@@ -466,6 +466,11 @@ defmodule Vapor.Runtime.Oracle do
   defp window(p, nil), do: Enum.to_list(0..p)
   defp window(p, w), do: Enum.to_list(max(0, p - w + 1)..p)
 
+  # rung 1 refuses k ≢ 0 (mod 16); a program evaluated here without it must
+  # not lose the tail of its contraction in silence (found in 0.15)
+  defp dot16(_w, _x, k, _p) when rem(k, 16) != 0,
+    do: raise(ArgumentError, "canonical dot over k = #{k}: k must be ≡ 0 (mod 16) (Program.check/1 rejects this program)")
+
   defp dot16(w, x, k, p) do
     Enum.reduce(0..(div(k, 16) - 1), List.duplicate(0, 16), fn c, acc ->
       base = 16 * c

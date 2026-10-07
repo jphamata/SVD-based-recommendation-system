@@ -41,9 +41,19 @@ defmodule Vapor.Train.LM do
   `(seed, k, i, j)` — independent of the workers — so a run is a pure
   function of the corpus, the configuration and the seed: `checkpoint/3`
   and `resume/2` continue it with the bits of an uninterrupted run.
+
+  **Or no tree at all** (`reduce: :exact`, 0.15): every micro-batch's
+  gradient enters a `Vapor.Amalgam` as it arrives — on whichever worker
+  finished first, in whatever order — and the step's gradient is the
+  **correctly rounded mean** of the exact sum. The bits are then a property
+  of the set of micro-batches alone: `micro` need not be a power of two,
+  workers are a work queue rather than a fixed assignment, and a micro-batch
+  recomputed after a crash may arrive last. The price, stated: one gradient
+  per micro-batch crosses back to the BEAM (no folding inside a session),
+  and the exact sum costs a bignum add per parameter per micro-batch.
   """
   import Bitwise
-  alias Vapor.{Autodiff, CR, F32, Program, Tensor}
+  alias Vapor.{Amalgam, Autodiff, CR, F32, Program, Tensor}
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Runtime.{Native, Substrates}
 
@@ -302,7 +312,7 @@ defmodule Vapor.Train.LM do
   defmodule Run do
     @moduledoc "A training run: configuration, compiled programs, state, schedule."
     defstruct [:cfg, :grad, :acc, :add, :opt, :params, :m, :v, :step, :seed, :micro, :chunk, :steps, :lr, :warmup, :lr_end,
-               :beta1, :beta2, :corpus_digest, sessions: %{}, losses: [], gnorms: []]
+               :beta1, :beta2, :corpus_digest, reduce: :tree, sessions: %{}, losses: [], gnorms: []]
   end
 
   @doc """
@@ -321,11 +331,18 @@ defmodule Vapor.Train.LM do
   never leaves it until the chunk ends (the parameters are written once
   per step) — what turns the per-micro-batch traffic into two one-hot
   matrices in and one number out.
+
+  With `reduce: :exact` there is no tree and no chunk: `micro` is any
+  positive integer and the gradient is the correctly rounded mean of the
+  exact sum (`Vapor.Amalgam`), whatever the arrival order.
   """
   def start(%__MODULE__{} = c, corpus, opts \\ []) do
+    reduce = Keyword.get(opts, :reduce, :tree)
     micro = Keyword.get(opts, :micro, 8)
-    chunk = Keyword.get(opts, :chunk, min(4, micro))
-    if micro < 1 or (micro &&& (micro - 1)) != 0, do: raise(ArgumentError, "micro-batches per step must be a power of two")
+    chunk = if reduce == :exact, do: 1, else: Keyword.get(opts, :chunk, min(4, micro))
+    if reduce not in [:tree, :exact], do: raise(ArgumentError, "reduce must be :tree or :exact")
+    if not (is_integer(micro) and micro >= 1), do: raise(ArgumentError, "micro-batches per step must be a positive integer")
+    if reduce == :tree and (micro &&& (micro - 1)) != 0, do: raise(ArgumentError, "micro-batches per step must be a power of two (or reduce: :exact)")
     if chunk < 1 or (chunk &&& (chunk - 1)) != 0 or rem(micro, chunk) != 0, do: raise(ArgumentError, "chunk must be a power of two dividing micro")
     seed = Keyword.get(opts, :seed, 1)
     {:ok, grad} = Vapor.Compile.Lower.lower(grad_program(c))
@@ -335,7 +352,7 @@ defmodule Vapor.Train.LM do
     params = init(c, seed)
     zeros = Map.new(params, fn {n, t} -> {n, Tensor.new(:f32, t.shape, :binary.copy(<<0::32>>, Enum.product(t.shape)))} end)
 
-    %Run{cfg: c, grad: grad, acc: acc, add: add, opt: opt, params: params, m: zeros, v: zeros, step: 0, seed: seed, micro: micro, chunk: chunk,
+    %Run{cfg: c, grad: grad, acc: acc, add: add, opt: opt, params: params, m: zeros, v: zeros, step: 0, seed: seed, micro: micro, chunk: chunk, reduce: reduce,
          steps: Keyword.get(opts, :steps, 1000), lr: Keyword.get(opts, :lr, 3.0e-3), warmup: Keyword.get(opts, :warmup, 50),
          lr_end: Keyword.get(opts, :lr_end, 0.1), beta1: Keyword.get(opts, :beta1, 0.9), beta2: Keyword.get(opts, :beta2, 0.95),
          corpus_digest: Base.encode16(:crypto.hash(:sha256, corpus), case: :lower)}
@@ -372,7 +389,10 @@ defmodule Vapor.Train.LM do
   end
 
   @doc "One step: the chunk sums (folded in the workers), their fixed-tree sum, the optimizer."
-  def step(%Run{cfg: c} = r, corpus, workers, opts \\ []) do
+  def step(run, corpus, workers, opts \\ [])
+  def step(%Run{reduce: :exact} = r, corpus, workers, opts), do: exact_step(r, corpus, workers, opts)
+
+  def step(%Run{cfg: c} = r, corpus, workers, opts) do
     k = r.step + 1
     nchunks = div(r.micro, r.chunk)
     # chunk j on worker assign(k, j) mod W; a worker runs its chunks in order
@@ -392,12 +412,40 @@ defmodule Vapor.Train.LM do
     loss = results |> Enum.flat_map(fn {_, _, ls} -> ls end) |> Enum.sum() |> Kernel./(r.micro)
     grads = results |> Enum.map(fn {_, g, _} -> g end) |> tree(workers, r.add, c)
 
+    optimize(r, k, grads, 1.0 / r.micro, loss, sessions, workers)
+  end
+
+  # the exact step: micro-batches as a work queue, gradients amalgamated in
+  # arrival order, the mean rounded once (gscale = 1, exact)
+  defp exact_step(%Run{cfg: c} = r, corpus, workers, opts) do
+    k = r.step + 1
+    assign = Keyword.get(opts, :assign, fn _k, i -> i end)
+    pin = Map.new(r.params, fn {n, t} -> {:"p.#{n}", t} end)
+    empty = Map.new(shapes(c), fn {n, s} -> {n, Amalgam.new(:f32, Enum.product(s))} end)
+
+    {grads, losses} =
+      0..(r.micro - 1)
+      |> Task.async_stream(fn i ->
+        b = batch(c, corpus, r.seed, k, i)
+        out = run_on(workers, assign.(k, i), r.grad, Map.merge(pin, %{x: b.x, y: b.y}))
+        {Map.new(shapes(c), fn {n, _} -> {n, Amalgam.add(empty[n], out[:"g.#{n}"])} end), Amalgam.add(Amalgam.new(:f32, 1), out.loss)}
+      end, ordered: false, timeout: :infinity, max_concurrency: max(length(workers), 1))
+      |> Enum.reduce({empty, Amalgam.new(:f32, 1)}, fn {:ok, {g, l}}, {acc, la} ->
+        {Map.new(acc, fn {n, a} -> {n, Amalgam.merge(a, g[n])} end), Amalgam.merge(la, l)}
+      end)
+
+    grads = Map.new(shapes(c), fn {n, s} -> {n, Amalgam.mean(grads[n], shape: s)} end)
+    loss = losses |> Amalgam.mean() |> Tensor.to_floats() |> hd()
+    optimize(r, k, grads, 1.0, loss, r.sessions, workers)
+  end
+
+  defp optimize(%Run{cfg: c} = r, k, grads, gscale, loss, sessions, workers) do
     {b1, b2} = {r.beta1, r.beta2}
     one = fn x -> Tensor.from_list(:f32, [1, 1], [x]) end
 
     env =
       Map.merge(
-        %{gscale: one.(1.0 / r.micro), lr: one.(lr_at(r, k)), c1: one.(1 / (1 - CR.pow_f64(b1, k * 1.0))), c2: one.(1 / (1 - CR.pow_f64(b2, k * 1.0)))},
+        %{gscale: one.(gscale), lr: one.(lr_at(r, k)), c1: one.(1 / (1 - CR.pow_f64(b1, k * 1.0))), c2: one.(1 / (1 - CR.pow_f64(b2, k * 1.0)))},
         Enum.reduce(shapes(c), %{}, fn {n, _}, acc ->
           Map.merge(acc, %{:"p.#{n}" => r.params[n], :"m.#{n}" => r.m[n], :"v.#{n}" => r.v[n], :"g.#{n}" => grads[n]})
         end))
@@ -607,7 +655,7 @@ defmodule Vapor.Train.LM do
       |> Map.new()
 
     meta = %{"vapor.lm" => Vapor.JSON.encode(%{step: r.step, seed: r.seed, micro: r.micro, steps: r.steps, lr: r.lr, warmup: r.warmup,
-                                                lr_end: r.lr_end, beta1: r.beta1, beta2: r.beta2, corpus: r.corpus_digest,
+                                                lr_end: r.lr_end, beta1: r.beta1, beta2: r.beta2, corpus: r.corpus_digest, reduce: r.reduce,
                                                 config: Map.from_struct(r.cfg)})}
     Vapor.Ingest.Safetensors.write(path, tensors, meta)
   end
