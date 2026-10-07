@@ -1,0 +1,86 @@
+% ============================================================================
+\chapter{Introdução}\label{cap:introducao}
+% ============================================================================
+
+Um número produzido por um computador carrega, implicitamente, uma afirmação: \emph{este é o resultado do cálculo que você pediu}. Na maior parte da computação científica e da aprendizagem de máquina contemporâneas, essa afirmação não pode ser conferida por quem a recebe. O cálculo atravessa uma pilha de bibliotecas, compiladores, \textit{drivers} e aceleradores que ninguém audita por inteiro; o resultado muda quando o mesmo programa roda em outra máquina, com outro número de \textit{threads} ou numa placa de vídeo; e, cada vez mais, o número vem de um modelo estatístico cuja saída é plausível por construção, e plausível não é o mesmo que verdadeiro.
+
+Esta monografia descreve o \vapor{}, um sistema que toma a posição oposta: um número só sai acompanhado do objeto que permite julgá-lo. O \vapor{} começou como um compilador e \textit{runtime} de tensores com uma garantia incomum --- \emph{os mesmos bits em todo substrato} --- e cresceu, ao longo de treze rodadas de desenvolvimento, até um ecossistema que serve modelos de linguagem, lê documentos escaneados, resolve problemas de engenharia e lógica e, na rodada mais recente, opera uma mesa de finanças e de negociação. O fio condutor de todas as rodadas é a mesma separação: \emph{uma busca propõe, um verificador decide}.
+
+\section{O problema}\label{sec:problema}
+
+Quatro dores motivam o trabalho. Cada uma é real, mensurável e mal atendida pelo estado da prática.
+
+\paragraph{Pilhas que ninguém audita.} Uma instalação típica de aprendizagem profunda ocupa gigabytes: o \textit{framework}, bibliotecas numéricas de fornecedores, compiladores just-in-time, \textit{drivers}. O \vapor{} mediu, para a sua apresentação, cerca de 3\,010~MB de \textit{wheels} comprimidos para uma instalação de PyTorch com CUDA, contra 1,76~MB do núcleo do \vapor{} (plano de controle compilado e binários nativos) e 8,7~MB do sistema inteiro, com as treze rodadas, sem contar o \textit{runtime} da linguagem em nenhum dos lados. O tamanho não é o problema em si; o problema é que cada componente é um ponto de confiança, e a confiança não é transitiva.
+
+\paragraph{Números que mudam de máquina para máquina.} A aritmética de ponto flutuante não é associativa: $(a+b)+c$ e $a+(b+c)$ podem diferir no último bit, e numa soma de milhões de termos essas diferenças se acumulam \cite{goldberg1991,higham2002}. Uma redução paralela que muda de ordem com o número de \textit{threads}, uma instrução \textit{fused multiply-add} que existe numa arquitetura e não em outra, uma implementação diferente de $\exp$: qualquer uma basta para que o mesmo programa produza resultados diferentes. Em aprendizagem de máquina isso torna experimentos irreproduzíveis; em finanças, transforma um número de risco num achado de auditoria esperando para acontecer.
+
+\paragraph{Ruído plausível.} Modelos generativos produzem saídas com a forma estatística de respostas corretas. Sem um mecanismo que separe sinal de ruído --- um controle que uma implementação quebrada produziria, um teste que poderia ter falhado ---, uma saída bem formatada é indistinguível de uma saída correta. O mesmo vale, em escala menor, para qualquer procedimento de busca: o melhor de cinquenta \textit{backtests} parece bom mesmo sobre dados aleatórios \cite{bailey2014dsr,harvey2016}.
+
+\paragraph{Mercados sem verificabilidade.} Na indústria financeira, as falhas mais caras raramente são de velocidade; são de prova. Um preço que muda quando o cálculo muda de servidor, uma estratégia que olhou, sem querer, o preço de amanhã, um livro de ofertas cujo comportamento ninguém de fora consegue auditar. Reguladores exigem que firmas com acesso ao mercado tenham controles de risco pré-negociação e possam demonstrar que os tinham \cite{sec15c35,rts6}; demonstrar é exatamente o que as arquiteturas usuais dificultam.
+
+\section{A tese}\label{sec:tese}
+
+A tese deste trabalho é que \textbf{verificabilidade pode ser uma propriedade de arquitetura}, obtida por construção e a custo baixo, se três decisões forem tomadas desde o início:
+
+\begin{enumerate}
+  \item \textbf{A semântica é simbólica e fixa.} Um programa é um termo de uma álgebra cujos operadores têm significado definido bit a bit (inclusive as funções transcendentais, implementadas como microprogramas sobre $+$, $-$ e $\times$ corretamente arredondados). O paralelismo vem de saídas independentes, nunca de reassociar uma soma.
+  \item \textbf{O código gerado é isolado e o compilador não é confiado.} O \vapor{} emite bits de máquina diretamente, mas toda alocação de registradores é conferida por um verificador provado; todo binário roda num processo que pode morrer sem consequências; e cada compilação produz um certificado com o trabalho contado e as evidências de cada degrau de verificação.
+  \item \textbf{Toda resposta vem com o seu juiz.} Nas camadas de aplicação, o procedimento que produz uma resposta é separado do procedimento que a confere --- e o segundo é deliberadamente mais simples, independente do primeiro, ou ambos.
+\end{enumerate}
+
+A rodada 0.13 testa a tese num domínio em que ela tem consequências econômicas diretas. Se a dor de finanças é verificabilidade, então um sistema construído para a verificabilidade deveria produzir, sem esforço extraordinário, coisas que a prática usual não produz: números de risco com os mesmos bits em qualquer máquina, \textit{backtests} que provam não ter olhado o futuro, arbitragens decididas e não estimadas, livros de ofertas auditáveis por terceiros. O \autoref{cap:financas} mostra que isso é o que acontece. A rodada 0.14 faz o teste inverso: em vez de um domínio escolhido, qualquer problema que o usuário escreva (\autoref{cap:bancada}).
+
+\section{O que, para quem, para que, por que, como}\label{sec:cinco}
+
+A \autoref{tab:cinco} resume o trabalho nas cinco perguntas que organizam esta monografia. Cada inovação do \autoref{cap:inovacoes} é apresentada com uma ficha que responde às mesmas perguntas.
+
+\begin{table}[htbp]
+\centering
+\caption{O \vapor{} nas cinco perguntas}\label{tab:cinco}
+\small
+\begin{tabularx}{\textwidth}{@{}p{2.4cm}X@{}}
+\toprule
+\textbf{pergunta} & \textbf{resposta}\\
+\midrule
+O quê & Um compilador e \textit{runtime} de tensores certificados (álgebra simbólica $\to$ bits de máquina em cinco alvos, executados em processos isolados, com certificado), e um ecossistema de aplicações construído sobre ele: modelos de linguagem, documentos, agentes, mesas de engenharia, lógica, ciência e finanças.\\
+Para quem & Equipes que precisam \emph{demonstrar} um resultado e não apenas obtê-lo: reguladas (finanças, saúde, setor público), que auditam modelos de IA, que precisam de reprodutibilidade científica; pesquisadores de compiladores e verificação; estudantes que queiram ver um sistema completo, do termo ao registrador, em código legível.\\
+Para que & Para que um número computado possa ser julgado por quem o recebe: os mesmos bits em qualquer substrato, um certificado do que foi compilado, um verificador independente para cada resposta, e um controle que mostra que a verificação poderia ter falhado.\\
+Por que & Porque as falhas que mais custam --- irreprodutibilidade, ruído plausível, auditoria impossível --- são falhas de prova, e não de desempenho; e porque a prova, feita por construção, custa pouco.\\
+Como & Semântica simbólica fixa; reescrita só por identidades exatas; emissão direta de bits com alocação verificada por um verificador provado em Lean; execução em processos isolados; escada de verificação de seis degraus; certificados Ed25519 determinísticos; e, nas aplicações, a separação proponente/verificador com controles calibrados.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Contribuições}\label{sec:contribuicoes}
+
+As contribuições deste trabalho, todas implementadas e testadas no repositório, são:
+
+\begin{enumerate}
+  \item Uma \textbf{numérica canônica portátil}: um conjunto de operadores com semântica fixa bit a bit, incluindo divisão corretamente arredondada e funções transcendentais como microprogramas, que produz os mesmos bits em x86-64 (AVX2 e AVX-512), AArch64, RISC-V (qualquer VLEN de 128 a 512) e Vulkan, e que é invariante ao número de \textit{threads}, ao tamanho do lote e ao armazenamento dos pesos (\autoref{sec:inov-canonica}).
+  \item Um \textbf{compilador sem cadeia de ferramentas externa} que emite bits de máquina com codificadores próprios, valida cada instrução contra o GNU binutils e o \texttt{spirv-val} nos testes, e confere toda alocação de registradores com um verificador provado e extraído do Lean (\autoref{sec:arq-compilacao}).
+  \item \textbf{Contenção total} do código gerado: nenhum byte emitido executa na máquina virtual; quatro classes de falha viram mensagens tipadas (\autoref{sec:arq-substratos}).
+  \item Uma \textbf{escada de verificação} de seis degraus que termina num certificado co-assinável por nós independentes (\autoref{sec:arq-escada}).
+  \item O padrão \textbf{proponente/verificador com controles} aplicado a domínios inteiros --- lógica, engenharia, ciência e finanças ---, inclusive a propostas vindas de modelos de linguagem pelo protocolo MCP (\autoref{sec:inov-proponente}).
+  \item Na rodada 0.13, \textbf{finanças verificáveis}: invariância de prefixo como certificado de ausência de antecipação; arbitragem decidida pelo lema de Farkas em aritmética racional; Monte Carlo como programa canônico, com o gerador dentro da álgebra; um livro de ofertas julgado por um motor ingênuo independente; e uma sessão de bolsa em que o \textit{backtest} é o próprio código da bolsa (\autoref{cap:financas}).
+  \item Na rodada 0.14, a \textbf{bancada aberta}: uma linguagem pura e saneada para escrever qualquer problema; uma fornalha de estratégias que o busca contra a busca aleatória com o mesmo orçamento; uma pedra de toque que reconfere o certificado; leis de conservação provadas sobre $\mathbb{Q}$; e uma suíte que decide se uma diferença de avaliação de IA é real (\autoref{cap:bancada}).
+\end{enumerate}
+
+\section{Como ler esta monografia}\label{sec:leitura}
+
+O texto foi escrito para três leitores ao mesmo tempo. Ao longo dos capítulos, caixas marcam o nível:
+
+\begin{graduacao}
+Explicações intuitivas e exemplos concretos, para quem tem a formação de um bacharelado em computação: ponto flutuante, compiladores, criptografia e estatística no nível de um primeiro curso.
+\end{graduacao}
+
+\begin{mestrado}
+Os mecanismos com a precisão necessária para reimplementá-los: formatos, algoritmos, cotas de erro, os argumentos de correção.
+\end{mestrado}
+
+\begin{doutorado}
+O que não está resolvido --- aqui ou na literatura ---, formulado como pergunta de pesquisa, com a evidência que o \vapor{} oferece e o que faltaria para respondê-la.
+\end{doutorado}
+
+O \autoref{cap:fundamentos} reúne os fundamentos de que os demais capítulos dependem e pode ser pulado por quem já os domina. O \autoref{cap:arquitetura} descreve a arquitetura; o \autoref{cap:inovacoes}, as inovações, cada uma com a sua ficha; o \autoref{cap:financas} aprofunda a rodada 0.13; o \autoref{cap:bancada}, a 0.14; o \autoref{cap:avaliacao} apresenta a avaliação e as ameaças à validade; o \autoref{cap:relacionados} situa o trabalho; o \autoref{cap:conclusao} conclui com as limitações e os trabalhos futuros. O \autoref{ap:reproducao} lista os comandos que reproduzem cada número citado; o \autoref{ap:exercicios} propõe exercícios por nível.
+
+Uma advertência de método atravessa o texto: \textbf{nenhuma afirmação de superioridade é feita sem a comparação que a sustenta}, e onde o \vapor{} perde --- em velocidade de jogo de xadrez, em predição de estrutura de proteínas, em latência de bolsa --- isso é dito. Os números citados foram medidos numa máquina modesta (um Xeon de 2,1~GHz com duas vCPUs, AVX-512, sem GPU física nem contadores de desempenho), e o \autoref{ap:reproducao} diz como refazê-los.

@@ -1,0 +1,1310 @@
+# vapor — arquitetura
+
+Este documento descreve o sistema como ele está implementado e testado neste
+repositório: fluxo de dados, protocolos de IPC, modelo de memória, modelo
+numérico, escada de verificação e o que está provado, o que está testado e o
+que é confiado. A última seção registra onde a diretiva original foi
+refinada por escrutínio técnico, e as limitações que permanecem.
+
+## 1. Visão geral
+
+```
+                    ┌──────────────────────── BEAM (plano de controle, deps: []) ────────────────────────┐
+  Program ──▶ Rung 1 (sorts) ──▶ Rewrite (ε=0) ──▶ Lower + cut sweep ──▶ KIR ──▶ seleção por ISA
+   (termos       │                                   │                          │
+   simbólicos)   │                                   ▼                          ▼
+                 │                          SPIR-V (assembler)      liveness ─▶ linear scan (grupos g)
+                 │                                   │                          │
+                 │                                   │              checker extraído do Lean (aceita?)
+                 │                                   │                          │
+                 │                                   ▼                          ▼
+                 │                            módulos .spv     x86-64 AVX2 · AVX-512 · AArch64 · RV64GCV (bits)
+                 ▼                                   │                          │
+   Rungs 2–5: admissão · adjunta · oráculo · paridade + envelope (execução real nos substratos)
+                 │
+   Rung 6: certificado Ed25519 (determinístico, co-assinável) ──▶ Bundle ──▶ nó de borda (só verifica)
+                 │
+   Vapor.run ──▶ árbitro (3 tetos, perfis declarados) ──▶ Dispatch com failover
+                 └───────────┬───────────────────────────┬───────────────────────────┬───────────┘
+                     {packet,4} stdio            {packet,4} stdio                   (puro)
+                             ▼                           ▼                             ▼
+                 vapor-worker (processo)        vapor-fabric (processo)           Oracle (BEAM)
+                 seccomp · W^X · watchdog       Vulkan compute completo           binary32 exato
+                 pool de threads · sessões      lavapipe / GPU real
+                 nativo | interpretador RVV
+```
+
+Nada gerado executa dentro da BEAM. Não há NIF (o teste de auditoria proíbe
+`load_nif`/`@on_load`); o único código nativo que a BEAM carrega é o da
+própria VM.
+
+| Componente | Onde | Linhas |
+|---|---|---|
+| Plano de controle (álgebra, compilação, emissores, verificação, runtime, modelos, motor, servidor, tokenizador, ingestão) | `lib/` | ~15 500 |
+| Código extraído do Lean (gerado) | `lib/vapor/extracted.ex` | ~130 |
+| Worker, pool de threads, contadores, interpretador RVV, sandbox, daemon Vulkan | `native/src/` | ~3 000 |
+| Provas Lean 4 + extrator | `proofs/` | ~940 |
+| Testes (Elixir e scripts Python dos níveis diferenciais) | `test/` | ~4 800 |
+
+O ecossistema construído sobre o núcleo (modelos Llama/Mistral/Qwen2,
+tokenizador, motor de geração, servidor OpenAI, autodiff/LoRA, ingestão
+safetensors/GGUF) e o seu escrutínio estão em
+[ECOSSISTEMA.md](ECOSSISTEMA.md); o §4.6 abaixo descreve as formas de
+paralelismo e concorrência e o invariante que cada uma preserva.
+
+## 2. Álgebra e programas
+
+`Vapor.Algebra.Term` é uma álgebra livre *simbólica*: todo operador é um nome
+com semântica fixa (`Vapor.Runtime.Oracle`). O antecessor guardava closures
+Elixir dentro dos termos, o que nenhum emissor consegue baixar para código de
+máquina.
+
+- Geradores: `input`, `const`, `ew` (ι: `add sub mul fma neg relu`, com
+  `splat`), `qgemv` (contração com matriz `:sb4`), `gemm_i8` (contração em
+  ℤ/2³²ℤ).
+- **Dimensões semi-dinâmicas**: `{:dyn, :S, max}`. Todas as cotas são
+  estabelecidas no máximo; os lemas de monotonicidade
+  (`admissible_mono`, `withinEnvelope_mono`) garantem que o certificado vale
+  para todo `S ≤ max`. `Compiled.dims/2` rejeita extensões acima do máximo.
+- **Programas recorrentes** (`Vapor.Program`, `state: [h: :h_next]`)
+  realizam o gerador `scan` sobre o monoide afim σ = 2 sem materializar a
+  sequência: o loop inteiro roda no worker atrás de **uma** travessia da
+  BEAM, com saída por token em streaming.
+- Dados numéricos vivem em binários contíguos (`Vapor.Tensor`). Não há
+  `Enum.at` no código; onde há acesso aleatório usa-se tupla (O(1)); as
+  listas aparecem só em travessias sequenciais transitórias do oráculo.
+
+## 3. Compilação
+
+### 3.1 Reescrita (ε = 0)
+`Vapor.Compile.Rewrite` só admite identidades válidas bit a bit para todo
+IEEE-754, zeros com sinal incluídos: `neg(neg x) → x`, `x·1 → x`,
+`x + (−0) → x`, `x − (+0) → x`, mas **não** `x + (+0) → x` (pois
+`(−0) + (+0) = +0`). O dobramento de constantes avalia a própria semântica
+declarada.
+
+### 3.2 KIR, seleção e o fator de grupo
+Os kernels (`Vapor.KIR.Kernels`: `ew` fundido, reduções, `gemv_f32` e
+`gemv_bf16`, `sb_sums`, `gemv_sb4`, `gemm_i8`, e os operadores de modelo —
+`gather_row`, `rope`, `kv_write` contíguo e paginado, `attention` contígua e
+paginada, `sample`, `transpose`) são escritos uma vez em IR portátil sobre registradores virtuais
+com *tipos* (`:strip`, `:f16l`, `:i32acc`, …). Cada backend dimensiona os
+tipos. O **fator de grupo `g` generaliza o LMUL do RVV para todas as ISAs**:
+um strip AVX2 com `g = 4` são quatro ymm em lockstep; um strip RVV com
+`g = 8` é um grupo m8.
+
+| tipo | RVV | AVX2 | AVX-512 | NEON |
+|---|---|---|---|---|
+| `:strip` | m`g` | `g` ymm | `g` zmm | `g` q |
+| `:f16l` (16 lanes f32) | m4, vl=16 | 2 ymm | 1 zmm | 4 q |
+| `:i32acc` | m`4g` | `g` ymm | `g` zmm | 2 q |
+
+O backend AVX-512 (`Vapor.Emit.X86.AVX512`, nível x86-64-v4) reaproveita o
+lado inteiro do AVX2 e codifica todo o resto em EVEX: 32 registradores zmm
+(zmm31 de rascunho), a largura canônica de 16 lanes num registrador só,
+caudas de strip feitas por uma passada mascarada (`bzhi` → `k2…k5`, só
+loads/stores mascarados: lanes inativas computam e são descartadas) em vez
+de laço escalar, e constantes de 4 bytes lidas com broadcast embutido
+`{1to16}`. Seleções viram `vcmpps → k1` + `vblendmps`; a árvore de redução é
+a mesma do AVX2 lane a lane, logo os bits são os mesmos.
+
+A seleção (`select/2` em cada backend) acontece **antes** da alocação, como
+em compiladores de produção; instruções "lanewise" são emitidas como *bundles*
+(uma unidade de alocação), o que permite destino e fonte compartilharem
+registradores quando a fonte morre ali.
+
+### 3.3 Alocação linear scan sem spill, verificada
+`Vapor.KIR.Liveness` calcula liveness por ponto fixo sobre o CFG (valores
+vivos no back-edge cobrem o loop inteiro); `early clobber` modela as regras
+de sobreposição das instruções de alargamento do RVV. `Vapor.KIR.RegAlloc`
+faz linear scan com blocos alinhados de tamanho 1/2/4/8 (preferência:
+caller-saved, depois "buddy" ocupado, depois ordem da ISA).
+
+Não existe caminho de spill. Se falta registrador, o alocador devolve o ponto
+de pressão e: (a) o compilador tenta `g` menor; (b) o `gemv_sb4` tenta menos
+linhas por iteração (R ∈ {4, 2, 1}); (c) o **cut sweep** fecha a região
+fundida ali. Toda alocação aceita é revalidada por `check_alloc/3`,
+**extraído do Lean** e provado correto (`checkAlloc_sound`): grupos
+alinhados, dentro do arquivo, fora dos reservados, e nenhum par de valores
+simultaneamente vivos compartilha registrador. Logo, cada região emitida é
+livre de spill e de clobber por construção, não por suposição sobre a
+heurística.
+
+### 3.4 Codificação binária pura
+- x86-64: REX, VEX de 3 bytes, EVEX (AVX-512, sempre disp32 — nunca o
+  disp8·N comprimido), ModR/M, SIB; ABI SysV (`rdi = args`, callee-saved
+  salvos só se usados, `vzeroupper; ret`).
+- AArch64: palavras A64/NEON; AAPCS64 (`x0 = args`, `x19–x28` e `d8–d15`
+  salvos se usados; `x16`/`v31` scratch; `x18` nunca alocado).
+- RV64GCV: `vtype = vlmul[2:0] | vsew[5:3] | vta | vma`; loads/stores
+  vetoriais em LOAD-FP/STORE-FP com campo de largura; FP escalar com modo
+  estático RNE; ABI psABI completa com `ret`; desvios condicionais como
+  `b<inverso> +8; jal` (alcance de ±1 MiB independente do tamanho).
+- SPIR-V: assembler simbólico que interna tipos/constantes, ordena as seções
+  lógicas e emite palavras; `NoContraction` em todo `FMul/FAdd/FSub` na
+  política canônica.
+
+Os testes validam cada instrução emitida — todo construtor de kernel, nos
+quatro backends, em todo fator de grupo e política — contra o GNU binutils
+(x86 incl. EVEX, AArch64 e RISC-V com `rv64gcv`) e cada módulo SPIR-V contra
+o `spirv-val`; o produto nunca invoca essas ferramentas.
+
+## 4. Substratos, isolamento e protocolos
+
+### 4.1 `vapor-worker` (Substrato I)
+Executável Zig estático, sem libc (240–340 KB). O HELLO fixa o número de
+threads: o pool (`pool.zig`) e os contadores de eventos (`perf_event_open`:
+ciclos/instruções/cache quando há PMU; task-clock, faltas de página e trocas
+de contexto sempre) são criados **antes** do filtro seccomp, instalado com
+`TSYNC` em todas as threads. Cada chamada carrega um *descritor de
+partição* (argumento de contagem, grão, ponteiros que avançam por unidade,
+scratch por thread, guarda opcional) e o worker a divide entre as threads;
+como as unidades são linhas independentes, o resultado é o mesmo para 1…N
+threads. A passagem de bastão é espera ativa limitada (2 ms) e depois futex.
+Programas ficam **residentes** em sessões (OPEN/STEP/CLOSE): pesos
+mapeados uma vez, estado (caches KV) mantido entre passos, cada passo
+escreve só as entradas dadas e devolve só as saídas pedidas. Por RUN ou STEP:
+
+- **nativo**: o blob é copiado para uma página RW, a página vira R+X (W^X),
+  cache de instruções sincronizado (AArch64/RISC-V), chamada como
+  `void k(const uint64_t *args)`;
+- **emulado**: o blob RV64GCV é interpretado por `rvemu.zig`: todo acesso à
+  memória é checado contra os buffers vinculados, o fetch contra o blob, e
+  instrução desconhecida vira `IllegalInstruction` com pc e palavra.
+  Semântica RVV 1.0 fiel (RNE, `vfmacc` fundido, NaN canônico, NaN-boxing,
+  alinhamento de grupos, `vill`), com modo *poison* que escreve 1s em
+  elementos agnósticos de tail/máscara — prova que os kernels não dependem
+  deles. VLEN configurável (128–512).
+
+Contenção: seccomp-BPF (allowlist: read, write, openat, close, lseek, mmap,
+munmap, mprotect, clock_gettime, setitimer, sinais e saída; arquitetura
+auditada), `PR_SET_NO_NEW_PRIVS`, e um watchdog `SIGALRM` para código
+nativo que não termina. Os testes provocam as quatro classes de falha
+(SIGILL, SIGSEGV, SIGALRM, SIGSYS): em todas, só o worker morre, o
+`GenServer` dono da porta reporta `{:worker_crashed, {:signal, …}}`,
+respawna e a unidade seguinte roda.
+
+### 4.2 `vapor-fabric` (Substrato II)
+Daemon Zig (libc só para o `dlopen` do loader), bindings Vulkan escritos à
+mão. Pipeline headless completa: instância → dispositivo físico com fila de
+compute → dispositivo lógico → buffers → `vkCreateShaderModule` com o
+SPIR-V emitido pela BEAM → descriptor set layouts → pipeline layouts com
+push constants → `vkCreateComputePipelines` → descriptor pool/sets → um
+command buffer por RUN (dispatches, barreiras, janelas por iteração, cópias
+de estado, staging das emissões) → submit → fence com deadline → leitura.
+Queda do driver ou `VK_ERROR_DEVICE_LOST` matam só o daemon; timeout de
+fence é tratado como device lost.
+
+### 4.3 Protocolo (ambos os processos)
+Frames `{packet, 4}` no stdio (comprimento big-endian); campos internos
+little-endian. Um processo que morre no meio de um frame não pode
+dessincronizar a BEAM.
+
+```
+HELLO   1 | flags:u32 | threads:u32      → 1 | arch | sandbox | version:u32 | threads:u32
+RUN     2 | mode:u8 | vlen:u32 | flags:u32 | fuel:u64 | deadline_ms:u32
+          | code_len:u32 | code
+          | nbuf:u32 | (kind:u8 writable:u8 len:u64 [data | path_len:u16 path offset:u64])*
+          | ncall:u32 | (entry:u32 nargs:u32 (0 imm:u64 | 1 buf:u32 off:u64
+          |                                    | 2 buf:u32 base:u64 stride:u64)*)*
+          | iters:u32 | nemit:u32 (buf base stride len)* | ncopy:u32 (src soff dst doff len)*
+          | nret:u32 (buf)*
+EMIT    3 | t:u32 | bytes                  (por iteração, em streaming)
+DONE    4 | elapsed_ns:u64 | retired:u64 | n:u8 (id:u8 value:u64)* | (len:u64 bytes)*
+ERR     5 | code:u32 | pc:u64 | word:u32 | msg
+OPEN    6 | (como RUN, sem calls)         → sessão residente: código, buffers, constantes
+STEP    7 | writes (buf off bytes)* | calls | returns (buf off len)* | deadline
+CLOSE   8
+```
+
+Cada chamada pode trazer até dois descritores de partição (`count, grain,
+ptrs (arg, stride)*, scratch (arg, bytes)*, guard`); o primeiro aplicável é
+usado. As tabelas do worker e do daemon são dimensionadas pelo próprio
+quadro (uma contagem hostil não aloca mais do que o quadro descreve).
+
+O frame RUN do fabric troca `code/calls` por módulos SPIR-V e dispatches
+(`module, gx, gy, gz, push*, binds*`, com binds do tipo buffer ou *janela*
+`buf, base, stride, len`). Planos são autocontidos (sem estado no worker):
+um processo reiniciado não precisa de replay.
+
+### 4.4 Memória
+- Pesos ≥ 64 KiB vão uma única vez para `/dev/shm/vapor-<sha256>`
+  (endereçamento por conteúdo, escrita atômica) e são mapeados
+  copy-on-write pelo worker e **importados sem cópia** pelo fabric via
+  `VK_EXT_external_memory_host` quando o dispositivo o oferece.
+- Entradas por token são *janelas*: o daemon copia a fatia `t` antes da
+  iteração `t`; o worker passa `base + t·stride`.
+- Realimentação de estado (`h ← h_next`) é uma cópia declarada no plano.
+- Réplicas e reinícios mapeiam os mesmos arquivos: `n` workers com o mesmo
+  modelo ocupam uma cópia dos pesos no cache de páginas.
+  `Vapor.Runtime.Shm.prune/0` (`mix vapor.shm`, e ao fim da suíte de testes)
+  remove os arquivos que nenhum processo mapeia; quem precisa de um nome
+  removido o reescreve (`put/1` verifica a cada vez).
+- Pesos podem ficar em **bfloat16** (`storage: :bf16`): metade dos bytes;
+  `vld_bf16` alarga 16 pesos exatamente ao carregar (`vpmovzxwd` + shift,
+  `SHLL #16`, `vle16`+`vzext.vf2`+`vsll`, palavra/meia-palavra no SPIR-V),
+  então o resultado é bit a bit o do programa f32 sobre os mesmos valores.
+
+### 4.5 Failover
+`Vapor.Runtime.Dispatch` tenta a escolha do árbitro e desce a cadeia
+`fabric → host AVX-512 → host base → interpretador RVV → oráculo`,
+registrando o motivo de cada salto. O fabric também recusa por limite
+estático (cabeça de atenção acima de 512), e a unidade desce a cadeia. Sob a política canônica todos os elos computam os mesmos bits,
+então o reroteamento nunca muda a resposta; o oráculo não falha para um
+programa certificado.
+
+### 4.6 Paralelismo e concorrência
+
+A garantia a preservar: os bits de cada saída não dependem de quantas
+threads, de quantas sequências dividem o passo, de onde o KV mora, de qual
+réplica atende nem de qual substrato executa. Toda forma abaixo tira
+paralelismo de **saídas independentes**, nunca de reassociar uma soma.
+
+| forma | onde | invariante | teste |
+|---|---|---|---|
+| SIMD | AVX2, AVX-512, NEON, RVV (VLEN 128–512), SPIR-V | mesmos bits que o oráculo | `canon_test`, `native_test`, `model_test` (QEMU, lavapipe) |
+| ILP | R linhas por iteração no GEMV (4/2/1, escolhido pelo alocador) | idem | idem |
+| threads intra-operação | pool no worker, descritor de partição por chamada; atenção de decode dividida por cabeça KV | 1 = 2 = 3 threads | `threads_test`, `model_ops_test` |
+| lote contínuo | `Vapor.Engine`: decode + pedaços de prefill no mesmo passo | tokens de uma sequência iguais sozinha ou em lote, qualquer fatiamento | `engine_test` |
+| KV paginado | `kv_write_paged` / `attention_paged` com tabela de blocos | paginado = contíguo | `model_ops_test` |
+| réplicas (dados) | `Vapor.Engine.Pool`: uma compilação, páginas de pesos compartilhadas, menor fila | mesma resposta por qualquer réplica; réplica morta só leva as suas requisições | `engine_test` |
+| concorrência BEAM | processo por conexão HTTP, motor como `GenServer`, SSE | — | `serve_test` (cliente `openai`) |
+| banda de memória | pesos f32 compartilhados (mmap), `bf16` residente, GEMV *weight-stationary* (bloco de linhas de W encontra todo o lote) | bf16 = f32 sobre pesos arredondados | `model_test`, `engine_test` |
+| especulação | rascunho propõe, alvo verifica `k+1` linhas num passo | saída idêntica ao alvo sozinho | `speculative_test` |
+| GPU | SPIR-V de todos os operadores de modelo | fabric = oráculo (modelo inteiro, passo paginado com amostragem, decode recorrente) | `model_test`, `autodiff_test` |
+
+## 5. Modelo numérico
+
+`Vapor.F32` é aritmética binary32 **exata** na BEAM: valores como padrões de
+bits; `add/sub/mul` via binary64 + um arredondamento (correto, pois
+53 ≥ 2·24 + 2); `fma` em racionais diádicos com um único arredondamento
+(RNE, underflow gradual, overflow para ∞). Validado contra `fmaf`/`+`/`*` do
+hardware em 800 000 operações, incluindo subnormais e zeros com sinal.
+
+| Política | Semântica | Garantia |
+|---|---|---|
+| `:canonical` | mul e add arredondados separadamente; redução em árvore fixa de 16 lanes (`r8 → r4 → r2 → r`) | **bits idênticos** em x86, ARM, RVV, interpretador e GPU (digest FNV-1a) |
+| `:fast` | FMA fundido onde o operador permite | dentro do envelope rigoroso em todos os substratos |
+
+A ideia central: reprodutibilidade não exige lentidão se o paralelismo vier
+de **saídas independentes** (linhas, elementos) e não de reassociar uma
+soma. Por isso cada linha do GEMV tem exatamente 16 acumuladores, e o
+kernel ganha vazão processando R linhas por iteração — escolhido pelo
+alocador por ISA — sem mudar um bit.
+
+`Vapor.Verify.Envelope` calcula, para cada saída, o valor real exato e uma
+cota rigorosa válida para *qualquer* substrato conforme (arredondamento
+correto, FMA fundido ou não, qualquer ordem de redução, underflow gradual
+ou flush-to-zero), em racionais diádicos exatos: forma de Wilkinson
+`γₙ·S + a` para contrações sobre entradas exatas (decidida pelo
+`within_envelope/4` extraído do Lean) e análise de erro corrente para o
+resto. O verificador nunca arredonda; só cotas são encurtadas, e só para
+cima.
+
+## 6. Escada de verificação e certificado
+
+| Rung | Estabelece | Como |
+|---|---|---|
+| 1 | sorts, formas, realimentação | `Program.check/1` |
+| — | reescrita exata | `Rewrite` |
+| 2 | admissão | alocação aceita pelo checker extraído em **toda** ISA; no-wrap int8 via `admissible/3` no máximo das extensões; limites de SPIR-V |
+| 3 | identidade adjunta ⟨Wx, v⟩ = ⟨x, Wᵀv⟩ | kernel compilado vs. transposta exata (erros de layout/transposição) |
+| 4 | oráculo diferencial | cada substrato de CPU bit a bit igual ao oráculo exato |
+| 5 | paridade + envelope | digests FNV-1a iguais entre substratos; toda saída dentro do envelope |
+| 6 | proof-carrying code | certificado Ed25519 com quórum por co-assinatura |
+
+O payload contém SHA-256 do programa, de cada blob de máquina e de cada
+módulo SPIR-V, o digest das fontes Lean dos checkers, as evidências de cada
+rung e o **trabalho contado** (FLOPs, bytes, instruções por ISA). Não contém
+nada dependente do host (nem tempos, nem decisão de despacho), então nós
+independentes que refazem a escada produzem payloads **idênticos byte a
+byte** e podem co-assinar (`Certificate.cosign/3`). `verify/3` exige
+`quorum` assinaturas válidas de chaves distintas confiáveis. `Bundle`
+empacota artefatos + certificado; o nó de borda verifica assinaturas e
+hashes em ~2 ms e executa sem refazer a escada.
+
+## 7. Árbitro: roofline de três tetos
+
+`t = Σ max(F/π, Q/β, I/ι) + overheads`, com `F`, `Q` contados do schedule e
+`I` = contagem estática das instruções do corpo de cada loop quente, *como
+emitido*, vezes o número de iterações. O terceiro teto é o que torna o
+modelo honesto: o GEMV de 4 bits é limitado por emissão de instruções
+(~1,1 instr/peso), não por banda, e um modelo de dois tetos erra por ~5×.
+Com os três, o GEMV 4096×4096 é previsto em 71,7 ms e observado em
+72–75 ms. Os perfis são **declarados** (tabela por fornecedor; o Mesa
+lavapipe tem perfil de classe CPU). A decisão é o argmin do tempo previsto,
+tomada em cada nó a partir do trabalho certificado e do seu próprio perfil.
+
+## 8. Modelo de garantias
+
+**Provado em Lean 4 (núcleo apenas, sem `axiom`/`sorry`, sem aviso):**
+- ℤ/2³²ℤ: associatividade/comutatividade de soma e produto; `wrap32` é
+  homomorfismo; **toda árvore de redução com somador que dá a volta computa
+  o valor exato** sob `K·|A|max·|B|max < 2³¹` (`integer_parity`), para
+  qualquer permutação das folhas; monotonicidade da admissibilidade.
+- Bancos: lema de Euclides a partir de `gcd`; stride coprimo ⇒ injetor nas
+  lanes (`bank_injective`); pad em forma fechada para 2ᵐ bancos, suficiente
+  e **mínimo**.
+- Monoide afim: associativo, neutro (1, 0), e composição = aplicação em
+  sequência; levantamento segmentado associativo para qualquer monoide.
+- Checker de alocação: correção (`checkAlloc_sound`).
+- Envelope: a decisão exata, monotônica na extensão; forma bilateral.
+- Profundidade de Estrin = 3 vs. Horner = 7, calculada sobre a árvore.
+
+**Extraído para Elixir** (`lake exe vapor-extract`): `check_alloc`,
+`admissible`, `wrap_s32`, `pad_stride`, `bank_of`, `affine_op`,
+`seg_affine`, `within_envelope`. O extrator lê os termos *elaborados* — os
+mesmos sobre os quais os teoremas falam — e falha em qualquer construção
+fora do fragmento. O Lean calcula 480+ vetores de conformidade que o Elixir
+extraído precisa reproduzir; o módulo gerado carrega o FNV-1a das fontes
+Lean, conferido pelo teste de auditoria sem precisar do toolchain.
+
+**Testado (não provado):** encoders (binutils, QEMU, lavapipe),
+interpretador RVV vs. QEMU em VLEN 128/256/512, igualdade bit a bit entre
+todos os substratos, contenção de falhas.
+
+**Base confiável:** a BEAM e o kernel Linux; o printer do extrator (~200
+linhas) e seu prelúdio de 6 linhas; o lema analítico de Higham (citado); o
+driver Vulkan (contido em processo).
+
+## 9. Escrutínio da diretiva
+
+1. **`VK_KHR_external_memory_fd` não importa um memfd arbitrário.** Um
+   handle OPAQUE_FD só aceita memória exportada pelo mesmo driver. O
+   mecanismo que entrega cópia zero a partir de arquivos escritos pela BEAM
+   é `VK_EXT_external_memory_host` sobre um mapeamento — o implementado.
+2. **Extração Lean→Elixir é de tempo de build, não de execução.** Rodar o
+   toolchain Lean em produção reintroduziria o contêiner gigante que a
+   diretiva quer eliminar. A frescura é garantida por digest.
+3. **A condição de crista da Eq. 3 foi rebaixada a informação.** Com todos
+   os tetos na previsão, ela só consegue escolher o substrato mais lento.
+4. **A decisão de despacho saiu do certificado**, que agora carrega o
+   trabalho contado (portátil e co-assinável); a decisão é por nó.
+5. **Uma NIF "segura" foi recusada.** Um interpretador em NIF compartilha o
+   espaço de endereçamento da BEAM; um bug nele derruba a VM. O
+   interpretador roda no worker.
+6. **Nomes:** módulos `Vapor.Emit.*` (não `Aether.Emit.*`), coerente com o
+   nome do sistema.
+7. **Bugs do antecessor corrigidos:** `vtype` com SEW/LMUL trocados;
+   `vle8.v` no opcode OP-V; opcodes de cooperative matrix errados (4448 é
+   uma *capability*); `decode_i8` em floats; `axiom` e um "teorema" com
+   conclusão `True`.
+
+## 10. Limitações
+
+- Sem hardware físico RVV, ARM ou GPU discreta aqui: RVV/NEON validados sob
+  QEMU (e o interpretador contra o QEMU), Vulkan sob lavapipe.
+- O caminho cooperative matrix é emitido, validado pelo `spirv-val` e
+  selecionado quando o dispositivo anuncia (s8,s8,s32,16×16×16,subgrupo),
+  mas o lavapipe não o suporta: **não foi executado**.
+- O worker é Linux (syscalls diretas). O código NEON segue o AAPCS64, que o
+  arm64 da Apple respeita (x18 reservado, d8–d15 callee-saved), mas um worker
+  para macOS/Apple Silicon (`MAP_JIT`, `pthread_jit_write_protect_np`) não
+  foi escrito.
+- Esta VM tem 2 vCPUs e nenhuma PMU: o escalonamento a muitos núcleos e os
+  contadores de hardware não foram medidos aqui (o código os lê quando
+  existem). O GEMV de 4 bits segue limitado por emissão (o cálculo escalar
+  de α/β por sub-bloco e as conversões u8→f32 dominam): o AVX-512 quase não
+  o acelera; vetorizar esse cálculo é o próximo passo.
+- O fabric executa unidades autocontidas (sem sessões residentes): serve a
+  modelos inteiros e à certificação, mas o motor de geração usa o worker.
+- A atenção no SPIR-V recalcula os escores em três passadas (sem memória
+  compartilhada): correta e bit a bit, não otimizada para GPU real.
+- Fatores RoPE que chegam como tensor de GGUF não têm grafia em
+  `config.json`; exportar um modelo assim para Hugging Face é recusado.
+- Buffers do fabric são host-visible; GPUs discretas pedem device-local +
+  staging.
+- O oráculo e o envelope são exatos e portanto lentos: limitam o tamanho das
+  sondas das rungs 3–5 (as cotas valem no máximo das extensões pela
+  monotonicidade).
+- seccomp não está disponível sob `qemu-user` (reportado como
+  `:unsupported`); o isolamento por processo continua valendo.
+- Famílias de fronteira: o MoE é **denso** (todos os especialistas são
+  computados e a seleção é exata, logo a semântica é a do modelo e o custo é
+  `E/k` vezes o necessário); o MLA guarda K/V completos em vez do vetor
+  latente; *soft-capping* de atenção (Gemma 2), NTK dinâmico e LongRoPE são
+  recusados.
+- A divisão e as funções transcendentais canônicas são idênticas em todo
+  substrato, mas não são as da IEEE: ÷ fica a ≤ 1 ulp (medido contra o
+  avaliador do Nx). Só `+ − ×` coincidem com IEEE bit a bit.
+- O texto normalizado depende da versão do Unicode do OTP. Ela é registrada
+  no digest de agentes e testada separadamente, mas não é eliminada.
+
+## 11. Camadas sobre o núcleo
+
+As camadas desta seção usam o núcleo sem alterá-lo: tudo que produzem é
+programa certificado ou dado canônico.
+
+| camada | módulos | garantia que herda | documento |
+|---|---|---|---|
+| saída restrita | `Vapor.Grammar`, `Grammar.{JSONSchema, Vocab, Constraint}`, `Vapor.Tools` | o motor só escolhe tokens que a gramática admite; nenhum prefixo aceito é beco sem saída | [AGENTES.md §6](AGENTES.md) |
+| templates | `Vapor.Template`, `Vapor.Chat` | renderização = `jinja2` do HF, byte a byte; relógio explícito | [AGENTES.md §2](AGENTES.md) |
+| agentes | `Vapor.Agent`, `Agent.{Spec, Journal, Keys, Store, Backend.*, MCP}` | decisões locais re-deriváveis em qualquer substrato ⇒ repetir é verificar | [AGENTES.md §3](AGENTES.md) |
+| RAG | `Vapor.RAG`, `Vapor.Merkle`, `Vapor.Embed` | escores densos são `linear` canônico ⇒ índice igual em qualquer nó | [AGENTES.md §4](AGENTES.md) |
+| canônico | `Vapor.Canonical` (CBOR RFC 8949 §4.2), `Vapor.CR` | certificados e diários verificáveis fora da BEAM | [ECOSSISTEMA.md](ECOSSISTEMA.md) |
+| transporte | `Vapor.Serve.dispatch/3` + responders (`:gen_tcp`, `Vapor.Plug`) | o mesmo handler, os mesmos recibos | [ECOSSISTEMA_ELIXIR.md](ECOSSISTEMA_ELIXIR.md) |
+
+O motor monitora o destinatário de cada requisição. Um destinatário que
+morre retira as suas sequências do lote na fronteira de passo seguinte, e
+`cancel/2` faz o mesmo de propósito. Esses dois caminhos são a única forma
+de uma sequência deixar o lote antes do fim, e nenhum dos dois altera os
+bits das outras (invariância a lote).
+
+# Ecossistema vapor — escrutínio e plano
+
+Este documento examina a proposta de expansão (tokenizador, ingestão Hugging
+Face, LoRA/QLoRA, destilação, serviço, aparato de benchmark) contra as
+garantias que o núcleo já entrega, e fixa a ordem de construção. Ele é
+revisado a cada fase: o que for aprendido na implementação volta para cá.
+
+## Critério
+
+Uma camada nova entra se preservar os invariantes do núcleo, ou se disser
+explicitamente onde deixa de preservá-los:
+
+1. `deps: []` no plano de controle; nenhum código gerado dentro da BEAM.
+2. Semântica exata no oráculo; política `:canonical` bit-idêntica entre
+   substratos; `:fast` dentro de envelope.
+3. Todo artefato aceito tem certificado; toda rejeição tem contraexemplo.
+4. Números publicados são medidos aqui, com a fonte citada.
+
+## Veredito por item
+
+| Proposta | Veredito | Motivo técnico |
+|---|---|---|
+| API OpenAI | **sim**, HTTP/1.1 + SSE sobre `:gen_tcp` | é o que a API OpenAI usa para streaming; cabe em OTP puro |
+| HTTP/3 | **não no núcleo** | exige QUIC + TLS 1.3; terminar HTTP/3 num proxy (Caddy, nginx, h2o) na frente é mais seguro e não custa nada ao modelo |
+| Phoenix WebSockets | **não como dependência** | o vapor é biblioteca: uma app Phoenix chama `Vapor.Serve` na mesma BEAM |
+| Ponte Python zero-copy | **depois** | cliente HTTP basta; tensores já vivem em `/dev/shm` endereçados por conteúdo |
+| Tokenizador BPE puro | **sim** | BPE byte-level (GPT-2/Llama 3/Qwen) e SentencePiece-BPE com byte fallback (Llama 2/Mistral), lendo `tokenizer.json`; oráculo diferencial: a biblioteca `tokenizers` da HF |
+| Trie em Zig SIMD | **não** | seria NIF (quebra a contenção) ou uma travessia de processo mais cara que a própria tokenização |
+| "20 M tokens/s por núcleo" | **rejeitado a priori** | nenhuma medição sustenta; será medido e publicado |
+| Ingestão safetensors | **sim** | cabeçalho JSON + offsets validados como eclusa; pesos f32 mapeados pelo worker sem cópia |
+| `config.json` → termos | **sim para Llama, Mistral, Qwen2** → depois Qwen3, Qwen3-MoE, Mixtral, Gemma 3, DeepSeek-V3 (2026-10-01) | mesma estrutura (RMSNorm, RoPE, GQA, SwiGLU); MLA e MoE entraram como contrações exatas; Mamba depois |
+| GGUF | **depois** → feito em P8 | formato secundário; safetensors cobre a HF. Leitura, desquantização e exportação (f32/q8_0) conferidas contra gguf-py e o próprio llama.cpp |
+| 70 B: 140 GB → 41 GB | **aritmética correta** | 70·10⁹ × 4,6875 / 8 = 41,0 GB |
+| "perda de perplexidade matematicamente delimitada" | **falso** | o erro por peso é limitado e o erro de arredondamento dos kernels tem envelope; perplexidade só se mede |
+| QLoRA "somando B·A antes de emitir" | **corrigido** | nunca materializar B·A: `y = W₀x + s·B(Ax)`, dois GEMV finos |
+| Fundir B·A no `:sb4` | **com ressalva** | requantizar altera o erro de quantização; não é sem perdas |
+| Backprop "pela Rung 3" | **sim, com a leitura certa** | a identidade adjunta ⟨Wx,v⟩ = ⟨x,Wᵀv⟩ certifica os kernels transpostos que o reverse-mode usa |
+| Destilação "estabilizada abaixo do ruído 2γ_K S_ij" | **reformulado** | estabilidade vem de log-softmax com subtração do máximo; o envelope certifica o erro de arredondamento da perda, não "estabiliza gradientes" |
+| PagedKV com processo OTP dedicado | **estrutura sim, processo não** | a tabela de páginas é um dado puro no estado do motor; um processo a mais só serializa mensagens |
+| Batelada contínua sem padding | **sim** | e com uma propriedade forte: a ordem canônica não depende do tamanho do lote ⇒ **invariância a lote** (mesmos tokens sozinho ou em lote) |
+| Speculative decoding "aceito dentro do envelope de Wilkinson" | **conceito errado** | aceitação é por comparação de tokens (greedy) ou amostragem por rejeição; com invariância a lote, o resultado é **idêntico** ao decode sem especulação — essa é a garantia real |
+| "até 3,5×" | **rejeitado a priori** | depende da taxa de aceitação; será medido |
+| Contadores `perf_event_open` | **sim, quando o kernel permite** | abertos antes do seccomp; relata `:unavailable` caso contrário |
+| Joules/token via RAPL | **sim, quando existe** | nesta máquina `/sys/class/powercap` não existe ⇒ não validável aqui |
+| "interfaces energéticas Vulkan" | **não existe** | o Vulkan core não expõe energia |
+| Deriva ULP vs Float128 | **substituído** | o oráculo é exato (racional diádico), mais forte que binary128 |
+| Roofline SVG | **sim** | dados já vêm do árbitro |
+| Saturação por e-graphs | **depois, baixo retorno** | quase nenhuma regra de ponto flutuante é exata |
+| AVX-512 | **depois** → feito (HPC) | esta CPU tem AVX-512 (x86-64-v4); ganho de desempenho, não de garantia — os bits são os mesmos |
+| Treino de 8B em LoRA "em dados corporativos" | **escala errada para 1 núcleo** | a maquinaria é demonstrada em modelos pequenos; escala real pede multi-núcleo/GPU |
+
+## O pré-requisito que a proposta omite
+
+Um Llama precisa de `exp`, divisão, raiz quadrada inversa, máximo, reduções
+por linha, RoPE, softmax, atenção com cache KV de comprimento variável e
+lookup de embedding. Nada disso existe no núcleo, e a forma de introduzir
+decide se a garantia central sobrevive.
+
+**Decisão:** na política `:canonical`, toda função é um programa sobre
+{+, −, × corretamente arredondados, operações inteiras, comparação, seleção}.
+
+- `+ − ×` são corretamente arredondados em x86, AArch64, RVV **e** Vulkan
+  (onde divisão e raiz *não* são: 2,5 ULP no Vulkan). Construir `div`,
+  `rsqrt` e `exp` com Newton–Raphson e polinômios em ordem fixa dá bits
+  idênticos em todo substrato, inclusive GPU, e o oráculo os computa por
+  composição, sem caso especial.
+- `max`/`min` como `select(a < b, b, a)`: a semântica de NaN de `maxps`,
+  `fmax` e `vfmax` difere entre ISAs; comparação + seleção não.
+- `exp` zera por definição abaixo de 2⁻¹²⁶: a saída nunca é subnormal, então
+  GPUs que descartam subnormais continuam bit-idênticas.
+- RoPE: tabelas cos/sin calculadas uma vez na BEAM e embarcadas como
+  constantes (bits no certificado).
+- Atenção sobre o cache: a redução em 16 lanes atribui o elemento *i* à lane
+  *i mod 16*; posições além de `pos` contribuem zeros exatos. Logo parar o
+  laço em `pos + 1` produz **os mesmos bits** que a definição mascarada sobre
+  o comprimento máximo: o comprimento em tempo de execução é otimização, não
+  semântica.
+- `:fast` pode usar `vdivps`/`vrsqrtps`/FMA do hardware e é certificado por
+  envelope.
+
+**Certificação composicional.** O oráculo exato é lento demais para um
+modelo inteiro. Mas cada kernel é o mesmo código de máquina qualquer que seja
+a dimensão (dimensões são argumentos). Um certificado de modelo liga: o hash
+de cada kernel, a sua verificação diferencial em instâncias de sonda, a boa
+formação do cronograma e a admissão nas extensões máximas; a igualdade
+completa com o oráculo é verificada numa configuração pequena da mesma
+arquitetura.
+
+## Fases
+
+Cada fase termina com testes verdes em todos os níveis, commit e registro aqui.
+
+| Fase | Entrega | Pronto quando |
+|---|---|---|
+| P1 | Numérica e operadores: primitivas inteiras/comparação/seleção nos 3 ISAs de CPU; `recip`, `div`, `rsqrt`, `exp`, `sigmoid`, `silu`, `max`; reduções por linha; broadcast; GEMV f32; gather e escrita de linha em tempo de execução; ambiente de FP do worker verificado | oráculo = x86 = AArch64 = RVV (QEMU, VLEN 128–512) bit a bit; objdump decodifica tudo; erro ULP de cada função medido e publicado |
+| P2 | JSON, safetensors (eclusa), `config.json` → programa Llama/Mistral/Qwen2, quantização na ingestão | rejeição tipada para cabeçalho malformado; programas certificados |
+| P3 | Oráculo de modelo: `transformers` + `torch` (PyPI) em modelos pequenos com pesos aleatórios | logits dentro de tolerância declarada; geração greedy idêntica fora de empates |
+| P4 | Tokenizador | idêntico à `tokenizers` em corpora de teste e em tokenizadores reais obtidos offline |
+| P5 | Geração, amostragem determinística, motor com lote contínuo e PagedKV, servidor OpenAI + SSE | invariância a lote testada; cliente OpenAI conversa com o servidor |
+| P6 | Aparato de medição: contadores, histograma ULP vs exato, roofline SVG | números reproduzíveis com a fonte registrada |
+| P7 | Autodiff, LoRA, AdamW, perda de destilação | gradientes = diferenças finitas no oráculo; adjunta certificada; perda cai num modelo pequeno |
+| P8 | Speculative decoding, SPIR-V para os novos operadores, GGUF, AVX-512, Mamba | cada item com o seu critério |
+
+## Registro
+
+- 2026-09-30 — plano inicial.
+- P2/P3 (f32) — `Vapor.JSON` (RFC 8259, chaves duplicadas recusadas, profundidade
+  limitada; diferencial contra o `json` do Python), eclusa safetensors
+  (ladrilhamento exato do segmento de dados, `bf16`/`f16` alargados exatamente —
+  os 65 536 padrões `f16` iguais aos do numpy; lê bit a bit o que a biblioteca
+  `safetensors` escreve), `config.json` de Llama/Mistral/Qwen2 (formatos de
+  RoPE `rope_scaling` e `rope_parameters` do transformers ≥ 5), carregador de
+  diretório com shards.
+  **Descoberta:** termos BEAM são árvores; o fluxo residual usado ~3× por camada
+  fazia a árvore não compartilhada crescer como 3^L — e hashing/cópia são
+  lineares nela. Um Qwen2 de 2 camadas levava 23,5 s para baixar e 6,5 s no
+  oráculo. **Correção:** *let-bindings* no `Program` (substituição semântica;
+  pesos como ligações constantes, logo nenhuma chave contém bytes de peso):
+  0,19 s e 0,05 s, e o maior termo não cresce com a profundidade (testado com
+  12 camadas). O worker passou de tabelas fixas (64 buffers/chamadas) para
+  tabelas dimensionadas pelo quadro, com a contagem limitada pelos bytes
+  recebidos.
+  **Paridade com transformers 5.18 / torch 2.14 (float32):** cinco variantes
+  (Llama com viés e cabeça solta, RoPE Llama 3, RoPE linear com MHA, Mistral,
+  Qwen2 com cabeça atada e 1 cabeça KV): |Δlogit| máximo relativo
+  2,7·10⁻⁷ … 5,6·10⁻⁷ (tolerância declarada 10⁻⁵); decodificação gulosa de 16
+  tokens idêntica nas cinco, sem empates. Modelo inteiro bit a bit igual ao
+  oráculo em x86, interpretador RVV, AArch64 e RVV (QEMU); invariância a lote
+  (prefill = passos de decode) verificada.
+  **Reordenado:** a quantização na ingestão sai de P2 para depois de P3 — o
+  erro que ela introduz só tem significado medido contra a referência f32.
+- Quantização na ingestão — `Llama.program(..., quantize: :sb4)` guarda toda
+  matriz de projeção e a cabeça em superblocos de 4 bits (o embedding fica
+  f32: é consultado, não multiplicado). O `qgemv` passou a aceitar
+  `x : f32[b, k]`: cada linha de ativação é um GEMV independente, com as
+  mesmas instruções na mesma ordem que `b = 1` — invariância a lote no
+  kernel, nos três ISAs, no interpretador e no SPIR-V (despacho `rows·b`).
+  Para caber nos 14 GPRs do x86 sem perder a variante de 2 linhas por
+  iteração, o registrador-base de W foi eliminado (a linha seguinte começa
+  onde terminou o último ponteiro de linha) e a contagem de sub-blocos é
+  relida dos argumentos num registrador novo (intervalos de vida são
+  envoltórias). Bench GEMV 4096² sem regressão (66–80 ms observados).
+  **Qualidade medida** (Llama largura 256, pesos gaussianos, 24 posições,
+  contra os logits float32 do transformers): `sb4` (4,6875 bit/peso) erro
+  RMS relativo 0,161 e KL média 0,0129; Q4_1 de referência (5 bit/peso)
+  0,158 / 0,0129; Q4_0 (4,5 bit/peso) 0,190 / 0,0178. O teste exige
+  `sb4` ≤ 1,25× Q4_1 nas duas medidas. O erro absoluto alto é próprio de um
+  modelo minúsculo de pesos aleatórios (sem redundância); não é uma
+  previsão de perplexidade em modelos treinados.
+- P4 (tokenizador) — `Vapor.Tokenizer`: BPE byte-level (GPT-2, Llama 3,
+  Qwen2) e BPE SentencePiece com *byte fallback* (Llama 2), um único
+  procedimento de fusão por prioridade em `O(n log n)` (heap + lista
+  duplamente ligada; por posto de merge ou por score do vocabulário), tokens
+  guardados pela sua superfície em bytes (decodificar é concatenar).
+  Fontes: GGUF (`Vapor.Ingest.GGUF`, antecipado de P8: o hub HF é bloqueado
+  por política aqui; os vocabulários reais chegam como os GGUF só-vocabulário
+  do llama.cpp via raw.githubusercontent, `make fixtures`, SHA-256 fixado) e
+  `tokenizer.json`.
+  **Resultados:** os 4 vocabulários reais (Llama 3, Qwen2, GPT-2, Llama 2)
+  reproduzem os 184 vetores que o Hugging Face gerou para eles; contra a
+  biblioteca `tokenizers` em 7 configurações (as convertidas pelo
+  transformers e as opções originais de cada lançamento: `ignore_merges` do
+  Llama 3, NFC do Qwen2, normalizador Prepend+Replace do Llama 2) × 415
+  textos adversariais: ids e bytes decodificados idênticos.
+  **Descoberta:** o NFC do OTP (`:unicode.characters_to_nfc_binary`) compõe
+  através de uma marca de classe 0 (`и ๎ ̈` → `ӥ ๎`), violando UAX #15 — e
+  muda ids de token no Qwen2. `Vapor.Unicode` implementa NFC/NFKC pela
+  definição (tabela de 941 compostos primários derivada em compilação);
+  igual ao `unicodedata` do Python em todo ponto de código até U+2FFFF e em
+  20 000 sequências aleatórias de marcas.
+  Velocidade (1 núcleo, BEAM): ~330 mil tokens/s codificando texto em inglês
+  (Llama 3); carga do `tokenizer.json` de 11,6 MB em ~4,5 s.
+
+- 2026-09-30 — **diretriz nova: "HPC máximo", pipeline ponta a ponta, zip final.**
+  Escrutínio das formas de paralelismo pertinentes a este sistema e onde
+  cada uma entra (a garantia a preservar: resultados bit-idênticos
+  independentemente de quantas threads, de quantas sequências no lote e de
+  onde o KV mora):
+
+  | forma | onde | invariante verificado |
+  |---|---|---|
+  | SIMD | já: AVX2, NEON, RVV (VLEN 128–512); **AVX-512** novo backend | mesmos bits que o oráculo |
+  | threads (intra-op) | worker: pool de threads com barreira; cada chamada carrega um *descritor de partição* (qual argumento conta linhas, quais ponteiros avançam quantos bytes por linha) | igual para 1…N threads (linhas independentes) |
+  | lote contínuo | motor: prefill em blocos + decode no mesmo passo | tokens de uma sequência iguais sozinha ou em lote |
+  | PagedKV | kernels `kv_write`/`attention` com tabela de blocos | paginado = contíguo bit a bit |
+  | réplicas (dados) | pool de sessões, uma por worker, requisições distribuídas | — |
+  | concorrência BEAM | um processo por conexão HTTP, motor como GenServer, streaming SSE | — |
+  | memória | pesos mmap compartilhados entre workers, sessões residentes | — |
+  | especulação | decodificação especulativa com rascunho; aceitação por comparação greedy | saída idêntica à sem especulação |
+  | GPU | SPIR-V dos operadores de modelo (lavapipe aqui) | fabric = oráculo |
+
+  Todas as linhas da tabela estão implementadas e testadas; o estado de
+  cada uma está nos itens abaixo e em [ARCHITECTURE.md §4.6](ARCHITECTURE.md).
+
+- P5 (geração e serviço) — `Vapor.Sampler` (binary64 + SplitMix64, truncamento
+  exato; amostragem gulosa e por temperatura também como operador `sample`
+  no substrato), `Vapor.Engine` (lote contínuo sobre KV paginado, páginas
+  reservadas na admissão — sem impasse nem preempção), `Vapor.Serve`
+  (HTTP/1.1 + SSE em `:gen_tcp`, `/v1/completions`, `/v1/chat/completions`,
+  `/v1/models`, modelos de chat ChatML, Llama 3 e `[INST]`), CLI
+  (`mix vapor.generate | serve | demo_model | export | bench | shm`).
+  **Resultados:** invariância a lote testada (9 requisições concorrentes =
+  cada uma sozinha, sob qualquer fatiamento de prompt e número de threads);
+  o cliente `openai` oficial conversa com o servidor, com e sem streaming;
+  `make e2e` percorre eclusas → tokenizador → compilador → motor → HTTP →
+  cliente. Amostragem no substrato: 1,8 → 316 tokens/s num vocabulário de
+  151 936 (a ordenação na BEAM era o gargalo).
+  **Robustez:** um worker que morre sob um passo encerra as sequências que
+  ele guardava com `{:done, :error, …}` (HTTP 503, ou evento de erro no
+  SSE), o worker renasce, a sessão é reaberta e o motor continua.
+
+- P6 (medição) — `mix vapor.bench` gera [bench/BENCH.md](bench/BENCH.md),
+  `roofline.svg` e `engine.svg`, tudo medido na hora: kernels por ISA e
+  threads, motor por concorrência/threads/ISA/armazenamento/réplicas,
+  prefill, ULP das funções canônicas contra binary64, tokenizador. Esta VM
+  (Xeon 2,1 GHz, 2 vCPUs) não expõe PMU: o tempo de CPU vem do task-clock.
+  Números de 2026-10-01: teto de memória 53 GB/s; GEMV f32 2048² 0,28 ms
+  (60 GB/s); GEMV bf16 2048² 0,17 ms; linear 512² × 64 linhas 84 GFLOP/s
+  (AVX-512, 2 threads); motor Llama 256-largura/4 camadas/vocab 32 000:
+  ~1 500–1 800 tokens/s com 8 sequências, prefill ~5 500 tokens/s;
+  tokenizador Llama 3 ~535 mil tokens/s num núcleo da BEAM. Variam com a
+  carga do host (VM compartilhada): a fonte é sempre o BENCH.md da execução.
+
+- P7 (autodiff e destilação) — `Vapor.Autodiff`: modo reverso de termos em
+  termos (gradientes são programas como quaisquer outros: baixados,
+  executados em todo substrato, bit a bit iguais e certificados); operador
+  `transpose`. `Vapor.Train`: LoRA na última MLP + cabeça, perda KL contra o
+  professor, AdamW — um passo de treino é **um programa recorrente**, a
+  corrida inteira roda no worker atrás de uma travessia. **Resultados:**
+  gradientes = diferenças finitas (oráculo); a adjunta dos kernels
+  transpostos é certificada pela Rung 3; KL 0,051 → 0,00093 em 120 passos
+  num modelo pequeno (~20 ms de worker); bits idênticos em 1–3 threads e no
+  fabric.
+
+- P8 — **especulação** (`Vapor.Speculative`): rascunho propõe `k`, alvo
+  verifica `k+1` linhas num passo; pela invariância a lote a saída é
+  *idêntica* à do alvo sozinho (testado), a aceitação só muda a velocidade
+  (rascunho igual 1,0; parecido 0,66; sem relação 0,0).
+  **GGUF** (`Vapor.Ingest.GGUF`, `Vapor.Ingest.GGML`, `Vapor.Model.GGUF`):
+  desquantização de F32/F16/BF16/Q8_0/Q4_0/Q4_1/Q5_0/Q5_1/Q4_K/Q5_K/Q6_K
+  bit a bit igual à do `gguf-py`; a permutação q/k do conversor do llama.cpp
+  desfeita; `rope_freqs` do Llama 3 como fatores. Um GGUF produzido pelo
+  próprio `convert_hf_to_gguf.py` (do sdist do PyPI) reproduz os logits do
+  transformers: f32 com erro relativo 5,6·10⁻⁷, q8_0 dentro da sua
+  quantização. **Exportação** (`Vapor.Model.GGUF.write/4`, `mix vapor.export
+  --out x.gguf`): f32 e q8_0 (quantização bit a bit igual à do `gguf-py`,
+  empates incluídos); `load(write(m)) = m`; o **llama.cpp** (libllama
+  compilada do mesmo sdist) carrega o arquivo, tokeniza com o nosso
+  vocabulário exatamente como o vapor e reproduz os logits (f32 ≤ 10⁻⁴,
+  q8_0 ≤ 5 % do maior logit — o llama.cpp quantiza também as ativações) para
+  Llama e Qwen2.
+  **SPIR-V dos operadores de modelo**: gather, RoPE, escrita de KV (cópia, no
+  lugar, paginada, última escrita vence), atenção contígua e paginada (três
+  passadas que recalculam os escores — sem memória de rascunho), amostragem
+  e transposição; o daemon passou a tabelas dimensionadas pelo quadro. Um
+  modelo inteiro, o passo paginado com amostragem do motor e o decode
+  recorrente rodam no lavapipe **bit a bit iguais ao oráculo**; um modelo
+  `storage: :bf16` é certificado com paridade em fabric, AVX2, AVX-512,
+  RVV e oráculo.
+  **AVX-512**: backend EVEX completo (ver ARCHITECTURE §3.2), bit a bit igual
+  ao oráculo em todo programa canônico, modelo inteiro, atenção paginada,
+  amostragem, `sb4` e gradientes; o binutils decodifica toda instrução de
+  todo kernel. Ganho medido: `x·silu(x)` 2,3×, linear em lote 1,4×, atenção
+  1,2×; kernels limitados por banda ficam iguais, como o roofline prevê.
+  Mamba fica fora: nenhuma arquitetura pedida aqui o usa.
+
+- HPC — réplicas (`Vapor.Engine.Pool`, `--replicas N`): uma compilação,
+  pesos nas mesmas páginas (`/dev/shm` endereçado por conteúdo), roteamento
+  para a menor fila, réplica morta substituída sem afetar as outras; mesma
+  resposta por qualquer réplica (testado). **bf16 residente**
+  (`storage: :bf16`): instrução portátil `vld_bf16` nos quatro backends e
+  no SPIR-V, `gemv_bf16` e `gather_row_bf16`; o programa é *bit a bit* o
+  programa f32 sobre os pesos arredondados (testado em todo substrato, no
+  motor e pela escada); GEMV com metade dos bytes: 2× mais rápido nesta
+  máquina (0,59 vs 1,22 ms em 4096², 2 threads — limitado por banda nos dois
+  casos). Um checkpoint bf16 do Hugging Face entra sem ser alargado.
+
+- Safetensors completo — todos os dtypes do formato reconhecidos (tamanhos
+  conferidos, sub-byte em bits): F64 arredondado como torch/numpy;
+  F8_E4M3, F8_E4M3FNUZ, F8_E5M2, F8_E5M2FNUZ e F8_E8M0 alargados exatamente
+  (os 256 padrões de cada um iguais ao `.float()` do torch, NaN incluídos);
+  inteiros de 16/64 bits e sem sinal levados a s32 quando cabem (senão
+  recusa nomeando o tensor); BOOL; F4/F6/C64 reconhecidos e recusados pelo
+  nome. Escrita em F32 ou estreitada para BF16/F16 (RNE; igual ao torch em
+  20 000 padrões com empates, subnormais e overflow), forma com shards e
+  `model.safetensors.index.json`. `Config.to_map/1` (inverso testado de
+  `from_map/1`) e `Vapor.Model.write/4` (`mix vapor.export --out DIR`):
+  o transformers carrega o diretório exportado pelo vapor e reproduz **bit a
+  bit** os logits do checkpoint original nas cinco variantes; em BF16, os
+  logits do vapor sobre os mesmos pesos ficam dentro de 10⁻⁵. Um modelo
+  entra por GGUF e sai como diretório Hugging Face com shards bf16 —
+  percorrido no `make e2e`.
+
+- 2026-10-01 — **diretriz nova: modelos de fronteira, agentes, RAG, "agentes
+  imutáveis"; depois, o ecossistema Elixir.** O escrutínio completo e o
+  desenho estão em [AGENTES.md](AGENTES.md) e
+  [ECOSSISTEMA_ELIXIR.md](ECOSSISTEMA_ELIXIR.md). Os vereditos:
+
+  | proposta | veredito | motivo técnico |
+  |---|---|---|
+  | modelos de fronteira (arquiteturas abertas) | **sim**: Qwen3, Qwen3-MoE, Mixtral, Gemma 3, DeepSeek-V3 | cada peça nova reduzida a contrações exatas (seleção 0/1, posto por contagem, `sel`), sem operador "aproximado"; paridade com `transformers` ≤ 8·10⁻⁷ |
+  | modelos de fronteira (hospedados) | **sim, como observação** | OpenAI-compatível e API de Mensagens; a decisão é registrada, não reproduzida — dizê-lo é parte da garantia |
+  | "mais um framework de agentes" | **não** | o laço é commodity; o que só o vapor tem é determinismo ⇒ execução como objeto de prova (repetir = verificar) |
+  | agentes imutáveis | **sim, com cinco leituras e seus limites** | spec como valor; diário só-acréscimo; capacidades no digest; repetição como prova; apagamento por destruição de chave |
+  | "exatamente uma vez" | **reformulado** | no máximo uma vez com destinatário idempotente (chave estável por passo); é o que existe |
+  | RAG | **sim, verificável** | corpus = raiz Merkle; recuperação = função (BM25 com log CR, densos certificados, RRF exato); citações literais por construção |
+  | saída estruturada / tool calls | **sim, por construção** | gramática de bytes sobre a trie do vocabulário; nenhum *retry* |
+  | templates de chat | **sim, hermético** | Jinja próprio com a semântica do ambiente do HF; byte a byte igual ao `jinja2` em 240 renderizações reais |
+  | funções elementares | **corretamente arredondadas** para tabelas (RoPE/YaRN) | Ziv: binary64 + inteiro de precisão crescente; validado contra mpmath; digests fixados |
+  | codificação canônica | **CBOR determinístico** (RFC 8949 §4.2) | `term_to_binary` não é contrato entre versões do OTP nem entre linguagens; certificados verificáveis em Python |
+  | Phoenix/Plug, Nx, Livebook | **sim, fora do núcleo** | `integrations/` com dependências próprias; núcleo `deps: []` |
+  | Ecto, Oban, LiveView, Broadway | ***behaviours*/ganchos + receitas** | `Store`, `on_event:`, cancelamento por monitor |
+  | AtomVM, Membrane, Riak | **não** | sem *ports*/MMU; sem modelos de mídia; armazenamento endereçado por conteúdo serve melhor |
+
+  **Descobertas** (cada uma com teste):
+  - Funções elementares: o caminho rápido de Ziv não decidia nada para
+    resultados negativos (pontos médios trocados): 27 % caíam no caminho
+    lento. `log(1)` ficava em laço infinito (o teste de exatidão diádica
+    estava errado).
+  - Um laço `let` morto sem saídas quebrava o *lowering*. Agora há
+    eliminação de código morto.
+  - O `transformers` 5 escreve `num_local_experts` no Qwen3-MoE. As normas
+    latentes do DeepSeek usam ε = 10⁻⁶, não `rms_norm_eps`.
+  - Servidor: uma requisição restrita derrubava o motor e ficava pendurada
+    para sempre. Agora o motor é monitorado e exceções viram 500. Clientes
+    desconectados ocupavam o lote até `max_tokens`; agora são cancelados.
+  - Gramática: três becos sem saída (escape no limite de `maxLength`,
+    surrogates soltos, UTF-8 malformado), achados por teste de propriedade
+    e por um modelo aleatório no Livebook.
+  - Mix ≥ 1.15 poda o *code path*: `:inets`/`:ssl` precisavam ser declarados.
+  - Uma corrida antiga, exposta pelo *timing* do Elixir 1.18: escrever num
+    worker recém-morto (EPIPE) virava sinal de saída pelo *link* do *port*
+    e derrubava o motor. Os donos de *port* agora interceptam saídas.
+  - **ZK/FHE** (proposta de 2026-10-01, escrutínio em [ZK_FHE.md](ZK_FHE.md)):
+    as zkVMs são RV32IM, então “RVV para zkVM” cai. Ponto flutuante não é
+    aritmética de corpo, e o fragmento inteiro sim, com a ponte provada em
+    Lean. Com pesos públicos, os recibos já verificam por reexecução, e o
+    ZK só acrescenta privacidade e sucintez. Construídos: corpos/NTT,
+    R1CS → Groth16 → EVM (209 922 gás de execução medidos, contra os
+    “< 200k” prometidos) e polinômios com erro provado. Recusado: CKKS/BFV
+    sem auditoria. A revisão independente achou dois furos de solidez no
+    circuito, ambos corrigidos e testados: a entrada privada não tinha
+    checagem de faixa (dava para alcançar qualquer saída), e um ReLU em
+    corpo pequeno podia ter duas decomposições.
+  - A revisão independente achou mais defeitos, todos corrigidos e
+    testados. A retomada podia seguir de um prefixo que não verificava e
+    agir. Um histórico apagado deixava a retomada em laço. Uma execução
+    parada por `max_steps` não verificava. Dois retomadores podiam agir os
+    dois; agora a ação é anunciada antes. Um titular apagado ganhava chave
+    nova em silêncio. O comprimento de string do caminho rápido era contado
+    em grafemas.
+  - A divisão canônica não é a IEEE: até 1 ulp de diferença (era sabido,
+    nunca medido contra uma referência externa; o avaliador do Nx mediu).
+
+# Agentes imutáveis, RAG verificável e modelos de fronteira
+
+Este documento registra o escrutínio da diretriz desta rodada, o desenho
+que saiu dele e — com o mesmo peso — o que **não** é garantido. Tudo que
+aparece como fato aqui tem teste no repositório. O nome do teste vai entre
+parênteses.
+
+## 1. A diretriz, examinada
+
+> *“zip refinado + suporte a modelos fronteira + agentes + rag + o que mais
+> for pertinente + reflita sobre agentes imutáveis → esta própria diretriz
+> está sujeita a refinamentos e escrutínio → resultado deve resolver as
+> dores reais da indústria e academia com inovação real, pensamento lateral
+> e primeiros princípios”*
+
+Cada termo da diretriz admite mais de uma leitura. A leitura escolhida
+decide o que vale a pena construir.
+
+**“Modelos de fronteira” tem duas leituras, e as duas valem.** A primeira
+é rodar localmente, com a garantia do vapor, as *arquiteturas* das famílias
+de fronteira abertas: Qwen3, Qwen3-MoE, Mixtral, Gemma 3 e DeepSeek-V3
+(MLA + MoE). A segunda é usar os *modelos hospedados* (Claude, GPT, ou
+qualquer servidor compatível com OpenAI) como cérebro de um agente. As duas
+estão implementadas, mas são de naturezas diferentes, e o desenho torna
+essa diferença explícita. Uma decisão de um modelo local é **re-derivável**:
+é função pura de pesos, tokens, parâmetros e semente, com os mesmos bits em
+qualquer substrato. Uma decisão de modelo remoto é **observação**: pode ser
+registrada e protegida contra adulteração, mas não reproduzida. A semente
+da OpenAI é declaradamente de “melhor esforço”, e a API de Mensagens da
+Anthropic não oferece semente. Nenhum texto deste projeto promete o
+contrário.
+
+**“Agentes” não pedem mais um laço de orquestração.** Frameworks de
+agentes existem às dezenas, e mais um laço `pensar → chamar ferramenta →
+observar` não resolve dor nenhuma. O que o vapor tem de único é o
+**determinismo**: invariância a lote, a threads e a substrato, com
+certificado. A pergunta de primeiros princípios passa a ser outra: *o que
+um agente pode ser quando o seu modelo é uma função?* A resposta orienta
+todo o resto. Uma execução deixa de ser um log e vira um **objeto de
+prova**, que qualquer um com os mesmos pesos pode repetir e conferir.
+
+**“RAG” pela mesma lente.** Ninguém precisa de outro índice vetorial. As
+dores reais são três: o resultado não se reproduz, ninguém prova de qual
+corpus veio a resposta, e o modelo inventa citações. O RAG daqui ataca
+essas três.
+
+**“Agentes imutáveis” tem pelo menos cinco leituras**, e cada uma tem um
+limite:
+
+| leitura | o que entrega | o que *não* entrega |
+|---|---|---|
+| a definição do agente é um valor (endereçado por conteúdo, com linhagem) | saber exatamente *qual* agente agiu; versões comparáveis | correção: um agente imutável pode estar imutavelmente errado |
+| a execução é só-acréscimo e evidente a adulteração | auditoria, atribuição, prova de inclusão de um evento | verdade dos fatos observados: registra-se o que a ferramenta disse, não o que o mundo era |
+| o agente não muda as próprias capacidades no meio da execução | injeção de prompt não escala privilégio | que o modelo não *tente*; a tentativa fica registrada e é negada |
+| repetir é provar | verificação independente das decisões locais e das ferramentas puras | re-execução do mundo: `observe`/`act` nunca são re-executadas |
+| imutável *versus* direito ao esquecimento | apagamento por destruição de chave (*crypto-shredding*) | apagamento de metadados estruturais: nomes de ferramentas e a forma da execução permanecem |
+
+A última linha é o conflito que a palavra “imutável” costuma esconder. Um
+log imutável de dados pessoais colide com o art. 17 do RGPD e o art. 18 da
+LGPD. A resolução não exige escolher entre auditoria e privacidade: o
+conteúdo é cifrado por titular, e só a cifra é encadeada. Destruir a chave
+apaga o conteúdo em todo lugar, inclusive nos backups, e a cadeia, a raiz
+Merkle e as provas continuam válidas.
+
+**O que a diretriz não pediu e as dores pedem.** Uma execução sobrevive à
+queda do processo? Uma ação externa (e-mail, pagamento) acontece no
+máximo uma vez quando o agente cai no meio dela? Quem garante que o
+diário guardado não foi reescrito *por quem o guarda*? O §3 responde as
+três perguntas.
+
+## 2. Dores reais → peças
+
+| dor | contexto | o que o vapor faz | evidência |
+|---|---|---|---|
+| chamadas de ferramenta malformadas, nomes inventados, argumentos fora do esquema (laços de *retry*) | comum até em modelos grandes; pior nos pequenos | a chamada é decodificada sob gramática derivada dos esquemas declarados: nome declarado, argumentos válidos **por construção** | `agentic_serve_test` (`tool_choice: "required"` com modelo de pesos aleatórios: 100 % válido) |
+| saída estruturada que às vezes não é JSON válido | `response_format` com `json_schema` | gramática de JSON Schema (subconjunto declarado; o resto é recusado pelo nome, ou aceito com `lenient: true`) | `grammar_test`, `agentic_serve_test` |
+| resultados de LLM não reproduzíveis, nem com semente | o lote muda os bits dos *kernels* usuais (He et al., Thinking Machines, 2025: *Defeating Nondeterminism in LLM Inference*) | invariância a lote e a substrato **já era** propriedade do vapor; cada resposta leva um recibo (`x-vapor-receipt`) = digest canônico de modelo, ids do prompt, parâmetros e ids gerados | `serve_test`, `engine_test` |
+| reprodutibilidade acadêmica | quem tem os pesos deve conseguir refazer o número do artigo | recibos + execução certificada; um Livebook que roda como teste | `notebook_test` |
+| citações alucinadas em RAG | o modelo “cita” o que não está na fonte | dentro de `<quote src="i">…</quote>` só podem sair bytes que continuam uma substring da fonte *i* (autômato de sufixos); `check_citations` reconfere respostas de qualquer origem | `rag_test` (modelo aleatório: só cita literalmente) |
+| “de qual corpus veio isso?” | versões de índice, reindexação em outro hardware | corpus = raiz Merkle (RFC 6962); BM25 com log corretamente arredondado; escores densos como programa certificado; RRF em racionais exatos; recibo de recuperação re-verificável | `rag_test` |
+| obrigação de registro de eventos | AI Act da UE, art. 12 (registro automático em sistemas de alto risco) e art. 19 (guarda) | diário encadeado por hash + raiz Merkle + **atestado Ed25519** do nó que executou; prova de inclusão de um evento sem revelar os outros | `agent_test` |
+| apagamento de dados pessoais em logs imutáveis | RGPD art. 17, LGPD art. 18 | *crypto-shredding* por titular: entrada, textos, tokens, argumentos, resultados e erros selados; estrutura legível para auditoria | `agent_test` (“erasure”) |
+| injeção de prompt levando a ações | texto lido por ferramenta pode instruir o modelo | capacidades (`grants`) fazem parte do digest do agente; ferramenta `act` sem concessão é negada, e a negação é registrada; `confirm:` registra a aprovação humana | `agent_test` |
+| agente cai no meio do fluxo; ação duplicada | e-mail enviado duas vezes, cobrança dupla | diário gravado antes do passo seguinte (*write-ahead*); toda ação é anunciada (`intent`) e gravada **antes** de acontecer; retomar é repetir (nada do que foi gravado se repete); chave de idempotência estável por (execução, passo, chamada); de dois retomadores, só um anuncia cada ação | `agent_store_test` |
+| template de chat errado degrada o modelo em silêncio | cada modelo traz o seu Jinja | interpretador Jinja hermético, byte a byte igual ao `jinja2` do Hugging Face | `template_test` (240 renderizações de 20 templates reais + 40 trechos) |
+| cliente desconecta, GPU segue gerando para ninguém | desperdício de lote | o motor monitora o processo destinatário: se ele morre (LiveView fechada, job morto), as suas sequências saem do lote no passo seguinte, também através das réplicas; no HTTP, um cliente de *streaming* que desconecta é cancelado na escrita seguinte (TCP e Plug). Uma requisição sem *streaming* roda até o fim (limitada por `max_tokens`) | `engine_test`, `serve_test`, `vapor_plug_test` |
+| dependência de fornecedor | trocar de provedor reescreve o agente | o mesmo agente roda com modelo local, qualquer servidor OpenAI-compatível (inclusive o próprio vapor) ou a API de Mensagens; ferramentas MCP | `agent_test` (AgentBackendsTest) |
+
+## 3. O desenho
+
+```
+Spec (valor, digest, linhagem) ──run──▶ Journal (eventos encadeados, raiz Merkle) ──attest──▶ assinatura Ed25519
+   │ tools: pure | observe | act          │  start · model · tool · intent · tool · … · final|halt
+   │ grants, policy (seed, max_steps)     │
+   ▼                                      ▼
+Backend: Local (re-derivável) | OpenAI | Anthropic (observação)      Store (write-ahead, fencing) ──resume──▶ continua
+```
+
+**Spec** (`Vapor.Agent.Spec`). Nome, instruções, modelo, ferramentas com
+classe de efeito e esquema, concessões e política (semente, passos máximos,
+temperatura). O digest é o hash canônico (CBOR determinístico, RFC 8949
+§4.2) do valor inteiro, e o ambiente entra nele: versão do Unicode do OTP
+e versão da codificação canônica. Duas BEAMs com tabelas Unicode diferentes
+normalizam texto de forma diferente, e isso não pode passar despercebido.
+`evolve/2` cria a versão seguinte com `parent` apontando para a anterior.
+Uma execução de v1 não é aceita como execução de v2.
+
+**Classes de efeito.** Três classes cobrem o comportamento de qualquer
+ferramenta diante da repetição:
+- `pure`: função dos argumentos. Na repetição é **re-executada** e precisa
+  concordar com o registro.
+- `observe`: lê o mundo. Na repetição o resultado é **lido** do registro.
+- `act`: muda o mundo. Só roda com concessão; na repetição **nunca** roda;
+  ao vivo recebe a chave de idempotência.
+
+Ferramentas MCP chegam como `act` quando o operador não declara a classe.
+O MCP não diz o que uma ferramenta faz, e a classe mais restritiva é o
+padrão seguro.
+
+**Journal.** `hashᵢ = SHA-256(canonical({hashᵢ₋₁, i, kind, data}))`, com
+raiz RFC 6962 sobre os hashes. Qualquer linguagem recomputa, porque a
+codificação é CBOR canônico, verificado contra o `cbor2` do Python. Uma
+cadeia de hashes só prova integridade **relativa a uma cabeça em que já se
+confia**: quem guarda o diário pode reescrevê-lo inteiro e reencadeá-lo.
+Por isso existe `Journal.attest/2`. O nó que executou assina (id, número de
+eventos, cabeça, raiz), e um diário reencadeado deixa de ser atestado
+(`agent_test`). Publicar o atestado, ou ancorá-lo num log de transparência,
+fecha a porta.
+
+**Repetir é provar** (`Vapor.Agent.replay/3`). A repetição reconstrói a
+execução a partir do diário. Cada decisão local é **recomputada** e precisa
+dar os mesmos tokens. A invariância entre substratos é o que torna isso uma
+verificação feita em *outra* máquina, e não apenas na mesma. Ferramentas
+`pure` são re-executadas; `observe`, `act` e decisões remotas são lidas;
+os anúncios de ação (`intent`) são re-derivados e conferidos. No fim, o
+diário reconstruído precisa terminar na mesma cabeça. A repetição não toca
+o mundo, e nenhum gancho `on_event:` dispara durante ela.
+
+**Retomar é repetir; durabilidade sem motor de workflow**
+(`Vapor.Agent.Store`). O gancho `on_event:` roda depois de cada evento novo
+e antes do passo seguinte. É o ponto *write-ahead*: se o armazenamento
+recusa, a execução para antes de agir. Toda ferramenta `act` é precedida de
+um evento `intent` (chamada, chave de idempotência, aprovação), gravado
+**antes** de a ação acontecer. `Store.resume/4` repete o prefixo gravado
+sem efeitos e só segue ao vivo se o prefixo **verificou**: outro spec, uma
+decisão recomputada diferente ou um evento fora de ordem fazem a retomada
+parar (`{:error, {:diverged, …}}`) antes de qualquer evento novo. Um
+histórico apagado pode ser verificado como registrado, mas nunca
+continuado. Há duas janelas de queda:
+1. *antes* do anúncio: a ação não aconteceu e acontece uma vez na retomada;
+2. *depois* do anúncio e antes do resultado: a ação pode ter acontecido.
+   A retomada grava um evento `retry` e a repete com a **mesma** chave de
+   idempotência; um destinatário que respeita a chave aplica uma vez só.
+
+A garantia é de **no máximo uma vez com destinatário idempotente**, não
+“exatamente uma vez” em geral. Nenhum sistema distribuído oferece mais do
+que isso (`agent_store_test` cobre as duas janelas). O `Store.File` grava
+cada evento num temporário exclusivo, faz `fsync` e cria um *hard link* com
+o nome final. `link(2)` é atômico e falha se o nome existe, e isso dá duas
+propriedades de uma vez: um evento meio escrito nunca é lido, e dois
+retomadores não gravam o mesmo evento. Como o anúncio (ou o `retry`) é
+gravado antes da ação, **de dois retomadores concorrentes só um anuncia
+cada ação**; o outro recebe `:conflict` antes de tocar o mundo. O limite
+honesto: uma ação já anunciada e ainda em curso não se distingue de uma
+interrompida pela queda. Um segundo retomador que chegue nesse intervalo
+grava o seu `retry` e a tenta de novo, com a mesma chave de idempotência.
+Fechar esse caso exigiria um arrendamento (*lease*) com relógio, que fica
+como trabalho futuro. Ferramentas `pure` e `observe` não são anunciadas, e
+o perdedor pode tê-las executado antes do conflito, o que é inofensivo por
+definição. Um adaptador relacional obtém o mesmo com
+`UNIQUE (run_id, seq)`.
+
+Esse é o contrato de Temporal, Step Functions ou workflows do Oban,
+obtido de dois fatos que o vapor já tinha (determinismo e diário
+encadeado) em vez de um agendador. Uma diferença importa: o Temporal exige
+que o *código* do workflow seja determinístico, e o vapor estende o
+determinismo à *decisão do modelo*.
+
+**Capacidades.** Uma ferramenta `act` sem concessão é negada, e a negação
+entra no diário. Texto lido por uma ferramenta pode convencer o modelo a
+*tentar*, mas não concede nada: as concessões estão no digest, fixado antes
+da execução. `confirm:` coloca um humano no caminho, e a decisão dele
+também vai para o diário: a recusa no resultado (`"not approved"`), a
+aprovação no anúncio (`"approval" => "approved"`).
+
+**Apagamento** (`Journal.seal/4`, `Keys`). Os valores são cifrados com
+AES-256-GCM por titular, com o id da execução como dado associado. O nonce
+é derivado de chave, execução e valor, de modo que selar é determinístico e
+a repetição reproduz os mesmos hashes. São selados: entrada, textos do
+modelo, tokens do modelo local, argumentos de chamadas, resultados e erros.
+Ficam legíveis: tipos de evento, nomes de ferramentas, classes de efeito,
+ids. Uma cifra que não abre com a chave existente é relatada como
+divergência (`:sealed`), não como apagamento. Os recibos e o digest do prompt do modelo local também são selados,
+porque um hash de texto curto confirma um palpite. Depois de
+`Keys.shred/2`, a repetição relata os eventos como `redacted` em vez de
+falhar, e o titular fica marcado como apagado: selar para ele de novo é
+recusado, em vez de criar uma chave nova que faria a cifra antiga parecer
+adulterada. Em produção as chaves moram num KMS/HSM; o
+contrato tem as mesmas três operações.
+
+**Backends.** `Local` renderiza com o template do próprio modelo e restringe
+as chamadas aos esquemas. `OpenAI` atende qualquer servidor compatível
+(OpenAI, vLLM, llama.cpp, Ollama ou o `Vapor.Serve`; neste caso o recibo
+torna o modelo remoto verificável por quem tem os pesos). `Anthropic` fala
+a API de Mensagens (`tool_use`/`tool_result`). O MCP entra por cliente
+stdio próprio (`2025-06-18`), testado contra o SDK oficial.
+
+## 4. RAG verificável
+
+`Vapor.RAG.corpus/2` normaliza o texto (NFC), parte em trechos com offsets
+e faz de cada trecho uma folha Merkle. Com isso:
+
+- o **corpus é um valor**: a raiz nomeia exatamente o que foi indexado;
+- a **recuperação é uma função**: BM25 em binary64 com ordem fixa e
+  logaritmo corretamente arredondado; escores densos como `linear`
+  certificado no worker (mesmos bits em todo substrato, assim como os
+  embeddings de `Vapor.Embed`); fusão RRF em racionais exatos; desempate
+  por id;
+- o recibo `(raiz, método, k, consulta, embedder, ids)` é re-verificável
+  com `verify/2`, e cada trecho leva a sua prova de inclusão.
+
+As citações são literais **por construção**. O modelo escreve livremente,
+mas dentro de `<quote src="i">` só pode continuar uma substring da fonte
+*i*. Isso não garante que a citação *sustente* a afirmação; garante que
+ela *existe* na fonte. Julgar a sustentação continua sendo trabalho de
+quem lê (ou de outro modelo), agora com a certeza de que o texto citado é
+real.
+
+## 5. Modelos de fronteira, localmente
+
+| família | o que exige | como entrou |
+|---|---|---|
+| Qwen3 | normas RMS por cabeça em q/k | `linear` com matrizes 0/1 de seleção (contração exata) |
+| Qwen3-MoE, Mixtral | roteador top-k | posto por contagem + `sel`; especialistas em ordem fixa |
+| Gemma 3 | GeGLU (tanh), normas `(1+w)`, normas sanduíche, √d no embedding, RoPE local/global por camada, `query_pre_attn_scalar` | novas funções canônicas `tanh` e `gelu_tanh`; escala de atenção explícita no termo |
+| DeepSeek-V3 | MLA, MoE com grupos e sigmoide, especialistas compartilhados, YaRN com `mscale_all_dim`, `rope_interleave` | MLA como layout de cabeças (pares RoPE passantes, intercalação como permutação); grupos por seleção exata |
+
+Os resultados vêm de `frontier_test`. Os logits ficam a ≤ 8·10⁻⁷ (relativo)
+do `transformers` 5.18 nas 8 variantes. Os bits são idênticos em AVX2,
+AVX-512, no interpretador RVV, em QEMU aarch64/riscv64 e no Vulkan. Prefill
+é igual a decode passo a passo. Envenenar especialistas *não escolhidos* com
+NaN/∞ não muda um bit, e todo tensor do checkpoint é lido. As tabelas RoPE
+(inclusive YaRN e Llama 3) são **corretamente arredondadas** (`Vapor.CR`,
+estratégia de Ziv) e coincidem bit a bit com as do `transformers` em 95–97 %
+das entradas. As demais diferem porque o `transformers` não arredonda
+corretamente, e os digests estão fixados.
+
+**Limitações honestas.**
+- O MoE é **denso**: todos os especialistas são computados e a seleção é
+  exata. A semântica é a do modelo, mas o custo é `E/k` vezes o necessário.
+  O despacho esparso com a mesma garantia é trabalho futuro.
+- O MLA guarda K/V completos no cache, sem a compressão latente, que é o
+  ganho de memória do MLA.
+- Janela deslizante menor que o cache e *soft-capping* de logits de
+  atenção (Gemma 2) são recusados pelo nome.
+- RoPE dinâmico (NTK) e LongRoPE são recusados.
+
+## 6. Decodificação restrita
+
+`Vapor.Grammar` é uma IR em nível de byte (literais, sequências,
+alternativas, repetições, classes, strings JSON, números, referências,
+substrings). A execução é um conjunto de configurações ao estilo Thompson.
+`Vocab` guarda o vocabulário numa trie e separa os tokens “seguros dentro
+de string”, que levam toda configuração de string ilimitada a uma
+equivalente. É a mesma ideia dos tokens independentes de contexto do
+XGrammar. O custo fica entre 0 e 50 ms por token no vocabulário de 151 936
+do Qwen2. O modo `{:lazy, gatilho}` deixa o texto livre até a chamada abrir;
+o modo `:strict` restringe tudo.
+
+**O que os testes desta rodada acharam e corrigiram.** O critério que
+importa é **nenhum beco sem saída**: todo prefixo aceito tem de poder ser
+completado. Um teste de propriedade (passeios aleatórios enviesados para
+os bytes delicados) revelou três violações:
+1. um escape `\` aceito quando a string já estava no `maxLength`, morto
+   quatro bytes depois;
+2. surrogates soltos em `\uD800`, que nenhum parser estrito aceita;
+3. sequências UTF-8 malformadas: surrogates codificados (`ED A0–BF`) e
+   formas *overlong*.
+
+As três estão corrigidas. O escape só começa se couber, um surrogate alto
+exige o baixo e é recusado no segundo dígito hexadecimal, e o segundo byte
+de `E0/ED/F0/F4` é estreitado pela tabela da RFC 3629. A primeira violação
+apareceu ao executar o Livebook: um modelo aleatório produziu `\u35E` e
+travou.
+
+## 7. O que não é garantido (resumo)
+
+- **Correção do modelo.** Determinismo e certificados dizem *o que* foi
+  computado, não se está certo.
+- **Repetição de decisões remotas.** São observações.
+- **Exatamente uma vez.** É no máximo uma vez com destinatário idempotente.
+- **Ancoragem externa.** O atestado é assinado, mas publicá-lo ou ancorá-lo
+  num log de transparência fica com o operador.
+- **Divisão e transcendentais corretamente arredondadas.** Na política
+  canônica são microprogramas idênticos em todo substrato, a ≤ 1 ulp (÷)
+  do valor IEEE. Só `+ − ×` coincidem com IEEE bit a bit (`vapor_nx_test`).
+- **Dependência da versão do Unicode do OTP.** É registrada no digest do
+  agente, não eliminada.
+
+# ZK e FHE — escrutínio da proposta e o que foi construído
+
+A proposta (anexo de 2026-10-01) pede para transformar o vapor “no
+compilador de ponta para zkML e fheML”, num catálogo de dez itens e uma
+tabela de prioridades. Como a própria diretriz está sujeita a escrutínio,
+este documento separa três coisas: o que é **fato**, conferido com fonte;
+o que é **analogia**, às vezes útil e às vezes enganosa; e o que foi
+**construído e testado** aqui. As fontes estão no fim.
+
+## 1. A pergunta de primeiros princípios
+
+**O que uma prova de conhecimento zero acrescenta ao que o vapor já dá?**
+
+O vapor já torna qualquer saída **re-derivável**. O recibo (`x-vapor-receipt`)
+liga modelo, prompt, parâmetros e saída, e quem tem os pesos refaz a conta
+e obtém os mesmos bits em qualquer substrato. Isso é verificabilidade por
+reexecução. Uma prova ZK acrescenta exatamente duas coisas, e só elas
+justificam o custo:
+
+1. **Privacidade de uma das partes**: a entrada (ou os pesos) não é revelada.
+2. **Verificação sucinta**: verificar custa muito menos do que reexecutar,
+   por exemplo num contrato inteligente.
+
+Quando nenhuma das duas é necessária, uma prova ZK é custo sem benefício.
+O recibo já basta.
+
+**O que FHE acrescenta?** Uma propriedade que nenhuma outra peça do vapor
+dá: o servidor computa sobre dados que **nunca vê**. A avaliação
+homomórfica, porém, é aritmética **inteira modular exata**. Ela já é
+determinística por natureza, e por isso o diferencial central do vapor
+(bits idênticos em todo substrato apesar do ponto flutuante) pesa pouco
+ali. O que o vapor pode oferecer ao FHE é outra coisa: kernels certificados
+(NTT), aproximações polinomiais com erro **provado** e a disciplina de
+recusar o que não sabe garantir.
+
+## 2. Veredito por item
+
+| item da proposta | veredito | por quê |
+|---|---|---|
+| 1.1 “otimizar a emissão RVV para SP1/RISC Zero” | **premissa falsa** | As zkVMs executam **RV32IM**: inteiro de 32 bits, sem vetores nem ponto flutuante (especificação da RISC Zero). O vapor emite RV64GCV com RVV. Seria um backend **novo** (RV32IM, sem `V`, com f32 emulado em software, o que é caríssimo dentro de uma prova). A ideia que sobra é boa e está na direção certa: **separar testemunha e prova**. Ela foi feita, mas por outro caminho (§3.2). |
+| 1.2 aritmetização R1CS/Plonkish de `add`, `mul`, `fma`, `linear` | **feito para o fragmento inteiro** | Ponto flutuante **não** é aritmética de corpo. Cada arredondamento f32 exige decomposição em bits e prova de intervalo, centenas de restrições por operação. Já o `gemm_i8` do vapor é aritmética inteira, e a ausência de *overflow* dele está **provada em Lean**. Esse é o fragmento que vira restrições baratas. |
+| 1.3 corpos BabyBear, Goldilocks, BN254 | **feito (referência exata)** | `Vapor.Field`, com primalidade, 2-adicidade e geradores conferidos. Kernels SIMD com Montgomery/Barrett são trabalho futuro e terão esta referência como oráculo. |
+| 1.4 provar em Lean “Circuit(x,y)=1 ⟺ y=Oracle(x)”, “eliminaria 100% dos riscos” | **parcialmente feito; a promessa é exagerada** | Provado: o lema que liga o limite inteiro à igualdade no corpo (§3.3). A correção do *circuito* em relação à especificação é uma parte do risco. O resto continua de fora: a segurança do sistema de prova, a cerimônia de *setup*, os bugs do provador e do verificador, e a pergunta “estes são os pesos certos?”. Nenhuma prova de circuito elimina 100 % disso. |
+| 1.5 verificador Solidity “< 200k gas” | **feito e medido: a promessa não se sustenta com o verificador padrão** | O verificador Groth16 exportado pelo snarkjs, implantado numa EVM em memória, gastou **209 922 gás de execução**, cerca de 237 k com a transação, para 3 entradas públicas. O piso dos *precompiles* é ≈ 181 k + 6 k por entrada pública. Abaixo de 200 k só com verificador enxuto e poucas entradas. |
+| 2.1 CKKS/BFV como termos da álgebra | **não agora** | Implementar um esquema de criptografia sem auditoria e sem a escolha de parâmetros do *Homomorphic Encryption Standard* seria um brinquedo perigoso. Bibliotecas maduras (OpenFHE, Lattigo, TFHE-rs) existem. O lugar do vapor é **abaixo** delas (kernels, aproximações), não no lugar delas. |
+| 2.2 NTT em AVX-512 e RVV | **referência feita; kernel é o próximo passo** | `Vapor.NTT` (cíclica e negacíclica, `Z_q[X]/(Xᴺ+1)`) bate com o produto ingênuo em quatro corpos. É o **denominador comum** de FHE e de provadores STARK, logo o investimento de kernel com maior alcance. A frase “90 % do tempo é NTT” varia com o esquema e a operação; não foi medida aqui. |
+| 2.3 envelope de Wilkinson = orçamento de ruído | **analogia, não reuso** | O envelope limita erro de arredondamento de forma **determinística**. O ruído CKKS nasce **aleatório**, da cifragem, e se analisa por cotas de pior caso (muito pessimistas) ou de caso médio (heurísticas). O que se reaproveita é a *infraestrutura* de propagar cotas pelo DAG de termos, com funções de transferência novas. |
+| 2.4 ativações por Chebyshev; “Canon já decompõe em polinômios” | **feito, com certificado; a premissa sobre o `Canon` é falsa** | As funções canônicas usam comparação e seleção (`sel`), redução de faixa e Newton. **Não** são polinômios puros. Aproximar por Chebyshev é o passo certo. O que faltava, e foi feito, é **provar** o erro (§3.4). |
+| 2.5 *bootstrapping* inserido pelo *cut sweep* | **analogia** | O *cut sweep* corta regiões por pressão de registradores. Posicionar *bootstrapping* é gestão de níveis (o problema de compiladores como EVA, HECATE ou Fhelipe). O formalismo de cortes no grafo pode inspirar; não é o mesmo algoritmo. |
+| 3 zkFHE para 70 B | **pesquisa, não roteiro** | Ver §4 para a ordem de grandeza: só provar a inferência em claro de um modelo de 13 B já leva minutos de GPU. |
+
+## 3. O que foi construído
+
+### 3.1 Corpos e NTT (`Vapor.Field`, `Vapor.NTT`)
+
+BabyBear (2³¹ − 2²⁷ + 1), Goldilocks (2⁶⁴ − 2³² + 1), o escalar do BN254 e
+998 244 353 = 119·2²³ + 1. Os testes conferem:
+- primalidade (Miller–Rabin), 2-adicidade e que o gerador é não-resíduo, o
+  que implica que a raiz 2ˢ-ésima tem ordem exata;
+- que a NTT inverte e que produtos NTT = produtos ingênuos, cíclicos e
+  **negacíclicos** (o anel do BFV, do CKKS e do ML-KEM);
+- que o mergulho com sinal é injetor abaixo de p/2 e colide logo acima.
+
+### 3.2 Inferência inteira como R1CS (`Vapor.ZK`)
+
+Uma rede int8 (`linear → ReLU → linear`) é compilada para R1CS sobre o
+BN254. A **testemunha da primeira camada é calculada pelo kernel
+`gemm_i8` certificado** do vapor, em qualquer substrato e com os mesmos
+bits; o circuito só a confere. Essa é a separação testemunha/prova que o
+item 1.1 buscava, sem precisar de uma zkVM. Os arquivos saem nos formatos
+binários do iden3 (`.r1cs` e `.wtns`), aceitos pelo ecossistema
+circom/snarkjs.
+
+Três escolhas de desenho:
+- **Pesos públicos são constantes do circuito.** Multiplicar por constante
+  é grátis em R1CS (faz parte da combinação linear). Uma camada densa
+  oculta **não custa restrição nenhuma**, e a última custa uma por saída.
+  O custo da prova está nas não-linearidades (o ReLU custa uma decomposição
+  em bits, `B + 3` restrições por neurônio) e na checagem de faixa das
+  entradas (9 por entrada int8 privada). É o **inverso** da estrutura de
+  custo da CPU.
+- **A entrada privada é int8 porque o circuito diz.** Cada `x + 128` é a
+  soma de 8 bits booleanos. A primeira versão não tinha essa checagem, e a
+  revisão independente mostrou o efeito: o provador podia escolher
+  qualquer valor de corpo para `x`, alcançar qualquer ativação oculta e,
+  com ela, qualquer saída. O enunciado provado agora é exatamente
+  **∃ x ∈ int8ᵏ : modelo(x) = y**.
+- **Pesos privados não são oferecidos.** Com pesos como testemunha
+  privada, a prova diz apenas que *existem* pesos que produzem a saída.
+  Isso é inútil sem um compromisso, dentro do circuito, com um modelo
+  publicado. E mesmo um compromisso diz *quais* pesos, não que eles são o
+  modelo anunciado: o ataque *Hollow-LLM* (2026) mostra pesos “ocos” que
+  passam na verificação de um modelo maior. Constantes no circuito
+  amarram o modelo: a chave de verificação deriva do circuito, e
+  `ZK.digest/1` nomeia os pesos.
+- **Recusa do que o corpo não representa sem ambiguidade.** O compilador
+  calcula as cotas exatas e recusa em dois casos: quando um valor
+  intermediário pode chegar a p/2, e quando a decomposição de um ReLU
+  precisaria de mais bits do que o corpo distingue (`2^(B+1) > p`, caso em
+  que um segundo representante do mesmo valor também caberia). No BN254,
+  contrações int8 ficam muito longe dos dois limites. No BabyBear, uma
+  contração int8 com K ≈ 70 000, ou um ReLU sobre valores perto de 10⁹,
+  já são recusados (testado).
+
+Números desta máquina (`zk_test`, nível `:snarkjs`):
+- 16 → 8 → 3, int8 com entrada privada: **311 restrições, 304 fios**
+  (144 delas são a checagem de faixa das 16 entradas);
+- `snarkjs wtns check` aceita a testemunha;
+- prova Groth16 gerada e verificada, e a mesma prova com uma saída
+  forjada é rejeitada;
+- o verificador Solidity compila (1 721 bytes de EVM) e gasta **209 922 gás
+  de execução** (236 582 com a transação), medido numa EVM do ethereumjs;
+- mudar o valor de qualquer fio isolado quebra alguma restrição, e uma
+  entrada fora de int8 não tem testemunha. Isso é teste empírico, não
+  prova. A garantia formal de não-sub-restrição é a do enunciado acima:
+  fixadas as entradas, cada fio interno é determinado (bits únicos abaixo
+  de p, ReLU e camadas lineares como funções dos fios anteriores). Entradas
+  diferentes com a mesma saída continuam possíveis, e isso é próprio do
+  enunciado “existe x”.
+
+### 3.3 O lema em Lean (`proofs/Vapor/FieldEmbedding.lean`)
+
+```
+embed_injective   : p ∣ a − b, |2a| < p, |2b| < p  ⟹  a = b
+field_parity      : |dot| ≤ K·A·B, 2·K·A·B < p, p ∣ z − dot, |2z| < p  ⟹  z = dot
+machine_field_agree : integer_parity ∧ field_parity  ⟹  máquina de 32 bits = inteiros = corpo
+```
+
+Os enunciados acima estão em notação matemática. Em Lean, cada
+`|2x| < p` é a conjunção `-p < 2 * x ∧ 2 * x < p`.
+
+Junto com o teorema de paridade inteira já existente, isso fecha a cadeia
+*kernel certificado → inteiros → corpo*. As hipóteses do lema (entradas
+int8, cotas abaixo de p/2) são **fatos do circuito**: a checagem de faixa
+garante a primeira, e o compilador recusa o que violaria a segunda. Por
+isso, para uma dada entrada, o valor que o worker calcula é o que o
+circuito impõe. O núcleo do Lean continua sem
+Mathlib, sem `axiom`, sem `sorry`, agora com 45 teoremas, e o módulo
+extraído foi regenerado com o novo digest.
+
+### 3.4 Polinômios com erro provado (`Vapor.Poly`)
+
+Sob CKKS, toda não-linearidade vira polinômio. A prática comum é aproximar
+e **medir** o erro em amostras. `Vapor.Poly` aproxima por Chebyshev e
+**prova** o erro em aritmética racional exata:
+- avalia `p` exatamente numa grade diádica;
+- cerca `f` com a exponencial corretamente arredondada do `Vapor.CR`;
+- entre pontos da grade, usa o resto de interpolação `h²/8 · sup|e''|`,
+  com `sup|p''|` limitado pela desigualdade de Markov.
+
+| função | intervalo | grau | erro **provado** | erro observado | profundidade |
+|---|---|---|---|---|---|
+| sigmoide | [−8, 8] | 7 | 2,9642·10⁻² | 2,9640·10⁻² | 3 |
+| sigmoide | [−8, 8] | 15 | 1,388·10⁻³ | 1,382·10⁻³ | 4 |
+| tanh | [−4, 4] | 15 | 2,776·10⁻³ | 2,765·10⁻³ | 4 |
+| exp | [−1, 1] | 8 | 1,47·10⁻⁸ | 1,22·10⁻⁸ | 4 |
+
+A cota é válida em **todo** o intervalo, não só nas amostras, e fica a no
+máximo 1,21× do erro observado. A grade é de 4 096 pontos, exceto na
+linha da exp, que usa 32 768 porque uma aproximação muito precisa precisa
+de grade mais fina para o termo de resto não dominar. A “profundidade” é
+⌈log₂(d+1)⌉, o mínimo de níveis para multiplicar cifras entre si. Uma
+avaliação CKKS real costuma gastar mais um nível com as constantes.
+
+## 4. Ordem de grandeza (para calibrar a ambição)
+
+- **zkLLM** (CCS 2024) prova a inferência do LLaMA-2 13B em **803 s** numa
+  A100. A prova tem 188 kB e a verificação leva 3,95 s. O compromisso dos
+  pesos leva 986 s e ocupa 11 MB.
+- **Hollow-LLM** (2026) mostra que uma prova ZK de inferência certifica
+  coerência com pesos comprometidos, não que o modelo comprometido é o
+  anunciado.
+- **Groth16 na Ethereum**: o piso imposto pelo custo dos *precompiles*
+  (EIP-1108) é cerca de 181 k + 6 k·ℓ gás, com ℓ entradas públicas. O
+  verificador do snarkjs mediu 210 k de execução aqui.
+
+“Plataforma definitiva de IA confidencial e verificável do mundo” não é uma
+afirmação que este repositório possa sustentar. O que ele sustenta, com
+testes, é menor e mais útil: um caminho exato, provado e de ponta a ponta,
+de um kernel int8 certificado até uma prova Groth16 verificável na EVM, e
+as peças de base (corpos, NTT, polinômios com erro provado) sobre as quais
+o resto pode ser construído sem perder a garantia.
+
+## 5. Próximos passos, em ordem
+
+1. **Kernel NTT certificado** (AVX-512, NEON, RVV, SPIR-V), com
+   `Vapor.NTT` como oráculo bit a bit. É o maior alcance: FHE e STARK.
+2. **Requantização** (`s32 → s8`) como gadget e como termo da álgebra. Ela
+   permite redes inteiras mais profundas com testemunha certificada em
+   todas as camadas.
+3. **Backend PLONK/STARK** (em vez de Groth16, que exige *setup* por
+   circuito) e um compromisso Poseidon que ligue o circuito ao digest do
+   certificado do modelo.
+4. **Cotas de ruído BFV de pior caso** propagadas pelo DAG, a parte honesta
+   do item 2.3.
+5. RV32IM como alvo de zkVM só se um caso concreto pedir. As restrições
+   diretas (§3.2) são mais baratas que emular uma CPU.
+
+## Fontes
+
+- RISC Zero, *zkVM Technical Specification* — “The zkVM implements the RV32IM instruction set”: https://dev.risczero.com/api/zkvm/zkvm-specification
+- Sun et al., *zkLLM: Zero Knowledge Proofs for Large Language Models* (CCS 2024): https://arxiv.org/pdf/2404.16109
+- Gong, Liu, Li, *Hollow-LLM Attack: Computationally Trivial Weights in Zero-Knowledge Verification of LLM Inference* (2026): https://arxiv.org/html/2607.28884v1
+- Nebra, *Groth16 Verification Gas cost*: https://hackmd.io/@nebra-one/ByoMB8Zf6
+- iden3, formatos binários `r1cs`/`wtns` (circom/snarkjs), conferidos pelo próprio `snarkjs r1cs info` e `wtns check` nos testes.

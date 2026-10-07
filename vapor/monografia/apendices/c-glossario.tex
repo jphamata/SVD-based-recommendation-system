@@ -1,0 +1,45 @@
+% ============================================================================
+\chapter{Glossário}\label{ap:glossario}
+% ============================================================================
+
+\begin{description}
+  \item[Adjunta (identidade)] $\langle Wx, v\rangle = \langle x, W^\top v\rangle$; usada no degrau 3 para pegar erros de \textit{layout} e transposição.
+  \item[Árbitro] O componente que escolhe o substrato pelo menor tempo previsto pelo \textit{roofline} de três tetos.
+  \item[Arbitragem] Portfólio que não custa nada (ou rende hoje), nunca perde e às vezes ganha.
+  \item[Backtest] Simulação de uma estratégia sobre dados históricos.
+  \item[BEAM] A máquina virtual do Erlang/OTP; no \vapor{}, o plano de controle.
+  \item[Bootstrap (de curva)] Construção sequencial de uma curva de desconto, um nó por instrumento, cada um reprecificado com os anteriores fixos.
+  \item[CBOR determinístico] Codificação binária (RFC 8949 §4.2) com uma única representação por valor; usada em tudo que é assinado.
+  \item[Certificado] Objeto que acompanha uma resposta e permite conferi-la com um procedimento mais simples que o que a produziu.
+  \item[Controle] Valor que uma implementação quebrada, ingênua ou trapaceira produziria; uma verificação só vale se o controle for recusado.
+  \item[Cut sweep] Estratégia do compilador que fecha uma região fundida quando faltam registradores, em vez de derramar.
+  \item[DRUP] Formato de refutação SAT por propagação unitária reversa, conferido por um verificador independente.
+  \item[DSR] Índice de Sharpe deflacionado: a probabilidade de o Sharpe verdadeiro exceder o máximo esperado de $N$ tentativas sem habilidade.
+  \item[Eclusa] Fronteira de admissão por medição: de modelos, de substratos ou de documentos.
+  \item[Envelope] Cota rigorosa, calculada em racionais diádicos, dentro da qual qualquer substrato conforme tem de cair.
+  \item[Fabric] O processo que executa SPIR-V via Vulkan.
+  \item[Farkas (lema de)] Teorema da alternativa: de dois sistemas lineares, exatamente um tem solução.
+  \item[Fator de grupo ($g$)] Número de registradores físicos que formam um registrador lógico; generaliza o LMUL do RVV.
+  \item[FIX] Protocolo tag=valor de mensagens de ordens e execuções.
+  \item[FOK, IOC, GTC] Validades de ordem: tudo ou nada imediato; imediato, o resto cancela; até cancelar.
+  \item[Hawkes (processo)] Processo de chegadas em que cada evento aumenta temporariamente a intensidade dos seguintes.
+  \item[Invariância de prefixo] Igualdade do sinal calculado com a história inteira e com a história truncada; certificado de ausência de antecipação.
+  \item[ITCH] Protocolo binário de dados de mercado da Nasdaq.
+  \item[KIR] A representação intermediária de kernels do \vapor{}, sobre registradores virtuais tipados.
+  \item[Kupiec (teste de)] Teste de razão de verossimilhança da proporção de exceções de um VaR.
+  \item[Linear scan] Algoritmo de alocação de registradores em tempo quase linear sobre intervalos de vida.
+  \item[Merkle (árvore de)] Árvore de \textit{hashes} cuja raiz resume um conjunto e permite provas de inclusão logarítmicas.
+  \item[Oráculo] Implementação exata da semântica (no núcleo) ou referência externa (nos testes).
+  \item[PBO] Probabilidade de sobreajuste do \textit{backtest}, por validação cruzada combinatória.
+  \item[Política canônica] Semântica numérica fixa bit a bit; oposta à política \code{:fast}.
+  \item[Preços de estado] Preços positivos de um pagamento unitário em cada estado; a sua existência equivale à ausência de arbitragem.
+  \item[Proponente/verificador] Padrão em que uma busca (ou pessoa, ou modelo) propõe e um verificador independente decide.
+  \item[Roofline] Modelo de desempenho em que o tempo é limitado pelo maior dentre cálculo, banda e (no \vapor{}) emissão de instruções.
+  \item[SPIR-V] Representação intermediária de \textit{shaders} do Vulkan.
+  \item[Spill] Escrita de um valor na memória por falta de registrador.
+  \item[Substrato] Lugar onde um programa executa: uma ISA nativa, o interpretador, uma GPU ou o oráculo.
+  \item[SVI] Parametrização da variância total implícita de uma fatia de vencimento.
+  \item[VaR] Perda que só é excedida com probabilidade dada (1\% para o VaR de 99\%).
+  \item[W\^{}X] Política em que uma página de memória é gravável ou executável, nunca as duas.
+  \item[Worker] O processo que executa código de CPU gerado, nativo ou interpretado.
+\end{description}

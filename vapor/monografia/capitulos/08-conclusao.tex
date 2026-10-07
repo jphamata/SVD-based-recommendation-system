@@ -1,0 +1,54 @@
+% ============================================================================
+\chapter{Conclusão}\label{cap:conclusao}
+% ============================================================================
+
+\section{Síntese}
+
+Esta monografia defendeu que \textbf{verificabilidade pode ser uma propriedade de arquitetura}, obtida por construção e a custo baixo, se três decisões forem tomadas desde o início: semântica simbólica e fixa, compilador não confiado com código isolado, e toda resposta acompanhada do seu juiz. O \vapor{} é a evidência: um compilador de tensores sem dependências que emite cinco ISAs com os mesmos bits, confere a alocação com um verificador provado, nunca executa código gerado dentro da máquina virtual e sai de cada compilação com um certificado que nós independentes reproduzem e co-assinam --- e, sobre ele, catorze rodadas de aplicações que herdam essas garantias.
+
+A rodada 0.13 testou a tese num domínio em que ela tem consequências econômicas diretas. O resultado foi o previsto no \autoref{cap:introducao}: um sistema construído para a verificabilidade produziu, sem esforço extraordinário, coisas que a prática usual não produz --- calendários e curvas iguais à referência dia a dia por 89 anos; Monte Carlo com os mesmos bits do oráculo e de outra contagem de \textit{threads}; \textit{backtests} com um certificado de ausência de antecipação; arbitragem decidida exatamente, com a prova entregue a quem quiser conferir; e um livro de ofertas cujo juiz independente achou um defeito real que dois motores compartilhavam.
+
+A rodada 0.14 testou a tese no sentido oposto: em vez de um domínio novo, \emph{qualquer} domínio. Ao trocar as mesas por categoria por uma linguagem pura, uma fornalha de estratégias e uma pedra de toque, o sistema passou de vitrine a ferramenta --- o usuário escreve o problema, a busca o enfrenta contra o acaso com o mesmo orçamento, e o certificado é reconferido por quem não confia nela. Os controles da rodada acharam, mais uma vez, defeitos que os testes não tinham visto: uma lei de escala que estourava em dados sem estrutura, um vazamento de átomos na compilação de expressões e um estado de gerador perdido no caminho sem processo nativo.
+
+\section{Respostas às cinco perguntas}
+
+\begin{description}
+  \item[O quê.] Um compilador e \textit{runtime} de tensores certificados e um ecossistema de mesas --- de modelos de linguagem a finanças --- em que cada número sai com o que permite julgá-lo.
+  \item[Para quem.] Para quem precisa \emph{demonstrar} um resultado: equipes reguladas, auditores de IA, ciência reprodutível, pesquisadores de compiladores e verificação, e estudantes que queiram ver um sistema inteiro, do termo ao registrador.
+  \item[Para que.] Para que ``rodou de novo e deu diferente'', ``o modelo disse'' e ``o \textit{backtest} mostrou'' deixem de ser respostas aceitáveis.
+  \item[Por que.] Porque as falhas que mais custam são de prova, não de desempenho, e porque a prova, feita por construção, custou aqui um fator pequeno --- quando custou.
+  \item[Como.] Pelas inversões da \autoref{tab:inversoes}: ordem de soma fixa e paralelismo entre saídas; verificar em vez de confiar; isolar em vez de embutir; contar o trabalho em vez de prescrever o despacho; e acompanhar cada juiz de um controle.
+\end{description}
+
+\section{Limitações}
+
+As limitações estão espalhadas pelos capítulos, cada uma ao lado da afirmação que limita; aqui estão reunidas as mais importantes.
+
+\begin{itemize}
+  \item \textbf{Desempenho absoluto.} O \vapor{} é mais lento que os compiladores e servidores de inferência de produção. A afirmação é que reprodutibilidade custa pouco \emph{relativamente}, não que o sistema seja o mais rápido.
+  \item \textbf{\textit{Hardware}.} Nenhum silício RVV, ARM ou GPU discreta foi usado; RVV e NEON foram validados sob QEMU, Vulkan sob lavapipe. O caminho de \textit{cooperative matrix} não foi executado.
+  \item \textbf{Transcendentais.} Iguais em todo substrato, mas não corretamente arredondadas (1--2~ulps).
+  \item \textbf{Base confiável.} O modelo padrão da IEEE-754 no \textit{hardware}, o \textit{printer} do extrator, a BEAM, o kernel e o \textit{driver} Vulkan (contido em processo).
+  \item \textbf{Finanças.} Latência de microssegundos, não de nanossegundos; nenhum dado real de mercado; sem XVA, modelos de taxa de vários fatores ou volatilidade calibrada a uma superfície; o gerador do Monte Carlo no worker é antigo.
+  \item \textbf{Bancada aberta.} ``Provado'' é enumeração de um espaço finito; a fornalha não substitui resolvedores especializados; a Alembic é interpretada (de 20 a 50 vezes mais lenta que código nativo da BEAM); a busca roda num nó só.
+  \item \textbf{Avaliação.} Uma máquina; resultados estatísticos de uma semente em vários casos; controles escolhidos pelo autor.
+\end{itemize}
+
+\section{Trabalhos futuros}
+
+A lista de pendências do repositório (\code{docs/TODO.md}) é mantida item a item, cada um com o motivo e o que o fecha. Os mais importantes para a tese são:
+
+\begin{enumerate}
+  \item \textbf{Motor de ofertas de baixa latência} como programa do worker (sem alocação, livro em arranjos por nível), com o mesmo diário e o mesmo juiz fora do caminho crítico, e latência medida com contadores de \textit{hardware}.
+  \item \textbf{Multiplicação inteira de 32/64 bits na álgebra}, nos cinco codificadores: abriria geradores modernos (Philox, Threefry) para o Monte Carlo e o kernel NTT para criptografia homomórfica e provas de conhecimento zero.
+  \item \textbf{Dados de mercado reais}: um dia de ITCH da Nasdaq reconstruído e conferido contra instantâneos publicados; curvas e preços indicativos da ANBIMA.
+  \item \textbf{Juiz em outra linguagem}: o motor ingênuo também em Python, para que a independência seja de linguagem e não só de algoritmo --- a lição do defeito do FOK a mercado.
+  \item \textbf{Arbitragem na superfície inteira}: calendário $\times$ \textit{strike} num só programa linear racional.
+  \item \textbf{Athanor distribuído e Alembic compilada}: repartir o orçamento entre nós e juntar os diários por raiz de Merkle; descer os objetivos numéricos para a álgebra de tensores com o combustível contado por bloco; exportar afirmações para SAT/SMT quando o espaço não cabe na enumeração.
+  \item \textbf{Silício}: RVV 1.0 em placas reais, \textit{cooperative matrix} numa GPU, contadores de desempenho e energia (J/token) em \textit{bare metal}.
+  \item \textbf{Codificadores ligados a semânticas formais de ISA}, reduzindo a base confiável (\autoref{sec:arq-garantias}).
+\end{enumerate}
+
+\section{Considerações finais}
+
+O \vapor{} começou com uma pergunta estreita --- é possível obter os mesmos bits em todo substrato sem perder desempenho? --- e a resposta afirmativa se mostrou mais útil do que a pergunta sugeria. Bits canônicos tornam toda execução repetível; execuções repetíveis tornam diários verificáveis; diários verificáveis tornam agentes, sessões de bolsa e \textit{backtests} auditáveis. Em cada rodada, a mesma separação --- \emph{uma busca propõe, um verificador decide} --- resolveu um problema novo sem mudar o núcleo. A lição de método que fica é modesta e, ao mesmo tempo, exigente: \emph{todo número deve sair com o que permite julgá-lo, e todo juiz deve mostrar que poderia ter recusado.}

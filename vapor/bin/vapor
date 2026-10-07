@@ -1,0 +1,17 @@
+#!/bin/sh
+# vapor — the command line (docs/CLI.md). Runs the compiled tree directly
+# (no Mix start-up) for vapor's own verbs, and the Mix tasks for the rest.
+set -e
+here=$(dirname "$0")
+VAPOR_HOME=$(cd "$here/.." && pwd)
+env=${MIX_ENV:-dev}
+ebin="$VAPOR_HOME/_build/$env/lib/vapor/ebin"
+case "${1:-help}" in
+  serve|tui|ocr|merge|quality|rag|lock|train|generate|export|audit|bench|archive|finance|rl|upscale|substrate|mcp|shm|demo_model)
+    verb=$1; shift
+    MIX_EXS="$VAPOR_HOME/mix.exs" exec mix "vapor.$verb" "$@" ;;
+esac
+if [ ! -d "$ebin" ] || [ "$VAPOR_HOME/mix.exs" -nt "$ebin/vapor.app" ]; then
+  (cd "$VAPOR_HOME" && MIX_ENV=$env mix compile >&2)
+fi
+ERL_LIBS="$VAPOR_HOME/_build/$env/lib" exec elixir --erl "+sbwt none" -e 'Vapor.Main.main(System.argv())' -- "$@"

@@ -1,0 +1,1 @@
+{"algorithm":"behaviour cloning of the analytic expert","dataset_sha256":"becbbce8a2d0969aaadb155e1116f4bf4448e12122c85ca58c3d9f9d493d3446","demo_seed":7,"env":"reacher","episodes":300,"loss":2.4801341351121664e-4,"rows":5876,"seconds":7,"seed":1,"sizes":[8,64,64,2],"steps":6000,"weights_sha256":"36522c2debfd511d96d6fd0fafcf69967ced4e896b77e75016a354e13a840210"}

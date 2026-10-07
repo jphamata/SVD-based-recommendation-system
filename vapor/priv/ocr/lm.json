@@ -1,0 +1,13 @@
+{
+ "about": "the OCR reader's character language model: an interpolated Witten-Bell n-gram counted at load time from these corpora (the reader's own training text, never the held-out text it is measured on), with the Markdown markup deleted (strip) because printed pages carry none. weight, bonus and beam were chosen on a validation set disjoint from every test set (ocr_render.py val 160 101); gate (bits per character above which the model abstains) on a separate random-strings validation set (random 60 303). docs/OCR.md §3b",
+ "corpora": [
+  "../quality/pt_reference.txt",
+  "../quality/en_reference.txt"
+ ],
+ "order": 5,
+ "weight": 0.8,
+ "bonus": 3.0,
+ "beam": 8,
+ "gate": 8.0,
+ "strip": "[`*#|]"
+}

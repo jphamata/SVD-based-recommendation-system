@@ -1,0 +1,4275 @@
+{
+ "t01_grid": {
+  "style": "grid",
+  "font": "C059",
+  "lang": "pt",
+  "size": [
+   1700,
+   870
+  ],
+  "before": [
+   "usam saem consumidor ctx com endereçados do por def escala tokens integrar imagem dor com false MCP ports",
+   "entre próprio das bit backend dono executados def telemetry hardwares forward iguais chaves not def máximos"
+  ],
+  "after": [
+   "plug streaming queda projetos deixava Oban null Uma Ecto avaliador Mix suíte contrato perform event mix",
+   "réplica gravar Hex def iguais LiveView construção certificado forward integração do que cliente Elixir cai foram"
+  ],
+  "table": {
+   "box": [
+    336,
+    234,
+    1289,
+    626
+   ],
+   "rows": 7,
+   "cols": 4,
+   "header_rows": 2,
+   "cells": [
+    {
+     "row": 0,
+     "col": 0,
+     "rowspan": 2,
+     "colspan": 1,
+     "text": "Código",
+     "box": [
+      336,
+      234,
+      511,
+      346
+     ]
+    },
+    {
+     "row": 0,
+     "col": 1,
+     "rowspan": 2,
+     "colspan": 1,
+     "text": "Descrição",
+     "box": [
+      511,
+      234,
+      865,
+      346
+     ]
+    },
+    {
+     "row": 0,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 2,
+     "text": "Trimestre",
+     "box": [
+      865,
+      234,
+      1289,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "T1",
+     "box": [
+      865,
+      290,
+      1077,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "T2",
+     "box": [
+      1077,
+      290,
+      1289,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "MF-13644",
+     "box": [
+      336,
+      346,
+      511,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "integração",
+     "box": [
+      511,
+      346,
+      865,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 43.943,64",
+     "box": [
+      865,
+      346,
+      1077,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 27.266,83",
+     "box": [
+      1077,
+      346,
+      1289,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "XA-34606",
+     "box": [
+      336,
+      402,
+      511,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "inspect",
+     "box": [
+      511,
+      402,
+      865,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 59.660,42",
+     "box": [
+      865,
+      402,
+      1077,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 88.356,70",
+     "box": [
+      1077,
+      402,
+      1289,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "AU-78159",
+     "box": [
+      336,
+      458,
+      511,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "error Plug",
+     "box": [
+      511,
+      458,
+      865,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 33.886,32",
+     "box": [
+      865,
+      458,
+      1077,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 2.331,24",
+     "box": [
+      1077,
+      458,
+      1289,
+      514
+     ]
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "AK-72376",
+     "box": [
+      336,
+      514,
+      511,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "implementa operacional",
+     "box": [
+      511,
+      514,
+      865,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 38.416,65",
+     "box": [
+      865,
+      514,
+      1077,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 69.758,90",
+     "box": [
+      1077,
+      514,
+      1289,
+      570
+     ]
+    },
+    {
+     "row": 6,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "SX-91525",
+     "box": [
+      336,
+      570,
+      511,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "autenticação",
+     "box": [
+      511,
+      570,
+      865,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 79.015,89",
+     "box": [
+      865,
+      570,
+      1077,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 27.471,61",
+     "box": [
+      1077,
+      570,
+      1289,
+      626
+     ]
+    }
+   ]
+  }
+ },
+ "t02_grid": {
+  "style": "grid",
+  "font": "Carlito",
+  "lang": "en",
+  "size": [
+   1700,
+   926
+  ],
+  "before": [
+   "The under verifier Wx with the Why commitment one inference exists all circuit model resource public makes every checked",
+   "weights shapes not receipts stays the the long stay per can private private check input contraction ReLU sweep Private result the"
+  ],
+  "after": [
+   "value and the give input the adds computation are exists circuit parity constraint the what bit signed already cut computed",
+   "monotonicity sweep any Rungs computed are circuit private would can and Wv output rigorous from vs with integers mono cost"
+  ],
+  "table": {
+   "box": [
+    293,
+    234,
+    1168,
+    682
+   ],
+   "rows": 8,
+   "cols": 5,
+   "header_rows": 2,
+   "cells": [
+    {
+     "row": 0,
+     "col": 0,
+     "rowspan": 2,
+     "colspan": 1,
+     "text": "Date",
+     "box": [
+      293,
+      234,
+      467,
+      346
+     ]
+    },
+    {
+     "row": 0,
+     "col": 1,
+     "rowspan": 2,
+     "colspan": 1,
+     "text": "Item",
+     "box": [
+      467,
+      234,
+      769,
+      346
+     ]
+    },
+    {
+     "row": 0,
+     "col": 2,
+     "rowspan": 2,
+     "colspan": 1,
+     "text": "Count",
+     "box": [
+      769,
+      234,
+      883,
+      346
+     ]
+    },
+    {
+     "row": 0,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 2,
+     "text": "Quarter",
+     "box": [
+      883,
+      234,
+      1168,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Q1",
+     "box": [
+      883,
+      290,
+      997,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 4,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Q2",
+     "box": [
+      997,
+      290,
+      1168,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "2025-02-04",
+     "box": [
+      293,
+      346,
+      467,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Lean",
+     "box": [
+      467,
+      346,
+      769,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "95884",
+     "box": [
+      769,
+      346,
+      883,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "24733",
+     "box": [
+      883,
+      346,
+      997,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 4,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$57,573.16",
+     "box": [
+      997,
+      346,
+      1168,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "2024-10-24",
+     "box": [
+      293,
+      402,
+      467,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "it",
+     "box": [
+      467,
+      402,
+      769,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "27931",
+     "box": [
+      769,
+      402,
+      883,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "65564",
+     "box": [
+      883,
+      402,
+      997,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 4,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$34,740.26",
+     "box": [
+      997,
+      402,
+      1168,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "2019-08-08",
+     "box": [
+      293,
+      458,
+      467,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "commitment",
+     "box": [
+      467,
+      458,
+      769,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "38393",
+     "box": [
+      769,
+      458,
+      883,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "22717",
+     "box": [
+      883,
+      458,
+      997,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 4,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$26,017.71",
+     "box": [
+      997,
+      458,
+      1168,
+      514
+     ]
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "2023-02-02",
+     "box": [
+      293,
+      514,
+      467,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "commitment compiled",
+     "box": [
+      467,
+      514,
+      769,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "72992",
+     "box": [
+      769,
+      514,
+      883,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "21156",
+     "box": [
+      883,
+      514,
+      997,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 4,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$80,712.89",
+     "box": [
+      997,
+      514,
+      1168,
+      570
+     ]
+    },
+    {
+     "row": 6,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "2019-01-26",
+     "box": [
+      293,
+      570,
+      467,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "input",
+     "box": [
+      467,
+      570,
+      769,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "86786",
+     "box": [
+      769,
+      570,
+      883,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "45150",
+     "box": [
+      883,
+      570,
+      997,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 4,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$70,301.21",
+     "box": [
+      997,
+      570,
+      1168,
+      626
+     ]
+    },
+    {
+     "row": 7,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "2023-08-02",
+     "box": [
+      293,
+      626,
+      467,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "and from",
+     "box": [
+      467,
+      626,
+      769,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "93616",
+     "box": [
+      769,
+      626,
+      883,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "94008",
+     "box": [
+      883,
+      626,
+      997,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 4,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$62,650.38",
+     "box": [
+      997,
+      626,
+      1168,
+      682
+     ]
+    }
+   ]
+  }
+ },
+ "t03_inner": {
+  "style": "inner",
+  "font": "P052",
+  "lang": "pt",
+  "size": [
+   1700,
+   870
+  ],
+  "before": [
+   "LiveView desconecta resto args com it token gerado nomes Nx test vivem QEMU até continua publica qualquer noreply",
+   "why nós not end test seq gerado seguinte revelou archive reconferidas crypto atestado integração que para dono Nx"
+  ],
+  "after": [
+   "oráculo Ecto Elixir Phoenix dentro requisição aos impls trechos ponte HTTP receita Livebook vocabulário chama RVV q",
+   "null binary adaptador id depende recibo construção são ok integer vapor contra VAPOR sobre gravado chamadas"
+  ],
+  "table": {
+   "box": [
+    371,
+    234,
+    922,
+    626
+   ],
+   "rows": 7,
+   "cols": 3,
+   "header_rows": 1,
+   "cells": [
+    {
+     "row": 0,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Descrição",
+     "box": [
+      371,
+      234,
+      603,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Data",
+     "box": [
+      603,
+      234,
+      792,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Taxa",
+     "box": [
+      792,
+      234,
+      922,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "dos",
+     "box": [
+      371,
+      290,
+      603,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "08/02/2019",
+     "box": [
+      603,
+      290,
+      792,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "908,8%",
+     "box": [
+      792,
+      290,
+      922,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Hex",
+     "box": [
+      371,
+      346,
+      603,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "06/10/2026",
+     "box": [
+      603,
+      346,
+      792,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "742,6%",
+     "box": [
+      792,
+      346,
+      922,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "mais",
+     "box": [
+      371,
+      402,
+      603,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "12/09/2023",
+     "box": [
+      603,
+      402,
+      792,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "651,9%",
+     "box": [
+      792,
+      402,
+      922,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "que",
+     "box": [
+      371,
+      458,
+      603,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "11/01/2025",
+     "box": [
+      603,
+      458,
+      792,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "919,2%",
+     "box": [
+      792,
+      458,
+      922,
+      514
+     ]
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "embedder uma",
+     "box": [
+      371,
+      514,
+      603,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "06/04/2019",
+     "box": [
+      603,
+      514,
+      792,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "95,6%",
+     "box": [
+      792,
+      514,
+      922,
+      570
+     ]
+    },
+    {
+     "row": 6,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "servidor mix",
+     "box": [
+      371,
+      570,
+      603,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "24/09/2022",
+     "box": [
+      603,
+      570,
+      792,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "208,1%",
+     "box": [
+      792,
+      570,
+      922,
+      626
+     ]
+    }
+   ]
+  }
+ },
+ "t04_inner": {
+  "style": "inner",
+  "font": "URWBookman",
+  "lang": "en",
+  "size": [
+   1700,
+   814
+  ],
+  "before": [
+   "canonical exports those proved makes arithmetic against model equal point proof time quorum stays signed",
+   "private public ok input the Wx integers Weights check the input the output cost probe it some including"
+  ],
+  "after": [
+   "compile bit output kernels rewriting and shapes exactly constraint feedback proved costs derived",
+   "intermediate all contrast not the envelope range weights and bound and public private from give the kept"
+  ],
+  "table": {
+   "box": [
+    411,
+    234,
+    1181,
+    570
+   ],
+   "rows": 6,
+   "cols": 4,
+   "header_rows": 1,
+   "cells": [
+    {
+     "row": 0,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Code",
+     "box": [
+      411,
+      234,
+      602,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Item",
+     "box": [
+      602,
+      234,
+      834,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Amount",
+     "box": [
+      834,
+      234,
+      1034,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Rate",
+     "box": [
+      1034,
+      234,
+      1181,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "YU-22784",
+     "box": [
+      411,
+      290,
+      602,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "code the",
+     "box": [
+      602,
+      290,
+      834,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$18,504.53",
+     "box": [
+      834,
+      290,
+      1034,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "817.0%",
+     "box": [
+      1034,
+      290,
+      1181,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "NF-98779",
+     "box": [
+      411,
+      346,
+      602,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "inside",
+     "box": [
+      602,
+      346,
+      834,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$43,990.70",
+     "box": [
+      834,
+      346,
+      1034,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "732.4%",
+     "box": [
+      1034,
+      346,
+      1181,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "HW-10536",
+     "box": [
+      411,
+      402,
+      602,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "hidden public",
+     "box": [
+      602,
+      402,
+      834,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$48,752.52",
+     "box": [
+      834,
+      402,
+      1034,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "844.1%",
+     "box": [
+      1034,
+      402,
+      1181,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "VP-72237",
+     "box": [
+      411,
+      458,
+      602,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "sweep",
+     "box": [
+      602,
+      458,
+      834,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$24,633.28",
+     "box": [
+      834,
+      458,
+      1034,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "352.5%",
+     "box": [
+      1034,
+      458,
+      1181,
+      514
+     ]
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "MG-76207",
+     "box": [
+      411,
+      514,
+      602,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "bit the",
+     "box": [
+      602,
+      514,
+      834,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$98,429.17",
+     "box": [
+      834,
+      514,
+      1034,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "318.4%",
+     "box": [
+      1034,
+      514,
+      1181,
+      570
+     ]
+    }
+   ]
+  }
+ },
+ "t05_booktabs": {
+  "style": "booktabs",
+  "font": "C059",
+  "lang": "en",
+  "size": [
+   1700,
+   926
+  ],
+  "before": [
+   "bound that each the contraction certified per That some exports accepted inside wtns public without why Field",
+   "inference verifier field cost linear wrap ok arithmetic sorts every the oracle range monotonicity floats maximal"
+  ],
+  "after": [
+   "are fragment they bound extents same the circuit compiled wit the can it circuit every weights below canonical",
+   "inputs prove there and sweep maximal this under arithmetic stay costs with prove input this bit proof maximal"
+  ],
+  "table": {
+   "box": [
+    266,
+    234,
+    975,
+    682
+   ],
+   "rows": 8,
+   "cols": 4,
+   "header_rows": 2,
+   "cells": [
+    {
+     "row": 0,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 2,
+     "text": "Quarter",
+     "box": [
+      673,
+      234,
+      975,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Item",
+     "box": [
+      266,
+      290,
+      462,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Count",
+     "box": [
+      506,
+      290,
+      629,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Q1",
+     "box": [
+      673,
+      290,
+      794,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Q2",
+     "box": [
+      838,
+      290,
+      975,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "What",
+     "box": [
+      266,
+      346,
+      462,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "55333",
+     "box": [
+      506,
+      346,
+      629,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "9624",
+     "box": [
+      673,
+      346,
+      794,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "672.6%",
+     "box": [
+      838,
+      346,
+      975,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "checks Why",
+     "box": [
+      266,
+      402,
+      462,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "222",
+     "box": [
+      506,
+      402,
+      629,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "55870",
+     "box": [
+      673,
+      402,
+      794,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "897.1%",
+     "box": [
+      838,
+      402,
+      975,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "neuron",
+     "box": [
+      266,
+      458,
+      462,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "85127",
+     "box": [
+      506,
+      458,
+      629,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "16238",
+     "box": [
+      673,
+      458,
+      794,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "899.8%",
+     "box": [
+      838,
+      458,
+      975,
+      514
+     ]
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "and value",
+     "box": [
+      266,
+      514,
+      462,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "32410",
+     "box": [
+      506,
+      514,
+      629,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "40029",
+     "box": [
+      673,
+      514,
+      794,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "290.8%",
+     "box": [
+      838,
+      514,
+      975,
+      570
+     ]
+    },
+    {
+     "row": 6,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "computes",
+     "box": [
+      266,
+      570,
+      462,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "76890",
+     "box": [
+      506,
+      570,
+      629,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "28054",
+     "box": [
+      673,
+      570,
+      794,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "225.9%",
+     "box": [
+      838,
+      570,
+      975,
+      626
+     ]
+    },
+    {
+     "row": 7,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "every",
+     "box": [
+      266,
+      626,
+      462,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "99027",
+     "box": [
+      506,
+      626,
+      629,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "26161",
+     "box": [
+      673,
+      626,
+      794,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "957.5%",
+     "box": [
+      838,
+      626,
+      975,
+      682
+     ]
+    }
+   ]
+  }
+ },
+ "t06_booktabs": {
+  "style": "booktabs",
+  "font": "Carlito",
+  "lang": "pt",
+  "size": [
+   1700,
+   982
+  ],
+  "before": [
+   "entrega Store alcançável journal modelo ação suíte seq elixir precisam recusar Oban tokens virava Postgres RAG SCM desconexão",
+   "checkpoints roda com port latente sequência máquinas vapor entre confiável que when Uma derrubava LiveView seguinte"
+  ],
+  "after": [
+   "pesos integrações keep que desconecta def repo gravado vapor AtomVM projeto sem true dispositivos que Para tensores suas",
+   "JSON ser conflict store montar Ordem núcleo dono verdade why sem seq monitorar que integer test false job Encaixar são event"
+  ],
+  "table": {
+   "box": [
+    294,
+    234,
+    1039,
+    738
+   ],
+   "rows": 9,
+   "cols": 3,
+   "header_rows": 2,
+   "cells": [
+    {
+     "row": 0,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 2,
+     "text": "Trimestre",
+     "box": [
+      609,
+      234,
+      1039,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Descrição",
+     "box": [
+      294,
+      290,
+      565,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "T1",
+     "box": [
+      609,
+      290,
+      802,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "T2",
+     "box": [
+      846,
+      290,
+      1039,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "bit",
+     "box": [
+      294,
+      346,
+      565,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 72.285,63",
+     "box": [
+      609,
+      346,
+      802,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 88.370,32",
+     "box": [
+      846,
+      346,
+      1039,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "nessa plug",
+     "box": [
+      294,
+      402,
+      565,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 31.692,87",
+     "box": [
+      609,
+      402,
+      802,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 65.518,37",
+     "box": [
+      846,
+      402,
+      1039,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Postgres",
+     "box": [
+      294,
+      458,
+      565,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 61.499,37",
+     "box": [
+      609,
+      458,
+      802,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 37.200,77",
+     "box": [
+      846,
+      458,
+      1039,
+      514
+     ]
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "existe",
+     "box": [
+      294,
+      514,
+      565,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 18.751,57",
+     "box": [
+      609,
+      514,
+      802,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 20.817,61",
+     "box": [
+      846,
+      514,
+      1039,
+      570
+     ]
+    },
+    {
+     "row": 6,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "desempenho socket",
+     "box": [
+      294,
+      570,
+      565,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 43.191,47",
+     "box": [
+      609,
+      570,
+      802,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 27.497,66",
+     "box": [
+      846,
+      570,
+      1039,
+      626
+     ]
+    },
+    {
+     "row": 7,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "why",
+     "box": [
+      294,
+      626,
+      565,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 74.045,13",
+     "box": [
+      609,
+      626,
+      802,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 81.496,52",
+     "box": [
+      846,
+      626,
+      1039,
+      682
+     ]
+    },
+    {
+     "row": 8,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "têm",
+     "box": [
+      294,
+      682,
+      565,
+      738
+     ]
+    },
+    {
+     "row": 8,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 46.867,33",
+     "box": [
+      609,
+      682,
+      802,
+      738
+     ]
+    },
+    {
+     "row": 8,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 63.821,52",
+     "box": [
+      846,
+      682,
+      1039,
+      738
+     ]
+    }
+   ]
+  }
+ },
+ "t07_hrules": {
+  "style": "hrules",
+  "font": "P052",
+  "lang": "pt",
+  "size": [
+   1700,
+   870
+  ],
+  "before": [
+   "fontes defn não Postgres error destinatário Ingestão quando code mesma acontecer id que motor operação fora seguinte",
+   "feito token integer agente conversão topic RAG workers ulp Ecto mesma outro test para vetor RAG MCP unique chega"
+  ],
+  "after": [
+   "destinatário ele monitor quê continua que executados id validado versões entrega Phoenix EMQX embeddings fabric",
+   "motor plug válida que mesma por com resposta Plug PID corpo def mesma Ecto por receita Ecto Axon info numa"
+  ],
+  "table": {
+   "box": [
+    498,
+    234,
+    1198,
+    626
+   ],
+   "rows": 7,
+   "cols": 3,
+   "header_rows": 1,
+   "cells": [
+    {
+     "row": 0,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Data",
+     "box": [
+      498,
+      234,
+      687,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Descrição",
+     "box": [
+      731,
+      234,
+      959,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Valor",
+     "box": [
+      1003,
+      234,
+      1198,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "15/03/2020",
+     "box": [
+      498,
+      290,
+      687,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "nome trap",
+     "box": [
+      731,
+      290,
+      959,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 40.370,37",
+     "box": [
+      1003,
+      290,
+      1198,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "09/04/2021",
+     "box": [
+      498,
+      346,
+      687,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "abaixo fachada",
+     "box": [
+      731,
+      346,
+      959,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 69.752,76",
+     "box": [
+      1003,
+      346,
+      1198,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "26/03/2026",
+     "box": [
+      498,
+      402,
+      687,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "não que",
+     "box": [
+      731,
+      402,
+      959,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 10.037,58",
+     "box": [
+      1003,
+      402,
+      1198,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "04/02/2020",
+     "box": [
+      498,
+      458,
+      687,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "DOWN",
+     "box": [
+      731,
+      458,
+      959,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 47.100,95",
+     "box": [
+      1003,
+      458,
+      1198,
+      514
+     ]
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "05/07/2023",
+     "box": [
+      498,
+      514,
+      687,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Elixir falha",
+     "box": [
+      731,
+      514,
+      959,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 76.454,02",
+     "box": [
+      1003,
+      514,
+      1198,
+      570
+     ]
+    },
+    {
+     "row": 6,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "19/07/2021",
+     "box": [
+      498,
+      570,
+      687,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "GitHub",
+     "box": [
+      731,
+      570,
+      959,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 61.662,46",
+     "box": [
+      1003,
+      570,
+      1198,
+      626
+     ]
+    }
+   ]
+  }
+ },
+ "t08_hrules": {
+  "style": "hrules",
+  "font": "URWGothic",
+  "lang": "en",
+  "size": [
+   1700,
+   814
+  ],
+  "before": [
+   "the weights product field certified ISA from transpose arithmetic model wtns not real bind model equal the",
+   "from parity model can the compiled inference the its the two intermediate network the state extents sweep"
+  ],
+  "after": [
+   "cost every covers names the system covers free circuit are verification substrate the the model model",
+   "admission any computation output here already it rounding exact the input integer Field not value range"
+  ],
+  "table": {
+   "box": [
+    154,
+    234,
+    1066,
+    570
+   ],
+   "rows": 6,
+   "cols": 4,
+   "header_rows": 1,
+   "cells": [
+    {
+     "row": 0,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Date",
+     "box": [
+      154,
+      234,
+      340,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Code",
+     "box": [
+      384,
+      234,
+      565,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Item",
+     "box": [
+      609,
+      234,
+      839,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Amount",
+     "box": [
+      883,
+      234,
+      1066,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "2026-05-14",
+     "box": [
+      154,
+      290,
+      340,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "PQ-38766",
+     "box": [
+      384,
+      290,
+      565,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "code",
+     "box": [
+      609,
+      290,
+      839,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$88,248.30",
+     "box": [
+      883,
+      290,
+      1066,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "2020-08-16",
+     "box": [
+      154,
+      346,
+      340,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "BJ-90719",
+     "box": [
+      384,
+      346,
+      565,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "number",
+     "box": [
+      609,
+      346,
+      839,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$58,280.21",
+     "box": [
+      883,
+      346,
+      1066,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "2025-12-15",
+     "box": [
+      154,
+      402,
+      340,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "KA-31058",
+     "box": [
+      384,
+      402,
+      565,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "check",
+     "box": [
+      609,
+      402,
+      839,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$6,600.81",
+     "box": [
+      883,
+      402,
+      1066,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "2023-07-15",
+     "box": [
+      154,
+      458,
+      340,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "SS-39647",
+     "box": [
+      384,
+      458,
+      565,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "bounds",
+     "box": [
+      609,
+      458,
+      839,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$16,228.90",
+     "box": [
+      883,
+      458,
+      1066,
+      514
+     ]
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "2019-10-06",
+     "box": [
+      154,
+      514,
+      340,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "QM-50453",
+     "box": [
+      384,
+      514,
+      565,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "would extents",
+     "box": [
+      609,
+      514,
+      839,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$39,831.45",
+     "box": [
+      883,
+      514,
+      1066,
+      570
+     ]
+    }
+   ]
+  }
+ },
+ "t09_grid": {
+  "style": "grid",
+  "font": "URWGothic",
+  "lang": "pt",
+  "size": [
+   1700,
+   870
+  ],
+  "before": [
+   "pesos gravado estavam corpos pela thousand desconecta Elixir fronteira promete reutilizado case vazio que",
+   "imagem índice run fronteira por então novo mais Como eventos requisição via que HTTP vivem núcleo"
+  ],
+  "after": [
+   "socket para UNIQUE ainda Mix foram def gravado avaliador pediu socket aplicação not que não id",
+   "desempenho vem tem responder isso desconecta contexto caberia geração testados certificado unique"
+  ],
+  "table": {
+   "box": [
+    204,
+    234,
+    732,
+    626
+   ],
+   "rows": 7,
+   "cols": 3,
+   "header_rows": 2,
+   "cells": [
+    {
+     "row": 0,
+     "col": 0,
+     "rowspan": 2,
+     "colspan": 1,
+     "text": "Descrição",
+     "box": [
+      204,
+      234,
+      403,
+      346
+     ]
+    },
+    {
+     "row": 0,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 2,
+     "text": "Trimestre",
+     "box": [
+      403,
+      234,
+      732,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "T1",
+     "box": [
+      403,
+      290,
+      524,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "T2",
+     "box": [
+      524,
+      290,
+      732,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "pelo",
+     "box": [
+      204,
+      346,
+      403,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "94796",
+     "box": [
+      403,
+      346,
+      524,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 56.496,94",
+     "box": [
+      524,
+      346,
+      732,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "true",
+     "box": [
+      204,
+      402,
+      403,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "75596",
+     "box": [
+      403,
+      402,
+      524,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 30.975,13",
+     "box": [
+      524,
+      402,
+      732,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "único",
+     "box": [
+      204,
+      458,
+      403,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "27250",
+     "box": [
+      403,
+      458,
+      524,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 5.239,64",
+     "box": [
+      524,
+      458,
+      732,
+      514
+     ]
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "mensagem",
+     "box": [
+      204,
+      514,
+      403,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "32013",
+     "box": [
+      403,
+      514,
+      524,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 1.932,16",
+     "box": [
+      524,
+      514,
+      732,
+      570
+     ]
+    },
+    {
+     "row": 6,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "avaliador",
+     "box": [
+      204,
+      570,
+      403,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "23381",
+     "box": [
+      403,
+      570,
+      524,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 1.208,14",
+     "box": [
+      524,
+      570,
+      732,
+      626
+     ]
+    }
+   ]
+  }
+ },
+ "t10_booktabs": {
+  "style": "booktabs",
+  "font": "URWBookman",
+  "lang": "pt",
+  "size": [
+   1700,
+   870
+  ],
+  "before": [
+   "handle processos binários nome afirmações ponderar RVV ports EMQX mesma também esboços vapor run",
+   "Zig index Oban mesmo vapor antes vapor não streaming que todo Fica vapor idempotentes agendar Oban"
+  ],
+  "after": [
+   "repo todo resolvem como events aproximado node Bumblebee por vapor processo vazio journal monitorados",
+   "duplicado saída Agora cada end pacotes normalmente dependência carregar com gramática RabbitMQ repo"
+  ],
+  "table": {
+   "box": [
+    327,
+    234,
+    1269,
+    626
+   ],
+   "rows": 7,
+   "cols": 4,
+   "header_rows": 2,
+   "cells": [
+    {
+     "row": 0,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 2,
+     "text": "Trimestre",
+     "box": [
+      780,
+      234,
+      1269,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Código",
+     "box": [
+      327,
+      290,
+      515,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Descrição",
+     "box": [
+      559,
+      290,
+      736,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "T1",
+     "box": [
+      780,
+      290,
+      996,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "T2",
+     "box": [
+      1040,
+      290,
+      1269,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "SD-12055",
+     "box": [
+      327,
+      346,
+      515,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "nessa",
+     "box": [
+      559,
+      346,
+      736,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "08/05/2022",
+     "box": [
+      780,
+      346,
+      996,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 90.686,12",
+     "box": [
+      1040,
+      346,
+      1269,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "QQ-38915",
+     "box": [
+      327,
+      402,
+      515,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "ref",
+     "box": [
+      559,
+      402,
+      736,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "19/05/2023",
+     "box": [
+      780,
+      402,
+      996,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 8.809,56",
+     "box": [
+      1040,
+      402,
+      1269,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "ZA-43366",
+     "box": [
+      327,
+      458,
+      515,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "programa",
+     "box": [
+      559,
+      458,
+      736,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "12/07/2020",
+     "box": [
+      780,
+      458,
+      996,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 79.117,78",
+     "box": [
+      1040,
+      458,
+      1269,
+      514
+     ]
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "CR-78222",
+     "box": [
+      327,
+      514,
+      515,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Toda",
+     "box": [
+      559,
+      514,
+      736,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "03/04/2023",
+     "box": [
+      780,
+      514,
+      996,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 8.440,78",
+     "box": [
+      1040,
+      514,
+      1269,
+      570
+     ]
+    },
+    {
+     "row": 6,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "EX-44878",
+     "box": [
+      327,
+      570,
+      515,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "foi cair",
+     "box": [
+      559,
+      570,
+      736,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "03/08/2019",
+     "box": [
+      780,
+      570,
+      996,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "R$ 3.308,59",
+     "box": [
+      1040,
+      570,
+      1269,
+      626
+     ]
+    }
+   ]
+  }
+ },
+ "t11_inner": {
+  "style": "inner",
+  "font": "Carlito",
+  "lang": "en",
+  "size": [
+   1700,
+   758
+  ],
+  "before": [
+   "output each Solidity and the verification prime the weights relu result certified ecosystem bit prove the bounds ok model costs",
+   "bound the anyone published linear contraction Field identity quantized the model public smaller Solidity they against rewriting"
+  ],
+  "after": [
+   "output true every private compile combination can certificate part value the ok circuit substrate give weights per resource",
+   "embedding its Private names snarkjs What verification witness field rigorous the the can PLONK same checked constraint linear"
+  ],
+  "table": {
+   "box": [
+    412,
+    234,
+    1075,
+    514
+   ],
+   "rows": 5,
+   "cols": 4,
+   "header_rows": 1,
+   "cells": [
+    {
+     "row": 0,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Item",
+     "box": [
+      412,
+      234,
+      562,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Amount",
+     "box": [
+      562,
+      234,
+      733,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Amount",
+     "box": [
+      733,
+      234,
+      904,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Amount",
+     "box": [
+      904,
+      234,
+      1075,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "mono",
+     "box": [
+      412,
+      290,
+      562,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$46,019.09",
+     "box": [
+      562,
+      290,
+      733,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$42,143.92",
+     "box": [
+      733,
+      290,
+      904,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$14,157.98",
+     "box": [
+      904,
+      290,
+      1075,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "and",
+     "box": [
+      412,
+      346,
+      562,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$37,948.33",
+     "box": [
+      562,
+      346,
+      733,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$46,243.61",
+     "box": [
+      733,
+      346,
+      904,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$87,897.81",
+     "box": [
+      904,
+      346,
+      1075,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "model",
+     "box": [
+      412,
+      402,
+      562,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$93,136.20",
+     "box": [
+      562,
+      402,
+      733,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$4,662.56",
+     "box": [
+      733,
+      402,
+      904,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$55,298.16",
+     "box": [
+      904,
+      402,
+      1075,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "bind field",
+     "box": [
+      412,
+      458,
+      562,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$32,772.97",
+     "box": [
+      562,
+      458,
+      733,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$1,918.19",
+     "box": [
+      733,
+      458,
+      904,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$67,784.04",
+     "box": [
+      904,
+      458,
+      1075,
+      514
+     ]
+    }
+   ]
+  }
+ },
+ "t12_hrules": {
+  "style": "hrules",
+  "font": "C059",
+  "lang": "en",
+  "size": [
+   1700,
+   926
+  ],
+  "before": [
+   "weights both arithmetic the and the checked policies wit public weights weights are and Rungs kept substrate",
+   "model the constraints range are those arithmetic constraint per state constraint circuit the already can things"
+  ],
+  "after": [
+   "contrast proved not the vector Constants weights value computed can those and that the merely floats what not",
+   "same also there what limits Why per field x costs constraint all any field bit the inputs long computed and network"
+  ],
+  "table": {
+   "box": [
+    174,
+    234,
+    1025,
+    682
+   ],
+   "rows": 8,
+   "cols": 4,
+   "header_rows": 1,
+   "cells": [
+    {
+     "row": 0,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Code",
+     "box": [
+      174,
+      234,
+      351,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Item",
+     "box": [
+      395,
+      234,
+      630,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Count",
+     "box": [
+      674,
+      234,
+      797,
+      290
+     ]
+    },
+    {
+     "row": 0,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "Amount",
+     "box": [
+      841,
+      234,
+      1025,
+      290
+     ]
+    },
+    {
+     "row": 1,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "RR-79047",
+     "box": [
+      174,
+      290,
+      351,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "per",
+     "box": [
+      395,
+      290,
+      630,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "92860",
+     "box": [
+      674,
+      290,
+      797,
+      346
+     ]
+    },
+    {
+     "row": 1,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$78,195.88",
+     "box": [
+      841,
+      290,
+      1025,
+      346
+     ]
+    },
+    {
+     "row": 2,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "XX-31734",
+     "box": [
+      174,
+      346,
+      351,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "differential",
+     "box": [
+      395,
+      346,
+      630,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "29610",
+     "box": [
+      674,
+      346,
+      797,
+      402
+     ]
+    },
+    {
+     "row": 2,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$76,421.23",
+     "box": [
+      841,
+      346,
+      1025,
+      402
+     ]
+    },
+    {
+     "row": 3,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "CX-15739",
+     "box": [
+      174,
+      402,
+      351,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "integer the",
+     "box": [
+      395,
+      402,
+      630,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "75150",
+     "box": [
+      674,
+      402,
+      797,
+      458
+     ]
+    },
+    {
+     "row": 3,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$96,207.02",
+     "box": [
+      841,
+      402,
+      1025,
+      458
+     ]
+    },
+    {
+     "row": 4,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "CM-54927",
+     "box": [
+      174,
+      458,
+      351,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "the embedding",
+     "box": [
+      395,
+      458,
+      630,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "75246",
+     "box": [
+      674,
+      458,
+      797,
+      514
+     ]
+    },
+    {
+     "row": 4,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$96,101.50",
+     "box": [
+      841,
+      458,
+      1025,
+      514
+     ]
+    },
+    {
+     "row": 5,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "AM-36808",
+     "box": [
+      174,
+      514,
+      351,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "limits",
+     "box": [
+      395,
+      514,
+      630,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "1086",
+     "box": [
+      674,
+      514,
+      797,
+      570
+     ]
+    },
+    {
+     "row": 5,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$53,749.09",
+     "box": [
+      841,
+      514,
+      1025,
+      570
+     ]
+    },
+    {
+     "row": 6,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "AB-49687",
+     "box": [
+      174,
+      570,
+      351,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "the",
+     "box": [
+      395,
+      570,
+      630,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "11306",
+     "box": [
+      674,
+      570,
+      797,
+      626
+     ]
+    },
+    {
+     "row": 6,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$30,319.76",
+     "box": [
+      841,
+      570,
+      1025,
+      626
+     ]
+    },
+    {
+     "row": 7,
+     "col": 0,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "UE-65654",
+     "box": [
+      174,
+      626,
+      351,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 1,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "true",
+     "box": [
+      395,
+      626,
+      630,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 2,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "17050",
+     "box": [
+      674,
+      626,
+      797,
+      682
+     ]
+    },
+    {
+     "row": 7,
+     "col": 3,
+     "rowspan": 1,
+     "colspan": 1,
+     "text": "$54,254.92",
+     "box": [
+      841,
+      626,
+      1025,
+      682
+     ]
+    }
+   ]
+  }
+ }
+}

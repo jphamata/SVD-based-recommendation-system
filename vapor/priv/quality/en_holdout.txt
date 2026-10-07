@@ -1,0 +1,62 @@
+  | 1 | sorts, shapes, state feedback | `Vapor.Program.check/1` |
+  | — | exact rewriting (ε = 0) | `Vapor.Compile.Rewrite` |
+  | 2 | admission | cut sweep + allocation accepted by the Lean-extracted checker on every ISA; int8 no-wrap via extracted `admissible/3` at maximal extents; SPIR-V resource limits |
+  | 3 | adjoint identity `⟨Wx, v⟩ = ⟨x, Wᵀv⟩` | compiled linear kernels vs. an exact transpose computation (layout/transposition errors) |
+  | 4 | differential oracle | every CPU substrate bit-identical to the exact-arithmetic oracle |
+  | 5 | parity + envelope | FNV-1a digests equal across all substrates (integers; floats under `:canonical`), every output inside the rigorous error envelope (all policies) |
+  | 6 | proof-carrying code | Ed25519-signed certificate; quorum by co-signature |
+
+  Rungs 3–5 execute deterministic probe inputs (seeded from the program
+  digest) at probe extents; bounds are established at the maximal extents,
+  which the monotonicity lemmas (`admissible_mono`, `withinEnvelope_mono`)
+  show covers every smaller extent.
+  
+
+  Zero-knowledge proofs of integer inference: a quantized network compiled
+  to a rank-1 constraint system (R1CS) over a prime field, a witness that
+  satisfies it, and both written in the formats of circom/snarkjs
+  (`.r1cs`, `.wtns`) — so any Groth16 or PLONK prover of that ecosystem can
+  prove, and any verifier (including the Solidity one snarkjs exports) can
+  check, that *this* public model mapped a private input to a public output.
+
+      model = [{:linear, w1, b1}, :relu, {:linear, w2, b2}]   # w1 int8, weights public
+      c = Vapor.ZK.compile(model, k: 16)
+      {:ok, wit} = Vapor.ZK.witness(c, x)                     # x : int8, kept private
+      :ok = Vapor.ZK.check(c, wit)
+      Vapor.ZK.write_r1cs(c, "m.r1cs"); Vapor.ZK.write_wtns(c, wit, "m.wtns")
+
+  ## Why the integer fragment, and why public weights
+
+  *Field arithmetic is integer arithmetic.* `+` and `×` of a field are
+  exactly those of the integers as long as no value reaches `p/2` (the
+  signed embedding, `Vapor.Field`). vapor's int8 contraction is already
+  *proved* (Lean, `integer_parity`) never to wrap 32-bit accumulators under
+  its admissibility bound; the same bound, checked against `p/2`, makes the
+  kernel's result and the circuit's the same number — so the witness can be
+  computed by the certified `gemm_i8` kernels on any substrate
+  (`witness/3`, `certified: true`) and the circuit merely checks it.
+  Floating point, by contrast, is not field arithmetic: every rounding would
+  cost a range proof. That is why f32 programs are not compiled here.
+
+  *Weights are constants of the circuit.* A product by a constant is free in
+  R1CS (it is part of a linear combination): a hidden dense layer costs no
+  constraint at all and the last one one per output; the cost of a proof is
+  in the non-linearities (ReLU: a bit decomposition, `B + 3` constraints per
+  neuron) and in the input range check (9 per private int8 input).
+
+  *What is proved:* there exists an int8 vector `x` with `model(x) = y` for
+  the public `y` — the range check makes `x ∈ int8ᵏ` a fact of the circuit,
+  and then every intermediate value is the integer the model computes (each
+  stays below `p/2` and below the ReLU decompositions' range, checked at
+  compile time; Lean: `field_parity`). Constants also *bind the model*: the verification key is derived
+  from the circuit, and the circuit's digest (`digest/1`) names the weights.
+  A circuit with weights as private witnesses would prove only that *some*
+  weights produce the output — useless without an in-circuit commitment to
+  a published model, and even then a commitment says which weights, not that
+  they are the real model's (the "hollow model" problem). Private weights
+  are therefore not offered.
+
+  The proof adds two things to what vapor's receipts already give (anyone
+  with the weights can re-derive an output bit for bit): the input can stay
+  private, and verification does not re-run the model.
+  

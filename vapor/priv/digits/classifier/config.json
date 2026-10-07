@@ -1,0 +1,31 @@
+{
+ "model_type": "vapor_mlp",
+ "in_width": 64,
+ "hidden_sizes": [
+  128,
+  128
+ ],
+ "out_width": 10,
+ "hidden_act": "gelu",
+ "labels": [
+  "0",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9"
+ ],
+ "from": "image",
+ "to": "text_digit",
+ "input": "8\u00d78 grey levels / 16, row-major",
+ "training": {
+  "data": "sklearn load_digits (UCI)",
+  "train": 1300,
+  "held_out": 497,
+  "held_out_accuracy": 0.9798792600631714
+ }
+}
