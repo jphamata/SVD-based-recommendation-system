@@ -33,11 +33,16 @@ defmodule Vapor.Docs.JBIG2 do
       symbol ID table, strips, all corners) — checked against jbig2dec on
       streams written by an independent encoder in the tests.
 
+    * **pattern dictionaries and halftone regions** (6.6–6.7, 0.15): the
+      collective pattern bitmap (arithmetic or MMR), the gray-scale image as
+      Gray-coded bitplanes (C.5) with `HENABLESKIP`, the grid with its
+      rotation vector, every combination operator.
+
   Refused, with a reason (a warning, the page keeps what was decoded):
   Huffman coding combined with refinement (`SDHUFF` with `SDREFAGG`,
   `SBHUFF` with `SBREFINE` — no encoder writes them, so there is nothing to
-  check a decoder against), pattern dictionaries and halftone regions
-  (7.4.4–7.4.5), and the retained-context flags of symbol dictionaries.
+  check a decoder against), and the retained-context flags of symbol
+  dictionaries.
 
   Bitmaps are `%{w, h, rows}` — `rows` a tuple of row tuples of 0/1, where
   **1 is black** (JBIG2's convention); `packed/1` gives the rows packed
@@ -260,7 +265,7 @@ defmodule Vapor.Docs.JBIG2 do
 
   @doc false
   # generic region decoding (6.2.5), arithmetic: `{bitmap, st}`
-  def generic(st, stats, w, h, template, at, tpgdon) do
+  def generic(st, stats, w, h, template, at, tpgdon, skip \\ nil) do
     nominal? = at == @nominal_at[template]
     empty = Tuple.duplicate(0, w)
 
@@ -280,7 +285,7 @@ defmodule Vapor.Docs.JBIG2 do
         if ltp == 1 do
           {[p1 | rows], st, ltp}
         else
-          {row, st} = generic_row(st, stats, w, template, at, nominal?, p1, p2, rows, y)
+          {row, st} = generic_row(st, stats, w, template, at, nominal?, p1, p2, rows, y, skip && elem(skip, y))
           {[row | rows], st, ltp}
         end
       end)
@@ -290,7 +295,7 @@ defmodule Vapor.Docs.JBIG2 do
 
   # one row: shift registers over the two rows above and the current row,
   # adaptive pixels looked up (the current row's from the register)
-  defp generic_row(st, stats, w, template, at, nominal?, p1, p2, rows, y) do
+  defp generic_row(st, stats, w, template, at, nominal?, p1, p2, rows, y, skip_row) do
     at_px = fn cur, x, {dx, dy} ->
       cond do
         dy == 0 -> if x + dx >= 0, do: cur >>> (-dx - 1) &&& 1, else: 0
@@ -335,7 +340,8 @@ defmodule Vapor.Docs.JBIG2 do
                 rpx(p1, x - 1, w) <<< 7 ||| rpx(p1, x - 2, w) <<< 8 ||| rpx(p1, x - 3, w) <<< 9
           end
 
-        {b, st} = decode_bit(st, stats, cx)
+        # USESKIP: a skipped pixel is 0 and nothing is decoded for it
+        {b, st} = if skip_row != nil and elem(skip_row, x) == 1, do: {0, st}, else: decode_bit(st, stats, cx)
         {[b | bits], st, (cur <<< 1 ||| b) &&& 0xFFFFFFFF}
       end)
 
@@ -810,6 +816,138 @@ defmodule Vapor.Docs.JBIG2 do
     end
   end
 
+
+  # ------------------------------------------- patterns and halftones --
+
+  # 7.4.4 / 6.7: GRAYMAX + 1 patterns of HDPW × HDPH, one collective bitmap
+  defp pattern_dict(<<flags, pw, ph, graymax::32, body::binary>>) do
+    mmr = flags &&& 1
+    template = flags >>> 1 &&& 3
+    w = (graymax + 1) * pw
+
+    cond do
+      pw == 0 or ph == 0 or w * ph > 64_000_000 -> {:error, "a pattern dictionary of #{graymax + 1} patterns of #{pw}×#{ph}"}
+      true ->
+        coll =
+          if mmr == 1 do
+            case Vapor.Docs.CCITT.decode(body, k: -1, columns: w, rows: ph, black_is_1: true) do
+              {:ok, %{data: data}} -> unpack(data, w, ph)
+              {:error, why} -> throw({:jbig2, "an MMR pattern dictionary (#{inspect(why)})"})
+            end
+          else
+            at = if template == 0, do: [{-pw, 0}, {-3, -1}, {2, -2}, {-2, -2}], else: [{-pw, 0}]
+            {bm, _} = generic(mq_new(body), stats(65_536), w, ph, template, at, false)
+            bm
+          end
+
+        {:ok, for(i <- 0..graymax, do: crop(coll, i * pw, pw))}
+    end
+  catch
+    {:jbig2, why} -> {:error, why}
+  end
+
+  defp pattern_dict(_), do: {:error, "a truncated pattern dictionary"}
+
+  # 7.4.5 / 6.6: a grid of gray values (Gray-coded bitplanes, C.5), each
+  # cell drawing the pattern of its value at its grid position
+  defp halftone_region(<<w::32, h::32, x::32, y::32, eflags, flags, gw::32, gh::32, gx::signed-32, gy::signed-32, rx::16, ry::16, body::binary>>, pats) do
+    mmr = flags &&& 1
+    template = flags >>> 1 &&& 3
+    enable_skip = (flags >>> 3 &&& 1) == 1
+    combop = flags >>> 4 &&& 7
+    defpixel = flags >>> 7 &&& 1
+    npats = length(pats)
+
+    cond do
+      pats == [] -> {:error, "a halftone region with no pattern dictionary"}
+      w == 0 or h == 0 or w * h > 256_000_000 or gw * gh > 16_000_000 -> {:error, "a halftone region of #{w}×#{h}, grid #{gw}×#{gh}"}
+      true ->
+        %{w: pw, h: ph} = hd(pats)
+        bpp = max(codelen(npats), 1)
+        pos = fn mg, ng -> {(gx + mg * ry + ng * rx) >>> 8, (gy + mg * rx - ng * ry) >>> 8} end
+
+        skip =
+          if enable_skip do
+            for(mg <- 0..(gh - 1), do: for(ng <- 0..(gw - 1), do: (case pos.(mg, ng) do
+              {px, py} when px + pw <= 0 or px >= w or py + ph <= 0 or py >= h -> 1
+              _ -> 0
+            end)) |> List.to_tuple()) |> List.to_tuple()
+          end
+
+        planes = gray_planes(body, mmr, gw, gh, template, bpp, skip)
+        page = canvas(w, h, defpixel)
+        pt = List.to_tuple(pats)
+
+        for mg <- 0..(gh - 1)//1, ng <- 0..(gw - 1)//1 do
+          v = Enum.reduce(Enum.with_index(planes), 0, fn {pl, j}, acc -> acc ||| px(pl, ng, mg) <<< j end)
+          v = min(v, npats - 1)
+          {px0, py0} = pos.(mg, ng)
+          compose(page, w, h, elem(pt, v), px0, py0, combop)
+        end
+
+        {:ok, {freeze(page, w, h), x, y, eflags &&& 7}}
+    end
+  catch
+    {:jbig2, why} -> {:error, why}
+  end
+
+  defp halftone_region(_, _), do: {:error, "a truncated halftone region"}
+
+  # C.5: bitplanes HBPP−1 … 0 (shared arithmetic contexts, or consecutive MMR
+  # codes), then Gray decoding GSPLANES[j] ⊕= GSPLANES[j + 1]; index j = bit j
+  defp gray_planes(body, mmr, gw, gh, template, bpp, skip) do
+    at = [{if(template <= 1, do: 3, else: 2), -1}, {-3, -1}, {2, -2}, {-2, -2}]
+    at = if template == 0, do: at, else: [hd(at)]
+
+    raw =
+      if mmr == 1 do
+        {planes, _} =
+          Enum.map_reduce((bpp - 1)..0//-1, 0, fn _j, off ->
+            if off >= byte_size(body), do: throw({:jbig2, "MMR gray-scale bitplanes past the end of the region"})
+
+            case Vapor.Docs.CCITT.decode(binary_part(body, off, byte_size(body) - off), k: -1, columns: gw, rows: gh, black_is_1: true) do
+              {:ok, %{data: data, bits_used: used}} -> {unpack(data, gw, gh), off + div(after_eofb(body, off * 8 + used) - off * 8 + 7, 8)}
+              {:error, why} -> throw({:jbig2, "an MMR gray-scale bitplane (#{inspect(why)})"})
+            end
+          end)
+
+        planes
+      else
+        st = mq_new(body)
+        gb = stats(65_536)
+
+        {planes, _} =
+          Enum.map_reduce((bpp - 1)..0//-1, st, fn _j, st -> generic(st, gb, gw, gh, template, at, false, skip) end)
+
+        planes
+      end
+
+    # raw is ordered from the top bit down; Gray-decode downwards
+    {decoded, _} =
+      Enum.map_reduce(raw, nil, fn pl, above ->
+        pl = if above, do: xor_bm(pl, above), else: pl
+        {pl, pl}
+      end)
+
+    Enum.reverse(decoded)
+  end
+
+  # a plane's code may end with EOFB (two EOLs, 0x001001): the next plane
+  # starts after it — whether the MMR decoder stopped before it or after
+  # its first EOL
+  defp after_eofb(bin, bit) do
+    case bin do
+      <<_::size(bit), 0x001001::24, _::bitstring>> -> bit + 24
+      <<_::size(bit - 12), 0x001::12, 0x001::12, _::bitstring>> when bit >= 12 -> bit + 12
+      _ -> bit
+    end
+  end
+
+  defp xor_bm(%{rows: a} = bm, %{rows: b}) do
+    rows = Enum.zip_with(Tuple.to_list(a), Tuple.to_list(b), fn ra, rb -> Enum.zip_with(Tuple.to_list(ra), Tuple.to_list(rb), &bxor/2) |> List.to_tuple() end)
+    %{bm | rows: List.to_tuple(rows)}
+  end
+
   # ------------------------------------------------------------- segments --
 
   @doc """
@@ -981,8 +1119,19 @@ defmodule Vapor.Docs.JBIG2 do
             {:error, why} -> {dicts, [why | ws]}
           end
 
-        s.type in [16, 20, 22, 23] ->
-          {dicts, ["halftone regions and pattern dictionaries (7.4.4–7.4.5) are not decoded here" | ws]}
+        s.type == 16 ->
+          case pattern_dict(s.data) do
+            {:ok, pats} -> {Map.put(dicts, {:patterns, s.number}, pats), ws}
+            {:error, why} -> {dicts, [why | ws]}
+          end
+
+        s.type in [20, 22, 23] ->
+          pats = Enum.flat_map(s.refs, &Map.get(dicts, {:patterns, &1}, []))
+
+          case halftone_region(s.data, pats) do
+            {:ok, {bm, x, y, op}} -> place(page, pw, ph, bm, x, y, op, s.type); {dicts, ws}
+            {:error, why} -> {dicts, [why | ws]}
+          end
 
         s.type == 53 ->
           case Vapor.Docs.JBIG2.Huffman.table_segment(s.data) do
@@ -1000,8 +1149,8 @@ defmodule Vapor.Docs.JBIG2 do
   # the code tables a segment refers to, in the order of its references
   defp tables_of(dicts, refs), do: for(r <- refs, t = Map.get(dicts, {:table, r}), t != nil, do: t)
 
-  # intermediate regions (types 4, 36, 40) are not drawn on the page
-  defp place(_page, _pw, _ph, _bm, _x, _y, _op, type) when type in [4, 36, 40], do: :ok
+  # intermediate regions (types 4, 20, 36, 40) are not drawn on the page
+  defp place(_page, _pw, _ph, _bm, _x, _y, _op, type) when type in [4, 20, 36, 40], do: :ok
   defp place(page, pw, ph, bm, x, y, op, _type), do: compose(page, pw, ph, bm, x, y, op)
 
   defp generic_region(<<w::32, h::32, x::32, y::32, eflags, flags, rest::binary>>) do

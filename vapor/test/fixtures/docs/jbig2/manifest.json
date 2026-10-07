@@ -170,6 +170,71 @@
   "sha256": "b6af160a37c369e329e572660cd1ebbad81e9c2358eafe67bbb54b5225010c6e",
   "w": 170
  },
+ "halftone_black": {
+  "files": [
+   "halftone_black.jb2"
+  ],
+  "h": 106,
+  "jbig2dec_differs_px": 5050,
+  "sha256": "4f1b00e89e2ccc46aa472b73a72bfa4358b04b051c918b166e4a4a7cc9d1598b",
+  "w": 124
+ },
+ "halftone_grid": {
+  "files": [
+   "halftone_grid.jb2"
+  ],
+  "h": 86,
+  "sha256": "78ff807d877c6e88dab10bdc66e7fafbe1fe83fc117b3f0933a3eac6c3d4edc8",
+  "w": 124
+ },
+ "halftone_mmr": {
+  "files": [
+   "halftone_mmr.jb2"
+  ],
+  "h": 86,
+  "sha256": "5113dfb7648fa90bbe760b6f4f0eb30fdac5bec8272121ef687120b43c6448d6",
+  "w": 124
+ },
+ "halftone_rotated_skip": {
+  "files": [
+   "halftone_rotated_skip.jb2"
+  ],
+  "h": 116,
+  "sha256": "07941d15cc165e3dcee60ad3f133fa324d2ddffe0208b067e6068e5b9f974be6",
+  "w": 134
+ },
+ "halftone_t1": {
+  "files": [
+   "halftone_t1.jb2"
+  ],
+  "h": 78,
+  "sha256": "188f176505e615596638955438e5c1b1f61e62ff95896717fd2a57e8dab40a66",
+  "w": 108
+ },
+ "halftone_t2": {
+  "files": [
+   "halftone_t2.jb2"
+  ],
+  "h": 78,
+  "sha256": "188f176505e615596638955438e5c1b1f61e62ff95896717fd2a57e8dab40a66",
+  "w": 108
+ },
+ "halftone_t3": {
+  "files": [
+   "halftone_t3.jb2"
+  ],
+  "h": 78,
+  "sha256": "188f176505e615596638955438e5c1b1f61e62ff95896717fd2a57e8dab40a66",
+  "w": 108
+ },
+ "halftone_xor": {
+  "files": [
+   "halftone_xor.jb2"
+  ],
+  "h": 106,
+  "sha256": "a3e70665f71b5c5968f1649d126dda9fca4d7f21f8ac258250d28dac39d741d2",
+  "w": 124
+ },
  "huff_alt_rc0": {
   "files": [
    "huff_alt_rc0.jb2"

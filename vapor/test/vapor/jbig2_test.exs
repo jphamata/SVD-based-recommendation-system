@@ -11,7 +11,10 @@ defmodule Vapor.JBIG2Test do
   combinations with strips, DSOFFSET, XOR, a black default pixel and refined
   instances, symbol dictionaries with refinement and aggregation, a striped
   page of unknown height, and — 0.15 — Huffman-coded dictionaries and text
-  regions with standard and custom code tables).
+  regions with standard and custom code tables, pattern dictionaries and
+  halftone regions). One fixture is judged by T.88's text instead: jbig2dec
+  0.20 fills a halftone region's HDEFPIXEL = 1 with the byte 0x01 (one black
+  pixel in eight); the manifest records by how many pixels it is wrong.
   """
   use ExUnit.Case, async: true
   import Bitwise
@@ -32,10 +35,14 @@ defmodule Vapor.JBIG2Test do
     assert Base.encode16(out) == "00020051000000C00352872AAAAAAAAA82C02000FCD79EF6BF7FED904F46A3BF"
   end
 
-  test "every fixture decodes to jbig2dec's bitmap, bit for bit" do
+  test "every fixture decodes to its reference bitmap (jbig2dec's, or T.88's where jbig2dec departs), bit for bit" do
     m = manifest()
-    assert map_size(m) >= 56
+    assert map_size(m) >= 63
     assert Enum.count(m, fn {k, _} -> String.starts_with?(k, "huff_") end) == 13
+    assert Enum.count(m, fn {k, _} -> String.starts_with?(k, "halftone_") end) == 8
+    # the one case judged by the standard is the one jbig2dec gets wrong, and by a lot
+    assert [{"halftone_black", %{"jbig2dec_differs_px" => px}}] = Enum.filter(m, fn {_, v} -> Map.has_key?(v, "jbig2dec_differs_px") end)
+    assert px > 1000
 
     for {name, %{"files" => files, "sha256" => sha, "w" => w, "h" => h}} <- m do
       bins = Enum.map(files, &File.read!(Path.join(@dir, &1)))

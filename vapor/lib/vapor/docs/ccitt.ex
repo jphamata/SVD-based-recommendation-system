@@ -115,7 +115,8 @@ defmodule Vapor.Docs.CCITT do
 
         st = start(st)
         {out, st} = rows_loop(st, {cols}, [], 0)
-        {:ok, %{columns: cols, rows: length(out), data: out |> Enum.reverse() |> IO.iodata_to_binary(), warnings: Enum.uniq(Enum.reverse(st.warns))}}
+        {:ok, %{columns: cols, rows: length(out), data: out |> Enum.reverse() |> IO.iodata_to_binary(), warnings: Enum.uniq(Enum.reverse(st.warns)),
+                bits_used: st.pos}}
     end
   end
 

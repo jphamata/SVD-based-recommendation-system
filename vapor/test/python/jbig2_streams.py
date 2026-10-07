@@ -202,7 +202,7 @@ def gctx(bm, x, y, t, at):
     return c
 
 
-def enc_generic(m, ctx, bm, t, at, tpgdon):
+def enc_generic(m, ctx, bm, t, at, tpgdon, skip=None):
     h, w = bm.shape
     ltp = 0
     for y in range(h):
@@ -213,6 +213,9 @@ def enc_generic(m, ctx, bm, t, at, tpgdon):
             if same:
                 continue
         for x in range(w):
+            if skip is not None and skip[y, x]:
+                assert bm[y, x] == 0  # USESKIP: a skipped pixel is 0 and is not coded
+                continue
             m.bit(ctx, gctx(bm, x, y, t, at), int(bm[y, x]))
 
 
@@ -717,6 +720,62 @@ def huff_text_seg(num, refs, syms, insts, p, fs=6, ds=8, dt=11, custom=None, fre
     return segment(num, 6, data, refs), region
 
 
+# ------------------------------------------- patterns and halftones (6.6–6.7) --
+
+def pattern_dict_seg(num, pats, template=0, mmr=False):
+    ph, pw = pats[0].shape
+    coll = np.concatenate(pats, axis=1)
+    flags = int(mmr) | (template << 1)
+    if mmr:
+        data = g4(coll)
+    else:
+        m = MQ()
+        at = [(-pw, 0), (-3, -1), (2, -2), (-2, -2)] if template == 0 else [(-pw, 0)]
+        enc_generic(m, {}, coll, template, at, False)
+        data = m.final()
+    return segment(num, 16, bytes([flags, pw, ph]) + (len(pats) - 1).to_bytes(4, "big") + data, page=1)
+
+
+def grid_pos(gx, gy, rx, ry, mg, ng):
+    return (gx + mg * ry + ng * rx) >> 8, (gy + mg * rx - ng * ry) >> 8
+
+
+def halftone_seg(num, refs, pats, gray, w, h, gx, gy, rx, ry, template=0, mmr=False, skip=False, combop=0, defpixel=0, x=0, y=0, op=0):
+    """gray: HGH × HGW array of pattern indices. Returns (segment, region bitmap)."""
+    gh, gw = gray.shape
+    ph, pw = pats[0].shape
+    bpp = max(1, (len(pats) - 1).bit_length())
+    sk = None
+    if skip:
+        sk = np.zeros((gh, gw), dtype=np.uint8)
+        for mg in range(gh):
+            for ng in range(gw):
+                px, py = grid_pos(gx, gy, rx, ry, mg, ng)
+                if px + pw <= 0 or px >= w or py + ph <= 0 or py >= h:
+                    sk[mg, ng] = 1
+                    gray[mg, ng] = 0  # the decoder sees 0 there
+    bits = [((gray >> j) & 1).astype(np.uint8) for j in range(bpp)]
+    # Gray code: plane j = bit j ⊕ bit j+1 (the top plane is the top bit)
+    planes = [bits[j] ^ bits[j + 1] if j < bpp - 1 else bits[j] for j in range(bpp)]
+    if mmr:
+        data = b"".join(g4(planes[j]) for j in range(bpp - 1, -1, -1))
+    else:
+        m, ctx = MQ(), {}
+        at = [(3 if template <= 1 else 2, -1), (-3, -1), (2, -2), (-2, -2)] if template == 0 else [(3 if template <= 1 else 2, -1)]
+        for j in range(bpp - 1, -1, -1):
+            enc_generic(m, ctx, planes[j], template, at, False, sk)
+        data = m.final()
+    region = np.full((h, w), defpixel, dtype=np.uint8)
+    for mg in range(gh):
+        for ng in range(gw):
+            px, py = grid_pos(gx, gy, rx, ry, mg, ng)
+            compose(region, pats[int(gray[mg, ng])], px, py, combop)
+    flags = int(mmr) | (template << 1) | (int(skip) << 3) | (combop << 4) | (defpixel << 7)
+    body = region_info(w, h, x, y, op) + bytes([flags]) + gw.to_bytes(4, "big") + gh.to_bytes(4, "big")
+    body += gx.to_bytes(4, "big", signed=True) + gy.to_bytes(4, "big", signed=True) + rx.to_bytes(2, "big") + ry.to_bytes(2, "big")
+    return segment(num, 22, body + data, refs), region
+
+
 # ------------------------------------------------------------- material --
 
 def blobs(w, h, n, seed):
@@ -750,8 +809,12 @@ manifest = {}
 jbig2dec = "jbig2dec"
 
 
-def keep(name, files, bm):
-    """Write the stream(s) and the expected bitmap; keep only if jbig2dec agrees."""
+def keep(name, files, bm, judge="jbig2dec"):
+    """Write the stream(s) and the expected bitmap; keep only if jbig2dec agrees.
+
+    judge="spec": a case where jbig2dec is known to depart from T.88 — the
+    bitmap is the composition by the standard's text, and the manifest
+    records how many pixels jbig2dec gets wrong instead of asserting it."""
     for fname, data in files.items():
         open(os.path.join(out, fname), "wb").write(data)
     exp = pbm(bm)
@@ -764,9 +827,16 @@ def keep(name, files, bm):
     r = subprocess.run(args, capture_output=True, text=True)
     got = open(os.path.join(out, "_check.pbm"), "rb").read() if os.path.exists(os.path.join(out, "_check.pbm")) else b""
     os.remove(os.path.join(out, "_check.pbm")) if got else None
-    assert got == exp, f"{name}: jbig2dec disagrees ({r.stderr.strip()[:200]})"
     h, w = bm.shape
-    manifest[name] = {"files": list(files), "w": w, "h": h, "sha256": hashlib.sha256(exp).hexdigest()}
+    entry = {"files": list(files), "w": w, "h": h, "sha256": hashlib.sha256(exp).hexdigest()}
+    if judge == "spec":
+        hdr = len(f"P4\n{w} {h}\n".encode())
+        a = np.unpackbits(np.frombuffer(exp[hdr:], dtype=np.uint8).reshape(h, -1), axis=1)[:, :w]
+        b = np.unpackbits(np.frombuffer(got[hdr:], dtype=np.uint8).reshape(h, -1), axis=1)[:, :w] if got else np.zeros_like(a)
+        entry["jbig2dec_differs_px"] = int((a != b).sum())
+    else:
+        assert got == exp, f"{name}: jbig2dec disagrees ({r.stderr.strip()[:200]})"
+    manifest[name] = entry
 
 
 def main():
@@ -940,6 +1010,39 @@ def main():
         keep("huff_ids", {"huff_ids.jb2": jb2_file(segs + [dseg, tseg, segment(4, 49, b"")])}, page)
     ids_case()
 
+    # halftones: 16 dot patterns (a clustered-dot screen), grids axis-aligned and rotated, cells outside the region (HSKIP),
+    # arithmetic templates 0–3 and MMR, for the patterns and for the gray-scale bitplanes
+    def dot(n, size):
+        r = np.random.default_rng(n)
+        p = np.zeros((size, size), dtype=np.uint8)
+        order = sorted(((yy - (size - 1) / 2) ** 2 + (xx - (size - 1) / 2) ** 2 + r.random() * 0.01, yy, xx) for yy in range(size) for xx in range(size))
+        for _, yy, xx in order[:round(n * size * size / 15)]:
+            p[yy, xx] = 1
+        return p
+
+    def halftone_case(name, size, gw, gh, w, h, gx, gy, rx, ry, pt=0, pmmr=False, ht=0, hmmr=False, skip=False, combop=0, defpixel=0, judge="jbig2dec"):
+        pats = [dot(k, size) for k in range(16)]
+        r = np.random.default_rng(len(name))
+        yy, xx = np.mgrid[0:gh, 0:gw]
+        gray = ((np.sin(xx / 3.0) + np.cos(yy / 4.0) + 2) * 3.7 + r.random((gh, gw))).astype(np.int64) % 16
+        hseg, region = halftone_seg(3, [2], pats, gray, w, h, gx, gy, rx, ry, template=ht, mmr=hmmr, skip=skip, combop=combop,
+                                    defpixel=defpixel, x=2, y=3)
+        page = np.zeros((h + 6, w + 4), dtype=np.uint8)
+        compose(page, region, 2, 3, 0)
+        segs = [segment(1, 48, page_info(w + 4, h + 6)), pattern_dict_seg(2, pats, pt, pmmr), hseg, segment(4, 49, b"")]
+        keep(name, {name + ".jb2": jb2_file(segs)}, page, judge)
+
+    halftone_case("halftone_grid", 4, 30, 20, 120, 80, 0, 0, 4 << 8, 0)
+    for t in (1, 2, 3):
+        halftone_case(f"halftone_t{t}", 4, 26, 18, 104, 72, 0, 0, 4 << 8, 0, pt=t, ht=t)
+    # a screen rotated by atan(1/3) (rx, ry = 3.79, 1.26 px), cells that fall outside skipped, OR and XOR
+    halftone_case("halftone_rotated_skip", 5, 34, 30, 130, 110, -6 << 8, -20 << 8, 970, 323, skip=True, combop=0)
+    halftone_case("halftone_xor", 5, 28, 24, 120, 100, -2 << 8, 1 << 8, 1004, 268, combop=2, defpixel=0)
+    # HDEFPIXEL = 1: jbig2dec 0.20 fills the region with memset(…, 1, …) — the byte 0x01, one black pixel in eight
+    # (vertical stripes of period 8) — instead of black; judged by T.88 6.6.5.2 step 1, the difference recorded
+    halftone_case("halftone_black", 5, 28, 24, 120, 100, -2 << 8, 1 << 8, 1004, 268, combop=0, defpixel=1, judge="spec")
+    halftone_case("halftone_mmr", 4, 30, 20, 120, 80, 0, 0, 4 << 8, 0, pmmr=True, hmmr=True)
+
     # jbig2enc on a real scanned page
     if "--jbig2enc" in sys.argv:
         enc = sys.argv[sys.argv.index("--jbig2enc") + 1]
@@ -993,7 +1096,8 @@ def main():
         os.remove(os.path.join(out, name + ".pbm"))
 
     json.dump(manifest, open(os.path.join(out, "manifest.json"), "w"), indent=1, sort_keys=True)
-    print(len(manifest), "streams, every one decoded by jbig2dec to its bitmap")
+    spec = [k for k, v in manifest.items() if "jbig2dec_differs_px" in v]
+    print(len(manifest), "streams;", len(manifest) - len(spec), "decoded by jbig2dec to their bitmaps;", len(spec), "judged by T.88 where jbig2dec departs from it:", spec)
 
 
 main()
