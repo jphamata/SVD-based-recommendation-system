@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Vapor.Serve do
   @moduledoc """
       mix vapor.serve --model PATH [--port 8000] [--ip 127.0.0.1] [--threads N] [--gpu] [--quantize sb4] [--storage bf16]
                       [--max-seq 512] [--sequences 8] [--page 16] [--step-tokens 64] [--replicas 1]
-                      [--docs FILE_OR_DIR]... [--tlog PATH] [--tlog-origin NAME]
+                      [--docs FILE_OR_DIR]... [--tlog PATH] [--tlog-origin NAME] [--data DIR]
       mix vapor.serve --docs ./pasta            # the console and the document library alone, no model
 
   Starts `Vapor.Engine` (continuous batching, paged KV; with `--replicas N`
@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Vapor.Serve do
   use Mix.Task
 
   @switches [model: :string, port: :integer, ip: :string, threads: :integer, gpu: :boolean, quantize: :string, storage: :string, max_seq: :integer, replicas: :integer,
-             sequences: :integer, page: :integer, step_tokens: :integer, docs: :keep, token: :string, tlog: :string,
+             sequences: :integer, page: :integer, step_tokens: :integer, docs: :keep, token: :string, tlog: :string, data: :string,
              tlog_origin: :string]
 
   @impl true
@@ -65,7 +65,9 @@ defmodule Mix.Tasks.Vapor.Serve do
     # receipts are anchored in a transparency log: a file with --tlog (and its
     # key beside it), else in memory for this run
     {:ok, tlog} = Vapor.Tlog.Holder.start_link(Enum.reject([path: o[:tlog], origin: o[:tlog_origin]], &is_nil(elem(&1, 1))))
-    {:ok, srv} = Vapor.Serve.start_link(engine: e, tokenizer: tk, port: o[:port] || 8000, ip: ip, model_name: name, library: holder,
+    # conversations live here (crash-atomic store); --data DIR, $VAPOR_HOME, or ~/.vapor
+    data = o[:data] || System.get_env("VAPOR_HOME") || Path.join(System.user_home!(), ".vapor")
+    {:ok, srv} = Vapor.Serve.start_link(engine: e, tokenizer: tk, port: o[:port] || 8000, ip: ip, model_name: name, library: holder, data: data,
                                         token: token, tlog: tlog)
     base = "http://#{o[:ip] || "127.0.0.1"}:#{Vapor.Serve.port(srv)}"
     IO.puts("vapor: #{if dir, do: "serving #{dir}", else: "no model"}; API #{base}/v1, console #{base}/" <> if(token, do: "?token=…", else: ""))

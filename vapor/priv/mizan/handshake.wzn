@@ -1,0 +1,12 @@
+; A two-bit handshake: the step swaps the bits, and "the bits are equal" is an invariant.
+(claim handshake (root n-q-l) (wazn burhan)
+  (inputs (req bool) (ack bool))
+  (init (and (not req) (not ack)))
+  (step (req ack) (ack req))
+  (invariant (= req ack))
+  (proof invariant)
+  (body (and req ack)))
+
+; a record: kept, and named by its hash
+(claim constants (root k-t-b) (wazn maful)
+  (body (/ 355 113)))

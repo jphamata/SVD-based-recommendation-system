@@ -1,0 +1,14 @@
+{
+  "scopeName": "source.alembic",
+  "name": "Alembic",
+  "patterns": [
+    { "name": "comment.line.number-sign.alembic", "match": "#.*$" },
+    { "name": "string.quoted.double.alembic", "begin": "\"", "end": "\"", "patterns": [{ "name": "constant.character.escape.alembic", "match": "\\\\." }] },
+    { "name": "keyword.control.alembic", "match": "\\b(if|then|else|let|in|for|match|fn)\\b" },
+    { "name": "keyword.other.space.alembic", "match": "\\b(space|minimize|maximize|claim|find|holdout|describe|neighbor|violation|measured|init|moves|play|winner|player)\\b" },
+    { "name": "constant.language.alembic", "match": "\\b(true|false|nil|inf|pi|e)\\b" },
+    { "name": "constant.numeric.alembic", "match": "\\b[0-9]+(?:\\.[0-9]+)?(?:[eE][-+]?[0-9]+)?\\b" },
+    { "name": "entity.name.function.alembic", "match": "^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\(.*\\)\\s*=)" },
+    { "name": "keyword.operator.alembic", "match": "\\|>|=>|->|==|!=|<=|>=|&&|\\|\\||[-+*/^%<>=]" }
+  ]
+}

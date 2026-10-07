@@ -602,9 +602,9 @@ defmodule Vapor.Rebis do
   end
 
   defp random_cex(a, b, pairs, k, seed) do
-    :rand.seed(:exsss, {seed, 0xBEE, 0xCAFE})
     mask = (1 <<< k) - 1
-    words = Map.new(a.inputs, fn n -> {n, rand_word(k)} end)
+    {words, _} = Enum.map_reduce(a.inputs, Vapor.Entropy.rng({:rebis_patterns, seed}), fn n, r -> {w, r} = rand_word(k, r); {{n, w}, r} end)
+    words = Map.new(words)
     oa = simulate(a, words, mask)
     ob = simulate(b, words, mask)
     diff = Enum.reduce(pairs, 0, fn {x, y}, acc -> acc ||| bxor(oa[x], ob[y]) end)
@@ -617,7 +617,10 @@ defmodule Vapor.Rebis do
     end
   end
 
-  defp rand_word(k), do: :rand.bytes(div(k + 7, 8)) |> :binary.decode_unsigned() |> band((1 <<< k) - 1)
+  defp rand_word(k, rng) do
+    {b, rng} = :rand.bytes_s(div(k + 7, 8), rng)
+    {b |> :binary.decode_unsigned() |> band((1 <<< k) - 1), rng}
+  end
 
   defp by_sat(a, b, pairs, opts) do
     {cnf, _} = miter(a, b, pairs)

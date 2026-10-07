@@ -590,7 +590,7 @@ mix vapor.quality                                        # §5e de docs/bench/QU
 | "FreeBSD" | portar | sem FreeBSD aqui | o worker compila para FreeBSD (x86-64 e AArch64) com isolamento **Capsicum**; o teste confere o binário; **não executado** |
 | "inverter o RoPE" (anexo) | contexto infinito | o anexo exagera o que já existia (§2 de [TREINO.md](TREINO.md)) | âncoras + janela com o RoPE aplicado no referencial do cache: memória constante, nenhuma distância fora do treino, **sem núcleo novo** |
 | "motor de física" | um simulador | simuladores existem; a dor é que não se reproduzem | física cujo passo é um programa vapor: **os mesmos bits em todo substrato**, diferenciável, em lote; um gêmeo digital com livro verificável ([FISICA.md](FISICA.md)) |
-| "redes complexas" | funções de grafo | bibliotecas existem; a dor é reprodutibilidade e afirmações sem nulo | geradores e estatísticas reprodutíveis, **cada afirmação contra um modelo nulo** ([REDES.md](REDES.md)) |
+| "redes complexas" | funções de grafo | bibliotecas existem; a dor é reprodutibilidade e afirmações sem nulo | geradores e estatísticas reprodutíveis, **cada afirmação contra um modelo nulo** (retirado em 0.16, §19) |
 | "UI/UX original e elegante" | telas novas | — | painéis *Substratos*, *Treino*, *Física*, *Redes*; *Visão* com a escolha da escrita, linhas RTL, figuras com os dados do gráfico, LaTeX; em inglês e português, claro e escuro, na mesma linguagem visual (a eclusa e o nível d'água) |
 
 ### Entregas e o que as prova
@@ -703,11 +703,11 @@ toda cláusula.
 | cláusula | leitura literal | problema | refinamento adotado |
 |---|---|---|---|
 | "AlphaProof para matemática" | RL sobre o Lean com um modelo de linguagem | sem pesos, sem GPU; o `lake` (Lean) não está nesta máquina nesta rodada | o **verificador** e uma busca completa para uma classe grande: geometria pelo método algébrico (numerador ≡ 0, com as condições de não degenerescência como certificado) e conferência em outra aritmética (racionais exatos); **conjecturas achadas e provadas sem serem pedidas**; topologia por homologia exata (torção) e persistente ([MATEMATICA.md](MATEMATICA.md)) |
-| "síntese e descoberta de algoritmos" | AlphaDev/AlphaTensor | — | três buscas, três certificados que não confiam nelas: redes de ordenação (princípio 0-1), multiplicação de matrizes (tensor exato nos inteiros), truques de bits (minimalidade por exaustão sólida num domínio finito); complexidade ajustada às contagens ([DESCOBERTA.md](DESCOBERTA.md)) |
+| "síntese e descoberta de algoritmos" | AlphaDev/AlphaTensor | — | três buscas, três certificados que não confiam nelas: redes de ordenação (princípio 0-1), multiplicação de matrizes (tensor exato nos inteiros), truques de bits (minimalidade por exaustão sólida num domínio finito); complexidade ajustada às contagens (DESCOBERTA.md (retirado em 0.16, §19)) |
 | "física em suas diversas frentes" | um motor universal | não existe; cada frente tem o seu método | um experimento por frente, cada um contra forma fechada ou valor publicado, com controle: quântica, relatividade, plasma, **tokamak** (Solov'ev), química (Hartree–Fock contra Szabo & Ostlund, e o fracasso conhecido do RHF mostrado), materiais (Lennard-Jones) ([CIENCIA.md](CIENCIA.md)) |
 | "biologia, algo similar a AlphaFold" | prever estruturas de proteínas | exige o modelo e as bases | **recusado pelo nome**; no lugar, o que se confere: fixação de mutantes contra a cadeia exata, filogenia por neighbour joining (RF 0), dobramento no modelo HP até o ótimo publicado |
 | "baterias, materiais" | DFT, eletroquímica | fora do que uma rodada mede honestamente | o primeiro degrau conferido (Hartree–Fock de moléculas, um líquido de LJ); o resto no TODO |
-| "AlphaZero e além" | autojogo | — | AlphaZero inteiro em escala de jogo da velha (rede de política e valor, PUCT, treino só por autojogo), julgado contra o **jogador perfeito**, com a busca sem treino como controle; **aleatorização de domínio** como "manipulação de ambientes" ([JOGOS.md](JOGOS.md)) |
+| "AlphaZero e além" | autojogo | — | AlphaZero inteiro em escala de jogo da velha (rede de política e valor, PUCT, treino só por autojogo), julgado contra o **jogador perfeito**, com a busca sem treino como controle; **aleatorização de domínio** como "manipulação de ambientes" (JOGOS.md (retirado em 0.16, §19)) |
 | "esboço → fotorrealista" | geração por difusão | sem pesos aqui | **não medido**: o img2img do vapor aceita o esboço com um checkpoint do usuário. No lugar, o que se mede: **esboço → desenho técnico** (retas, círculos, restrições, SVG/DXF) e **planta → 3D** (cômodos, portas, GLB) ([CENA.md §5](CENA.md)) |
 | "dar vida a uma imagem: NPC, 3D, profundidade, navegação livre, esqueletos, luz, gravidade" | um gerador de mundos | profundidade monocular, segmentação e pose são redes treinadas | uma **cena 2,5D** de primeiros princípios: camadas por SLIC e o plano do chão (a profundidade como heurística, dita e editável), o fundo reconstruído por push-pull, habitantes por A* com a cabeça no horizonte, clima, luz, vento, partículas, desenhos animados por esqueleto e skinning ([CENA.md](CENA.md)) |
 | "navegação livre" | andar dentro da cena | uma imagem não tem a geometria de trás | paralaxe numa janela de câmera pequena, dito; "livre" fica para quando houver profundidade aprendida |
@@ -770,7 +770,7 @@ lendo-o contra estes documentos) achou, e foi corrigido:
   sobrevivente é provado simbolicamente.
 - **"Nunca perde"** vinha de 60 partidas sorteadas; a contagem exaustiva
   de todas as linhas ótimas acha 4 perdidas de 131 com 64 simulações. A
-  afirmação passou a ser a que vale (nenhuma com 128) — [JOGOS.md](JOGOS.md).
+  afirmação passou a ser a que vale (nenhuma com 128) — JOGOS.md (retirado em 0.16, §19).
 - Controles fracos ditos como tais (o tunelamento clássico é calculado; a
   norma é uma conservação); a taxa h² do tokamak é do localizador do
   eixo, não do esquema (exato nesses polinômios); a classe n^2,807 está
@@ -1336,4 +1336,223 @@ mix test test/vapor/amalgam_test.exs test/vapor/train_exact_test.exs test/vapor/
 python3 test/python/jbig2_streams.py /tmp/jb2          # as fixtures JBIG2 de novo, cada uma julgada pelo jbig2dec
 mix vapor.quality --only round15                        # §5k, em ~2 s
 bin/vapor rebis equiv a.net b.net                       # e então traga os seus circuitos
+```
+
+## 19. Rodada 0.16: purificar — o Majlis, o Dīwān, a Khazāna e o Mīzān
+
+> Pedido 8 (2026-10-07): "continue + fechamento de pontas soltas, todo + expurgo de funcionalidades
+> meramente ilustrativas + refino e polimento + funcionalidades de chat/agente dos modelos: editar
+> conversas, contexto, clonar sessões (etc, o que mais for pertinente para equiparar e superar um
+> claude ou chat gpt da vida mesmo considerando a parte agêntica) + utilitários de terminal (terminal
+> gui e tui equivalentes bem como api) + fagocitação de algumas das ideias anexadas no prompt
+> inicial de valor (como geometria da informação) + fagocitação das ideias do pdf em anexo [o ASAS,
+> *Atomic Stream Application Substrate*] + pondere: [o manifesto **Al-Mīzān**] + ecossistema de
+> desenvolvimento (à la VS Code, Neovim e Emacs) + liberdade total para rebatizar […] via as raízes
+> de três letras (ex.: mizan → mzn) + liberdade total para refinamento e escrutínio desta diretriz
+> + […] capacidades agênticas de sandbox e execução de código […] + manteria a Alembic e o vapor em
+> sintaxe universal (ASCII/latina)? + implementaria a Al-Mīzān como uma 'camada secreta'? +
+> purificar o vapor ao extremo […] + ponderar [três críticas: Riemann × hardware discreto,
+> dependência de um ITP, sintaxe × semântica]."
+
+### A instrução, escrutinada
+
+- **"Expurgo do meramente ilustrativo"** precisa de um critério, senão vira gosto. O adotado é o do
+  ASAS (§2, a ordem lexicográfica sobre um piso inegociável), traduzido para o vapor: o **piso** é a
+  evidência — nada fica que afirme sem conferir; acima dele, **utilidade antes de leveza antes de
+  alcance**. Uma funcionalidade é útil quando responde a uma pergunta que alguém traz *com os seus
+  próprios dados*; é ilustrativa quando só reencena uma demonstração fixa. Pela régua:
+
+  | saiu | por quê | o que a substitui |
+  |---|---|---|
+  | `Vapor.Graph` (redes complexas) | geradores e estatísticas sobre grafos sintéticos; ninguém trazia o seu grafo | — (networkx faz melhor o que ela fazia) |
+  | `Vapor.Discover` (redes de ordenação, Strassen, síntese) | ótimos *conhecidos* reencontrados | o Crucible (o seu sistema, com evidência) |
+  | `Vapor.Games` (AlphaZero em jogo da velha) | um jogo resolvido, reaprendido | `Vapor.Play` (xadrez, shogi, Go, MNK genérico), que serve a qualquer jogo |
+  | painéis Física, Redes, Algoritmos, Matemática, Ciência, Jogos, Desenhar, Ouvir, Treino, Fusão; o botão de dossiê de demonstração | cada um rodava um exemplo fixo | os módulos que servem a outras portas ficam (Física e Ciência servem ao Crucible e ao estúdio; a prova ao arquivo replayável) |
+  | TUI: desenhar, ouvir, fundir | idem | o TUI agora é o Dīwān: **todos** os verbos |
+
+  O saldo é **2 949 linhas a menos** no que existia, 3 documentos retirados (REDES, DESCOBERTA,
+  JOGOS) e nenhuma afirmação do livro-razão perdida. As seções §13–§14 desta diretriz ficam como
+  registro histórico; os comandos de contestação delas que citam testes retirados apontam para o
+  histórico do git.
+- **"Equiparar e superar Claude e ChatGPT, inclusive no agêntico."** Superar *o modelo* não é uma
+  promessa honesta para um sistema que serve o modelo que você tiver. O que se pode superar é **a
+  conversa como objeto**: o que os dois produtos tratam como uma lista mutável, o vapor trata como
+  uma árvore endereçada por conteúdo ([MAJLIS.md](MAJLIS.md)):
+
+  | | ChatGPT / Claude (produtos, out. 2026) | vapor 0.16 |
+  |---|---|---|
+  | editar uma mensagem | cria um ramo; navegação ‹ › | idem, e o ramo antigo é **imutável** (o hash de cada mensagem cobre o pai) |
+  | outra resposta | idem | idem, com o *backend*, os tokens e o tempo de cada uma |
+  | bifurcar | "ramificar em nova conversa" (cópia) | **O(1)**: 0 mensagens copiadas (medido: §5l) |
+  | contexto | opaco; compactação automática invisível | **exatamente** o que o modelo vai ler, por mensagem, com as deixadas de fora; mensagens **fixadas** que nunca saem; compactação explícita que nomeia o hash que resume, desfazível |
+  | busca | por título/conteúdo | BM25 sobre todas as mensagens, de todos os ramos |
+  | importar | — | exportações do ChatGPT e do Claude (árvore preservada) |
+  | exportar | JSON/Markdown | JSON **verificável**: um caractere trocado é recusado na importação |
+  | compartilhar | link; apagar revoga | link = MAC sobre (conversa, geração); **revogar mata todos** os links de uma vez (ASAS §6.2) |
+  | agente | ferramentas do produto | ferramentas do vapor por lista de permissão, com **diário verificável** de cada execução |
+  | onde mora | na nuvem do fornecedor | num arquivo seu, *crash-atomic* (a Khazāna) |
+
+  O que **não** se afirma: *streaming* token a token (a resposta chega inteira), anexos de imagem na
+  conversa, memória entre conversas. Ficam no [TODO](TODO.md).
+- **"Terminal GUI, TUI e API equivalentes"** — equivalência só é verdadeira se for *construída*,
+  não mantida à mão. Há **um** interpretador, o Dīwān ([DIWAN.md](DIWAN.md)): pipes, redireção,
+  arquivos, `help`; a linha de comando (`bin/vapor`), o TUI e o terminal do console são três
+  apresentações dele, e a API HTTP é a mesma chamada. Um verbo novo aparece nas quatro portas sem
+  uma linha a mais.
+- **"Sandbox e execução de código"** — o terminal do console é uma porta para estranhos, então é uma
+  **jaula**: arquivos só da sessão (128 arquivos, 8 MB cada, 64 MB no total), nenhum *shell*,
+  `--measure` recusado, teto de heap e prazo por comando, um processo por comando. A jaula é
+  medida contra o controle (a sessão local lê o arquivo; a jaula recusa — §5l). A Alembic já
+  executava código gerado só em *workers* isolados; isso agora é afirmação do livro-razão,
+  conferida por auditoria a cada build.
+- **"Rebatizar via raízes de três letras (mizan → mzn)"** — escrutinado, e corrigido: a raiz de
+  *mīzān* é **و-ز-ن** (*w-z-n*, "pesar"); *m-z-n* não é raiz, é o padrão de instrumento *mif'āl*
+  aplicado a ela. E `.mzn` já é a extensão do MiniZinc, uma linguagem de restrições em uso — o
+  conflito seria real em todo editor. A extensão é **`.wzn`**. Os nomes novos seguem a temática do
+  pedido (árabe, como *alquimia*, *alambique*, *elixir*), cada um pelo que faz: **Majlis** (o
+  conselho onde se conversa), **Dīwān** (o registro, e a sala onde se despacha), **Khazāna** (o
+  tesouro, o depósito), **Mīzān** (a balança). Nada antigo foi renomeado: os nomes antigos estão em
+  recibos, arquivos assinados e na monografia, e renomear quebraria a evidência por estética.
+- **"Purificar ao extremo; acabamento de produto; viabilizador acadêmico de fronteira"** — as três
+  coisas puxam para lados diferentes, e a ordem lexicográfica decide: o piso (evidência) primeiro;
+  o produto é o que fica depois do expurgo; a fronteira acadêmica entra só onde decide algo (o
+  Mīzān, a geometria da informação com controle, a Khazāna com injeção de falhas em cada byte).
+
+### O ASAS, fagocitado
+
+O ASAS é um sistema operacional para RISC-V resolvido em tempo de build. Quase nada dele cabe num
+sistema que roda *sobre* um SO comum — mas cinco ideias são independentes do *kernel*, e as cinco
+entraram:
+
+| ideia (ASAS) | no vapor 0.16 | medido |
+|---|---|---|
+| §8.3–8.4 conteúdo imutável + troca atômica de ponteiro; raiz em **dois slots** com sequência e etiqueta | `Vapor.Khazana`: dois arquivos de pacote e dois slots de raiz de 128 bytes (`KHZ1` · seq · geração · tamanho · raiz · etiqueta) | uma queda em **cada byte** de um *commit* (344 pontos): sempre a raiz velha ou a nova; o arquivo único sobrescrito no lugar lê como v2 com um valor rasgado — pior que perdido |
+| §6.1 **um** hash com chave | HMAC-SHA256 sob a chave do depósito (SHA-256, não BLAKE3: é o hash de todo o histórico do vapor — recibos, diário Merkle, arquivos; *um* hash vale mais que *o melhor* hash) | — |
+| §6.2 capacidades **computadas**, revogação em massa por geração | links compartilhados = MAC(conversa, geração); revogar incrementa a geração | um link forjado ou revogado: 403 |
+| §6.3 entropia numa **única fronteira** | `Vapor.Entropy`: o gerador do SO só ali; todo o resto semeado e reproduzível | auditoria do código-fonte a cada build; um sorteio injetado é pego |
+| §11 o **livro-razão** de garantias | `Vapor.Assurance` → [GARANTIAS.md](GARANTIAS.md): *provado*, *conferido*, *testado*, *argumentado*, *devido* | um teste falha se a evidência citada sumir ou o documento divergir dos dados |
+
+Recusado, com razão: PMP no lugar de MMU, *kernel bypass*, binários planos, rasterização em RVV,
+árvore de dispositivos no build — o vapor não é um SO e não substitui o do usuário. A divisão Zig
+(mecanismo) × Rust (política) já existe no vapor como BEAM (política, supervisão) × *worker* Zig
+(mecanismo), separados por um processo — a "costura" do ASAS §3.3. A garantia de memória fraca dos
+anéis lock-free do ASAS §4.4 tem um análogo no protocolo de `/dev/shm` do *worker*, e está no
+livro-razão como **devida**, não como feita.
+
+### O manifesto Al-Mīzān, pesado
+
+O manifesto propõe uma linguagem com raízes trilaterais e *awzān* como sistema de tipos, sintaxe
+S-expression em árabe da direita para a esquerda, provas em Lean, endereçamento por *abjad*, a
+cadeia `ikseer` (*distill*, *assay*, *transmute*), dependências P2P por conteúdo (Al-Khazāna) e a
+divisão Alembic (execução) × Al-Mīzān (prova). Pesado item a item:
+
+| proposta | veredito | o que foi feito |
+|---|---|---|
+| raízes = domínios, *awzān* = regimes | **mantida** — é a melhor ideia do manifesto: a morfologia carrega o tipo | raiz diz *que tipo de afirmação* (ح-س-ب aritmética, ح-ف-ظ conservação, ن-ق-ل transição, ك-ت-ب registro); *wazn* diz *como pode ser usada* (فاعل transitória, مفعول persistente, برهان provada). Pares sem sentido são recusados: uma lei de conservação sem prova não compila |
+| sintaxe em árabe RTL | **mantida como projeção**, não como a linguagem | uma árvore neutra; duas impressões bijetivas — latina (Buckwalter, ASCII) e árabe (palavras-chave árabes, algarismos arábico-índicos). `ler(imprimir(t)) = t` em 300 programas aleatórios nas duas escritas; a identidade é o hash da árvore, igual nas duas |
+| endereçamento por *abjad* | **refutado por medição** | das 21 952 raízes de três letras, 21 950 compartilham o valor com outra (99,99 %); a maior classe tem 82. *Abjad* é mostrado (`vapor wzn abjad`), nunca usado como endereço: a identidade é SHA-256 (0 colisões nas mesmas raízes) |
+| provas em Lean | **trocadas por procedimentos de decisão**, Lean como segunda opinião | ver a crítica 2 abaixo |
+| `ikseer distill/assay/transmute` | **mantida como verbos** | `vapor wzn check` (destila: decide as obrigações), `vapor wzn assay` (o fāʿil em f32 contra o valor exato em ℚ, ULP a ULP), `vapor wzn transmute --to vapor\|aiger\|lean` (baixa para o compilador do vapor — x86-64, AVX-512, AArch64, RISC-V, SPIR-V —, para AIGER via Rebis, ou para teoremas Lean 4) |
+| Al-Khazāna P2P | **adiada**; o depósito local por conteúdo e *crash-atomic* está feito | P2P sem um modelo de confiança é um vetor de cadeia de suprimentos; quando vier, virá sobre a mesma raiz em dois slots |
+| VHDL | adiado | AIGER cobre a verificação; síntese não é o papel do vapor |
+
+**Manteria a Alembic e o vapor em sintaxe universal (ASCII/latina)? Sim.** A Alembic é uma
+linguagem de *kernels* lida por engenheiros de desempenho do mundo todo, em diffs, em revisões de
+código, em terminais sem fonte árabe; trocar a escrita dela custaria leitores e não compraria
+nenhuma garantia. **Implementaria a Al-Mīzān como uma "camada secreta"? Não como secreta — como
+dialeto formal declarado.** Uma camada secreta é uma camada sem revisores; o que dá valor a um
+dialeto de prova é justamente ser lido e contestado. A forma adotada é a do pedido final
+("uma representação neutra além do árabe"): a árvore é neutra, a projeção árabe é cidadã de
+primeira classe (o LSP, os realces de sintaxe do VS Code, do Neovim e do Emacs e o `wzn show
+--arabic` tratam as duas igualmente), e quem quiser escrever e ler só em árabe pode.
+
+### As três críticas, respondidas
+
+1. **"Geometria riemanniana × hardware discreto."** A crítica é certa quanto à *implementação* e
+   errada quanto ao *uso*. Ninguém roda uma variedade no silício: roda-se a **fórmula fechada** que
+   a geometria entrega, e é aí que ela paga. Na 0.16 (`Vapor.InfoGeom`, [GEOMETRIA.md](GEOMETRIA.md)):
+   a distância de Fisher–Rao no simplex é `2·arccos(Σ√(pᵢqᵢ))` — uma soma e um arco-cosseno; a
+   geodésica é uma *slerp* na esfera das raízes; entre normais, a fórmula fechada da métrica
+   hiperbólica. E cada uso tem um controle que mostra por que a geometria importa: KL viola a
+   desigualdade triangular em 217 de 1 000 triplas (Fisher–Rao: 0), então não pode ordenar "mais
+   perto"; o gradiente natural dá as **mesmas** previsões com uma variável reescalada ×1000
+   (diferença 7·10⁻¹²), o gradiente simples não (0,54). O que é discreto é a aritmética, e para
+   isso o vapor já tem o envelope de Higham provado. No Assay, a ferramenta `geometry` compara
+   modelos pelas suas distribuições de saída com a métrica certa.
+2. **"Dependência de um ITP (Lean) → precisa de automação SMT/SAT."** Correta, e assumida. Um
+   assistente de prova interativo pede uma pessoa que saiba usá-lo para cada obrigação — o
+   gargalo do manifesto. No Mīzān, **cada obrigação que a linguagem consegue enunciar tem um
+   decisor que o vapor já possui**, com certificado conferido por código separado: identidades
+   polinomiais e leis de conservação por forma normal exata sobre ℚ (dH/dt = ∇H·f ≡ 0); positividade
+   e limites numa caixa pelo Aludel (Bernstein, testemunha replayável); invariantes de sistemas de
+   transição booleanos por SAT com prova DRUP. O veredito é *provado*, *refutado com contraexemplo*
+   ou *desconhecido* — e *desconhecido* **não compila**. A linguagem é recortada para caber nos
+   decisores, não o contrário. O Lean continua como segunda opinião independente
+   (`transmute --to lean` gera os teoremas; fechá-los com `ring`/`decide` está no livro-razão como
+   **devido**, porque o Lean não está nesta máquina). O controle de §5l mostra a diferença: a
+   amostragem de dH/dt em 1 000 pontos aceita a lei com amortecimento de 10⁻⁹; o decisor a refuta
+   e dá o ponto.
+3. **"Sintaxe × semântica (árabe × neutro)."** A semântica mora na árvore; a escrita é uma
+   projeção. Isso não é um rebaixamento do árabe: é o que permite que a raiz e o *wazn* — que são
+   *semântica*, não grafia — sobrevivam a qualquer escrita, e que duas pessoas, uma lendo
+   `(claim energy (root H-f-Z) (wazn burhan) …)` e outra `(دعوى energy (جذر ح-ف-ظ) (وزن برهان) …)`,
+   discutam **o mesmo hash**. A bijeção é testada; a transliteração com perdas (dobrar as formas do
+   hamza) funde 7 nomes em 2 — por isso o Buckwalter, e não uma romanização "bonita".
+
+### O ecossistema de desenvolvimento
+
+Um servidor de linguagem só (`vapor lsp`, LSP 3.17 por stdio: diagnósticos, *hover*, completar,
+ir à definição, símbolos, formatação e a troca de escrita, `vapor.mizan.toArabic`/`toLatin`), e três
+clientes finos que não reimplementam nada ([EDITORES.md](EDITORES.md)): uma extensão do VS Code, um
+*plugin* do Neovim (Lua, `vim.lsp`), um modo do Emacs (`eglot`). As gramáticas TextMate e de Vim
+realçam as duas escritas do Mīzān e a Alembic. O teste fala com o servidor real, com *framing*
+`Content-Length` e colunas UTF-16, a partir de um cliente Node.
+
+### O que foi achado no caminho
+
+- **O controle do depósito ingênuo era mais grave do que o previsto**: sobrescrever metade de uma
+  raiz CBOR de mesmo tamanho não a torna ilegível — ela decodifica como v2 com um valor rasgado. A
+  verificação de §5l foi corrigida para chamar isso pelo nome (antes esperava "perdido").
+- **A própria verificação de fronteira de entropia casava consigo mesma** (a expressão regular
+  estava escrita no arquivo que ela varre); a regra agora é montada em pedaços, e a auditoria do
+  build a pegaria.
+- **Um nome árabe com algarismo ASCII** (`سالم-1`) é recusado, por desenho: um nome não mistura
+  escritas. A geração de nomes de teste usa algarismos arábico-índicos.
+- **A raiz-âncora**: mensagens de topo de conversas diferentes eram "irmãs" entre si; cada conversa
+  ganhou um nó-âncora e cada mensagem o dono (`o`) dentro do hash — sem isso a coleta de lixo de uma
+  conversa apagava mensagens de outra.
+- **O Dīwān aceitava um `|` inicial** (um comando vazio); a divisão por `|` preserva os segmentos
+  vazios para recusá-los.
+- **A auditoria pegou a rodada 0.15** usando o gerador do SO para entradas de teste — agora um fluxo
+  semeado.
+- **Uma resposta regenerada não virava a corrente**: o ponteiro só seguia uma resposta pedida *no*
+  ponteiro, então "outra resposta" criava o irmão e a página continuava na antiga. O teste se
+  chamava "o ponteiro a segue" e não conferia o ponteiro. Achado pelo teste de navegador; agora a
+  regeneração move o ponteiro quando a pergunta está no caminho à vista, e uma resposta tardia a
+  uma pergunta que a pessoa já ultrapassou continua sem roubá-lo — os dois casos testados.
+- **O teste da API de conversas dependia da ordem de carga** dos arquivos de teste (usava um
+  *backend* definido noutro arquivo); o *backend* foi para `test/support`.
+
+### O que este documento não afirma
+
+- Que o vapor converse melhor que um modelo de fronteira: a conversa é tão boa quanto o modelo
+  servido; o que é melhor é o que se pode fazer com ela.
+- Que a jaula resista a um atacante com acesso ao BEAM: ela repousa no isolamento de processos da
+  BEAM e em todo verbo ler pela porta `Vapor.Main.read_input` (o livro-razão diz isso).
+- Que a Khazāna sobreviva a um disco que mente sobre `fsync`: é a metade da plataforma no contrato
+  (como no ASAS §8.4).
+- Que o Mīzān prove tudo: ele prova o que os seus decisores decidem, e recusa o resto.
+
+### Como contestar
+
+```sh
+mix test test/vapor/khazana_test.exs test/vapor/majlis_test.exs test/vapor/hall_test.exs \
+         test/vapor/diwan_test.exs test/vapor/mizan_test.exs test/vapor/lsp_test.exs \
+         test/vapor/editors_test.exs test/vapor/info_geom_test.exs test/vapor/assurance_test.exs \
+         test/vapor/console_majlis_test.exs test/vapor/audit_test.exs --include playwright
+mix vapor.quality --only round16                         # §5l, em ~2 s
+mix vapor.assurance --check                              # o livro-razão contra o seu documento
+bin/vapor wzn check priv/mizan/oscillator.wzn            # provado; refutado, com o ponto
+bin/vapor wzn show priv/mizan/oscillator.wzn --arabic    # a mesma árvore, a outra escrita
+T=$(bin/vapor chat new --title teste) && bin/vapor chat say $T "olá" && bin/vapor chat context $T   # com VAPOR_MIND
 ```

@@ -57,7 +57,8 @@ defmodule Vapor.Agent do
   alias Vapor.Canonical
 
   @doc """
-  Run an agent on an input. Options: `backend:` (required), `impls:`
+  Run an agent on an input — one user message, or a conversation so far as
+  a list of `%{"role", "content"}` messages. Options: `backend:` (required), `impls:`
   (`%{tool_name => fun(args, ctx)}`, `ctx = %{idempotency_key:, run_id:,
   step:}`, returning `{:ok, json_value}` or `{:error, reason}`), `now:`
   (default: the current UTC time — recorded), `nonce:`, `confirm:`
@@ -115,7 +116,7 @@ defmodule Vapor.Agent do
 
   defp fresh_state(spec, input, opts) do
     now = Keyword.get_lazy(opts, :now, fn -> DateTime.utc_now() end) |> iso()
-    nonce = Keyword.get_lazy(opts, :nonce, fn -> Base.encode16(:crypto.strong_rand_bytes(8), case: :lower) end)
+    nonce = Keyword.get_lazy(opts, :nonce, fn -> Base.encode16(Vapor.Entropy.bytes(8), case: :lower) end)
     st = base(spec, opts)
     run_id = Canonical.hex_digest({:run, st.digest, now, nonce})
     st = Map.merge(st, %{run_id: run_id, now: now, journal: Journal.new(run_id)})
@@ -144,9 +145,19 @@ defmodule Vapor.Agent do
     end
   end
 
+  # the input is one user message, or a conversation so far (a list of
+  # %{"role", "content"} messages ending with the user's turn) — what a chat
+  # thread hands over; either way it is recorded, sealed, in the start event
   defp begin(st, input) do
     sys = if st.spec.instructions != "", do: [%{"role" => "system", "content" => st.spec.instructions}], else: []
-    %{st | messages: sys ++ [%{"role" => "user", "content" => input}]}
+
+    msgs =
+      case input do
+        list when is_list(list) -> Enum.map(list, &Map.take(&1, ["role", "content", "tool_calls", "tool_call_id", "name"]))
+        text -> [%{"role" => "user", "content" => text}]
+      end
+
+    %{st | messages: sys ++ msgs}
   end
 
   # --------------------------------------------------------------- loop --

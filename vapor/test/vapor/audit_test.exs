@@ -34,6 +34,14 @@ defmodule Vapor.AuditTest do
     assert measure =~ "deadline"
   end
 
+  test "one entropy boundary (ASAS §6): the OS generator only through Vapor.Entropy; the process generator only seeded" do
+    for path <- @lib, path != "lib/vapor/entropy.ex", src = File.read!(path) do
+      refute src =~ ~r/strong_rand_bytes|:crypto\.rand_|:crypto\.strong_rand/, "#{path} draws OS entropy outside Vapor.Entropy"
+      uses = src =~ ~r/\bEnum\.(random|shuffle|take_random)\(|:rand\.(uniform|bytes|normal)\(/
+      if uses, do: assert(src =~ ~r/:rand\.seed\(/, "#{path} uses the process generator without seeding it")
+    end
+  end
+
   test "the control plane has no dependencies" do
     assert Mix.Project.config()[:deps] == []
   end

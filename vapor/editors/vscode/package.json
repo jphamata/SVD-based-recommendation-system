@@ -1,0 +1,33 @@
+{
+  "name": "vapor",
+  "displayName": "vapor — Al-Mizān and Alembic",
+  "description": "Al-Mizān (claims decided, in Latin or Arabic script) and Alembic (the problem language): highlighting, diagnostics that decide every obligation, hover, completion, symbols, formatting, and the Latin ⇄ Arabic projection — all from `vapor lsp`.",
+  "version": "0.16.0",
+  "publisher": "vapor",
+  "license": "SEE LICENSE IN ../../LICENSE.md",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Programming Languages", "Formatters", "Linters"],
+  "main": "./extension.js",
+  "activationEvents": ["onLanguage:mizan", "onLanguage:alembic"],
+  "contributes": {
+    "languages": [
+      { "id": "mizan", "aliases": ["Al-Mizān", "الميزان", "mizan"], "extensions": [".wzn"], "configuration": "./language-configuration.json" },
+      { "id": "alembic", "aliases": ["Alembic", "alembic"], "extensions": [".alb"], "configuration": "./alembic-configuration.json" }
+    ],
+    "grammars": [
+      { "language": "mizan", "scopeName": "source.mizan", "path": "./syntaxes/mizan.tmLanguage.json" },
+      { "language": "alembic", "scopeName": "source.alembic", "path": "./syntaxes/alembic.tmLanguage.json" }
+    ],
+    "commands": [
+      { "command": "vapor.mizan.toArabic", "title": "Al-Mizān: show in Arabic script (same program, same hash)" },
+      { "command": "vapor.mizan.toLatin", "title": "Al-Mizān: show in Latin script (same program, same hash)" }
+    ],
+    "configuration": {
+      "title": "vapor",
+      "properties": {
+        "vapor.path": { "type": "string", "default": "vapor", "description": "The vapor executable (bin/vapor of a checkout, or vapor on the PATH)." }
+      }
+    }
+  },
+  "dependencies": { "vscode-languageclient": "^9.0.1" }
+}

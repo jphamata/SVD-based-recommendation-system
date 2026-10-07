@@ -9,7 +9,7 @@ defmodule Vapor.TUITest do
 
   test "help, languages, unknown commands and quitting", %{st: st} do
     {help, _} = TUI.eval("help", st)
-    assert help =~ "read FILE" and help =~ "draw DIGIT"
+    assert help =~ "read FILE" and help =~ "every vapor verb"
     {_, pt} = TUI.eval("lang pt", st)
     assert {msg, _} = TUI.eval("frobnicate", pt)
     assert msg =~ "comando desconhecido"
@@ -17,12 +17,16 @@ defmodule Vapor.TUITest do
     assert {[], ^st} = TUI.eval("", st)
   end
 
-  test "draw: the digit in the terminal (no ANSI without colour), read back, with its distance to training", %{st: st} do
-    {out, _} = TUI.eval("draw 3 1", st)
-    text = IO.iodata_to_binary(out)
-    refute text =~ "\e["
-    assert text =~ "classifier reads 3"
-    assert text |> String.split("\n") |> Enum.take(8) |> Enum.all?(&(String.length(&1) == 16))
+  test "every other line is the shared interpreter: vapor verbs, pipes, sequences — as in the console's terminal", %{st: st} do
+    dir = Path.join(System.tmp_dir!(), "tui-#{System.unique_integer([:positive])}")
+    File.mkdir_p!(dir)
+    f = Path.join(dir, "nums.txt")
+    {_, st} = TUI.eval("echo 1e16 1 -1e16 > #{f}", st)
+    {out, st} = TUI.eval("amalgam #{f} | cat", st)
+    assert {:ok, %{"amalgam" => %{"value" => "1.0"}}} = Vapor.JSON.decode(out)
+    {out, _} = TUI.eval("wzn abjad ميزان", st)
+    assert out =~ "108"
+    File.rm_rf!(dir)
   end
 
   test "the noise gate: real prose is signal, repetition is noise", %{st: st} do
@@ -37,8 +41,6 @@ defmodule Vapor.TUITest do
     assert IO.iodata_to_binary(out) =~ "error"
     {out, _} = TUI.eval("search anything", st)
     assert out =~ "library is empty"
-    {out, _} = TUI.eval("draw 12", st)
-    assert out =~ "0 to 9"
   end
 
   @tag :native

@@ -100,6 +100,7 @@ defmodule Vapor.Quality.Report do
     #{round13(Map.get(r, :round13))}
     #{round14(Map.get(r, :round14))}
     #{round15(Map.get(r, :round15))}
+    #{round16(Map.get(r, :round16))}
 
     ## 6. Custo da eclusa
 
@@ -155,6 +156,28 @@ defmodule Vapor.Quality.Report do
     JBIG2 contra o jbig2dec, a sessão residente na GPU contra a CPU, os especialistas de 4 bits
     predicados contra os densos, o Mamba-2 contra os logits do próprio transformers, o dossiê de
     auditoria contra adulteração e os *shards* entre nós BEAM contra um nó só.
+
+    | verificação | valor | controle | limiar | ok |
+    |---|---|---|---|---|
+    #{Enum.map_join(x.checks, "\n", fn c -> "| #{c.name} | #{v(c.value)} | #{v(c.control)} | #{c.threshold} | #{ok(c.pass)} |" end)}
+    """
+  end
+
+  defp round16(nil), do: ""
+
+  defp round16(x) do
+    """
+    ## 5l. Rodada 0.16 — o Majlis, o Dīwān, a Khazāna e o Mīzān
+
+    A rodada que tirou do produto o que só se exibia mede o que ficou. A khazāna que reabre na raiz
+    velha ou na nova depois de um corte em qualquer byte, contra o arquivo único sobrescrito no lugar
+    (que lê como v2 com um valor rasgado: pior que perdido); o fork que não copia nada contra a cópia
+    profunda; a exportação com hash que recusa um caractere trocado contra o Markdown que não vê;
+    o contexto que mantém a instrução fixada contra o truncamento pela cauda; a conservação decidida
+    exatamente contra a amostragem enganada por um amortecimento de 10⁻⁹; as duas projeções do Mīzān
+    contra a transliteração que funde nomes; SHA-256 contra o abjad; Fisher–Rao contra KL; o gradiente
+    natural contra o simples; a jaula contra a sessão local; a fronteira de entropia contra um sorteio
+    injetado.
 
     | verificação | valor | controle | limiar | ok |
     |---|---|---|---|---|

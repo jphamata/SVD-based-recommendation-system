@@ -23,6 +23,9 @@ vapor aludel decide P --vars x,y --box '0,1;0,1' | REQUEST.json   # positividade
 vapor tabula FILE [--facts a,b]          # um contrato: antinomias, provas, lacunas
 vapor cupel [--n 32 --k 64 --bit 26]     # o exercício de corrupção silenciosa
 vapor amalgam FILE|- [--f32]             # uma soma que não depende da ordem
+vapor chat new|say|show|edit|regen|switch|rewind|fork|pin|context|compact|search|export|import|share …  (0.16)
+vapor wzn check|show|hash|run|transmute|assay|abjad FILE …   # o Mīzān (0.16): afirmações decididas
+vapor lsp                                # o servidor de linguagem (VS Code, Neovim, Emacs, …)
 vapor serve | tui | ocr | merge | quality …   # as tarefas mix anteriores
 ```
 
@@ -68,6 +71,26 @@ vapor aludel decide 'x^4*y^2 + x^2*y^4 - 3*x^2*y^2 + 1 + 1/1000' --vars x,y --bo
 # um contrato: antinomias com o cenário; as posições quando a entrega atrasou
 vapor tabula venda.txt --facts delivered,late
 ```
+
+## Conversas, o Mīzān e o terminal único (0.16)
+
+```sh
+# uma conversa num arquivo seu (~/.vapor/majlis, ou $VAPOR_HOME), com o modelo de VAPOR_MIND
+T=$(vapor chat new --title rascunho --system "responda em português")
+vapor chat say $T "o que é uma base de Gröbner?"
+vapor chat edit $T 3fa2c1 "e um exemplo pequeno?"    # um ramo; o antigo fica
+vapor chat context $T                                # o que o modelo vai ler, e o que fica de fora
+vapor chat export $T --md > rascunho.md
+
+# uma lei de conservação provada sobre ℚ; a versão amortecida refutada no ponto
+vapor wzn check priv/mizan/oscillator.wzn
+vapor wzn show priv/mizan/oscillator.wzn --arabic | vapor wzn hash -   # o mesmo hash
+```
+
+A linha de comando, o TUI (`mix vapor.tui`), o terminal do console e `POST /v1/vapor/diwan` são o
+mesmo interpretador — o Dīwān ([DIWAN.md](DIWAN.md)): pipes, redireção, `;`, aspas e arquivos;
+no console, uma sessão enjaulada. Conversas: [MAJLIS.md](MAJLIS.md); o Mīzān: [MIZAN.md](MIZAN.md);
+editores: [EDITORES.md](EDITORES.md).
 
 ## Agentes e console de terminal
 

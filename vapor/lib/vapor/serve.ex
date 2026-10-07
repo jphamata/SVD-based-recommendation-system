@@ -90,7 +90,32 @@ defmodule Vapor.Serve do
       # with a token, every request but /health must carry it (Bearer, or the
       # cookie set by opening /?token=…): required when listening beyond loopback
       token: Keyword.get(opts, :token),
-      vocab: if(tk, do: vocab(tk))}
+      vocab: if(tk, do: vocab(tk)),
+      # conversations: given, or kept under `data:` (the serve task's --data, default ~/.vapor)
+      majlis: Keyword.get_lazy(opts, :majlis, fn -> majlis(opts, tk) end)}
+  end
+
+  # the conversations' backends: the served model (decisions re-derivable) and
+  # VAPOR_MIND's (observations); token counts exact when a tokenizer is served
+  defp majlis(opts, tk) do
+    case opts[:data] do
+      nil ->
+        nil
+
+      dir ->
+        local =
+          if opts[:engine] && tk,
+            do: %{(opts[:model_name] || "local") => Vapor.Agent.Backend.Local.new(engine: opts[:engine], tokenizer: tk, template: opts[:template], model_id: opts[:model_digest] || opts[:model_name])},
+            else: %{}
+
+        remote = case Vapor.Mind.from_env() do nil -> %{}; mind -> %{mind.name => mind.backend} end
+        count = if tk, do: fn text -> length(Vapor.Tokenizer.encode(tk, text)) end
+        backends = Map.merge(remote, local)
+        default = if local != %{}, do: hd(Map.keys(local)), else: List.first(Map.keys(remote))
+        {:ok, m} = Vapor.Majlis.start_link(dir: Path.join(dir, "majlis"), backends: backends, default: default, count: count)
+        Process.unlink(m)
+        m
+    end
   end
 
   @doc """
@@ -212,7 +237,7 @@ defmodule Vapor.Serve do
          {:ok, ref} <- Engine.generate(ctx.engine, ids, opts) do
       # an engine that dies mid-request ends the request (503), never hangs it
       mon = Process.monitor(GenServer.whereis(ctx.engine))
-      id = (if chat?, do: "chatcmpl-", else: "cmpl-") <> Base.url_encode64(:crypto.strong_rand_bytes(9))
+      id = (if chat?, do: "chatcmpl-", else: "cmpl-") <> Base.url_encode64(Vapor.Entropy.bytes(9))
       receipt = fn out_ids -> Vapor.Canonical.hex_digest({:completion, ctx.model_digest, ids, Keyword.drop(opts, [:constraint]), plan.digest, out_ids}) end
       meta = %{id: id, created: System.os_time(:second), model: ctx.model, chat?: chat?, plan: plan, receipt: receipt, engine: ctx.engine, mon: mon}
 
@@ -238,6 +263,10 @@ defmodule Vapor.Serve do
   # constant-time comparison; /health stays open (a load balancer's probe)
   def authorize(_req, %{token: t}) when t in [nil, ""], do: :ok
   def authorize(%{path: "/health"}, _ctx), do: :ok
+  # a shared conversation carries its own authority: a capability computed
+  # under the store's key, checked by the handler (Vapor.Console.Hall)
+  def authorize(%{method: :GET, path: "/shared/" <> _}, _ctx), do: :ok
+  def authorize(%{method: :GET, path: "/v1/vapor/shared/" <> _}, _ctx), do: :ok
 
   def authorize(req, %{token: token}) do
     headers = Map.get(req, :headers, %{})

@@ -2,7 +2,8 @@
 
 ```sh
 mix vapor.serve --model ./Qwen2-0.5B --docs ./pasta       # API em /v1, console em /
-mix vapor.serve --docs ./pasta                            # sem modelo de texto: documentos, visão, fala, desenho, estúdio, fusão, qualidade
+mix vapor.serve --docs ./pasta                            # sem modelo de texto: documentos, visão, estúdio, qualidade, as mesas
+mix vapor.serve --data ~/.vapor                           # onde moram as conversas (padrão: VAPOR_HOME ou ~/.vapor)
 mix vapor.serve --ip 0.0.0.0 --token SEGREDO --docs ./p   # exposto: o token é obrigatório
 mix vapor.tui                                             # o mesmo, no terminal
 ```
@@ -13,6 +14,32 @@ clique** (lembrado no navegador); claro e escuro pelo sistema ou pelo botão;
 navegável por teclado; legível a 390 px. Instalável como app (manifesto e
 ícones), com logo e favicon próprios. Decisões de interface — e por que não
 Tauri — em [INTERFACES.md](INTERFACES.md).
+
+## 0.16 — conversar, e um terminal
+
+Um grupo novo, **Conversar**:
+
+- **Conversas** ([MAJLIS.md](MAJLIS.md)) — à esquerda, as conversas (nova, importar uma exportação
+  do vapor, do ChatGPT ou do Claude, buscar em todas); no centro, a conversa, em que cada mensagem
+  tem *editar*, *outra resposta*, *fixar*, *continuar daqui*, *bifurcar daqui* e *copiar*, e os
+  ramos aparecem como **‹ i/n ›**; à direita, o **contexto** como uma barra (instruções, cada
+  mensagem enviada, as fixadas em ouro, a linha do orçamento) com as deixadas de fora contadas, a
+  compactação (que nomeia o que resume, e se desfaz), a **árvore** de ramos (o caminho em ouro;
+  um clique vai até lá), os ajustes (título, instruções, modelo, ferramentas, orçamento,
+  temperatura) e compartilhar · revogar · exportar (JSON verificável, Markdown).
+- **Perguntar à biblioteca** — o antigo *Chat*: uma pergunta respondida com as fontes.
+- **Terminal** ([DIWAN.md](DIWAN.md)) — os mesmos comandos de `bin/vapor`, numa sessão enjaulada,
+  com cores ANSI, histórico, Tab, e os arquivos da sessão num editor ao lado.
+
+Saíram, por serem demonstrações fixas ([DIRETRIZ §19](DIRETRIZ.md)): Física, Redes, Algoritmos,
+Matemática, Ciência, Jogos, Desenhar, Ouvir, Treino, Fusão e o dossiê de demonstração. As seções
+abaixo que os descrevem ficam como registro das rodadas 0.10–0.11.
+
+Um teste de navegador (`test/js/console_majlis.mjs`) conversa, edita, anda entre ramos, pede
+outra resposta, fixa, compacta, bifurca, busca, compartilha e revoga (lendo o link sem o
+console), e no terminal decide o oscilador do Mīzān, usa um *pipe*, completa com Tab, edita um
+arquivo e tenta ler fora da jaula; depois troca para português e para o escuro. Capturas:
+`docs/img/conversas-*.png`, `docs/img/terminal.png`.
 
 ## 0.14 — a bancada aberta
 
@@ -455,30 +482,19 @@ aparece como falha, não como um painel meio traduzido.
 | `POST /v1/vapor/quality` `{text}` | veredito do portão de texto, limiares e medidas |
 | `POST /v1/vapor/ocr` `{name, data, script?}` | texto de uma imagem ou das páginas escaneadas de um PDF: linhas, caixas, confianças por caractere; tabelas com estrutura, células e Markdown/HTML/CSV; figuras com legenda e os dados dos gráficos; `script`: `latin`, `arabic`, `cyrillic`, `cursive` (recusada), `zh`, `ja`, `ko`, `math` |
 | `GET /v1/vapor/substrates` | cada substrato presente admitido por medida: veredito, impressão numérica, sondas |
-| `POST /v1/vapor/physics` `{demo}` | `chaos`: o pêndulo duplo e a sua cópia a um ulp, oráculo × nativo; `twin`: resíduos, CUSUM, alarme e o livro refeito |
-| `POST /v1/vapor/graph` `{model, n, seed}` | uma rede, comunidades, lei de potência, agrupamento contra o nulo, robustez, PageRank |
-| `GET /v1/vapor/lm` | o recibo de `priv/lm` e o fluxo além do comprimento de treino |
 | `POST /v1/vapor/scene/analyze` `{name, data}` (ou `name: "sample:outdoor"`) | a cena: camadas (PNG com alfa) e profundidades, horizonte, chão caminhável, luz, paleta |
 | `POST /v1/vapor/scene/rig` `{name, data}` | o esqueleto de um desenho: ossos, malha e pesos, a imagem com alfa |
 | `POST /v1/vapor/scene/direct` `{prompt}` | o prompt como operações e as palavras não entendidas |
 | `POST /v1/vapor/scene/export` `{scene, title?}` | **uma página HTML** autônoma que toca a cena offline |
 | `POST /v1/vapor/sketch` `{name, data, mode, snap?, longest?}` | `vector`: retas, círculos, arcos, restrições, SVG, DXF; `plan`: paredes, portas, cômodos com área, malha e GLB |
-| `POST /v1/vapor/prove` `{theorem}` · `{discover: true}` · `{homology: true}` · `{persistence, seed}` · `{}` | uma prova com certificado e conferência; as conjecturas provadas; os números de Betti; as barras de persistência; a lista de teoremas |
-| `POST /v1/vapor/discover` `{task: network, n}` · `{task: matmul}` · `{task: synth, spec}` | a rede de ordenação e o controle; o algoritmo de 7 produtos, as contagens e a classe; o programa mínimo e a conferência |
-| `POST /v1/vapor/science` `{experiment}` | valor, referência, controle, limiar, veredito e dados para gráfico |
-| `POST /v1/vapor/games` `{task: selfplay \| randomization}` (`alphazero`, o nome de 0.11, ainda aceito) · `POST /v1/vapor/games/move` `{board, sims}` | a curva de derrotas por simulação; a robustez em mundos não vistos; o lance do agente com as visitas da busca |
 | `POST /v1/vapor/archive` `{kind, recipe, result}` · `POST /v1/vapor/archive/check` `{data}` | o arquivo (zip, base64; os tipos determinísticos calculados pelo servidor a partir da receita); a conferência e o recálculo |
 | `POST /v1/vapor/audit` `{data, log_key?}` | conferir um dossiê (ou o seu PDF): itens, cláusulas, assinaturas, âncoras, raiz |
-| `POST /v1/vapor/audit/demo` | montar e conferir o dossiê de demonstração; devolve o `.vdossier` e a página HTML |
-| `POST /v1/vapor/draw` `{digit, seed, steps, guidance}` | dígito gerado, trajetória, leitura de volta, distância ao treino |
-| `POST /v1/vapor/listen` `{name, data}` | dígito falado: rótulo, probabilidades, espectro mel |
 | `GET /v1/vapor/opus` | as estantes de exemplos das cinco mesas do Opus (0.15) |
 | `POST /v1/vapor/rebis` `{op: equivalent \| anf \| identity \| stabilizer \| aiger, a, b?, spec?, n?, seed?}` | a mesma função, com a prova DRUP ou o contraexemplo encolhido; a ANF; a identidade de palavra; as medidas; o AIGER |
 | `POST /v1/vapor/aludel` `{op: decide \| enclose \| barrier, vars, poly \| field, box \| domain/init/unsafe, sense?, barrier?, synthesize?}` | certificado (testemunha reproduzida, folhas), refutado (ponto exato) ou esgotado; o intervalo; as três condições da barreira |
 | `POST /v1/vapor/tabula` `{text, facts?}` | antinomias com cenário, pares provados (DRUP), resolvidos, silêncios; as posições sob os fatos |
 | `POST /v1/vapor/cupel` `{n, k, seed, trials, bit}` | o perfil de detecção por bit, o exemplo de um bit invertido, o int8 exato |
 | `POST /v1/vapor/amalgam` `{numbers, format}` | a soma exata arredondada uma vez, e as ingênuas em várias ordens |
-| `POST /v1/vapor/merge` `{pair}` | laboratório de fusão: diagnóstico, candidatos medidos, escolha |
 | `GET /v1/vapor/studio/nodes` | o catálogo de nós do estúdio (portas tipadas, parâmetros com faixa e padrão) e os modelos de partida |
 | `POST /v1/vapor/studio/run` `{graph}` | executar um grafo: por nó, calculado ou em cache, tempo, digest e prévia de cada saída; a raiz de Merkle |
 | `POST /v1/vapor/studio/verify` `{graph, root}` | reexecutar sem cache e comparar a raiz |
@@ -502,6 +518,13 @@ o servidor se recusa a escutar fora de 127.0.0.1 sem token.
 Verificado por `test/vapor/console_test.exs` (HTTP de verdade, sem modelo de
 texto) e num navegador headless (Chromium) em claro, escuro, inglês, português
 e 390 px de largura, sem erro de console.
+| `GET /v1/vapor/threads` · `POST /v1/vapor/threads` `{title, system, model, tools, budget}` | as conversas, os modelos, as ferramentas · uma nova (0.16) |
+| `GET /v1/vapor/threads/:id` · `/tree` · `/context` · `/export?format=json\|markdown` | ajustes e caminho · todos os ramos · exatamente o que o modelo vai ler · a exportação |
+| `POST /v1/vapor/threads/:id/:op` | `say` `{text}`, `reply`, `edit` `{node, text}`, `regenerate` `{node}`, `switch`/`rewind` `{node}`, `fork` `{node, title}`, `pin` `{node, on}`, `compact` `{upto, text}`, `uncompact`, `settings`, `share`, `revoke`, `delete` |
+| `POST /v1/vapor/threads/import` `{data}` · `POST /v1/vapor/chat/search` `{query}` | exportação do vapor, do ChatGPT ou do Claude · busca em todas as conversas |
+| `GET /v1/vapor/journal/:id` | o diário de uma execução de agente (verificável) |
+| `GET /shared/:id?cap=…` · `GET /v1/vapor/shared/:id?cap=…` | uma conversa compartilhada, só leitura (página sem *script* · JSON) — **sem o token do console: a capacidade é a autoridade** |
+| `POST /v1/vapor/diwan` `{session, line}` · `GET\|POST /v1/vapor/diwan/file` · `POST /v1/vapor/diwan/complete` | o terminal: uma linha numa sessão enjaulada · os arquivos da sessão · completar |
 
 ## Limites
 

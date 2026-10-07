@@ -53,11 +53,12 @@ defmodule Vapor.Quality.Suite do
     {round13, r13t} = timed(fn -> Vapor.Quality.Round13.run(ro) end)
     {round14, r14t} = timed(fn -> Vapor.Quality.Round14.run(ro) end)
     {round15, r15t} = timed(fn -> Vapor.Quality.Round15.run(ro) end)
+    {round16, r16t} = timed(fn -> Vapor.Quality.Round16.run(ro) end)
     if dir = opts[:gallery], do: gallery(hub, dir)
 
     %{substrate: if(w, do: :native, else: :oracle),
-      gates: summarize_gates(gates), text: text, any_to_any: a2a, merge: merge, merge_real: merge_real, real: real, substrates: subs, lock: lock, round06: round06, round07: round07, round08: round08, round09: round09, round10: round10, round11: round11, round12: round12, round13: round13, round14: round14, round15: round15,
-      timings_ms: %{gates: gt, text: tt, hub_fit: ht, any_to_any: at, merge: mt, merge_real: mrt, real: rt, substrates: st, lock: lt, round06: r6t, round07: r7t, round08: r8t, round09: r9t, round10: r10t, round11: r11t, round12: r12t, round13: r13t, round14: r14t, round15: r15t,
+      gates: summarize_gates(gates), text: text, any_to_any: a2a, merge: merge, merge_real: merge_real, real: real, substrates: subs, lock: lock, round06: round06, round07: round07, round08: round08, round09: round09, round10: round10, round11: round11, round12: round12, round13: round13, round14: round14, round15: round15, round16: round16,
+      timings_ms: %{gates: gt, text: tt, hub_fit: ht, any_to_any: at, merge: mt, merge_real: mrt, real: rt, substrates: st, lock: lt, round06: r6t, round07: r7t, round08: r8t, round09: r9t, round10: r10t, round11: r11t, round12: r12t, round13: r13t, round14: r14t, round15: r15t, round16: r16t,
                     total: System.monotonic_time(:millisecond) - t0}}
   end
 
@@ -73,7 +74,8 @@ defmodule Vapor.Quality.Suite do
           Map.get(r, :round07, %{checks: []}).checks ++ Map.get(r, :round08, %{checks: []}).checks ++
           Map.get(r, :round09, %{checks: []}).checks ++ Map.get(r, :round10, %{checks: []}).checks ++ Map.get(r, :round11, %{checks: []}).checks ++
           Map.get(r, :round12, %{checks: []}).checks ++ Map.get(r, :round13, %{checks: []}).checks ++
-          Map.get(r, :round14, %{checks: []}).checks ++ Map.get(r, :round15, %{checks: []}).checks
+          Map.get(r, :round14, %{checks: []}).checks ++ Map.get(r, :round15, %{checks: []}).checks ++
+          Map.get(r, :round16, %{checks: []}).checks
 
   defp timed(f) do
     t = System.monotonic_time(:millisecond)

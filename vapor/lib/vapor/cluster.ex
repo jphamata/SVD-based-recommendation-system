@@ -99,7 +99,7 @@ defmodule Vapor.Cluster do
       end
 
     {:ok,
-     %{nodes: nodes, per: per, audit_rate: Keyword.get(opts, :audit_rate, 0.1), salt: Keyword.get_lazy(opts, :salt, fn -> :crypto.strong_rand_bytes(16) end),
+     %{nodes: nodes, per: per, audit_rate: Keyword.get(opts, :audit_rate, 0.1), salt: Keyword.get_lazy(opts, :salt, fn -> Vapor.Entropy.bytes(16) end),
        hedge_ms: Keyword.get(opts, :hedge_ms), cache: %{}, order: :queue.new(), cap: Keyword.get(opts, :cache, 1024),
        audits: [], stats: %{jobs: 0, cache_hits: 0, audited: 0, disagreements: 0, retries: 0, hedged: 0}, digests: %{}}}
   end

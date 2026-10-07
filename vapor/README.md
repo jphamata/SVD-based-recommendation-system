@@ -203,6 +203,26 @@ saída com significado), por MCP e pela TUI; o console ganhou uma identidade
 própria em que a fornalha é o gráfico da busca e a pedra de toque é o
 veredito.
 
+Desde 0.16.0, o vapor é mais **puro** e **conversa**. Saiu o que só reencenava um exemplo fixo
+(redes complexas, descoberta de algoritmos, jogo da velha, dez painéis de demonstração — quase
+3 000 linhas). Entrou o **Majlis**: conversas como uma árvore endereçada por conteúdo, em que
+editar e pedir outra resposta criam ramos navegáveis (‹ i/n ›), bifurcar não copia nada, o
+contexto que o modelo vai ler aparece mensagem a mensagem antes de enviar (com as fixadas, que
+nunca saem, e uma compactação que nomeia o que resume), e um link compartilhado morre quando é
+revogado — tudo num arquivo seu, a **Khazāna**, cuja raiz sobrevive a uma queda em qualquer byte
+(o protocolo de dois slots do ASAS). O **Dīwān** é um interpretador só para a linha de comando, o
+TUI, o terminal do console (enjaulado) e a API. O **Mīzān** é um dialeto formal para afirmações que
+se *decidem*: uma árvore neutra impressa em latim ou em árabe com o mesmo hash, raízes trilaterais
+como domínios e *awzān* como regimes, e cada obrigação provada por um procedimento de decisão do
+vapor — ou refutada no ponto que a quebra. Um servidor de linguagem (`vapor lsp`) serve VS Code,
+Neovim e Emacs; a geometria da informação entra onde há distribuições para medir; e um
+**livro-razão de garantias** diz, afirmação por afirmação, o que é provado, conferido, testado,
+argumentado ou devido.
+
+- Rodada 0.16 — purificar: conversas **[docs/MAJLIS.md](docs/MAJLIS.md)** · o depósito **[docs/KHAZANA.md](docs/KHAZANA.md)** · o terminal único **[docs/DIWAN.md](docs/DIWAN.md)** · o Mīzān **[docs/MIZAN.md](docs/MIZAN.md)** · editores **[docs/EDITORES.md](docs/EDITORES.md)** · geometria da informação **[docs/GEOMETRIA.md](docs/GEOMETRIA.md)** · garantias **[docs/GARANTIAS.md](docs/GARANTIAS.md)** · o escrutínio do pedido, do ASAS e do manifesto Al-Mīzān: **[docs/DIRETRIZ.md §19](docs/DIRETRIZ.md)**
+
+<p><img src="docs/img/conversas.png" alt="Conversas: uma conversa com um ramo editado (1/2), uma mensagem fixada, o contexto como barra e a árvore de ramos com o caminho em ouro" width="760"></p>
+
 Desde 0.15.0, o vapor **decide** onde antes exibia ou replicava — o grupo
 **Opus**. A **Amálgama** soma qualquer coisa em qualquer ordem, com qualquer
 agrupamento e qualquer número de nós, e dá **um** resultado: a soma real
@@ -239,8 +259,8 @@ exato: a rede fundida com a sua cópia embaralhada volta a ser ela mesma).
 
 - Rodada 0.13 — finanças e mesa de operações: **[docs/FINANCAS.md](docs/FINANCAS.md)** · aritmética linear exata: **[docs/LOGICA.md §5](docs/LOGICA.md)** · transistores: **[docs/ENGENHARIA.md §1](docs/ENGENHARIA.md)** · °C/°F: **[docs/BANCADA.md §1](docs/BANCADA.md)** · o escrutínio: **[docs/DIRETRIZ.md §16](docs/DIRETRIZ.md)** · monografia: **[monografia/monografia.pdf](monografia/monografia.pdf)** · defesa: **[monografia/DEFESA.md](monografia/DEFESA.md)**
 - Rodada 0.12 — bancada: **[docs/BANCADA.md](docs/BANCADA.md)** · engenharia: **[docs/ENGENHARIA.md](docs/ENGENHARIA.md)** · lógica: **[docs/LOGICA.md](docs/LOGICA.md)** · tabuleiros e cartas: **[docs/TABULEIROS.md](docs/TABULEIROS.md)** · proteínas: **[docs/PROTEINAS.md](docs/PROTEINAS.md)** · render: **[docs/RENDER.md](docs/RENDER.md)** · habitantes da cena: **[docs/CENA.md §6.1](docs/CENA.md)** · o escrutínio: **[docs/DIRETRIZ.md §15](docs/DIRETRIZ.md)**
-- Rodada 0.11 — cena viva, esboço, salvar/exportar: **[docs/CENA.md](docs/CENA.md)** · descoberta de algoritmos: **[docs/DESCOBERTA.md](docs/DESCOBERTA.md)** · matemática: **[docs/MATEMATICA.md](docs/MATEMATICA.md)** · ciência: **[docs/CIENCIA.md](docs/CIENCIA.md)** · autojogo e mundos: **[docs/JOGOS.md](docs/JOGOS.md)** · o escrutínio: **[docs/DIRETRIZ.md §14](docs/DIRETRIZ.md)**
-- Rodada 0.10 — substratos (Metal, Tenstorrent, FreeBSD, cluster): **[docs/SUBSTRATOS.md](docs/SUBSTRATOS.md)** · treino e contexto sem fim: **[docs/TREINO.md](docs/TREINO.md)** · física, RL e gêmeos: **[docs/FISICA.md](docs/FISICA.md)** · redes complexas: **[docs/REDES.md](docs/REDES.md)** · escritas, gráficos e fórmulas: **[docs/OCR.md §3g–§3k](docs/OCR.md)** · o escrutínio do pedido: **[docs/DIRETRIZ.md §13](docs/DIRETRIZ.md)**
+- Rodada 0.11 — cena viva, esboço, salvar/exportar: **[docs/CENA.md](docs/CENA.md)** · matemática: **[docs/MATEMATICA.md](docs/MATEMATICA.md)** · ciência: **[docs/CIENCIA.md](docs/CIENCIA.md)** · o escrutínio: **[docs/DIRETRIZ.md §14](docs/DIRETRIZ.md)**
+- Rodada 0.10 — substratos (Metal, Tenstorrent, FreeBSD, cluster): **[docs/SUBSTRATOS.md](docs/SUBSTRATOS.md)** · treino e contexto sem fim: **[docs/TREINO.md](docs/TREINO.md)** · física, RL e gêmeos: **[docs/FISICA.md](docs/FISICA.md)** · escritas, gráficos e fórmulas: **[docs/OCR.md §3g–§3k](docs/OCR.md)** · o escrutínio do pedido: **[docs/DIRETRIZ.md §13](docs/DIRETRIZ.md)**
 - Rodada 0.9 — o estúdio, Stable Diffusion, ampliação consistente, RL, 3D, MCP e o mapa dos cursos da Hugging Face: **[docs/ESTUDIO.md](docs/ESTUDIO.md)**
 - Rodada 0.8 — GPU residente, 4 bits esparso, Mamba-2, cluster: **[docs/FRONTEIRA.md §1, §4, §6, §7](docs/FRONTEIRA.md)** · medições: **[docs/bench/ROUND08.md](docs/bench/ROUND08.md)**
 - Tabelas e JBIG2: **[docs/OCR.md §3e–§3f](docs/OCR.md)** · dossiês de auditoria: **[docs/AUDITORIA.md](docs/AUDITORIA.md)**

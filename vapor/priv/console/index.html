@@ -843,6 +843,90 @@ svg.amalgam-line { width: 100%; max-width: 640px; height: auto; display: block; 
 .amalgam-line .mark { stroke: var(--gold); stroke-width: 4; stroke-linecap: round; }
 .amalgam-line .marktext { fill: var(--ink); font: italic 13px var(--head); }
 @media (max-width: 900px) { .op-pair, .tabula-grid { grid-template-columns: 1fr; } .seal-col { padding-top: 0; } }
+/* 0.16 — conversations: the list, the talk, the inspector (the context as a bar, the tree of branches) */
+.mj { display: grid; grid-template-columns: 250px minmax(0, 1fr) 300px; gap: 18px; align-items: start; max-width: 1380px; }
+.mj-list, .mj-side { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; display: grid; gap: 10px; align-content: start; }
+.mj-list-head { display: flex; gap: 8px; flex-wrap: wrap; }
+.mj-search { width: 100%; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--mist); color: var(--ink); }
+.mj-threads { display: grid; gap: 4px; }
+.mj-thread, .mj-hit { display: grid; gap: 1px; text-align: left; background: none; border: 1px solid transparent; border-radius: 8px; padding: 7px 9px; cursor: pointer; color: var(--ink); }
+.mj-thread b { font: 600 14.5px var(--head); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mj-thread span, .mj-hit span { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mj-thread small, .mj-hit small { font-size: 11.5px; }
+.mj-thread:hover, .mj-hit:hover:not(:disabled) { border-color: var(--rule); }
+.mj-thread.on { background: var(--slab); border-color: var(--sand); }
+.mj-hit:disabled { opacity: .55; cursor: default; }
+.mj-talk { display: grid; gap: 10px; min-width: 0; }
+.mj-title { margin: 0; }
+.mj-empty { padding: 60px 0; text-align: center; font: italic 17px var(--head); }
+.mj-log { display: grid; gap: 10px; max-height: calc(100vh - 260px); min-height: 280px; overflow-y: auto; padding: 2px 4px 2px 0; }
+.mj-msg { border-radius: 12px; padding: 10px 14px 8px; background: var(--slab); border: 1px solid transparent; }
+.mj-msg.user { background: none; border-color: var(--rule); border-left: 3px solid var(--sand); }
+.mj-msg.pinned { box-shadow: inset 0 0 0 1px var(--gold); }
+.mj-msg.pending { background: none; }
+.mj-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 12px; color: var(--silt); margin-bottom: 4px; }
+.mj-role { font: italic 13px var(--head); color: var(--sand); }
+.mj-tag { font-size: 11px; padding: 0 7px; border-radius: 999px; background: var(--gold); color: var(--stone); }
+.mj-tag.dim { background: var(--rule); color: var(--ink); }
+.mj-branch { display: inline-flex; align-items: center; gap: 2px; font-variant-numeric: tabular-nums; }
+.mj-nav { background: none; border: 1px solid var(--rule); border-radius: 6px; width: 22px; height: 20px; line-height: 1; padding: 0; cursor: pointer; color: var(--ink); }
+.mj-nav:disabled { opacity: .35; cursor: default; }
+.mj-text { display: grid; gap: 8px; line-height: 1.55; overflow-wrap: anywhere; }
+.mj-para { white-space: pre-wrap; }
+.mj-code { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--stone); color: #ECE4D3; font: 13px/1.45 var(--mono); overflow-x: auto; }
+.mj-actions { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 6px; align-items: center; }
+.mj .link, .dw .link { background: none; border: none; padding: 2px 0; cursor: pointer; color: var(--silt); font-size: 12.5px; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+.mj .link:hover, .dw .link:hover { color: var(--ink); text-decoration-color: var(--sand); }
+.mj .link:disabled { opacity: .4; cursor: default; }
+.mj-input { width: 100%; resize: vertical; padding: 9px 11px; border: 1px solid var(--rule); border-radius: 10px; background: var(--mist); color: var(--ink); font: inherit; line-height: 1.5; }
+.mj-compose { display: grid; gap: 6px; }
+.mj-compose-row { display: flex; gap: 8px; justify-content: flex-end; }
+.mj-sec { border-top: 1px solid var(--rule); padding-top: 8px; }
+.mj-sec h3 { display: inline; margin: 0; font-size: 16px; }
+.mj-sec > summary { cursor: pointer; list-style-position: outside; }
+.mj-ctxnum { margin: 6px 0 4px; font-size: 13px; }
+.mj-ctxbar { position: relative; display: flex; gap: 1px; height: 16px; border-radius: 4px; background: var(--slab); overflow: hidden; }
+.mj-ctxbar i { display: block; height: 100%; background: var(--lock); }
+.mj-ctxbar i.assistant { background: var(--silt); }
+.mj-ctxbar i.sys { background: var(--sand); }
+.mj-ctxbar i.pin { background: var(--gold); }
+.mj-budget { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ember); margin-left: -1px; }
+.mj-summary { font-size: 13px; margin: 6px 0; }
+.mj-tree { width: 100%; height: auto; max-height: 340px; }
+.mj-tree line { stroke: var(--rule); stroke-width: 1.4; } .mj-tree line.on { stroke: var(--gold); stroke-width: 2.2; }
+.mj-tree circle { fill: var(--slab); stroke: var(--silt); stroke-width: 1.2; cursor: pointer; }
+.mj-tree circle.on { fill: var(--gold); stroke: var(--sand); } .mj-tree circle.head { stroke: var(--ember); stroke-width: 2; }
+.mj-tree circle.user { stroke-dasharray: 2 1.5; }
+.mj-tools { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; }
+.mj-tools label { display: inline-flex; gap: 4px; align-items: center; }
+.mj-share { font-size: 12.5px; overflow-wrap: anywhere; margin: 6px 0; }
+.small { font-size: 12.5px; }
+@media (max-width: 1180px) { .mj { grid-template-columns: 220px minmax(0, 1fr); } .mj-side { grid-column: 1 / -1; position: static; max-height: none; } }
+@media (max-width: 760px) { .mj { grid-template-columns: 1fr; } .mj-list { position: static; max-height: 40vh; } }
+/* 0.16 — the terminal: a dark slab, ANSI colours from the page's palette */
+.dw { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; max-width: 1380px; }
+.dw-term { background: var(--soot); border-radius: 12px; padding: 12px 14px; color: #ECE4D3; display: grid; gap: 6px; }
+.dw-screen { min-height: 360px; max-height: calc(100vh - 300px); overflow-y: auto; font: 13px/1.5 var(--mono); outline: none; }
+.dw-entry { margin-bottom: 8px; }
+.dw-cmd { color: #ECE4D3; white-space: pre-wrap; }
+.dw-ps { color: var(--gold); }
+.dw-out, .dw-err { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.dw-err { color: #E89A84; }
+.dw-code { color: rgba(236,228,211,.5); font-size: 11.5px; }
+.dw-prompt { display: flex; gap: 8px; align-items: center; border-top: 1px solid rgba(236,228,211,.14); padding-top: 8px; font: 13px var(--mono); }
+.dw-input { flex: 1; background: none; border: none; color: #ECE4D3; font: inherit; outline: none; }
+.dw-input::placeholder { color: rgba(236,228,211,.35); }
+.dw-status { font-size: 11.5px; color: rgba(236,228,211,.5); }
+.dw-samples { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin: 0 0 12px; max-width: 1380px; }
+.dw-samples .vial { font-family: var(--mono); font-size: 12px; }
+.dw-side { display: grid; gap: 8px; align-content: start; }
+.dw-side h3 { margin: 0; font-size: 16px; }
+.dw-files { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; font-family: var(--mono); }
+.dw-files .link.on { color: var(--ink); text-decoration-color: var(--gold); }
+.dw-editor { width: 100%; min-height: 280px; font: 12.5px/1.45 var(--mono); }
+.a-b { font-weight: 700; } .a-dim { opacity: .62; } .a-i { font-style: italic; } .a-u { text-decoration: underline; }
+.a-c1 { color: #E89A84; } .a-c2 { color: #9BCB8E; } .a-c3 { color: #E6C76A; } .a-c4 { color: #8FB4E3; } .a-c5 { color: #C9A3E0; } .a-c6 { color: #7FC9C0; } .a-c7 { color: #ECE4D3; } .a-c0 { color: #8C8478; }
+@media (max-width: 980px) { .dw { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -865,8 +949,10 @@ svg.amalgam-line { width: 100%; max-width: 640px; height: auto; display: block; 
       <button role="tab" aria-selected="false" aria-controls="p-tabula" id="t-tabula"><b data-i18n="tabula">Tabula</b><span data-i18n="tabula_s">contracts without antinomies</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-cupel" id="t-cupel"><b data-i18n="cupel">Cupel</b><span data-i18n="cupel_s">silent corruption, caught</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-amalgam" id="t-amalgam"><b data-i18n="amalgam">Amalgam</b><span data-i18n="amalgam_s">sums without order</span></button>
-      <div class="group" data-i18n="g_ask">Ask</div>
-      <button role="tab" aria-selected="false" aria-controls="p-chat" id="t-chat"><b data-i18n="chat">Chat</b><span data-i18n="chat_s">answers with their sources</span></button>
+      <div class="group" data-i18n="g_talk">Converse</div>
+      <button role="tab" aria-selected="false" aria-controls="p-majlis" id="t-majlis"><b data-i18n="majlis">Conversations</b><span data-i18n="majlis_s">branch, edit, fork, share — every word kept</span></button>
+      <button role="tab" aria-selected="false" aria-controls="p-chat" id="t-chat"><b data-i18n="chat">Ask the library</b><span data-i18n="chat_s">one question, answered with its sources</span></button>
+      <button role="tab" aria-selected="false" aria-controls="p-diwan" id="t-diwan"><b data-i18n="diwan">Terminal</b><span data-i18n="diwan_s">every vapor command, here</span></button>
       <div class="group" data-i18n="g_solve">Solve</div>
       <button role="tab" aria-selected="false" aria-controls="p-bench" id="t-bench"><b data-i18n="bench">Workbench</b><span data-i18n="bench_s">any equation, with units and checks</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-eng" id="t-eng"><b data-i18n="eng">Engineering</b><span data-i18n="eng_s">circuits, grids, structures, pipes, plants</span></button>
@@ -874,32 +960,21 @@ svg.amalgam-line { width: 100%; max-width: 640px; height: auto; display: block; 
       <div class="group" data-i18n="g_markets">Markets</div>
       <button role="tab" aria-selected="false" aria-controls="p-fin" id="t-fin"><b data-i18n="fin">Finance</b><span data-i18n="fin_s">curves, options, risk, backtests — certified</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-hft" id="t-hft"><b data-i18n="hft">Trading desk</b><span data-i18n="hft_s">order book, exchange, microstructure</span></button>
-      <div class="group" data-i18n="g_discover">Discover</div>
-      <button role="tab" aria-selected="false" aria-controls="p-algo" id="t-algo"><b data-i18n="algo">Algorithms</b><span data-i18n="algo_s">found by search, then proved</span></button>
-      <button role="tab" aria-selected="false" aria-controls="p-math" id="t-math"><b data-i18n="math">Mathematics</b><span data-i18n="math_s">proofs with certificates</span></button>
       <div class="group" data-i18n="g_sim">Simulate</div>
       <button role="tab" aria-selected="false" aria-controls="p-boards" id="t-boards"><b data-i18n="boards">Boards &amp; cards</b><span data-i18n="boards_s">chess, shogi, Go, poker — with proofs</span></button>
-      <button role="tab" aria-selected="false" aria-controls="p-games" id="t-games"><b data-i18n="games">Games</b><span data-i18n="games_s">self-play and varied worlds</span></button>
-      <button role="tab" aria-selected="false" aria-controls="p-net" id="t-net"><b data-i18n="net">Networks</b><span data-i18n="net_s">structure against its null</span></button>
-      <button role="tab" aria-selected="false" aria-controls="p-physics" id="t-physics"><b data-i18n="physics">Physics</b><span data-i18n="physics_s">chaos, twins, replay</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-protein" id="t-protein"><b data-i18n="protein">Proteins</b><span data-i18n="protein_s">structures compared, folded, read from evolution</span></button>
-      <button role="tab" aria-selected="false" aria-controls="p-science" id="t-science"><b data-i18n="science">Science</b><span data-i18n="science_s">quantum to genomes, against references</span></button>
       <div class="group" data-i18n="g_make">Make</div>
-      <button role="tab" aria-selected="false" aria-controls="p-draw" id="t-draw"><b data-i18n="draw">Draw</b><span data-i18n="draw_s">a digit, by diffusion</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-scene" id="t-scene"><b data-i18n="scene">Living scene</b><span data-i18n="scene_s">a picture that moves, directed</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-render" id="t-render"><b data-i18n="render">Render</b><span data-i18n="render_s">physically based light, on your GPU</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-sketch" id="t-sketch"><b data-i18n="sketch">Sketch</b><span data-i18n="sketch_s">to a drawing, to a 3D plan</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-studio" id="t-studio"><b data-i18n="studio">Studio</b><span data-i18n="studio_s">graphs of image, sound, video, 3D</span></button>
       <div class="group" data-i18n="g_read">Read</div>
       <button role="tab" aria-selected="false" aria-controls="p-docs" id="t-docs"><b data-i18n="docs">Documents</b><span data-i18n="docs_s">zip, PDF, Office, images</span></button>
-      <button role="tab" aria-selected="false" aria-controls="p-listen" id="t-listen"><b data-i18n="listen">Listen</b><span data-i18n="listen_s">a spoken digit</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-vision" id="t-vision"><b data-i18n="vision">Vision</b><span data-i18n="vision_s">text in photos and scans</span></button>
       <div class="group" data-i18n="g_measure">Measure</div>
       <button role="tab" aria-selected="false" aria-controls="p-lock" id="t-lock"><b data-i18n="lock">Airlock</b><span data-i18n="lock_s">the model's contract</span></button>
-      <button role="tab" aria-selected="false" aria-controls="p-merge" id="t-merge"><b data-i18n="merge">Fusion</b><span data-i18n="merge_s">which method fits</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-quality" id="t-quality"><b data-i18n="quality">Quality</b><span data-i18n="quality_s">signal or noise</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-subs" id="t-subs"><b data-i18n="subs">Substrates</b><span data-i18n="subs_s">hardware, admitted by measurement</span></button>
-      <button role="tab" aria-selected="false" aria-controls="p-train" id="t-train"><b data-i18n="train">Training</b><span data-i18n="train_s">a model vapor trained</span></button>
       <div class="group" data-i18n="g_trust">Trust</div>
       <button role="tab" aria-selected="false" aria-controls="p-archive" id="t-archive"><b data-i18n="archive">Archives</b><span data-i18n="archive_s">saved results, checked again</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-audit" id="t-audit"><b data-i18n="audit">Dossier</b><span data-i18n="audit_s">evidence for an auditor</span></button>
@@ -925,8 +1000,10 @@ svg.amalgam-line { width: 100%; max-width: 640px; height: auto; display: block; 
     <section role="tabpanel" id="p-tabula" aria-labelledby="t-tabula" hidden><div id="op-tabula"></div></section>
     <section role="tabpanel" id="p-cupel" aria-labelledby="t-cupel" hidden><div id="op-cupel"></div></section>
     <section role="tabpanel" id="p-amalgam" aria-labelledby="t-amalgam" hidden><div id="op-amalgam"></div></section>
+    <section role="tabpanel" id="p-majlis" aria-labelledby="t-majlis" hidden><div id="mj"></div></section>
+    <section role="tabpanel" id="p-diwan" aria-labelledby="t-diwan" hidden><div id="dw"></div></section>
     <section role="tabpanel" id="p-chat" aria-labelledby="t-chat" hidden>
-      <h2 data-i18n="chat">Chat</h2>
+      <h2 data-i18n="chat">Ask the library</h2>
       <p class="lede" data-i18n="chat_lede"></p>
       <div id="no-model" class="notice" hidden data-i18n-html="no_model"></div>
       <div class="split">
@@ -1004,17 +1081,6 @@ svg.amalgam-line { width: 100%; max-width: 640px; height: auto; display: block; 
       <div id="v-out"></div>
     </section>
 
-    <section role="tabpanel" id="p-listen" aria-labelledby="t-listen" hidden>
-      <h2 data-i18n="listen">Listen</h2>
-      <p class="lede" data-i18n="listen_lede"></p>
-      <div class="controls" style="margin-bottom:18px">
-        <button class="primary" id="l-rec" type="button" data-i18n="record"></button>
-        <label class="quiet file" for="l-file" data-i18n="choose_wav"></label>
-        <input type="file" id="l-file" accept="audio/wav,audio/x-wav" hidden>
-        <span id="l-state" class="muted" aria-live="polite"></span>
-      </div>
-      <div id="l-out"></div>
-    </section>
 
     <section role="tabpanel" id="p-studio" aria-labelledby="t-studio" hidden>
       <h2 data-i18n="studio">Studio</h2>
@@ -1059,29 +1125,7 @@ svg.amalgam-line { width: 100%; max-width: 640px; height: auto; display: block; 
       </dialog>
     </section>
 
-    <section role="tabpanel" id="p-draw" aria-labelledby="t-draw" hidden>
-      <h2 data-i18n="draw">Draw</h2>
-      <p class="lede" data-i18n="draw_lede"></p>
-      <div class="digits" id="d-digits" role="group" data-i18n-aria="digit"></div>
-      <div class="controls">
-        <label><span data-i18n="seed"></span> <input type="number" id="d-seed" value="0" min="0" style="width:6em"></label>
-        <label><span data-i18n="steps"></span> <input type="number" id="d-steps" value="25" min="2" max="200" style="width:5em"></label>
-        <label><span data-i18n="guidance"></span> <input type="range" id="d-guide" min="0" max="5" step="0.5" value="2" style="width:100px"> <span id="d-guide-v">2</span></label>
-        <button class="primary" id="d-go" type="button" data-i18n="draw_btn"></button>
-      </div>
-      <div id="d-out" style="margin-top:22px" aria-live="polite"></div>
-    </section>
 
-    <section role="tabpanel" id="p-merge" aria-labelledby="t-merge" hidden>
-      <h2 data-i18n="merge">Fusion</h2>
-      <p class="lede" data-i18n="merge_lede"></p>
-      <div class="controls" style="margin-bottom:20px">
-        <button class="primary" type="button" data-pair="fine_tune" data-i18n="pair_ft"></button>
-        <button class="quiet" type="button" data-pair="independent" data-i18n="pair_ind"></button>
-        <span id="m-state" class="muted" aria-live="polite"></span>
-      </div>
-      <div id="m-out"></div>
-    </section>
 
     <section role="tabpanel" id="p-quality" aria-labelledby="t-quality" hidden>
       <h2 data-i18n="quality">Quality</h2>
@@ -1154,51 +1198,12 @@ svg.amalgam-line { width: 100%; max-width: 640px; height: auto; display: block; 
         <input type="file" id="a-file" accept=".vdossier,application/pdf,application/octet-stream" hidden>
       </label>
       <div class="controls" style="margin-bottom:22px">
-        <button class="primary" id="a-demo" type="button" data-i18n="a_demo"></button>
         <span id="a-state" class="muted" aria-live="polite"></span>
       </div>
       <div id="a-out" aria-live="polite"></div>
     </section>
 
-    <section role="tabpanel" id="p-physics" aria-labelledby="t-physics" hidden>
-      <h2 data-i18n="physics">Physics</h2>
-      <p class="lede" data-i18n="physics_lede"></p>
-      <div class="lab-grid">
-        <article class="lab">
-          <header><h3 data-i18n="chaos_h"></h3><button class="primary" type="button" id="ph-chaos" data-i18n="run"></button></header>
-          <p class="muted" data-i18n="chaos_s"></p>
-          <div class="stage"><canvas id="ph-canvas" width="520" height="360" role="img" data-i18n-aria="chaos_h"></canvas></div>
-          <div id="ph-chaos-out" aria-live="polite"></div>
-        </article>
-        <article class="lab">
-          <header><h3 data-i18n="twin_h"></h3><button class="quiet" type="button" id="ph-twin" data-i18n="run"></button></header>
-          <p class="muted" data-i18n="twin_s"></p>
-          <div id="ph-twin-out" aria-live="polite"></div>
-        </article>
-      </div>
-    </section>
 
-    <section role="tabpanel" id="p-net" aria-labelledby="t-net" hidden>
-      <h2 data-i18n="net">Networks</h2>
-      <p class="lede" data-i18n="net_lede"></p>
-      <form class="controls" id="net-form" style="margin-bottom:18px">
-        <select id="net-model" data-i18n-aria="net_model">
-          <option value="ba" data-i18n="net_ba">Barabási–Albert (preferential attachment)</option>
-          <option value="er" data-i18n="net_er">Erdős–Rényi (random)</option>
-          <option value="ws" data-i18n="net_ws">Watts–Strogatz (small world)</option>
-          <option value="planted" data-i18n="net_planted">Planted communities</option>
-        </select>
-        <label><span data-i18n="net_n">nodes</span> <input type="number" id="net-n" min="40" max="400" value="200" style="width:5.5em"></label>
-        <label><span data-i18n="seed">seed</span> <input type="number" id="net-seed" min="1" value="1" style="width:5em"></label>
-        <button class="primary" type="submit" data-i18n="run"></button>
-        <span id="net-state" class="muted" aria-live="polite"></span>
-      </form>
-      <div class="split">
-        <div class="stage"><canvas id="net-canvas" width="620" height="460" role="img" data-i18n-aria="net"></canvas></div>
-        <aside class="side" id="net-side"></aside>
-      </div>
-      <div id="net-more" style="margin-top:18px"></div>
-    </section>
 
     <section role="tabpanel" id="p-subs" aria-labelledby="t-subs" hidden>
       <h2 data-i18n="subs">Substrates</h2>
@@ -1207,12 +1212,6 @@ svg.amalgam-line { width: 100%; max-width: 640px; height: auto; display: block; 
       <div id="subs-out"></div>
     </section>
 
-    <section role="tabpanel" id="p-train" aria-labelledby="t-train" hidden>
-      <h2 data-i18n="train">Training</h2>
-      <p class="lede" data-i18n="train_lede"></p>
-      <div class="controls" style="margin-bottom:18px"><button class="primary" type="button" id="train-run" data-i18n="train_load"></button><span id="train-state" class="muted" aria-live="polite"></span></div>
-      <div id="train-out"></div>
-    </section>
 
     <section role="tabpanel" id="p-scene" aria-labelledby="t-scene" hidden>
       <h2 data-i18n="scene">Living scene</h2>
@@ -1301,92 +1300,9 @@ svg.amalgam-line { width: 100%; max-width: 640px; height: auto; display: block; 
       <div id="sk-out"></div>
     </section>
 
-    <section role="tabpanel" id="p-math" aria-labelledby="t-math" hidden>
-      <h2 data-i18n="math">Mathematics</h2>
-      <p class="lede" data-i18n="math_lede"></p>
-      <div class="lab-grid">
-        <article class="lab">
-          <header><h3 data-i18n="m_prove_h"></h3></header>
-          <div class="controls tight"><select id="m-theorem" data-i18n-aria="m_prove_h"></select><button class="primary" type="button" id="m-prove" data-i18n="m_prove"></button></div>
-          <div class="stage"><canvas id="m-canvas" width="520" height="380" role="img" data-i18n-aria="m_prove_h"></canvas></div>
-          <div id="m-prove-out" aria-live="polite"></div>
-        </article>
-        <article class="lab">
-          <header><h3 data-i18n="m_conj_h"></h3><button class="quiet" type="button" id="m-conj" data-i18n="run"></button></header>
-          <p class="muted" data-i18n="m_conj_s"></p>
-          <div class="stage"><canvas id="m-conj-canvas" width="520" height="380" role="img" data-i18n-aria="m_conj_h"></canvas></div>
-          <div id="m-conj-out" aria-live="polite"></div>
-        </article>
-        <article class="lab">
-          <header><h3 data-i18n="m_topo_h"></h3><button class="quiet" type="button" id="m-topo" data-i18n="run"></button></header>
-          <p class="muted" data-i18n="m_topo_s"></p>
-          <div id="m-topo-out" aria-live="polite"></div>
-        </article>
-        <article class="lab">
-          <header><h3 data-i18n="m_pers_h"></h3>
-            <div class="seg small" id="m-pers" role="radiogroup"><button type="button" role="radio" aria-checked="true" data-p="loop" data-i18n="m_loop"></button><button type="button" role="radio" aria-checked="false" data-p="two_loops" data-i18n="m_two"></button><button type="button" role="radio" aria-checked="false" data-p="blob" data-i18n="m_blob"></button></div></header>
-          <p class="muted" data-i18n="m_pers_s"></p>
-          <div id="m-pers-out" aria-live="polite"></div>
-        </article>
-      </div>
-    </section>
 
-    <section role="tabpanel" id="p-algo" aria-labelledby="t-algo" hidden>
-      <h2 data-i18n="algo">Algorithms</h2>
-      <p class="lede" data-i18n="algo_lede"></p>
-      <div class="lab-grid">
-        <article class="lab">
-          <header><h3 data-i18n="a_sort_h"></h3>
-            <div class="controls tight"><label>n <select id="al-n"><option>4</option><option>5</option><option>6</option><option>7</option><option selected>8</option><option>9</option></select></label><button class="primary" type="button" id="al-sort" data-i18n="a_search"></button></div></header>
-          <p class="muted" data-i18n="a_sort_s"></p>
-          <div class="stage"><canvas id="al-canvas" width="560" height="260" role="img" data-i18n-aria="a_sort_h"></canvas></div>
-          <div id="al-sort-out" aria-live="polite"></div>
-        </article>
-        <article class="lab">
-          <header><h3 data-i18n="a_mm_h"></h3><button class="quiet" type="button" id="al-mm" data-i18n="a_search"></button></header>
-          <p class="muted" data-i18n="a_mm_s"></p>
-          <div id="al-mm-out" aria-live="polite"></div>
-        </article>
-        <article class="lab">
-          <header><h3 data-i18n="a_syn_h"></h3>
-            <div class="controls tight"><select id="al-spec"><option value="average" data-i18n="a_avg"></option><option value="average_ceil" data-i18n="a_avgc"></option><option value="abs" data-i18n="a_abs"></option><option value="clear_lowest_one" data-i18n="a_clr"></option><option value="lowest_one" data-i18n="a_low"></option></select><button class="quiet" type="button" id="al-syn" data-i18n="a_search"></button></div></header>
-          <p class="muted" data-i18n="a_syn_s"></p>
-          <div id="al-syn-out" aria-live="polite"></div>
-        </article>
-      </div>
-    </section>
 
-    <section role="tabpanel" id="p-science" aria-labelledby="t-science" hidden>
-      <h2 data-i18n="science">Science</h2>
-      <p class="lede" data-i18n="science_lede"></p>
-      <p class="muted" data-i18n="science_open" style="max-width:68ch">These are fixed reference problems with known answers: the calibration of the instruments. To put your own system, molecule, sequences or data on the bench, open the Crucible.</p>
-      <div class="controls" style="margin-bottom:18px"><button class="primary" type="button" id="sci-all" data-i18n="sci_all"></button><span id="sci-state" class="muted" aria-live="polite"></span></div>
-      <div class="sci-grid" id="sci-grid"></div>
-    </section>
 
-    <section role="tabpanel" id="p-games" aria-labelledby="t-games" hidden>
-      <h2 data-i18n="games">Games</h2>
-      <p class="lede" data-i18n="games_lede"></p>
-      <div class="lab-grid">
-        <article class="lab">
-          <header><h3 data-i18n="g_play_h"></h3>
-            <div class="controls tight"><label><span data-i18n="g_sims"></span> <select id="g-sims"><option>8</option><option>16</option><option>32</option><option selected>64</option><option>200</option></select></label><button class="quiet" type="button" id="g-new" data-i18n="g_new"></button></div></header>
-          <p class="muted" data-i18n="g_play_s"></p>
-          <div class="ttt" id="g-board" role="grid" data-i18n-aria="g_play_h"></div>
-          <p id="g-status" class="muted" aria-live="polite"></p>
-        </article>
-        <article class="lab">
-          <header><h3 data-i18n="g_az_h"></h3><button class="quiet" type="button" id="g-az" data-i18n="run"></button></header>
-          <p class="muted" data-i18n="g_az_s"></p>
-          <div id="g-az-out" aria-live="polite"></div>
-        </article>
-        <article class="lab">
-          <header><h3 data-i18n="g_dr_h"></h3><button class="quiet" type="button" id="g-dr" data-i18n="run"></button></header>
-          <p class="muted" data-i18n="g_dr_s"></p>
-          <div id="g-dr-out" aria-live="polite"></div>
-        </article>
-      </div>
-    </section>
 
     <section role="tabpanel" id="p-bench" aria-labelledby="t-bench" hidden><div class="wb" id="wb-bench"></div></section>
     <section role="tabpanel" id="p-fin" aria-labelledby="t-fin" hidden><div class="wb" id="wb-fin"></div></section>
@@ -2074,10 +1990,8 @@ const SceneEngine = (() => {
    shows lives here (the server's own messages — errors, rejections — stay
    in English, as in the API). */
 const I18N = {
-  en: {
-    g_discover: "Discover", scene: "Living scene", scene_s: "a picture that moves, directed", sketch: "Sketch", sketch_s: "to a drawing, to a 3D plan",
-    math: "Mathematics", math_s: "proofs with certificates", algo: "Algorithms", algo_s: "found by search, then proved",
-    science_open: "These are fixed reference problems with known answers: the calibration of the instruments. To put your own system, molecule, sequences or data on the bench, open the Crucible.", science: "Calibration", science_s: "the fixed experiments that keep the Crucible honest", games: "Games", games_s: "self-play and varied worlds",
+  en: { scene: "Living scene", scene_s: "a picture that moves, directed", sketch: "Sketch", sketch_s: "to a drawing, to a 3D plan",
+    math: "Mathematics", science: "Calibration",
     archive: "Archives", archive_s: "saved results, checked again", save: "Save", samples: "Examples",
     scene_lede: "Any picture — a photograph, a painting, an AI render, a drawing — becomes a scene that lives: depth layers with what is behind them filled in, a camera you can move, inhabitants who walk its ground, weather, light and wind, directed in words. It loops forever from a seed, and leaves as a file that plays offline.",
     sc_drop: "Drop a picture", sc_drop_s: "PNG or JPEG — it is analysed here, nothing leaves the machine", sc_rig_drop: "Drop a drawing to animate", sc_rig_drop_s: "dark strokes on light paper: a figure, a creature",
@@ -2098,35 +2012,8 @@ const I18N = {
     sk_room: (i, a) => `room ${i}: ${a.toFixed(2)} m²`, sk_door: (w) => `${w.toFixed(2)} m`, sk_scale: (s) => `scale: ${(1 / s).toFixed(1)} px per metre (the longest wall taken as 8 m — change it below)`, sk_longest: "longest wall (m)",
     sk_cons: { horizontal: "horizontal", vertical: "vertical", diagonal_45: "45°", parallel: "parallel", perpendicular: "perpendicular", welded_corners: "corners closed" },
     sk_noconstraints: "(the control: fitted, not corrected)", sk_raw: "Show without constraints",
-    math_lede: "Geometry proved by the algebraic method: every point a rational function of the free parameters, every claim a polynomial that must vanish identically — the certificate is the polynomial, and an independent check evaluates the figure in exact rationals at random points. False statements of the same shape are the control. Then conjectures found and proved without being asked, and topology by exact homology.",
-    m_prove_h: "Prove a theorem", m_prove: "Prove", m_conj_h: "Conjecture and prove", m_conj_s: "Every triple of points of a triangle's figure tested for a line, every quadruple for a circle; what survives is proved. Nothing was asked.",
-    m_topo_h: "Homology of surfaces", m_topo_s: "Betti numbers over GF(2) and over ℚ: where they differ, there is torsion — the Klein bottle and RP² are told from the torus and the sphere.",
-    m_pers_h: "Persistent homology", m_pers_s: "A point cloud's loops by Vietoris–Rips filtration: long bars are structure, short bars are noise.", m_loop: "noisy loop", m_two: "two loops", m_blob: "blob (control)",
-    m_proved: "proved", m_refuted: "refuted", m_true: "true theorem", m_false: "false (a control)", m_check: (c, k) => `independent check: ${c === "holds" ? "holds" : "fails"} at ${k} random rational points`,
-    m_cert: () => "the claim's numerator, expanded, is the zero polynomial", m_nondeg: "general position (denominators ≠ 0):", m_terms: (n, d) => `numerator: ${n} terms, degree ${d} — not identically zero`, m_slow: "symbolic proof of Simson's line takes about 100 s: checked in exact rationals only here",
-    m_found: (c, s, n) => `${n} candidates · ${s} survived floating point · ${c} proved`, m_collinear: "on a line", m_concyclic: "on a circle", m_complex: "complex", m_torsion: "torsion",
-    m_bars: (n) => `H₁: ${n} bars; the longest`,
-    algo_lede: "Algorithms discovered by search and certified by something that does not trust the search: the 0-1 principle for sorting networks, the exact multiplication tensor for matrix products, exhaustive evaluation for bit tricks.",
-    a_sort_h: "Sorting networks", a_sort_s: "Beam search over the 0-1 vectors a comparator prefix can still produce; certified by the 0-1 principle. Known optima: Knuth; Codish et al.", a_search: "Search",
-    a_mm_h: "Matrix multiplication", a_mm_s: "A 2×2 product with fewer than 8 multiplications, found by alternating least squares driven to integers, verified exactly; rank 6 is impossible (Winograd 1971) and never found.",
-    a_syn_h: "Bit-trick synthesis", a_syn_s: "The shortest program over add, sub, and, or, xor, not, neg, >>1, sign — minimal on the whole input space of small words, verified on 8, 16 and 32 bits.",
-    a_avg: "⌊(x+y)/2⌋ without overflow", a_avgc: "⌈(x+y)/2⌉ without overflow", a_abs: "|x|", a_clr: "clear the lowest set bit", a_low: "isolate the lowest set bit",
-    a_size: (s, d, ks, kd) => `size ${s} (known optimum ${ks}) · depth ${d} (optimum ${kd})`, a_control: (s, d) => `control — random comparators, every redundant one removed: size ${s}, depth ${d}`,
-    a_sorts: "sorts all 2ⁿ zero-one inputs: certified", a_mults: (m, a, k) => `${m} multiplications, ${a} additions, found on try ${k}`, a_verified: "every coefficient of the 4×4×4 tensor checked over the integers",
-    a_rank6: (k) => `rank 6: ${k} tries, none passed the exact check`, a_class: (c) => `operation counts of the recursion fit ${c}`, a_explored: (n, w) => `${n} distinct functions explored on ${w}-bit words`,
-    a_minimal: (o) => `${o} operations — nothing shorter exists over this set`, a_ver: "verified", a_products: "the products", a_outputs: "the outputs",
-    science_lede: "Physics past the classical, chemistry and life — each experiment against a closed form or a published value, with a control that must fail. Binary64 on the BEAM, deterministic: the same numbers on every machine.",
-    sci_all: "Run all", sci_running: (n) => `running ${n}…`, sci_ref: "reference", sci_ctrl: "control", sci_val: "value", sci_pass: "agrees", sci_fail: "disagrees",
-    sci_tags: { quantum_coherent: "quantum", quantum_tunneling: "quantum", relativistic_gyration: "relativity", exb_drift: "plasma", tokamak_equilibrium: "fusion", h2_hartree_fock: "chemistry", heh_hartree_fock: "chemistry", lennard_jones: "materials", wright_fisher: "evolution", phylogeny: "genomics", hp_folding: "proteins" },
-    games_lede: "Self-play and the manipulation of worlds: a small self-play learner (a search guided by a network) that learned tic-tac-toe only from its own games, judged against perfect play; and policies trained on one cart-pole or on many, tested on cart-poles neither saw.",
-    g_play_h: "Play against it", g_play_s: "You are X. The shading is the search's visit counts — where it looked.", g_sims: "simulations", g_new: "New game",
-    g_your: "your move", g_thinking: "searching…", g_win: "you won — that should not happen", g_lose: "it won", g_draw: "draw", g_value: (v) => `perfect play from here: ${v > 0 ? "X wins" : v < 0 ? "O wins" : "draw"}`,
-    g_az_h: "Strength per simulation", g_lines: "lines lost", g_az_s: "Share of lines lost (%) against a perfect player — every one of its optimal lines, from both sides, not a sample — by search budget: the trained network against the same search untrained.",
-    g_trained: "trained", g_untrained: "untrained (control)", g_dr_h: "Domain randomisation", g_dr_s: "Linear policies by random search: trained on the nominal cart-pole, or on cart-poles with drawn pole lengths, masses and motor force; tested on four cart-poles neither saw.",
-    g_nominal: "trained on one", g_randomized: "trained on many", g_steps: "steps up (of 500) on unseen cart-poles",
     archive_lede: "Every result of this console saves as an archive: a zip whose manifest names the recipe and the hash of every file; its identity is the hash of the manifest. Drop one here: it is checked byte for byte, and — when its kind is deterministic — computed again and compared.",
     ar_drop: "Drop an archive", ar_drop_s: ".zip saved from any panel", ar_ok: "intact: every file hashes to its manifest", ar_bad: "altered", ar_replay: "computed again:", ar_kind: "kind", ar_id: "identity",
-    sci_names: { quantum_coherent: "A coherent state keeps the classical orbit", quantum_tunneling: "Tunneling through a barrier", relativistic_gyration: "Gyration at 0.9 c: time dilates", exb_drift: "The E×B drift", tokamak_equilibrium: "A tokamak's equilibrium (Grad–Shafranov)", h2_hartree_fock: "H₂ by Hartree–Fock", heh_hartree_fock: "HeH⁺ by Hartree–Fock", lennard_jones: "A Lennard-Jones liquid", wright_fisher: "A mutant's fixation", phylogeny: "A tree rebuilt from genomes", hp_folding: "Folding the HP 20-mer" },
     studio: "Studio", studio_s: "graphs of image, sound, video, 3D",
     studio_lede: "Wire nodes into a graph — pictures, sound, video, 3D, diffusion, reinforcement learning — and run it. Every result is content-addressed: change one node and only what depends on it runs again; the run ends in a seal, its Merkle root, that anyone can re-derive with Verify.",
     st_template: "Start from", st_run: "Run", st_verify: "Verify", st_comfy: "Import ComfyUI", st_export: "Export JSON", st_clear: "Clear",
@@ -2142,10 +2029,10 @@ const I18N = {
     st_needs_worker: "This node compiles programs: the server needs its native worker.",
     cat_image: "Image", cat_audio: "Sound", cat_video: "Video", cat_text: "Text & reading", cat_3d: "3D", cat_rl: "Reinforcement learning",
     cat_diffusion: "Diffusion", cat_graph: "Graph", cat_misc: "Other",
-    skip: "Skip to content", nav: "Sections", g_ask: "Ask", g_read: "Read", g_make: "Make", g_measure: "Measure",
-    chat: "Chat", chat_s: "answers with their sources", docs: "Documents", docs_s: "zip, PDF, Office, images",
-    vision: "Vision", vision_s: "text in photos and scans", listen: "Listen", listen_s: "a spoken digit",
-    draw: "Draw", draw_s: "a digit, by diffusion", merge: "Fusion", merge_s: "which method fits",
+    skip: "Skip to content", nav: "Sections", g_read: "Read", g_make: "Make", g_measure: "Measure",
+    chat: "Ask the library", chat_s: "one question, answered with its sources", docs: "Documents", docs_s: "zip, PDF, Office, images",
+    vision: "Vision", vision_s: "text in photos and scans",
+    draw: "Draw",
     quality: "Quality", quality_s: "signal or noise", lock: "Airlock", lock_s: "the model's contract",
     checking: "checking the server", ready: "ready", no_model_s: "no text model", unreachable: "server unreachable",
     theme: "Theme", theme_aria: "Switch between light and dark", other_lang: "Português", other_lang_code: "pt",
@@ -2181,28 +2068,9 @@ const I18N = {
     lm_changed: (c, l) => `Where the frames were in doubt, the language model chose ${c} character${c == 1 ? "" : "s"} in ${l} line${l == 1 ? "" : "s"} — highlighted.`,
     lm_none: "The language model changed nothing: the frames were sure, or the line is not a language it knows (it abstains there).",
     show_frames: "Show the frames' own reading", show_model: "Show the reading with the model",
-    lm_legend: (o, g) => `Decoder: CTC beam search with a character ${o}-gram language model, which only chooses among what the frames find plausible and abstains on lines costing over ${g} bits per character (codes, random strings).`,
-    listen_lede: "Say a digit from zero to nine, in English, or drop a WAV. The spectrum is a certified program; the reader was trained on five voices and measured on a sixth it never heard: 90 % there, 72 % on average across voices. A small model — expect it to miss on yours, and look at its certainty.",
-    record: "Record 1.5 s", choose_wav: "Choose a WAV", recording: "recording — say the digit now", no_mic: (e) => `no microphone: ${e} — choose a WAV`,
-    listening: "listening…", certainty: (p, s, f) => `${p} certain — ${s} s of audio, ${f} frames`, draw_this: (d) => `Draw a ${d}`,
-    hesitates: "below this line, the reader hesitates", mel_caption: "what the reader hears: 32 mel bands × time, each band minus its mean (certified spectrum)",
-    draw_lede: "Choose a digit. A diffusion model trained on real handwriting draws it from noise, step by step; then a classifier that has only seen real images says what it reads, and the image is compared with its nearest training image — a copy would sit at distance zero.",
-    digit: "Digit", digit_n: (d) => `digit ${d}`, seed: "seed", steps: "steps", guidance: "guidance", draw_btn: "Draw", drawing: "drawing…",
-    trajectory: "denoising trajectory", reads_ok: (d, p) => `the classifier reads ${d}, at ${p}`, reads_bad: (w, g) => `asked for ${w}; the classifier reads ${g}`,
-    half: "half",
-    draw_note: (dist, s, st, g, ms) => `Distance to the nearest training image: ${dist} grey levels (a copy would be near zero; held-out real images sit typically between 15 and 30). Seed ${s}, ${st} steps, guidance ${g} — the same seed gives the same image, on any machine. ${ms} ms.`,
-    merge_lede: "Whether two models merge into one depends on how they are related. Here, real decoders trained for Portuguese and for English: the diagnosis reads only the weights and names the regime; then every method is measured on held-out text, and the one chosen is the one that wins on validation.",
-    pair_ft: "Fine-tunes of one base", pair_ind: "Trained separately", measuring: "measuring — the first time takes about twenty seconds",
-    regime: (r) => `Regime: ${r}`, r_small: "small deltas", r_dense: "dense deltas", r_unrelated: "no common ancestor", r_single: "a single model",
-    method: "method", validation: "validation", test_mean: "test, mean of pt/en (bits per character)", alone: (n) => `${n} (alone)`, chosen: " — chosen",
-    merge_note: (c, ms) => `Chosen on validation: ${c}. Fewer bits is better; the bar grows toward the best. Models: character-level Llama decoders trained by PyTorch (priv/quality/merge). ${ms} ms.`,
-    adv_unrelated: (c) => [`The weights are nearly orthogonal (cosine ${c}): the two networks share no ancestor, so their units are not aligned — a network computes the same function under any permutation of its hidden units.`, "A weight average of misaligned networks destroys both: do not fuse them in weight space."],
-    adv_nobase: (c) => [`Related models (weight cosine ${c}); without a base only linear, SLERP and RegMean apply — and they are measured.`],
-    adv_delta: (rel, dpct, conc, disc) => `Each fine-tune moved the weights by ${rel} of their norm; the largest ${dpct} of each delta carry ${conc} of its energy — TIES at that density discards ${disc}.`,
-    adv_conflict: (c, cos) => `The two deltas' signs disagree on ${c} of the magnitude they share; their cosine is ${cos}.`,
-    adv_dare: (p, n) => `DARE at p = ${p} perturbs each delta by ${n} of its own norm: harmless only if the fine-tune is redundant, which the weights alone cannot show.`,
-    adv_dense: "Deltas this large are not the small fine-tunes TIES and DARE assume: prefer linear, SLERP or RegMean.",
-    adv_small: "Every method is admissible. Task arithmetic at λ = 1 applies each delta at full strength, also where it hurts the other model's domain (λ = 1/n is the linear average). Hence: measure.",
+    lm_legend: (o, g) => `Decoder: CTC beam search with a character ${o}-gram language model, which only chooses among what the frames find plausible and abstains on lines costing over ${g} bits per character (codes, random strings).`, seed: "seed", steps: "steps",
+    regime: (r) => `Regime: ${r}`,
+    method: "method",
     quality_lede: "Paste a text — or measure the last answer — and see where it falls between the two gates, calibrated against noise and against real Portuguese text. The gate measures language statistics, not meaning.",
     q_ph: "At least 60 characters of text.", measure: "Measure", measure_last: "Measure the last answer",
     gate_noise: "noise up to here", gate_real: "real text from here", trigrams: (x) => `${x} of trigrams`,
@@ -2236,8 +2104,7 @@ const I18N = {
     logged: (i) => `receipt anchored as entry ${i} of the ledger`,
     audit: "Dossier", audit_s: "evidence for an auditor", audit_title: "Audit dossier",
     audit_lede: "The evidence this system produces — compilation certificates, attested agent runs, transparency-log receipts, quality reports, model contracts — packed into one signed file and checked again here, from its bytes: every hash, the Merkle root, the signatures, each item by its own rules. The weave shows which provisions of the EU AI Act and ISO/IEC 42001 each piece of evidence speaks to, and where there is none.",
-    drop_dossier: "Drop a dossier or its PDF report", drop_dossier_s: "A .vdossier written by mix vapor.audit export, or the PDF report that carries it as an attachment.",
-    a_demo: "Build a demonstration dossier", a_building: "compiling, signing, anchoring…", a_verifying: (n) => `checking ${n}…`,
+    drop_dossier: "Drop a dossier or its PDF report", drop_dossier_s: "A .vdossier written by mix vapor.audit export, or the PDF report that carries it as an attachment.", a_verifying: (n) => `checking ${n}…`,
     a_ok: "Verified", a_bad: "Not verified", a_items: (n) => `${n} item${n == 1 ? "" : "s"}`, a_sigs: (g, n) => `${g} of ${n} signature${n == 1 ? "" : "s"} valid`,
     a_root_ok: "Merkle root recomputed", a_root_bad: "Merkle root DIFFERS", a_coverage: "Coverage", a_coverage_s: "Rows: provisions. Columns: the evidence, in the dossier's order. A filled cell means that kind of evidence is relevant to the provision; red, that the item failed its check. The count on the right is the number of verified items behind each provision — a gap is shown, not hidden.",
     a_evidence: "Evidence", a_hash_ok: "hash matches", a_hash_bad: "hash ALTERED", a_check: (c) => `check: ${c}`, a_bytes: (n) => `${n.toLocaleString()} bytes`,
@@ -2248,44 +2115,26 @@ const I18N = {
     substrate: "substrate", cpu: "CPU", gpu: (d) => `GPU · ${d}`,
     t_table: (k, r, c) => `Table ${k} — ${r} × ${c}`, t_header: (n) => `${n} header row${n == 1 ? "" : "s"}`, t_kind_ruled: "ruled grid", t_kind_rules: "rules only",
     t_conf: (c) => `cells read with ${c} mean confidence`, t_view: "Table", t_copy: "Copy", t_spans: (n) => `${n} merged cell${n == 1 ? "" : "s"}`, t_below: (n) => `table ${n}, below`,
-    g_sim: "Simulate", physics: "Physics", physics_s: "chaos, twins, replay", net: "Networks", net_s: "structure against its null",
-    subs: "Substrates", subs_s: "hardware, admitted by measurement", train: "Training", train_s: "a model vapor trained",
+    g_sim: "Simulate",
+    subs: "Substrates", subs_s: "hardware, admitted by measurement",
     script: "Script", sc_latin: "Latin", sc_cursive: "Cursive", sc_math: "Formula", run: "Run",
     sc_note: { latin: "Printed Latin, with tables, figures and charts — a chart's data is read when its scale can be checked.",
-      arabic: "Printed Arabic, right to left: the frames are read in visual order and turned back into logical order (digits stay left to right).",
-      cyrillic: "Printed Russian (Cyrillic), left to right, read by its own reader.",
-      cursive: "Handwriting: no reader is shipped — one trained on handwriting typefaces misread unseen hands at 64 % CER, so the console shows the refusal and why.",
-      zh: "Simplified Chinese: 3,755 GB 2312 characters by their stroke directions; segmentation decided by recognition.",
-      ja: "Japanese: JIS level-1 kanji and the kana.", ko: "Korean: the 2,350 KS X 1001 syllables.",
-      math: "A typeset formula → LaTeX: symbols by shape, fractions, radicals and scripts by geometry." },
-    physics_lede: "Every step of these worlds is a vapor program, so it has the same bits on every substrate. That is what makes a chaotic simulation replayable and a digital twin auditable: two runs of the same world never part, and anyone holding the model and the actions can recompute what the twin predicted.",
-    chaos_h: "Chaos, run twice", chaos_s: "A double pendulum and a copy started one unit in the last place away. The native worker runs them; the exact oracle re-runs the first steps and must agree bit for bit.",
-    chaos_same: (n) => `oracle = native, bit for bit, for ${n} steps`, chaos_diff: "oracle ≠ native — the substrate is not canonical",
-    chaos_gap: "distance between the two worlds (log scale)", chaos_eps: (e) => `start: one ulp apart (${e.toExponential(1)} m)`,
-    twin_h: "A digital twin", twin_s: "A pendulum and its twin, measured with 2 mm of noise. At the dashed line the plant's rod stretches by 0.5 %. The twin accumulates its residuals (CUSUM) and raises the alarm when the sum crosses the threshold.",
-    twin_res: "residual (σ units)", twin_cusum: "CUSUM", twin_thr: "threshold", twin_fault: "fault", twin_alarm: (t, f) => `alarm at step ${t}, ${t - f} steps after the fault`,
-    twin_none: "no alarm", twin_ledger: (n, h, ok) => `ledger: ${n} entries, head ${h} — replayed from the model and the actions: ${ok ? "every prediction recomputed, chain intact" : "MISMATCH"}`,
-    net_lede: "A network is only as interesting as its difference from a random one with the same degrees. Every number here comes with its control: clustering against the configuration null, the power law tested (Clauset–Shalizi–Newman), communities scored by modularity, robustness to failure and to attack.",
-    net_model: "network model", net_ba: "Barabási–Albert (preferential attachment)", net_er: "Erdős–Rényi (random)", net_ws: "Watts–Strogatz (small world)", net_planted: "Planted communities", net_n: "nodes",
-    net_running: "computing…", net_done: (ms) => `${ms} ms`, net_clust: "clustering", net_null: "null", net_z: "z", net_assort: "assortativity", net_mod: "modularity", net_nmi: "NMI with the planted groups",
-    net_pl: "degree distribution", net_pl_v: { power_law: "power law: plausible and preferred to the exponential", rejected: "power law rejected (bootstrap p < 0.1)", exponential: "the exponential fits better", inconclusive: "inconclusive" },
-    net_alpha: (a, x, p) => `α = ${a.toFixed(2)} above x_min = ${x}; bootstrap p = ${p.toFixed(2)}`, net_rob: "giant component after removing a fraction of nodes",
-    net_fail: "random failure", net_attack: "targeted attack (highest degree first)", net_pr: "PageRank, top nodes",
+    arabic: "Printed Arabic, right to left: the frames are read in visual order and turned back into logical order (digits stay left to right).",
+    cyrillic: "Printed Russian (Cyrillic), left to right, read by its own reader.",
+    cursive: "Handwriting: no reader is shipped — one trained on handwriting typefaces misread unseen hands at 64 % CER, so the console shows the refusal and why.",
+    zh: "Simplified Chinese: 3,755 GB 2312 characters by their stroke directions; segmentation decided by recognition.",
+    ja: "Japanese: JIS level-1 kanji and the kana.", ko: "Korean: the 2,350 KS X 1001 syllables.",
+    math: "A typeset formula → LaTeX: symbols by shape, fractions, radicals and scripts by geometry." },
+    net_running: "computing…",
     subs_lede: "Hardware computes only after it is measured. Each substrate runs the admission probes; the oracle's exact answer decides whether it reproduces the canonical bits, stays within the proved error envelope (and how: fused multiply–add, flushed subnormals, reduction order), or is refused.",
     admit_all: "Admit every substrate present", subs_running: "running the probes…", subs_fp: "fingerprint",
     fp_contraction: "FMA", fp_flush_to_zero: "FTZ", fp_denormals_are_zero: "DAZ", fp_reduction_order: "reduction order", fp_significand_bits: "significand bits", fp_signed_zero: "signed zero", fp_nan_select: "NaN select", fp_division: "division", fp_functions: "functions",
     v_canonical: "canonical", v_envelope: "within the envelope", v_refused: "refused", v_unavailable: "unavailable",
-    train_lede: "A byte-level Llama pretrained by vapor on its own documentation, with data parallelism whose bits do not depend on the number of workers. Its receipt holds the curve, the baselines it beats on held-out text and the digest of every checkpoint; its stream reads past the training length in constant memory.",
-    train_load: "Show the receipt and the stream", train_curve: "held-out bits per byte", train_unigram: "byte frequencies", train_wb3: "Witten–Bell, order 3", train_wb5: "Witten–Bell, order 5",
-    train_facts: "run", train_stream: "past the training length: bits per byte, window by window", train_stream_s: "stream (sinks + window, positions in the cache's frame)", train_dense: "growing positions (the control)",
-    train_len: "training length", train_bpb: (b) => `${b.toFixed(2)} bits/byte`,
     fig_h: "Figures", fig_chart: "chart", fig_picture: "picture", fig_caption: "caption", fig_refused: (r) => `numbers refused: ${r}`, fig_none: "no caption",
     latex_h: "LaTeX", ar_visual: "visual order",
   },
-  pt: {
-    g_discover: "Descobrir", scene: "Cena viva", scene_s: "uma imagem que se move, dirigida", sketch: "Esboço", sketch_s: "para desenho, para planta 3D",
-    math: "Matemática", math_s: "provas com certificado", algo: "Algoritmos", algo_s: "achados por busca, depois provados",
-    science_open: "Estes são problemas de referência fixos, com respostas conhecidas: a calibração dos instrumentos. Para pôr na bancada o seu próprio sistema, molécula, sequências ou dados, abra o Crucible.", science: "Calibração", science_s: "os experimentos fixos que mantêm o Crucible honesto", games: "Jogos", games_s: "autojogo e mundos variados",
+  pt: { scene: "Cena viva", scene_s: "uma imagem que se move, dirigida", sketch: "Esboço", sketch_s: "para desenho, para planta 3D",
+    math: "Matemática", science: "Calibração",
     archive: "Arquivos", archive_s: "resultados salvos, conferidos de novo", save: "Salvar", samples: "Exemplos",
     scene_lede: "Qualquer imagem — uma foto, uma pintura, uma imagem gerada por IA, um desenho — vira uma cena viva: camadas de profundidade com o que está atrás delas reconstruído, uma câmera que se move, habitantes que andam pelo chão, clima, luz e vento, dirigidos em palavras. Roda para sempre a partir de uma semente e sai como um arquivo que toca offline.",
     sc_drop: "Solte uma imagem", sc_drop_s: "PNG ou JPEG — analisada aqui, nada sai da máquina", sc_rig_drop: "Solte um desenho para animar", sc_rig_drop_s: "traços escuros em papel claro: uma figura, uma criatura",
@@ -2306,35 +2155,8 @@ const I18N = {
     sk_room: (i, a) => `cômodo ${i}: ${a.toFixed(2).replace(".", ",")} m²`, sk_door: (w) => `${w.toFixed(2).replace(".", ",")} m`, sk_scale: (s) => `escala: ${(1 / s).toFixed(1).replace(".", ",")} px por metro (a parede mais longa tomada como 8 m — mude abaixo)`, sk_longest: "parede mais longa (m)",
     sk_cons: { horizontal: "horizontal", vertical: "vertical", diagonal_45: "45°", parallel: "paralela", perpendicular: "perpendicular", welded_corners: "cantos fechados" },
     sk_noconstraints: "(o controle: ajustado, não corrigido)", sk_raw: "Mostrar sem as restrições",
-    math_lede: "Geometria provada pelo método algébrico: cada ponto é uma função racional dos parâmetros livres, cada afirmação um polinômio que tem de se anular identicamente — o certificado é o polinômio, e uma conferência independente avalia a figura em racionais exatos em pontos sorteados. Enunciados falsos de mesma forma são o controle. Depois, conjecturas achadas e provadas sem serem pedidas, e topologia por homologia exata.",
-    m_prove_h: "Provar um teorema", m_prove: "Provar", m_conj_h: "Conjecturar e provar", m_conj_s: "Toda trinca de pontos da figura de um triângulo testada para uma reta, toda quadra para um círculo; o que sobrevive é provado. Nada foi perguntado.",
-    m_topo_h: "Homologia de superfícies", m_topo_s: "Números de Betti sobre GF(2) e sobre ℚ: onde diferem, há torção — a garrafa de Klein e o RP² se distinguem do toro e da esfera.",
-    m_pers_h: "Homologia persistente", m_pers_s: "Os laços de uma nuvem de pontos pela filtração de Vietoris–Rips: barras longas são estrutura, barras curtas são ruído.", m_loop: "laço com ruído", m_two: "dois laços", m_blob: "mancha (controle)",
-    m_proved: "provado", m_refuted: "refutado", m_true: "teorema verdadeiro", m_false: "falso (um controle)", m_check: (c, k) => `conferência independente: ${c === "holds" ? "vale" : "falha"} em ${k} pontos racionais sorteados`,
-    m_cert: () => "o numerador da afirmação, expandido, é o polinômio nulo", m_nondeg: "posição geral (denominadores ≠ 0):", m_terms: (n, d) => `numerador: ${n} termos, grau ${d} — não é identicamente zero`, m_slow: "a prova simbólica da reta de Simson leva uns 100 s: aqui só conferida em racionais exatos",
-    m_found: (c, s, n) => `${n} candidatos · ${s} sobreviveram em ponto flutuante · ${c} provados`, m_collinear: "numa reta", m_concyclic: "num círculo", m_complex: "complexo", m_torsion: "torção",
-    m_bars: (n) => `H₁: ${n} barras; a mais longa`,
-    algo_lede: "Algoritmos descobertos por busca e certificados por algo que não confia na busca: o princípio 0-1 para redes de ordenação, o tensor exato da multiplicação de matrizes, a avaliação exaustiva para truques de bits.",
-    a_sort_h: "Redes de ordenação", a_sort_s: "Busca em feixe sobre os vetores 0-1 que um prefixo de comparadores ainda pode produzir; certificada pelo princípio 0-1. Ótimos conhecidos: Knuth; Codish et al.", a_search: "Buscar",
-    a_mm_h: "Multiplicação de matrizes", a_mm_s: "Um produto 2×2 com menos de 8 multiplicações, achado por mínimos quadrados alternados levados a inteiros, conferido exatamente; posto 6 é impossível (Winograd 1971) e nunca é achado.",
-    a_syn_h: "Síntese de truques de bits", a_syn_s: "O programa mais curto sobre add, sub, and, or, xor, not, neg, >>1, sinal — mínimo em todo o espaço de entradas de palavras pequenas, conferido em 8, 16 e 32 bits.",
-    a_avg: "⌊(x+y)/2⌋ sem estouro", a_avgc: "⌈(x+y)/2⌉ sem estouro", a_abs: "|x|", a_clr: "apagar o bit 1 mais baixo", a_low: "isolar o bit 1 mais baixo",
-    a_size: (s, d, ks, kd) => `tamanho ${s} (ótimo conhecido ${ks}) · profundidade ${d} (ótimo ${kd})`, a_control: (s, d) => `controle — comparadores sorteados, os redundantes removidos: tamanho ${s}, profundidade ${d}`,
-    a_sorts: "ordena todas as 2ⁿ entradas 0-1: certificado", a_mults: (m, a, k) => `${m} multiplicações, ${a} somas, achado na tentativa ${k}`, a_verified: "cada coeficiente do tensor 4×4×4 conferido nos inteiros",
-    a_rank6: (k) => `posto 6: ${k} tentativas, nenhuma passou na conferência exata`, a_class: (c) => `as contagens de operações da recursão ajustam ${c}`, a_explored: (n, w) => `${n} funções distintas exploradas em palavras de ${w} bits`,
-    a_minimal: (o) => `${o} operações — nada mais curto existe sobre este conjunto`, a_ver: "conferido", a_products: "os produtos", a_outputs: "as saídas",
-    science_lede: "Física além da clássica, química e vida — cada experimento contra uma forma fechada ou um valor publicado, com um controle que tem de falhar. Binary64 na BEAM, determinístico: os mesmos números em qualquer máquina.",
-    sci_all: "Rodar todos", sci_running: (n) => `rodando ${n}…`, sci_ref: "referência", sci_ctrl: "controle", sci_val: "valor", sci_pass: "concorda", sci_fail: "discorda",
-    sci_tags: { quantum_coherent: "quântica", quantum_tunneling: "quântica", relativistic_gyration: "relatividade", exb_drift: "plasma", tokamak_equilibrium: "fusão", h2_hartree_fock: "química", heh_hartree_fock: "química", lennard_jones: "materiais", wright_fisher: "evolução", phylogeny: "genômica", hp_folding: "proteínas" },
-    games_lede: "Autojogo e manipulação de mundos: um pequeno aprendiz por autojogo (uma busca guiada por uma rede) que aprendeu o jogo da velha só com as próprias partidas, julgado contra o jogo perfeito; e políticas treinadas num carro-pêndulo ou em muitos, testadas em carros-pêndulo que nenhuma viu.",
-    g_play_h: "Jogue contra ele", g_play_s: "Você é o X. O sombreado são as visitas da busca — onde ela olhou.", g_sims: "simulações", g_new: "Nova partida",
-    g_your: "sua vez", g_thinking: "buscando…", g_win: "você venceu — isso não devia acontecer", g_lose: "ele venceu", g_draw: "empate", g_value: (v) => `jogo perfeito daqui: ${v > 0 ? "X vence" : v < 0 ? "O vence" : "empate"}`,
-    g_az_h: "Força por simulação", g_lines: "linhas perdidas", g_az_s: "Fração das linhas perdidas (%) contra um jogador perfeito — todas as suas linhas ótimas, dos dois lados, não uma amostra — por orçamento de busca: a rede treinada contra a mesma busca sem treino.",
-    g_trained: "treinada", g_untrained: "sem treino (controle)", g_dr_h: "Aleatorização de domínio", g_dr_s: "Políticas lineares por busca aleatória: treinadas no carro-pêndulo nominal, ou em carros-pêndulo com comprimento, massas e força do motor sorteados; testadas em quatro que nenhuma viu.",
-    g_nominal: "treinada em um", g_randomized: "treinada em muitos", g_steps: "passos em pé (de 500) em carros-pêndulo não vistos",
     archive_lede: "Todo resultado deste console se salva como um arquivo: um zip cujo manifesto diz a receita e o hash de cada arquivo; a identidade é o hash do manifesto. Solte um aqui: ele é conferido byte a byte e — quando o tipo é determinístico — recalculado e comparado.",
     ar_drop: "Solte um arquivo", ar_drop_s: ".zip salvo de qualquer painel", ar_ok: "íntegro: cada arquivo bate com o manifesto", ar_bad: "alterado", ar_replay: "recalculado:", ar_kind: "tipo", ar_id: "identidade",
-    sci_names: { quantum_coherent: "Um estado coerente segue a órbita clássica", quantum_tunneling: "Tunelamento por uma barreira", relativistic_gyration: "Giro a 0,9 c: o tempo dilata", exb_drift: "A deriva E×B", tokamak_equilibrium: "O equilíbrio de um tokamak (Grad–Shafranov)", h2_hartree_fock: "H₂ por Hartree–Fock", heh_hartree_fock: "HeH⁺ por Hartree–Fock", lennard_jones: "Um líquido de Lennard-Jones", wright_fisher: "A fixação de um mutante", phylogeny: "Uma árvore refeita de genomas", hp_folding: "Dobrando o 20-mero HP" },
     studio: "Estúdio", studio_s: "grafos de imagem, som, vídeo, 3D",
     studio_lede: "Ligue nós num grafo — imagens, som, vídeo, 3D, difusão, aprendizado por reforço — e execute. Cada resultado é endereçado pelo conteúdo: mude um nó e só o que depende dele roda de novo; a execução termina num selo, sua raiz de Merkle, que qualquer um rederiva com Verificar.",
     st_template: "Começar de", st_run: "Executar", st_verify: "Verificar", st_comfy: "Importar ComfyUI", st_export: "Exportar JSON", st_clear: "Limpar",
@@ -2350,10 +2172,10 @@ const I18N = {
     st_needs_worker: "Este nó compila programas: o servidor precisa do seu worker nativo.",
     cat_image: "Imagem", cat_audio: "Som", cat_video: "Vídeo", cat_text: "Texto e leitura", cat_3d: "3D", cat_rl: "Aprendizado por reforço",
     cat_diffusion: "Difusão", cat_graph: "Grafo", cat_misc: "Outros",
-    skip: "Pular para o conteúdo", nav: "Seções", g_ask: "Perguntar", g_read: "Ler", g_make: "Criar", g_measure: "Medir",
-    chat: "Conversa", chat_s: "respostas com as fontes", docs: "Documentos", docs_s: "zip, PDF, Office, imagens",
-    vision: "Visão", vision_s: "texto em fotos e escaneados", listen: "Ouvir", listen_s: "um dígito falado",
-    draw: "Desenhar", draw_s: "um dígito por difusão", merge: "Fusão", merge_s: "que método serve",
+    skip: "Pular para o conteúdo", nav: "Seções", g_read: "Ler", g_make: "Criar", g_measure: "Medir",
+    chat: "Perguntar à biblioteca", chat_s: "uma pergunta, respondida com as fontes", docs: "Documentos", docs_s: "zip, PDF, Office, imagens",
+    vision: "Visão", vision_s: "texto em fotos e escaneados",
+    draw: "Desenhar",
     quality: "Qualidade", quality_s: "sinal ou ruído", lock: "Eclusa", lock_s: "o contrato do modelo",
     checking: "verificando o servidor", ready: "pronto", no_model_s: "sem modelo de texto", unreachable: "servidor inacessível",
     theme: "Tema", theme_aria: "Alternar entre claro e escuro", other_lang: "English", other_lang_code: "en",
@@ -2389,28 +2211,9 @@ const I18N = {
     lm_changed: (c, l) => `Onde os quadros estavam em dúvida, o modelo de língua escolheu ${c} caractere${c == 1 ? "" : "s"} em ${l} linha${l == 1 ? "" : "s"} — destacados.`,
     lm_none: "O modelo de língua não mudou nada: os quadros estavam seguros, ou a linha não é uma língua que ele conhece (aí ele se abstém).",
     show_frames: "Mostrar a leitura só dos quadros", show_model: "Mostrar a leitura com o modelo",
-    lm_legend: (o, g) => `Decodificador: busca em feixe CTC com um modelo de língua de ${o}-gramas de caracteres, que só escolhe entre o que os quadros acham plausível e se abstém em linhas que custam mais de ${g} bits por caractere (códigos, cadeias aleatórias).`,
-    listen_lede: "Diga um dígito de zero a nove, em inglês, ou solte um WAV. O espectro é um programa certificado; o leitor foi treinado com cinco vozes e medido numa sexta que nunca ouviu: 90 % nela, 72 % em média entre as vozes. Um modelo pequeno — espere erros na sua voz e olhe a certeza.",
-    record: "Gravar 1,5 s", choose_wav: "Escolher WAV", recording: "gravando — diga o dígito agora", no_mic: (e) => `sem microfone: ${e} — escolha um WAV`,
-    listening: "ouvindo…", certainty: (p, s, f) => `${p} de certeza — ${s} s de áudio, ${f} quadros`, draw_this: (d) => `Desenhar o ${d}`,
-    hesitates: "abaixo desta linha, o leitor hesita", mel_caption: "o que o leitor ouve: 32 bandas mel × tempo, cada banda sem a sua média (espectro certificado)",
-    draw_lede: "Escolha um dígito. Um modelo de difusão treinado em caligrafia real o desenha a partir de ruído, passo a passo; depois, um classificador que só viu imagens reais diz o que lê, e a imagem é comparada com a de treino mais próxima — uma cópia ficaria a distância zero.",
-    digit: "Dígito", digit_n: (d) => `dígito ${d}`, seed: "semente", steps: "passos", guidance: "guia", draw_btn: "Desenhar", drawing: "desenhando…",
-    trajectory: "trajetória de remoção de ruído", reads_ok: (d, p) => `o classificador lê ${d}, com ${p}`, reads_bad: (w, g) => `pedido ${w}; o classificador lê ${g}`,
-    half: "metade",
-    draw_note: (dist, s, st, g, ms) => `Distância à imagem de treino mais próxima: ${dist} níveis de cinza (uma cópia ficaria perto de zero; imagens reais retidas ficam tipicamente entre 15 e 30). Semente ${s}, ${st} passos, guia ${g} — a mesma semente dá a mesma imagem, em qualquer máquina. ${ms} ms.`,
-    merge_lede: "Juntar dois modelos num só funciona ou não conforme a relação entre eles. Aqui, decoders de verdade treinados para o português e para o inglês: o diagnóstico lê só os pesos e diz o regime; depois cada método é medido em texto retido, e o escolhido é o que ganha na validação.",
-    pair_ft: "Ajustes finos de uma base", pair_ind: "Treinados separadamente", measuring: "medindo — na primeira vez leva cerca de vinte segundos",
-    regime: (r) => `Regime: ${r}`, r_small: "deltas pequenos", r_dense: "deltas densos", r_unrelated: "sem ancestral comum", r_single: "um modelo só",
-    method: "método", validation: "validação", test_mean: "teste, média pt/en (bits por caractere)", alone: (n) => `${n} (sozinho)`, chosen: " — escolhido",
-    merge_note: (c, ms) => `Escolhido na validação: ${c}. Menos bits é melhor; a barra cresce para o melhor. Modelos: decoders Llama de caracteres treinados pelo PyTorch (priv/quality/merge). ${ms} ms.`,
-    adv_unrelated: (c) => [`Os pesos são quase ortogonais (cosseno ${c}): as duas redes não têm um ancestral comum, então suas unidades não estão alinhadas — uma rede calcula a mesma função sob qualquer permutação das suas unidades ocultas.`, "Uma média de pesos de redes desalinhadas destrói as duas: não as funda no espaço de pesos."],
-    adv_nobase: (c) => [`Modelos aparentados (cosseno dos pesos ${c}); sem uma base, só a média linear, o SLERP e o RegMean se aplicam — e mede-se.`],
-    adv_delta: (rel, dpct, conc, disc) => `Cada ajuste moveu os pesos ${rel} da sua norma; os ${dpct} maiores valores de cada delta carregam ${conc} da sua energia — o TIES nessa densidade descarta ${disc}.`,
-    adv_conflict: (c, cos) => `Os sinais dos dois deltas discordam em ${c} da magnitude que compartilham; o cosseno entre eles é ${cos}.`,
-    adv_dare: (p, n) => `O DARE com p = ${p} perturba cada delta em ${n} da sua própria norma: só é inofensivo se o ajuste for redundante, o que os pesos sozinhos não mostram.`,
-    adv_dense: "Deltas desse tamanho não são os ajustes pequenos que o TIES e o DARE supõem: prefira a média linear, o SLERP ou o RegMean.",
-    adv_small: "Todos os métodos são admissíveis. A aritmética de tarefas com λ = 1 aplica cada delta com força total, inclusive onde ele prejudica o domínio do outro modelo (λ = 1/n é a média linear). Por isso, mede-se.",
+    lm_legend: (o, g) => `Decodificador: busca em feixe CTC com um modelo de língua de ${o}-gramas de caracteres, que só escolhe entre o que os quadros acham plausível e se abstém em linhas que custam mais de ${g} bits por caractere (códigos, cadeias aleatórias).`, seed: "semente", steps: "passos",
+    regime: (r) => `Regime: ${r}`,
+    method: "método",
     quality_lede: "Cole um texto — ou meça a última resposta — e veja onde ele cai entre as duas comportas, calibradas contra ruído e contra texto real em português. O portão mede estatística de língua, não significado.",
     q_ph: "Pelo menos 60 caracteres de texto.", measure: "Medir", measure_last: "Medir a última resposta",
     gate_noise: "ruído até aqui", gate_real: "texto real a partir daqui", trigrams: (x) => `${x} dos trigramas`,
@@ -2444,8 +2247,7 @@ const I18N = {
     logged: (i) => `recibo ancorado como entrada ${i} do registro`,
     audit: "Dossiê", audit_s: "evidências para auditoria", audit_title: "Dossiê de auditoria",
     audit_lede: "As evidências que este sistema produz — certificados de compilação, execuções de agentes atestadas, recibos do log de transparência, relatórios de qualidade, contratos de modelo — reunidas num arquivo assinado e conferidas de novo aqui, a partir dos bytes: cada hash, a raiz de Merkle, as assinaturas, cada item pelas suas próprias regras. A trama mostra a quais dispositivos do AI Act europeu e da ISO/IEC 42001 cada evidência se refere — e onde não há nenhuma.",
-    drop_dossier: "Solte um dossiê ou o seu relatório PDF", drop_dossier_s: "Um .vdossier escrito por mix vapor.audit export, ou o relatório PDF que o carrega como anexo.",
-    a_demo: "Montar um dossiê de demonstração", a_building: "compilando, assinando, ancorando…", a_verifying: (n) => `conferindo ${n}…`,
+    drop_dossier: "Solte um dossiê ou o seu relatório PDF", drop_dossier_s: "Um .vdossier escrito por mix vapor.audit export, ou o relatório PDF que o carrega como anexo.", a_verifying: (n) => `conferindo ${n}…`,
     a_ok: "Verificado", a_bad: "Não verificado", a_items: (n) => `${n} ite${n == 1 ? "m" : "ns"}`, a_sigs: (g, n) => `${g} de ${n} assinatura${n == 1 ? "" : "s"} válida${g == 1 ? "" : "s"}`,
     a_root_ok: "raiz de Merkle recalculada", a_root_bad: "raiz de Merkle DIFERENTE", a_coverage: "Cobertura", a_coverage_s: "Linhas: dispositivos. Colunas: as evidências, na ordem do dossiê. Célula cheia: esse tipo de evidência é pertinente ao dispositivo; vermelha: o item falhou na conferência. O número à direita conta os itens verificados por trás de cada dispositivo — uma lacuna aparece, não se esconde.",
     a_evidence: "Evidências", a_hash_ok: "hash confere", a_hash_bad: "hash ALTERADO", a_check: (c) => `conferência: ${c}`, a_bytes: (n) => `${n.toLocaleString("pt-BR")} bytes`,
@@ -2456,37 +2258,21 @@ const I18N = {
     substrate: "substrato", cpu: "CPU", gpu: (d) => `GPU · ${d}`,
     t_table: (k, r, c) => `Tabela ${k} — ${r} × ${c}`, t_header: (n) => `${n} linha${n == 1 ? "" : "s"} de cabeçalho`, t_kind_ruled: "grade com linhas", t_kind_rules: "só filetes",
     t_conf: (c) => `células lidas com confiança média de ${c}`, t_view: "Tabela", t_copy: "Copiar", t_spans: (n) => `${n} célula${n == 1 ? "" : "s"} mesclada${n == 1 ? "" : "s"}`, t_below: (n) => `tabela ${n}, abaixo`,
-    g_sim: "Simular", physics: "Física", physics_s: "caos, gêmeos, replay", net: "Redes", net_s: "estrutura contra o nulo",
-    subs: "Substratos", subs_s: "hardware admitido por medida", train: "Treino", train_s: "um modelo treinado pelo vapor",
+    g_sim: "Simular",
+    subs: "Substratos", subs_s: "hardware admitido por medida",
     script: "Escrita", sc_latin: "Latim", sc_cursive: "Cursiva", sc_math: "Fórmula", run: "Rodar",
     sc_note: { latin: "Latim impresso, com tabelas, figuras e gráficos — os dados de um gráfico são lidos quando a escala pode ser conferida.",
-      arabic: "Árabe impresso, da direita para a esquerda: os quadros são lidos em ordem visual e devolvidos à ordem lógica (números continuam da esquerda para a direita).",
-      cyrillic: "Russo impresso (cirílico), da esquerda para a direita, lido pelo seu próprio leitor.",
-      cursive: "Letra de mão: nenhum leitor é embarcado — um treinado em fontes manuscritas errou 64 % dos caracteres em mãos que nunca viu; o console mostra a recusa e o porquê.",
-      zh: "Chinês simplificado: 3.755 caracteres do GB 2312 pela direção dos traços; a segmentação é decidida pelo reconhecimento.",
-      ja: "Japonês: kanji do nível 1 do JIS e os kana.", ko: "Coreano: as 2.350 sílabas do KS X 1001.",
-      math: "Uma fórmula tipografada → LaTeX: símbolos pela forma, frações, radicais e índices pela geometria." },
-    physics_lede: "Cada passo destes mundos é um programa vapor, então tem os mesmos bits em qualquer substrato. É isso que torna uma simulação caótica reproduzível e um gêmeo digital auditável: duas execuções do mesmo mundo nunca se separam, e quem tem o modelo e as ações recalcula o que o gêmeo previu.",
-    chaos_h: "O caos, rodado duas vezes", chaos_s: "Um pêndulo duplo e uma cópia que parte a uma unidade na última casa de distância. O worker nativo roda os dois; o oráculo exato refaz os primeiros passos e tem de concordar bit a bit.",
-    chaos_same: (n) => `oráculo = nativo, bit a bit, por ${n} passos`, chaos_diff: "oráculo ≠ nativo — o substrato não é canônico",
-    chaos_gap: "distância entre os dois mundos (escala log)", chaos_eps: (e) => `início: a um ulp de distância (${e.toExponential(1)} m)`,
-    twin_h: "Um gêmeo digital", twin_s: "Um pêndulo e seu gêmeo, medido com 2 mm de ruído. Na linha tracejada a haste da planta se alonga 0,5 %. O gêmeo acumula os resíduos (CUSUM) e dispara o alarme quando a soma cruza o limiar.",
-    twin_res: "resíduo (em σ)", twin_cusum: "CUSUM", twin_thr: "limiar", twin_fault: "falha", twin_alarm: (t, f) => `alarme no passo ${t}, ${t - f} passos depois da falha`,
-    twin_none: "sem alarme", twin_ledger: (n, h, ok) => `livro: ${n} entradas, cabeça ${h} — refeito a partir do modelo e das ações: ${ok ? "cada previsão recalculada, cadeia íntegra" : "DIVERGÊNCIA"}`,
-    net_lede: "Uma rede só interessa pelo quanto difere de uma aleatória com os mesmos graus. Cada número aqui vem com seu controle: agrupamento contra o nulo de configuração, a lei de potência testada (Clauset–Shalizi–Newman), comunidades medidas pela modularidade, robustez a falhas e a ataques.",
-    net_model: "modelo de rede", net_ba: "Barabási–Albert (ligação preferencial)", net_er: "Erdős–Rényi (aleatória)", net_ws: "Watts–Strogatz (mundo pequeno)", net_planted: "Comunidades plantadas", net_n: "nós",
-    net_running: "calculando…", net_done: (ms) => `${ms} ms`, net_clust: "agrupamento", net_null: "nulo", net_z: "z", net_assort: "assortatividade", net_mod: "modularidade", net_nmi: "NMI com os grupos plantados",
-    net_pl: "distribuição de graus", net_pl_v: { power_law: "lei de potência: plausível e preferida à exponencial", rejected: "lei de potência rejeitada (p do bootstrap < 0,1)", exponential: "a exponencial ajusta melhor", inconclusive: "inconclusivo" },
-    net_alpha: (a, x, p) => `α = ${a.toFixed(2)} acima de x_min = ${x}; p do bootstrap = ${p.toFixed(2)}`, net_rob: "componente gigante após remover uma fração dos nós",
-    net_fail: "falha aleatória", net_attack: "ataque dirigido (maior grau primeiro)", net_pr: "PageRank, nós do topo",
+    arabic: "Árabe impresso, da direita para a esquerda: os quadros são lidos em ordem visual e devolvidos à ordem lógica (números continuam da esquerda para a direita).",
+    cyrillic: "Russo impresso (cirílico), da esquerda para a direita, lido pelo seu próprio leitor.",
+    cursive: "Letra de mão: nenhum leitor é embarcado — um treinado em fontes manuscritas errou 64 % dos caracteres em mãos que nunca viu; o console mostra a recusa e o porquê.",
+    zh: "Chinês simplificado: 3.755 caracteres do GB 2312 pela direção dos traços; a segmentação é decidida pelo reconhecimento.",
+    ja: "Japonês: kanji do nível 1 do JIS e os kana.", ko: "Coreano: as 2.350 sílabas do KS X 1001.",
+    math: "Uma fórmula tipografada → LaTeX: símbolos pela forma, frações, radicais e índices pela geometria." },
+    net_running: "calculando…",
     subs_lede: "O hardware só calcula depois de medido. Cada substrato roda as sondas de admissão; a resposta exata do oráculo decide se ele reproduz os bits canônicos, se fica dentro do envelope de erro provado (e como: multiplicação–adição fundida, subnormais zerados, ordem de redução) ou se é recusado.",
     admit_all: "Admitir todos os substratos presentes", subs_running: "rodando as sondas…", subs_fp: "impressão numérica",
     fp_contraction: "FMA", fp_flush_to_zero: "FTZ", fp_denormals_are_zero: "DAZ", fp_reduction_order: "ordem de redução", fp_significand_bits: "bits de mantissa", fp_signed_zero: "zero com sinal", fp_nan_select: "seleção de NaN", fp_division: "divisão", fp_functions: "funções",
     v_canonical: "canônico", v_envelope: "dentro do envelope", v_refused: "recusado", v_unavailable: "indisponível",
-    train_lede: "Um Llama de bytes pré-treinado pelo vapor sobre a própria documentação, com paralelismo de dados cujos bits não dependem do número de workers. O recibo guarda a curva, as referências que ele vence em texto retido e o digest de cada checkpoint; o fluxo lê além do comprimento de treino em memória constante.",
-    train_load: "Mostrar o recibo e o fluxo", train_curve: "bits por byte em texto retido", train_unigram: "frequência de bytes", train_wb3: "Witten–Bell, ordem 3", train_wb5: "Witten–Bell, ordem 5",
-    train_facts: "execução", train_stream: "além do comprimento de treino: bits por byte, janela a janela", train_stream_s: "fluxo (âncoras + janela, posições no referencial do cache)", train_dense: "posições crescentes (o controle)",
-    train_len: "comprimento de treino", train_bpb: (b) => `${b.toFixed(2).replace(".", ",")} bits/byte`,
     fig_h: "Figuras", fig_chart: "gráfico", fig_picture: "imagem", fig_caption: "legenda", fig_refused: (r) => `números recusados: ${r}`, fig_none: "sem legenda",
     latex_h: "LaTeX", ar_visual: "ordem visual",
   },
@@ -2996,12 +2782,6 @@ async function checkDossier(f) {
   try { lastAudit = { j: await api("/v1/vapor/audit", { data: await b64(f) }), name: f.name }; $("a-state").textContent = ""; renderAudit(); }
   catch (err) { $("a-state").textContent = ""; $("a-out").replaceChildren(notice(err.message)); }
 }
-$("a-demo").onclick = async () => {
-  $("a-state").textContent = t("a_building"); $("a-demo").disabled = true;
-  try { lastAudit = { j: await api("/v1/vapor/audit/demo", {}), name: "dossier.vdossier" }; $("a-state").textContent = ""; renderAudit(); }
-  catch (err) { $("a-state").textContent = ""; $("a-out").replaceChildren(notice(err.message)); }
-  finally { $("a-demo").disabled = false; }
-};
 function download(name, bytes, type) {
   const a = el("a", { href: URL.createObjectURL(new Blob([bytes], { type })), download: name }); document.body.append(a); a.click(); a.remove();
 }
@@ -3073,156 +2853,6 @@ function renderAudit() {
 }
 rerender.push(renderAudit);
 function markLine(wrap, i, on) { wrap.querySelectorAll(`[data-i="${i}"]`).forEach((n) => n.classList.toggle("on", on)); }
-
-/* drawing: diffusion, read back by a classifier of real handwriting */
-let digit = 7, lastDraw = null;
-$("d-digits").append(...[...Array(10).keys()].map((d) => {
-  const b = el("button", { type: "button", "aria-pressed": String(d === digit), text: String(d) });
-  b.onclick = () => { setDigit(d); draw(); };
-  return b;
-}));
-function setDigit(d) { digit = d; $("d-digits").querySelectorAll("button").forEach((x, i) => { x.setAttribute("aria-pressed", String(i === d)); x.setAttribute("aria-label", t("digit_n", i)); }); }
-$("d-guide").oninput = (e) => ($("d-guide-v").textContent = e.target.value);
-$("d-go").onclick = () => draw();
-function pxCanvas(levels, scale) {
-  const c = el("canvas", { class: "px", width: 8, height: 8 });
-  c.style.width = c.style.height = `${8 * scale}px`;
-  const ctx = c.getContext("2d"), img = ctx.createImageData(8, 8);
-  levels.forEach((v, i) => { const g = Math.round(Math.max(0, Math.min(16, v)) / 16 * 255); img.data.set([g, g, g, 255], i * 4); });
-  ctx.putImageData(img, 0, 0);
-  return c;
-}
-async function draw() {
-  $("d-out").replaceChildren(el("p", { class: "muted", text: t("drawing") }));
-  try { lastDraw = { want: digit, j: await api("/v1/vapor/draw", { digit, seed: +$("d-seed").value, steps: +$("d-steps").value, guidance: +$("d-guide").value }) }; renderDraw(); }
-  catch (err) { $("d-out").replaceChildren(notice(err.message)); }
-}
-function renderDraw() {
-  if (!lastDraw) return;
-  const { j, want } = lastDraw;
-  const film = el("div", { class: "film", "aria-label": t("trajectory") });
-  const pick = j.trace.length <= 10 ? j.trace.map((_, i) => i) : [...Array(10).keys()].map((k) => Math.round(k * (j.trace.length - 1) / 9));
-  for (const i of pick) film.append(el("figure", {}, pxCanvas(j.trace[i], 6), el("figcaption", { text: `t ${j.timesteps[i]}` })));
-  const ok = j.reading.digit === want, res = el("div", { class: "result" });
-  const right = levelBlock(j.reading.probs[want], { low: !ok, mark: 0.5, markTitle: t("half") });
-  right.append(el("p", { class: "big", text: String(j.reading.digit) }),
-    el("p", { class: ok ? "ok-t" : "bad-t", text: ok ? t("reads_ok", want, pctf(j.reading.p, 1)) : t("reads_bad", want, j.reading.digit) }),
-    bars(j.reading.probs), el("p", { class: "muted", text: t("draw_note", j.nearest_train.toFixed(1), j.params.seed, j.params.steps, j.params.guidance, j.ms) }));
-  res.append(pxCanvas(j.image, 22), right);
-  $("d-out").replaceChildren(film, res);
-}
-rerender.push(renderDraw);
-function bars(probs) {
-  const b = el("div", { class: "bars" }), top = probs.indexOf(Math.max(...probs));
-  probs.forEach((p, d) => {
-    const bar = el("div", { class: "bar" }), i = el("i"); i.style.width = `${(p * 100).toFixed(1)}%`; bar.append(i);
-    b.append(el("span", { class: d === top ? "top" : "", text: String(d) }), bar, el("span", { class: "muted", text: pctf(p, 1) }));
-  });
-  return b;
-}
-
-/* listening: record 1.5 s at the device's rate, encode a WAV, let the server resample */
-let lastListen = null;
-$("l-file").onchange = async (e) => { const f = e.target.files[0]; if (f) listen(await b64(f), f.name); };
-$("l-rec").onclick = async () => {
-  const st = $("l-state");
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const ac = new (window.AudioContext || window.webkitAudioContext)();
-    const src = ac.createMediaStreamSource(stream), proc = ac.createScriptProcessor(4096, 1, 1), chunks = [];
-    proc.onaudioprocess = (ev) => chunks.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
-    src.connect(proc); proc.connect(ac.destination);
-    st.textContent = t("recording");
-    await new Promise((ok) => setTimeout(ok, 1500));
-    proc.disconnect(); src.disconnect(); stream.getTracks().forEach((x) => x.stop());
-    const n = chunks.reduce((s, c) => s + c.length, 0), all = new Float32Array(n);
-    let o = 0; for (const c of chunks) { all.set(c, o); o += c.length; }
-    st.textContent = "";
-    listen(wavB64(trim(all, ac.sampleRate), ac.sampleRate), "microphone.wav");
-    ac.close();
-  } catch (err) { st.textContent = t("no_mic", err.message); }
-};
-// keep the loud part: the digit, not the silence around it
-function trim(x, rate) {
-  const win = Math.floor(rate * 0.02), e = [];
-  for (let i = 0; i + win <= x.length; i += win) { let s = 0; for (let j = i; j < i + win; j++) s += x[j] * x[j]; e.push(s); }
-  let peak = 0; for (const v of e) peak = Math.max(peak, v);
-  const on = e.map((v) => v > peak * 0.02), a = on.indexOf(true), b = on.lastIndexOf(true);
-  return a < 0 ? x : x.slice(Math.max(0, (a - 3) * win), Math.min(x.length, (b + 4) * win));
-}
-function wavB64(x, rate) {
-  const buf = new ArrayBuffer(44 + x.length * 2), v = new DataView(buf);
-  const w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
-  let peak = 1e-4; for (const s of x) peak = Math.max(peak, Math.abs(s));
-  const g = 0.9 / peak;
-  w(0, "RIFF"); v.setUint32(4, 36 + x.length * 2, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
-  v.setUint16(22, 1, true); v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
-  w(36, "data"); v.setUint32(40, x.length * 2, true);
-  x.forEach((s, i) => v.setInt16(44 + i * 2, Math.max(-32768, Math.min(32767, Math.round(s * g * 32767))), true));
-  let bin = ""; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 8192) bin += String.fromCharCode(...u.subarray(i, i + 8192));
-  return btoa(bin);
-}
-async function listen(data, name) {
-  $("l-out").replaceChildren(el("p", { class: "muted", text: t("listening") }));
-  try { lastListen = await api("/v1/vapor/listen", { name, data }); renderListen(); }
-  catch (err) { $("l-out").replaceChildren(notice(err.message)); }
-}
-function renderListen() {
-  const j = lastListen; if (!j) return;
-  const box = levelBlock(j.p, { low: j.p < 0.6, mark: 0.6, markTitle: t("hesitates") });
-  const go = el("button", { class: "quiet", type: "button", text: t("draw_this", j.label) });
-  go.onclick = () => { setDigit(+j.label); select($("t-draw")); draw(); };
-  box.append(el("p", { class: "big", text: j.label }), el("p", { class: "muted", text: t("certainty", pctf(j.p), j.seconds.toFixed(2), j.frames) }),
-    bars(j.probs), el("div", { style: "margin-top:12px" }, go));
-  const mel = el("canvas", { class: "px", width: j.mel.length, height: 32 });
-  mel.style.width = `${Math.max(240, j.mel.length * 6)}px`; mel.style.height = "160px";
-  const ctx = mel.getContext("2d"), img = ctx.createImageData(j.mel.length, 32);
-  let lo = Infinity, hi = -Infinity; for (const row of j.mel) for (const v of row) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
-  j.mel.forEach((row, tt) => row.forEach((v, b) => { const g = Math.round((v - lo) / (hi - lo + 1e-9) * 255); img.data.set([g * 0.2, g * 0.8, g * 0.8, 255], ((31 - b) * j.mel.length + tt) * 4); }));
-  ctx.putImageData(img, 0, 0);
-  const res = el("div", { class: "result" });
-  res.append(el("figure", { style: "margin:0" }, mel, el("figcaption", { class: "muted", text: t("mel_caption") })), box);
-  $("l-out").replaceChildren(res);
-}
-rerender.push(renderListen);
-
-/* fusion laboratory */
-let lastMerge = null;
-document.querySelectorAll("[data-pair]").forEach((b) => (b.onclick = () => mergeLab(b.dataset.pair)));
-async function mergeLab(pair) {
-  const st = $("m-state"); st.textContent = t("measuring");
-  try { lastMerge = { pair, j: await api("/v1/vapor/merge", { pair }) }; st.textContent = ""; renderMerge(); }
-  catch (err) { st.textContent = ""; $("m-out").replaceChildren(notice(err.message)); }
-}
-function renderMerge() {
-  if (!lastMerge) return;
-  const { pair, j } = lastMerge;
-  const names = pair === "fine_tune" ? ["ft_pt", "ft_en", "base"] : ["solo_pt", "solo_en"];
-  const regime = { small_deltas: t("r_small"), dense: t("r_dense"), unrelated: t("r_unrelated"), single: t("r_single") }[j.diagnosis.regime] || j.diagnosis.regime;
-  const head = el("div");
-  head.append(el("h3", { text: t("regime", regime) }), el("ul", { class: "advice" }, ...adviceText(j.diagnosis).map((a) => el("li", { text: a }))));
-  const tbl = el("table", { class: "cands" });
-  tbl.append(el("tr", {}, el("th", { text: t("method") }), el("th", { text: t("validation") }), el("th", { text: t("test_mean") }), el("th", { text: "" })));
-  const all = j.rows.map((r) => r.mean).concat(names.map((n) => j.models[n].mean)), lo = Math.min(...all), hi = Math.max(...all);
-  for (const n of names) tbl.append(row(t("alone", n), null, j.models[n].mean, lo, hi, false));
-  for (const r of j.rows) tbl.append(row(r.method, r.val, r.mean, lo, hi, r.method === j.chosen));
-  $("m-out").replaceChildren(head, tbl, el("p", { class: "muted", text: t("merge_note", j.chosen, j.ms) }));
-}
-rerender.push(renderMerge);
-// the diagnosis in words, from its numbers (the server's advice is in English)
-function adviceText(dg) {
-  const pc = (x) => `${Math.round(x * 100)} %`, p = dg.pairs[0] || {}, d = dg.density || 0.2;
-  if (dg.regime === "unrelated") return t("adv_unrelated", p.weight_cosine.toFixed(3));
-  if (!dg.models[0] || dg.models[0].relative_delta == null) return t("adv_nobase", p.weight_cosine.toFixed(3));
-  const rel = Math.max(...dg.models.map((m) => m.relative_delta)), conc = Math.min(...dg.models.map((m) => m.concentration));
-  return [t("adv_delta", pc(rel), `${Math.round(d * 100)} %`, pc(conc), pc(1 - conc)), t("adv_conflict", pc(p.sign_conflict), p.delta_cosine.toFixed(3)),
-          t("adv_dare", d, pc(dg.models[0].dare_noise)), dg.regime === "dense" ? t("adv_dense") : t("adv_small")];
-}
-function row(name, val, mean, lo, hi, chosen) {
-  const bar = el("div", { class: "bar" }), i = el("i"); i.style.width = `${Math.max(4, (hi - mean) / (hi - lo + 1e-9) * 100)}%`; bar.append(i);
-  return el("tr", { class: chosen ? "chosen" : "" }, el("td", { text: name + (chosen ? t("chosen") : "") }), el("td", { text: val == null ? "" : val.toFixed(3) }),
-    el("td", { text: mean.toFixed(3) }), el("td", {}, bar));
-}
 
 /* ---------------------------------------------------------------- studio --
    The canvas edits a graph in the studio's JSON (node positions ride along
@@ -3573,7 +3203,7 @@ const ST = (() => {
   return { init, load };
 })();
 ST.init();
-select(tabs[0]); setDigit(digit); applyLang(); refreshInfo(); refreshTree();
+select(tabs[0]); applyLang(); refreshInfo(); refreshTree();
 
 /* ------------------------------------------------------------- ledger --
    The verifier below is self-contained (WebCrypto only) and is the same
@@ -3810,105 +3440,6 @@ $("v-script").querySelectorAll("button").forEach((b) => (b.onclick = () => setSc
 rerender.push(() => setScript(script));
 setScript(script);
 
-/* physics: chaos, twice */
-let chaosData = null, chaosAnim = null;
-$("ph-chaos").onclick = async () => {
-  $("ph-chaos-out").replaceChildren(el("p", { class: "muted", text: t("net_running") }));
-  try { chaosData = await api("/v1/vapor/physics", { demo: "chaos" }); renderChaos(); animateChaos(); }
-  catch (e) { $("ph-chaos-out").replaceChildren(notice(e.message)); }
-};
-function animateChaos() {
-  if (chaosAnim) cancelAnimationFrame(chaosAnim);
-  const cv = $("ph-canvas"), g = cv.getContext("2d"), fr = chaosData.frames, W = cv.width, H = cv.height, s = 76, ox = W / 2, oy = H * 0.42;
-  const trail = [[], []]; let k = 0;
-  const step = () => {
-    const [[ax1, ax2], [ay1, ay2], [bx1, bx2], [by1, by2]] = fr[k];
-    g.fillStyle = css("--mist"); g.fillRect(0, 0, W, H);
-    [[ax1, ay1, ax2, ay2, css("--lock")], [bx1, by1, bx2, by2, css("--ember")]].forEach(([x1, y1, x2, y2, col], i) => {
-      trail[i].push([ox + x2 * s, oy - y2 * s]); if (trail[i].length > 90) trail[i].shift();
-      g.strokeStyle = col; g.globalAlpha = 0.35; g.lineWidth = 1.5; g.beginPath(); trail[i].forEach(([x, y], j) => (j ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
-      g.globalAlpha = 1; g.lineWidth = 3; g.beginPath(); g.moveTo(ox, oy); g.lineTo(ox + x1 * s, oy - y1 * s); g.lineTo(ox + x2 * s, oy - y2 * s); g.stroke();
-      g.fillStyle = col; [[x1, y1], [x2, y2]].forEach(([x, y]) => { g.beginPath(); g.arc(ox + x * s, oy - y * s, 7, 0, 7); g.fill(); });
-    });
-    g.fillStyle = css("--ink"); g.beginPath(); g.arc(ox, oy, 4, 0, 7); g.fill();
-    g.font = `12px ${css("--body")}`; g.fillText(`t = ${(k * chaosData.dt).toFixed(1)} s`, 12, H - 12);
-    k = (k + 1) % fr.length; chaosAnim = requestAnimationFrame(step);
-  };
-  step();
-}
-function renderChaos() {
-  const d = chaosData, out = $("ph-chaos-out"); if (!d) return;
-  const box = levelBlock(d.identical ? 1 : 0, { refused: !d.identical });
-  box.append(el("p", { text: d.identical ? t("chaos_same", d.checked * 2) : t("chaos_diff") }), el("p", { class: "muted", text: t("chaos_eps", d.perturbation) }));
-  out.replaceChildren(box, el("h3", { text: t("chaos_gap") }),
-    lineChart({ series: [{ points: d.gap.map((g, i) => [i * d.dt, Math.max(g, 1e-9)]), cls: 1 }], logy: true, xlab: "s", h: 180 }));
-}
-rerender.push(renderChaos);
-
-/* physics: the twin */
-let twinData = null;
-$("ph-twin").onclick = async () => {
-  $("ph-twin-out").replaceChildren(el("p", { class: "muted", text: t("net_running") }));
-  try { twinData = await api("/v1/vapor/physics", { demo: "twin" }); renderTwin(); } catch (e) { $("ph-twin-out").replaceChildren(notice(e.message)); }
-};
-function renderTwin() {
-  const d = twinData, out = $("ph-twin-out"); if (!d) return;
-  const marks = [{ x: d.fault, label: t("twin_fault") }].concat(d.alarm ? [{ x: d.alarm, label: "⚑" }] : []);
-  const box = levelBlock(d.alarm ? 1 : 0, { low: !d.alarm });
-  box.append(el("p", { text: d.alarm ? t("twin_alarm", d.alarm, d.fault) : t("twin_none") }),
-    el("p", { class: "muted", text: t("twin_ledger", d.entries, short(d.head), d.replay === "ok") }));
-  out.replaceChildren(box,
-    lineChart({ series: [{ points: d.trace.map((r) => [r.t, r.residual]), cls: 0 }, { points: d.trace.map((r) => [r.t, r.cusum]), cls: 1 }],
-                levels: [{ y: d.threshold, label: t("twin_thr") }], marks, xlab: t("step") || "step", h: 220 }),
-    legend([[0, t("twin_res")], [1, t("twin_cusum")]]));
-}
-rerender.push(renderTwin);
-
-/* networks */
-let netData = null, netAnim = null;
-$("net-form").onsubmit = async (e) => {
-  e.preventDefault(); $("net-state").textContent = t("net_running"); const t0 = performance.now();
-  try { netData = await api("/v1/vapor/graph", { model: $("net-model").value, n: +$("net-n").value, seed: +$("net-seed").value }); $("net-state").textContent = t("net_done", Math.round(performance.now() - t0)); renderNet(); layoutNet(); }
-  catch (err) { $("net-state").textContent = ""; $("net-side").replaceChildren(notice(err.message)); }
-};
-function layoutNet() {
-  if (netAnim) cancelAnimationFrame(netAnim);
-  const d = netData, cv = $("net-canvas"), g = cv.getContext("2d"), W = cv.width, H = cv.height, n = d.n;
-  // a seeded start (golden-angle spiral), then force-directed relaxation drawn as it settles
-  const P = Array.from({ length: n }, (_, i) => ({ x: W / 2 + Math.sqrt(i + 1) * 12 * Math.cos(i * 2.39996), y: H / 2 + Math.sqrt(i + 1) * 12 * Math.sin(i * 2.39996), vx: 0, vy: 0 }));
-  const deg = d.degrees, maxd = Math.max(...deg), palette = ["--lock", "--ember", "--sand", "--silt", "--ink"].map(css);
-  let it = 0;
-  const tick = () => {
-    const k = Math.sqrt((W * H) / n) * 0.55, temp = Math.max(0.6, 12 * (1 - it / 220));
-    for (let a = 0; a < n; a++) { const pa = P[a]; for (let b = a + 1; b < n; b++) { const pb = P[b]; let dx = pa.x - pb.x, dy = pa.y - pb.y, r2 = dx * dx + dy * dy + 0.01; const f = (k * k) / r2; pa.vx += dx * f * 0.02; pa.vy += dy * f * 0.02; pb.vx -= dx * f * 0.02; pb.vy -= dy * f * 0.02; } }
-    for (const [a, b] of d.edges) { const pa = P[a], pb = P[b], dx = pa.x - pb.x, dy = pa.y - pb.y, r = Math.sqrt(dx * dx + dy * dy) + 0.01, f = (r * r) / k / r * 0.02; pa.vx -= dx * f; pa.vy -= dy * f; pb.vx += dx * f; pb.vy += dy * f; }
-    for (const p of P) { const v = Math.sqrt(p.vx * p.vx + p.vy * p.vy) + 1e-9, s = Math.min(v, temp) / v; p.x = Math.min(W - 8, Math.max(8, p.x + p.vx * s + (W / 2 - p.x) * 0.002)); p.y = Math.min(H - 8, Math.max(8, p.y + p.vy * s + (H / 2 - p.y) * 0.002)); p.vx = 0; p.vy = 0; }
-    g.fillStyle = css("--mist"); g.fillRect(0, 0, W, H);
-    g.strokeStyle = css("--rule"); g.lineWidth = 1; g.beginPath(); for (const [a, b] of d.edges) { g.moveTo(P[a].x, P[a].y); g.lineTo(P[b].x, P[b].y); } g.stroke();
-    P.forEach((p, i) => { g.fillStyle = palette[d.communities[i] % palette.length]; g.beginPath(); g.arc(p.x, p.y, 2.5 + 6 * Math.sqrt(deg[i] / maxd), 0, 7); g.fill(); });
-    if (++it < 260) netAnim = requestAnimationFrame(tick);
-  };
-  tick();
-}
-function renderNet() {
-  const d = netData; if (!d) return;
-  const m = d.metrics, pl = d.power_law, side = $("net-side");
-  const facts = el("dl", { class: "facts" });
-  const add = (k, v) => facts.append(el("dt", { text: k }), el("dd", { text: v }));
-  add(t("net_clust"), `${m.clustering.toFixed(3)} · ${t("net_null")} ${m.clustering_null.toFixed(3)} · ${t("net_z")} ${m.clustering_z.toFixed(1)}`);
-  add(t("net_assort"), m.assortativity.toFixed(3)); add(t("net_mod"), m.modularity.toFixed(3));
-  if (m.nmi != null) add(t("net_nmi"), m.nmi.toFixed(3));
-  const ok = pl.verdict === "power_law";
-  const box = levelBlock(pl.p ?? 0, { low: !ok, mark: 0.1 });
-  box.append(el("h3", { text: t("net_pl") }), el("p", { text: t("net_pl_v")[pl.verdict] || pl.verdict }), el("p", { class: "muted", text: t("net_alpha", pl.alpha, pl.xmin, pl.p) }));
-  side.replaceChildren(facts, box, el("h3", { text: t("net_pr") }), el("p", { class: "muted", text: d.pagerank.map((r) => `#${r.node} ${r.score.toFixed(4)}`).join(" · ") }));
-  const r = d.robustness;
-  $("net-more").replaceChildren(el("h3", { text: t("net_rob") }),
-    lineChart({ series: [{ points: r.f.map((f, i) => [f, r.failure[i]]), cls: 0 }, { points: r.f.map((f, i) => [f, r.attack[i]]), cls: 1 }], ymin: 0, ymax: 1, h: 200 }),
-    legend([[0, t("net_fail")], [1, t("net_attack")]]));
-}
-rerender.push(renderNet);
-
 /* substrates */
 let subsData = null;
 $("subs-run").onclick = async () => {
@@ -3932,34 +3463,6 @@ function renderSubs() {
   $("subs-out").replaceChildren(el("div", { style: "overflow-x:auto" }, tb));
 }
 rerender.push(renderSubs);
-
-/* training */
-let trainData = null;
-$("train-run").onclick = async () => {
-  $("train-state").textContent = t("net_running");
-  try { trainData = await api("/v1/vapor/lm"); $("train-state").textContent = ""; renderTrain(); } catch (e) { $("train-state").textContent = ""; $("train-out").replaceChildren(notice(e.message)); }
-};
-function renderTrain() {
-  const d = trainData; if (!d) return;
-  const r = d.receipt, b = r.baselines, cur = r.curve.filter((c) => c.heldout_bpb != null);
-  const facts = el("dl", { class: "facts" }), add = (k, v) => facts.append(el("dt", { text: k }), el("dd", { text: v }));
-  add("params", r.parameters.toLocaleString()); add("steps", `${r.schedule.steps} × ${r.schedule.tokens_per_step} tokens`); add("digest", short(r.digest));
-  add("held-out", t("train_bpb", cur[cur.length - 1].heldout_bpb));
-  const out = $("train-out"); out.replaceChildren();
-  const left = el("div"), right = el("aside", { class: "side" });
-  left.append(el("h3", { text: t("train_curve") }),
-    lineChart({ series: [{ points: cur.map((c) => [c.step, c.heldout_bpb]), cls: 0 }], levels: [{ y: b.unigram, label: t("train_unigram") }, { y: b.witten_bell_3, label: t("train_wb3") }, { y: b.witten_bell_5, label: t("train_wb5") }], xlab: "step", ymin: 2, h: 240 }));
-  if (d.stream) {
-    const s = d.stream, n = s.window_bits.stream.length;
-    left.append(el("h3", { text: t("train_stream") }),
-      lineChart({ series: [{ points: s.window_bits.stream.map((v, i) => [i * 64, v]), cls: 0 }, { points: s.window_bits.dense.map((v, i) => [i * 64, v]), cls: 1 }], marks: [{ x: s.trained_length, label: t("train_len") }], xlab: "byte", ymin: 0, h: 220 }),
-      legend([[0, `${t("train_stream_s")} — ${t("train_bpb", s.stream)}`], [1, `${t("train_dense")} — ${t("train_bpb", s.dense)}`]]));
-    void n;
-  }
-  right.append(el("h3", { text: t("train_facts") }), facts, el("p", { class: "muted", text: r.sample ? `“${r.sample}”` : "" }));
-  out.append(el("div", { class: "split" }, left, right));
-}
-rerender.push(renderTrain);
 
 /* ====================================================================== 0.11 */
 /* saving: any result as a verifiable archive (replayable kinds are computed by the server from their recipe) */
@@ -4206,216 +3709,6 @@ function viewer3d(cv, mesh) {
   return { stop: () => cancelAnimationFrame(raf) };
 }
 
-/* ------------------------------------------------------------ mathematics */
-let mathList = null, mathLast = null, conjLast = null, topoLast = null, persLast = null, persKind = "loop";
-async function loadTheorems() {
-  if (mathList) return; try { mathList = (await api("/v1/vapor/prove", {})).theorems; renderTheoremList(); } catch (e) { $("m-prove-out").replaceChildren(notice(e.message)); }
-}
-function renderTheoremList() {
-  if (!mathList) return; const sel = $("m-theorem"), cur = sel.value; sel.replaceChildren();
-  [...mathList].sort((a, b) => (b.true - a.true)).forEach((th) => sel.append(el("option", { value: th.name, text: (th.true ? "" : "✗ ") + th.doc })));
-  if (cur) sel.value = cur;
-}
-rerender.push(renderTheoremList);
-$("t-math").addEventListener("click", loadTheorems);
-$("m-prove").onclick = async () => {
-  await loadTheorems(); $("m-prove-out").replaceChildren(el("p", { class: "muted", text: t("net_running") }));
-  try { mathLast = await api("/v1/vapor/prove", { theorem: $("m-theorem").value }); renderProof(); } catch (e) { $("m-prove-out").replaceChildren(notice(e.message)); }
-};
-// a figure: every point, the triangle (or the circle) it lives on, and the claim drawn
-function drawFigure(cv, pts, claims) {
-  const g = cv.getContext("2d"), W = cv.width, H = cv.height, P = Object.values(pts); if (!P.length) return;
-  const xs = P.map((p) => p[0]), ys = P.map((p) => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-  const s = Math.min((W - 80) / (x1 - x0 || 1), (H - 80) / (y1 - y0 || 1)), map = ([x, y]) => [40 + (x - x0) * s + ((W - 80) - (x1 - x0) * s) / 2, H - 40 - (y - y0) * s - ((H - 80) - (y1 - y0) * s) / 2];
-  g.fillStyle = css("--mist"); g.fillRect(0, 0, W, H);
-  const line = (a, b, col, w = 1.4, dash = []) => { if (!pts[a] || !pts[b]) return; const [ax, ay] = map(pts[a]), [bx, by] = map(pts[b]); g.strokeStyle = col; g.lineWidth = w; g.setLineDash(dash); g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke(); g.setLineDash([]); };
-  ["a", "b", "c", "d"].forEach((p, i, arr) => { const q = arr[(i + 1) % (pts.d ? 4 : 3)]; if (i < (pts.d ? 4 : 3)) line(p, q, css("--silt"), 1.2); });
-  for (const c of claims) {
-    const [kind, ...ps] = c, col = c.col || css("--lock");
-    if (kind === "collinear") { const pp = ps.map((p) => map(pts[p])).sort((a, b) => a[0] - b[0] || a[1] - b[1]); g.strokeStyle = col; g.lineWidth = 2.2; g.beginPath(); g.moveTo(...pp[0]); g.lineTo(...pp[pp.length - 1]); g.stroke(); }
-    else if (kind === "concyclic") { const [a, b, cc] = ps.slice(0, 3).map((p) => map(pts[p])); const d = 2 * (a[0] * (b[1] - cc[1]) + b[0] * (cc[1] - a[1]) + cc[0] * (a[1] - b[1])); if (Math.abs(d) > 1e-9) { const ux = ((a[0] ** 2 + a[1] ** 2) * (b[1] - cc[1]) + (b[0] ** 2 + b[1] ** 2) * (cc[1] - a[1]) + (cc[0] ** 2 + cc[1] ** 2) * (a[1] - b[1])) / d, uy = ((a[0] ** 2 + a[1] ** 2) * (cc[0] - b[0]) + (b[0] ** 2 + b[1] ** 2) * (a[0] - cc[0]) + (cc[0] ** 2 + cc[1] ** 2) * (b[0] - a[0])) / d; g.strokeStyle = c.col || css("--sand"); g.lineWidth = c.thin ? 1 : 2; g.globalAlpha = c.thin ? 0.45 : 1; g.beginPath(); g.arc(ux, uy, Math.hypot(a[0] - ux, a[1] - uy), 0, 7); g.stroke(); g.globalAlpha = 1; } }
-    else if (kind === "perpendicular" || kind === "parallel" || kind === "equal_length") { line(ps[0], ps[1], col, 2.2); line(ps[2], ps[3], kind === "equal_length" ? col : css("--ember"), 2.2); }
-    else if (kind === "same") { ps.forEach((p) => { if (!pts[p]) return; const [x, y] = map(pts[p]); g.strokeStyle = css("--ember"); g.lineWidth = 2; g.beginPath(); g.arc(x, y, 9, 0, 7); g.stroke(); }); }
-  }
-  g.font = `12px ${css("--body")}`;
-  for (const [k, p] of Object.entries(pts)) { const [x, y] = map(p); g.fillStyle = css("--ink"); g.beginPath(); g.arc(x, y, 3.2, 0, 7); g.fill(); g.fillStyle = css("--silt"); g.fillText(k, x + 5, y - 5); }
-}
-function renderProof() {
-  const r = mathLast; if (!r) return;
-  drawFigure($("m-canvas"), r.points, [r.claim]);
-  const ok = r.verdict === "proved", expected = r.expected;
-  const lines = [];
-  if (r.verdict === "proved") { lines.push(t("m_cert", r.certificate.degree)); if (r.certificate.nondegenerate.length) lines.push(t("m_nondeg"), ...r.certificate.nondegenerate.map((p) => "  " + p + " ≠ 0")); }
-  else if (r.verdict === "refuted") lines.push(t("m_terms", r.certificate.numerator_terms, r.certificate.degree));
-  else lines.push(t("m_slow"));
-  $("m-prove-out").replaceChildren(
-    el("p", {}, chipV(ok || (r.verdict !== "refuted" && r.check === "holds"), r.verdict === "proved" ? t("m_proved") : r.verdict === "refuted" ? t("m_refuted") : r.check), " ", el("span", { class: "muted", text: (expected ? t("m_true") : t("m_false")) + ` · ${r.ms} ms` })),
-    el("pre", { class: "cert", text: lines.join("\n") }), el("p", { class: "muted", text: t("m_check", r.check, r.checked_points) }),
-    el("div", { class: "controls tight" }, saveButton("prove.geometry", { name: r.name }, null, $("m-prove-out"))));
-}
-rerender.push(renderProof);
-$("m-conj").onclick = async () => {
-  $("m-conj-out").replaceChildren(el("p", { class: "muted", text: t("net_running") }));
-  try { conjLast = await api("/v1/vapor/prove", { discover: true }); renderConj(); } catch (e) { $("m-conj-out").replaceChildren(notice(e.message)); }
-};
-function renderConj() {
-  const r = conjLast; if (!r) return;
-  const claims = r.collinear.map((c) => Object.assign(c.slice(), { col: css("--lock") })).concat(r.concyclic.map((c) => Object.assign(c.slice(), { thin: true })));
-  drawFigure($("m-conj-canvas"), r.points, claims);
-  const list = el("ul", { class: "formula" });
-  r.collinear.forEach(([, ...ps]) => list.append(el("li", { text: `${ps.join(", ")} — ${t("m_collinear")}` })));
-  list.append(el("li", { class: "muted", text: `+ ${r.concyclic.length} × ${t("m_concyclic")}: ` + r.concyclic.slice(0, 6).map(([, ...ps]) => ps.join("·")).join("  ") + (r.concyclic.length > 6 ? " …" : "") }));
-  $("m-conj-out").replaceChildren(el("p", { text: t("m_found", r.collinear.length + r.concyclic.length, r.survivors, r.candidates) }), list);
-}
-rerender.push(renderConj);
-$("m-topo").onclick = async () => { try { topoLast = (await api("/v1/vapor/prove", { homology: true })).complexes; renderTopo(); } catch (e) { $("m-topo-out").replaceChildren(notice(e.message)); } };
-function renderTopo() {
-  if (!topoLast) return;
-  const tb = el("table", { class: "fp betti" }); tb.append(el("tr", {}, ...[t("m_complex"), "χ", "GF(2): b₀ b₁ b₂", "ℚ: b₀ b₁ b₂", t("m_torsion")].map((h) => el("th", { text: h }))));
-  topoLast.forEach((c) => tb.append(el("tr", {}, el("td", { text: c.complex }), el("td", { text: c.euler }), el("td", { text: c.gf2.join("  ") }), el("td", { class: c.torsion ? "diff" : "", text: c.q.join("  ") }), el("td", { class: c.torsion ? "diff" : "", text: c.torsion ? "ℤ/2" : "—" }))));
-  $("m-topo-out").replaceChildren(tb, el("div", { class: "controls tight" }, saveButton("prove.homology", { complex: "klein" }, null, $("m-topo-out"))));
-}
-rerender.push(renderTopo);
-$("m-pers").querySelectorAll("button").forEach((b) => (b.onclick = async () => { persKind = b.dataset.p; $("m-pers").querySelectorAll("button").forEach((x) => x.setAttribute("aria-checked", x === b)); await runPers(); }));
-async function runPers() { try { persLast = await api("/v1/vapor/prove", { persistence: persKind, seed: 3 }); renderPers(); } catch (e) { $("m-pers-out").replaceChildren(notice(e.message)); } }
-$("t-math").addEventListener("click", () => { if (!persLast) runPers(); });
-function renderPers() {
-  const r = persLast; if (!r) return;
-  const bars = r.h1.map(([b, d]) => [b, d == null ? b + 3 : d]).sort((p, q) => (q[1] - q[0]) - (p[1] - p[0]));
-  const maxd = Math.max(...bars.map((x) => x[1]), ...r.h0.filter((x) => x[1] != null).map((x) => x[1]), 1e-9);
-  const code = el("div", { class: "barcode" });
-  bars.slice(0, 12).forEach(([b, d]) => { const i = el("i"); i.style.marginLeft = `${(b / maxd) * 100}%`; i.style.width = `${Math.max(((d - b) / maxd) * 100, 0.8)}%`; code.append(i); });
-  const life = bars.length ? (bars[0][1] - bars[0][0]).toFixed(2) : "—";
-  $("m-pers-out").replaceChildren(lineChart({ series: [{ points: r.points, cls: 0, dots: true }], h: 200 }), el("p", { class: "muted", text: `${t("m_bars", r.h1.length)}: ${life}` }), code);
-}
-rerender.push(renderPers);
-
-/* ------------------------------------------------------------- algorithms */
-let sortLast = null, mmLast = null, synLast = null;
-$("al-sort").onclick = async () => { $("al-sort-out").replaceChildren(el("p", { class: "muted", text: t("net_running") })); try { sortLast = await api("/v1/vapor/discover", { task: "network", n: +$("al-n").value }); renderSort(); } catch (e) { $("al-sort-out").replaceChildren(notice(e.message)); } };
-function renderSort() {
-  const r = sortLast; if (!r) return;
-  const cv = $("al-canvas"), g = cv.getContext("2d"), W = cv.width, H = cv.height, n = r.n;
-  // layers: each comparator as early as its wires allow
-  const ready = new Array(n).fill(0), layer = r.net.map(([i, j]) => { const l = Math.max(ready[i], ready[j]); ready[i] = ready[j] = l + 1; return l; });
-  const L = Math.max(...layer) + 1, slots = new Map(), pos = r.net.map(([i, j], k) => { const key = layer[k]; const s = slots.get(key) || 0; slots.set(key, s + 1); return [key, s]; });
-  const per = Math.max(...[...slots.values()]), colW = (W - 60) / (L * per + L), y = (i) => 24 + i * (H - 48) / (n - 1);
-  g.fillStyle = css("--mist"); g.fillRect(0, 0, W, H); g.strokeStyle = css("--silt"); g.lineWidth = 1.2;
-  for (let i = 0; i < n; i++) { g.beginPath(); g.moveTo(20, y(i)); g.lineTo(W - 20, y(i)); g.stroke(); }
-  r.net.forEach(([i, j], k) => { const [l, s] = pos[k], x = 34 + (l * (per + 1) + s) * colW; g.strokeStyle = css("--lock"); g.lineWidth = 2.4; g.beginPath(); g.moveTo(x, y(i)); g.lineTo(x, y(j)); g.stroke(); g.fillStyle = css("--lock"); [i, j].forEach((w) => { g.beginPath(); g.arc(x, y(w), 4.2, 0, 7); g.fill(); }); });
-  $("al-sort-out").replaceChildren(el("p", {}, chipV(r.sorts, t("a_sorts"))), el("p", { text: t("a_size", r.size, r.depth, r.known.size, r.known.depth) }), el("p", { class: "muted", text: t("a_control", r.control.size, r.control.depth) + ` · ${r.ms} ms` }),
-    el("div", { class: "controls tight" }, saveButton("discover.sorting_network", { n: r.n, beam: 64, seed: 1 }, null, $("al-sort-out"))));
-}
-rerender.push(renderSort);
-$("al-mm").onclick = async () => { $("al-mm-out").replaceChildren(el("p", { class: "muted", text: t("net_running") })); try { mmLast = await api("/v1/vapor/discover", { task: "matmul" }); renderMM(); } catch (e) { $("al-mm-out").replaceChildren(notice(e.message)); } };
-function renderMM() {
-  const r = mmLast; if (!r) return;
-  const A = ["a₁₁", "a₁₂", "a₂₁", "a₂₂"], B = ["b₁₁", "b₁₂", "b₂₁", "b₂₂"], C = ["c₁₁", "c₁₂", "c₂₁", "c₂₂"];
-  const lin = (coef, names) => coef.map((c, i) => (c === 0 ? "" : (c > 0 ? " + " : " − ") + names[i])).join("").replace(/^ \+ /, "").replace(/^ − /, "−") || "0";
-  const col = (f, q) => f.map((row) => row[q]);
-  const prods = r.u[0].map((_, q) => `P${q + 1} = (${lin(col(r.u, q), A)}) · (${lin(col(r.v, q), B)})`);
-  const outs = r.w.map((row, k) => `${C[k]} = ${lin(row, r.u[0].map((_, q) => "P" + (q + 1)))}`);
-  const ch = lineChart({ series: [{ points: r.counts.filter((c) => c.n >= 1).map((c) => [Math.log2(c.n), c.mults]), cls: 0 }, { points: r.counts.filter((c) => c.n >= 1).map((c, i) => [Math.log2(c.n), r.naive[i]]), cls: 1 }], logy: true, xlab: "log₂ n", h: 200 });
-  $("al-mm-out").replaceChildren(el("p", {}, chipV(r.verified, t("a_verified"))), el("p", { text: t("a_mults", r.mults, r.adds, r.tries) }), el("pre", { class: "cert", text: [t("a_products") + ":", ...prods, "", t("a_outputs") + ":", ...outs].join("\n") }),
-    ch, legend([[0, `${r.class}`], [1, "n³"]]), el("p", { class: "muted", text: t("a_rank6", r.rank6_tries) + " · " + t("a_class", r.class) }),
-    el("div", { class: "controls tight" }, saveButton("discover.matmul", { n: 2, rank: 7, tries: 30, seed: 1 }, null, $("al-mm-out"))));
-}
-rerender.push(renderMM);
-$("al-syn").onclick = async () => { $("al-syn-out").replaceChildren(el("p", { class: "muted", text: t("net_running") })); try { synLast = await api("/v1/vapor/discover", { task: "synth", spec: $("al-spec").value }); renderSyn(); } catch (e) { $("al-syn-out").replaceChildren(notice(e.message)); } };
-function renderSyn() {
-  const r = synLast; if (!r) return;
-  if (r.error) { $("al-syn-out").replaceChildren(notice(r.error)); return; }
-  $("al-syn-out").replaceChildren(el("pre", { class: "latex", text: r.text }), el("p", { text: t("a_minimal", r.ops) }),
-    el("p", {}, ...["w8", "w16", "w32"].map((k) => [chipV(r.verified[k], `${k.slice(1)}-bit ${t("a_ver")}`), " "]).flat()), el("p", { class: "muted", text: t("a_explored", r.explored, r.width) + ` · ${r.ms} ms` }),
-    el("div", { class: "controls tight" }, saveButton("discover.synthesis", { spec: r.spec }, r, $("al-syn-out"))));
-}
-rerender.push(renderSyn);
-
-/* ---------------------------------------------------------------- science */
-const SCI = ["quantum_coherent", "quantum_tunneling", "relativistic_gyration", "exb_drift", "tokamak_equilibrium", "h2_hartree_fock", "heh_hartree_fock", "lennard_jones", "wright_fisher", "phylogeny", "hp_folding"];
-const sciResults = {};
-function sciCard(name) {
-  const r = sciResults[name], card = el("article", { class: "sci" });
-  const run = el("button", { class: r ? "quiet" : "primary", type: "button", text: t("run") }); run.onclick = () => runSci(name);
-  card.append(el("header", {}, el("div", {}, el("div", { class: "tag", text: t("sci_tags")[name] }), el("h3", { text: t("sci_names")[name] })), run));
-  if (r === "running") card.append(el("p", { class: "muted", text: t("net_running") }));
-  else if (r && r.error) card.append(notice(r.error));
-  else if (r) {
-    card.append(el("p", {}, chipV(r.pass, r.pass ? t("sci_pass") : t("sci_fail")), " ", el("span", { class: "muted", text: `${r.ms} ms` })),
-      dl([[t("sci_val"), fmt(r.value)], [t("sci_ref"), fmt(r.reference)], [t("sci_ctrl"), fmt(r.control)]]), el("p", { class: "muted", text: r.threshold }));
-    const d = r.data || {};
-    if (d.trace) card.append(lineChart({ series: [{ points: d.trace, cls: 0 }, { points: d.trace.map(([tt]) => [tt, 2 * Math.cos(tt)]), cls: 2 }], h: 150, xlab: "t" }));
-    if (d.rdf) card.append(lineChart({ series: [{ points: d.rdf, cls: 0 }], h: 150, xlab: "r/σ" }));
-    if (d.coords) card.append(hpFold(d.coords, d.sequence));
-    card.append(el("div", { class: "controls tight" }, saveButton("science", { experiment: name }, null, $("sci-state"))));
-  }
-  return card;
-}
-function hpFold(coords, seq) {
-  const cv = el("canvas", { width: 300, height: 220, role: "img" }), g = cv.getContext("2d"), xs = coords.map((c) => c[0]), ys = coords.map((c) => c[1]);
-  const x0 = Math.min(...xs), y0 = Math.min(...ys), s = Math.min(260 / (Math.max(...xs) - x0 + 1), 180 / (Math.max(...ys) - y0 + 1)), m = ([x, y]) => [20 + (x - x0) * s + s / 2, 20 + (y - y0) * s + s / 2];
-  g.fillStyle = css("--mist"); g.fillRect(0, 0, 300, 220); g.strokeStyle = css("--silt"); g.lineWidth = 2; g.beginPath(); coords.forEach((c, i) => (i ? g.lineTo(...m(c)) : g.moveTo(...m(c)))); g.stroke();
-  coords.forEach((c, i) => { g.fillStyle = seq[i] === "H" ? css("--ember") : css("--mist"); g.strokeStyle = css("--ink"); g.lineWidth = 1.2; g.beginPath(); g.arc(...m(c), s * 0.28, 0, 7); g.fill(); g.stroke(); });
-  return el("div", { class: "stage" }, cv);
-}
-function renderSci() { $("sci-grid").replaceChildren(...SCI.map(sciCard)); }
-async function runSci(name) {
-  sciResults[name] = "running"; renderSci();
-  try { sciResults[name] = await api("/v1/vapor/science", { experiment: name }); } catch (e) { sciResults[name] = { error: e.message }; }
-  renderSci();
-}
-$("sci-all").onclick = async () => { for (const n of SCI) { $("sci-state").textContent = t("sci_running", t("sci_names")[n]); await runSci(n); } $("sci-state").textContent = ""; };
-renderSci(); rerender.push(renderSci);
-
-/* ------------------------------------------------------------------ games */
-let board = new Array(9).fill(0), heat = {}, gameBusy = false, azLast = null, drLast = null;
-function renderBoard(status) {
-  const box = $("g-board"); box.replaceChildren();
-  const total = Object.values(heat).reduce((a, b) => a + b, 0) || 1;
-  board.forEach((v, i) => {
-    const b = el("button", { type: "button", "data-v": String(v), "aria-label": `${i + 1}` }); b.textContent = v === 1 ? "X" : v === -1 ? "O" : "";
-    if (heat[i]) { const h = el("span", { class: "heat" }); h.style.opacity = String(0.08 + 0.5 * heat[i] / total); b.prepend(h); }
-    b.disabled = v !== 0 || gameBusy || over(board) !== null; b.onclick = () => humanMove(i); box.append(b);
-  });
-  if (status !== undefined) $("g-status").textContent = status;
-}
-function over(b) {
-  for (const [x, y, z] of [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]) if (b[x] && b[x] === b[y] && b[y] === b[z]) return b[x];
-  return b.every((v) => v) ? 0 : null;
-}
-async function humanMove(i) {
-  if (gameBusy || board[i]) return; board[i] = 1; heat = {};
-  let o = over(board); if (o !== null) return renderBoard(o === 1 ? t("g_win") : t("g_draw"));
-  gameBusy = true; renderBoard(t("g_thinking"));
-  try {
-    const r = await api("/v1/vapor/games/move", { board, sims: +$("g-sims").value });
-    heat = r.visits || {}; if (r.move != null) board[r.move] = -1;
-    o = over(board); gameBusy = false;
-    renderBoard(o === null ? `${t("g_your")} · ${t("g_value", -r.value)}` : o === -1 ? t("g_lose") : o === 1 ? t("g_win") : t("g_draw"));
-  } catch (e) { gameBusy = false; renderBoard(e.message); }
-}
-$("g-new").onclick = () => { board = new Array(9).fill(0); heat = {}; renderBoard(t("g_your")); };
-renderBoard(t("g_your")); rerender.push(() => renderBoard());
-$("g-az").onclick = async () => { $("g-az-out").replaceChildren(el("p", { class: "muted", text: t("net_running") })); try { azLast = await api("/v1/vapor/games", { task: "selfplay" }); renderAZ(); } catch (e) { $("g-az-out").replaceChildren(notice(e.message)); } };
-function renderAZ() {
-  const r = azLast; if (!r) return;
-  $("g-az-out").replaceChildren(lineChart({ series: [{ points: r.curve.map((c) => [c.sims, c.trained]), cls: 0 }, { points: r.curve.map((c) => [c.sims, c.untrained]), cls: 1 }], xlab: t("g_sims"), h: 190, ymin: 0 }),
-    legend([[0, t("g_trained")], [1, t("g_untrained")]]),
-    dl([["recipe", `${r.recipe.games} games · ${r.recipe.sims} sims · seed ${r.recipe.seed}`], ["digest", short(r.digest)], ["vs random", `${r.versus_random.wins}/${r.versus_random.games}`],
-        [t("g_lines"), `${t("g_trained")} · ${t("g_untrained")}`], ...r.curve.map((c) => [`${c.sims} sims`, `${c.trained_lines[0]}/${c.trained_lines[1]} · ${c.untrained_lines[0]}/${c.untrained_lines[1]}`])]),
-    el("div", { class: "controls tight" }, saveButton("games.evaluation", { task: "selfplay" }, r, $("g-status"))));
-}
-rerender.push(renderAZ);
-$("g-dr").onclick = async () => { $("g-dr-out").replaceChildren(el("p", { class: "muted", text: t("net_running") })); try { drLast = await api("/v1/vapor/games", { task: "randomization" }); renderDR(); } catch (e) { $("g-dr-out").replaceChildren(notice(e.message)); } };
-function renderDR() {
-  const r = drLast; if (!r) return;
-  const series = [{ points: r.runs.map((x, i) => [i, x.nominal.shifted]), cls: 1, bars: true, bw: 0.1 }, { points: r.runs.map((x, i) => [i + 0.33, x.randomized.shifted]), cls: 0, bars: true, bw: 0.1 }];
-  $("g-dr-out").replaceChildren(lineChart({ series, h: 190, ymin: 0, ymax: 500, xticks: r.runs.map((x, i) => [i + 0.16, `seed ${x.seed}`]) }),
-    legend([[1, t("g_nominal")], [0, t("g_randomized")]]), el("p", { class: "muted", text: t("g_steps") }),
-    el("div", { class: "controls tight" }, saveButton("games.randomization", { seeds: [1, 2, 3] }, r, $("g-status"))));
-}
-rerender.push(renderDR);
-
 /* --------------------------------------------------------------- archives */
 wireDrop($("ar-drop"), $("ar-file"), async (fs) => {
   if (!fs[0]) return; $("ar-out").replaceChildren(el("p", { class: "muted", text: t("net_running") }));
@@ -4437,5 +3730,6 @@ wireDrop($("ar-drop"), $("ar-file"), async (fs) => {
 <script src="/mercado.js"></script>
 <script src="/athanor.js"></script>
 <script src="/opus.js"></script>
+<script src="/majlis.js"></script>
 </body>
 </html>

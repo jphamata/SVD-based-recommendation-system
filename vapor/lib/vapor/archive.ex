@@ -37,15 +37,9 @@ defmodule Vapor.Archive do
 
   # kind → {module, function}: a pure producer `fun(recipe) :: {:ok, result} | {:error, _}`
   @replayable %{
-    "discover.sorting_network" => {Vapor.Discover, :replay},
-    "discover.matmul" => {Vapor.Discover, :replay},
     "prove.geometry" => {Vapor.Prove, :replay},
     "prove.homology" => {Vapor.Prove, :replay},
     "science" => {Vapor.Science, :replay},
-    "games.selfplay" => {Vapor.Games, :replay},
-    # the 0.11 name of the same recipe, so its archives still replay
-    "games.alphazero" => {Vapor.Games, :replay},
-    "graph" => {Vapor.Archive, :replay_graph},
     "scene" => {Vapor.Scene, :replay},
     # 0.13: the finance desk's deterministic tasks (timings scrubbed)
     "finance.arbitrage" => {Vapor.Finance, :replay},
@@ -166,11 +160,6 @@ defmodule Vapor.Archive do
       :error -> {:error, {:not_replayable, kind}}
     end
   end
-
-  @doc false
-  def replay_graph("graph", %{"model" => m, "n" => n, "seed" => seed}) when is_binary(m) and is_integer(n) and is_integer(seed),
-    do: {:ok, Vapor.Console.Lab.graph(m, n, seed)}
-  def replay_graph(_, _), do: {:error, :bad_recipe}
 
   defp decode_manifest(mjson) do
     case Vapor.JSON.decode(mjson) do

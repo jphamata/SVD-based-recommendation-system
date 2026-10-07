@@ -20,6 +20,7 @@ defmodule Vapor.Main.AthanorCli do
 
   defp search(argv) do
     with {:ok, o, args} <- opts(argv, @run_opts),
+         true <- not (o[:measure] != nil and Vapor.Main.jailed?()) || {:error, "--measure runs a program on the server, which a console session may not do (run it from your own terminal)"},
          {:ok, text} <- read_input(List.first(args)),
          {:ok, consts} <- consts(o),
          {:ok, mind} <- mind(o) do
@@ -33,13 +34,13 @@ defmodule Vapor.Main.AthanorCli do
         if o[:interactive] do
           interactive(text, base, o)
         else
-          base = if tty?() and not json?(o), do: [{:on_round, progress()} | base], else: base
+          base = if tty?() and not json?(o) and not Vapor.Main.jailed?(), do: [{:on_round, progress()} | base], else: base
           Athanor.run(text, base)
         end
 
       case result do
         {:ok, cert} ->
-          if tty?(), do: IO.write(:stderr, "\r\e[K")
+          if tty?() and not Vapor.Main.jailed?(), do: IO.write(:stderr, "\r\e[K")
           if json?(o), do: emit_json(cert), else: out(render(cert))
           exit_code(cert)
         {:error, m} -> err("athanor: " <> m); 3

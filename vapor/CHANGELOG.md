@@ -1,5 +1,72 @@
 # Mudanças
 
+## 0.16.0 — 2026-10-07
+
+Escrutínio do oitavo pedido ("pontas soltas; expurgo do meramente ilustrativo; conversas e agente à
+altura dos produtos de fronteira; terminal GUI, TUI e API equivalentes; o ASAS; o manifesto
+Al-Mīzān; um ecossistema de editores; geometria da informação; purificar") e as três críticas
+respondidas: [docs/DIRETRIZ.md §19](docs/DIRETRIZ.md). A tese: **purificar** — o que só se
+exibia saiu; o que ficou é ferramenta com evidência. Verificações com controle em
+`mix vapor.quality` (§5l, 11; `--only round16`, ~2 s: [docs/bench/ROUND16.md](docs/bench/ROUND16.md)). A versão em `mix.exs` estava em 0.14.0
+desde a rodada 0.14; agora 0.16.0 (a 0.15 entrou sem mexer nela).
+
+**Expurgo** — 2 949 linhas a menos no que existia. Saíram `Vapor.Graph` (redes complexas),
+`Vapor.Discover` (descoberta de algoritmos) e `Vapor.Games` (AlphaZero em jogo da velha; o
+`Vapor.Play` genérico fica), os painéis do console Física, Redes, Algoritmos, Matemática, Ciência,
+Jogos, Desenhar, Ouvir, Treino e Fusão, o dossiê de demonstração, os comandos de desenho, escuta
+e fusão do TUI, as rotas HTTP correspondentes, 84 textos de interface que só eles usavam e os
+documentos REDES, DESCOBERTA e JOGOS. Critério: uma funcionalidade fica se responde a uma pergunta
+que alguém traz com os seus dados; sai se só reencena um exemplo fixo. O teste de fornalha do
+Render fica: é uma conferência com controle, não uma demonstração.
+
+**Khazāna** ([KHAZANA.md](docs/KHAZANA.md)) — o depósito por conteúdo com raiz *crash-atomic* do
+ASAS §8.4 num diretório POSIX: dois pacotes, dois slots de raiz de 128 bytes com sequência e
+etiqueta, nenhum arquivo criado depois de `init/1` (a OTP não dá `fsync` num diretório).
+Queda injetada em **cada byte** de um *commit*: sempre a raiz velha ou a nova. Capacidades
+HMAC-SHA256 com revogação em massa por geração (ASAS §6.2).
+
+**Majlis** ([MAJLIS.md](docs/MAJLIS.md)) — conversas como árvore endereçada por conteúdo (o hash
+de uma mensagem cobre o pai): editar e outra resposta como ramos, ‹ i/n ›, continuar daqui,
+bifurcar em O(1), mensagens fixadas, o contexto calculado e mostrado (enviadas, fixadas,
+resumidas, deixadas de fora; tokens exatos com o tokenizador servido), compactação que nomeia o
+hash que resume e se desfaz, busca BM25, exportação JSON verificável e Markdown, importação do
+ChatGPT e do Claude, links compartilhados por capacidade e revogáveis, ferramentas por lista de
+permissão com diário verificável. `vapor chat …`; `/v1/vapor/threads…`; o painel *Conversas*.
+
+**Dīwān** ([DIWAN.md](docs/DIWAN.md)) — um interpretador para a linha de comando, o TUI, o terminal
+do console e a API: verbos, `|`, `>`, `>>`, `<`, `;`, aspas, embutidos; no console, uma sessão
+enjaulada (arquivos próprios, nenhum processo externo, teto de heap e prazo por comando). O TUI foi
+refeito sobre ele. O painel *Terminal*: cores ANSI, histórico, Tab, editor de arquivos.
+
+**Al-Mīzān** ([MIZAN.md](docs/MIZAN.md)) — o dialeto formal `.wzn`: uma árvore neutra com duas
+impressões bijetivas (latina/Buckwalter e árabe, algarismos arábico-índicos), o hash da árvore
+como identidade; raízes (ح-س-ب, ح-ف-ظ, ن-ق-ل, ك-ت-ب) como domínios e *awzān* (فاعل, مفعول,
+برهان) como regimes; obrigações decididas por forma normal exata sobre ℚ, pelo Aludel e por SAT
+com DRUP — *desconhecido* não compila; baixa para o compilador do vapor, para AIGER e para teoremas
+Lean 4; `abjad` medido (99,99 % das raízes colidem) e mostrado, nunca usado como endereço.
+`vapor wzn check|show|hash|run|transmute|assay|abjad`.
+
+**Editores** ([EDITORES.md](docs/EDITORES.md)) — `vapor lsp` (LSP 3.17 por stdio: diagnósticos
+com as obrigações decididas, *hover*, completar, definição, símbolos, formatação, troca de
+escrita) e clientes finos para VS Code, Neovim/Vim e Emacs.
+
+**Geometria da informação** ([GEOMETRIA.md](docs/GEOMETRIA.md)) — `Vapor.InfoGeom` (Fisher–Rao
+no simplex, geodésicas, média de Karcher, normais em forma fechada, regressão logística por
+gradiente natural) e `vapor assay geometry`, cada um com o controle que mostra por que a métrica
+importa.
+
+**ASAS** — além da Khazāna: **uma** fronteira de entropia (`Vapor.Entropy`; todo o resto semeado
+e reproduzível, conferido por auditoria a cada build) e o **livro-razão de garantias**
+(`Vapor.Assurance` → [GARANTIAS.md](docs/GARANTIAS.md), `mix vapor.assurance [--check]`):
+provado · conferido · testado · argumentado · devido, com um teste que falha se a evidência
+citada sumir ou o documento divergir.
+
+**Corrigido no caminho** — uma resposta regenerada não se tornava a corrente (o ponteiro ficava na
+antiga; o teste dizia "o ponteiro a segue" sem conferir); mensagens de topo de conversas
+diferentes eram irmãs entre si (âncora por conversa e dono no hash); um `|` inicial era aceito
+no terminal; a rodada 0.15 usava o gerador do SO em entradas de teste; o backend de teste das
+conversas dependia da ordem de carga dos arquivos de teste (agora em `test/support`).
+
 ## 0.15.0 — 2026-10-07
 
 Escrutínio do sétimo pedido ("reengenharia completa sob primeiros princípios, em seis fases;

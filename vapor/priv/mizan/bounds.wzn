@@ -1,0 +1,19 @@
+; Motzkin's polynomial is non-negative but no sum of squares: the strict form is certified on a box.
+(claim motzkin (root H-s-b) (wazn burhan)
+  (inputs (x q) (y q))
+  (box (x -2 2) (y -2 2))
+  (proof pos)
+  (body (+ (* x x x x y y) (* x x y y y y) (* -3 x x y y) 1 1/1000)))
+
+; a bound that holds: |sin-like cubic| on [-1, 1]
+(claim cubic (root H-s-b) (wazn burhan)
+  (inputs (x q))
+  (box (x -1 1))
+  (proof (bounded -1 1))
+  (body (- x (/ (* x x x) 6))))
+
+; an identity: (a + b)^2 = a^2 + 2ab + b^2
+(claim square (root H-s-b) (wazn burhan)
+  (inputs (a q) (b q))
+  (proof (identity (+ (^ a 2) (* 2 a b) (^ b 2))))
+  (body (^ (+ a b) 2)))

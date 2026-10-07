@@ -1,6 +1,6 @@
 defmodule Vapor.Mind do
   @moduledoc """
-  The language-model layer (docs/MIND.md): where vapor asks a model for
+  The language-model layer (docs/CLI.md, "VAPOR_MIND"; docs/MAJLIS.md): where vapor asks a model for
   help — and never takes its word for anything.
 
     * `formalize/3` — a problem in words becomes an Alembic program; the

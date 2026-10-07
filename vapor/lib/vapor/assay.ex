@@ -14,6 +14,7 @@ defmodule Vapor.Assay do
   | `scaling` | extrapolated scaling laws without uncertainty | L = E + A/N^α (+ B/D^β) by Huber loss on log-loss with many starts, bootstrap CIs, compute-optimal exponents, and a **leave-the-largest-out** check |
   | `calibration` | ECE that is biased at small n | equal-mass ECE with its CI, the ECE a perfectly calibrated model would show at the same confidences (the bias floor), Brier, NLL, temperature/Platt scaling fitted on one half and judged on the other |
   | `agreement` | annotations nobody checked | Cohen's κ, Fleiss' κ, Krippendorff's α with bootstrap CIs |
+  | `geometry` | "model A is closer to B than to C" measured with KL, which is not a distance | Fisher–Rao distances between models' predictive distributions with bootstrap CIs, the geometric consensus (Fréchet mean) and each model's distance to it, the triangle inequality checked, a shuffled-item control |
   | `judge` | LLM-as-a-judge position bias | consistency under order swap, first-slot preference with an exact binomial test |
 
   Inputs are CSV/TSV with a header or JSON lines — from a file or a pipe.
@@ -23,6 +24,13 @@ defmodule Vapor.Assay do
 
   defp table do
   [
+    {"geometry", "several models' predicted distributions on the same items (columns model, item, then one per class)",
+     "model,item,p_yes,p_no,p_maybe\n" <> Enum.map_join(for(m <- ~w(base tuned other), i <- 1..30, do: {m, i}), "\n", fn {m, i} ->
+       h = fn k -> Vapor.Alembic.Builtins.hash01([:geo, m, i, k]) end
+       base = [0.2 + h.(1), 0.2 + h.(2), 0.1]
+       ps = case m do "base" -> base; "tuned" -> Enum.map(base, &(&1 + 0.05 * h.(3))); "other" -> [0.1 + h.(4), 0.5, 0.2 + h.(5)] end
+       "#{m},q#{i}," <> Enum.map_join(ps, ",", &Float.round(&1, 4))
+     end)},
     {"compare", "two systems on the same items (columns a, b)",
      "id,a,b\n" <> Enum.map_join(1..60, "\n", fn i -> "q#{i},#{if rem(i * 7, 10) < 6, do: 1, else: 0},#{if rem(i * 7 + 3, 10) < 7, do: 1, else: 0}" end)},
     {"leaderboard", "many systems on the same items (one column per system)",
@@ -73,6 +81,7 @@ defmodule Vapor.Assay do
     end
   end
 
+  defp dispatch("geometry", text, o), do: Vapor.Assay.Geometry.run(text, o)
   defp dispatch("compare", text, o), do: with({:ok, h, rows} <- Stats.table(text), do: compare(h, rows, o))
   defp dispatch("leaderboard", text, o), do: with({:ok, h, rows} <- Stats.table(text), do: leaderboard(h, rows, o))
   defp dispatch("calibration", text, o), do: with({:ok, h, rows} <- Stats.table(text), do: calibration(h, rows, o))

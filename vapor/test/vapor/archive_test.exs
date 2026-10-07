@@ -9,11 +9,11 @@ defmodule Vapor.ArchiveTest do
   alias Vapor.Archive
 
   test "pack, verify, replay; the same result is the same archive" do
-    {:ok, r} = Archive.produce("discover.sorting_network", %{"n" => 5})
-    a = Archive.pack("discover.sorting_network", %{"n" => 5}, r, %{"note.txt" => "hello"})
-    b = Archive.pack("discover.sorting_network", %{"n" => 5}, r, %{"note.txt" => "hello"})
+    {:ok, r} = Archive.produce("prove.homology", %{"complex" => "torus"})
+    a = Archive.pack("prove.homology", %{"complex" => "torus"}, r, %{"note.txt" => "hello"})
+    b = Archive.pack("prove.homology", %{"complex" => "torus"}, r, %{"note.txt" => "hello"})
     assert a.id == b.id
-    assert {:ok, %{files: %{"note.txt" => "hello"}, manifest: %{"kind" => "discover.sorting_network"}}} = Archive.verify(a.zip)
+    assert {:ok, %{files: %{"note.txt" => "hello"}, manifest: %{"kind" => "prove.homology"}}} = Archive.verify(a.zip)
     assert Archive.replay(a.zip) == {:ok, :same}
   end
 
@@ -50,11 +50,9 @@ defmodule Vapor.ArchiveTest do
     assert Archive.verify(nores) == {:error, :no_result}
 
     # every recipe parameter is bounded before anything runs
-    assert {:error, {:out_of_bounds, 32, _}} = Archive.produce("discover.sorting_network", %{"n" => 32})
-    assert {:error, {:out_of_bounds, 0, _}} = Archive.produce("discover.sorting_network", %{"n" => 8, "beam" => 0})
-    assert {:error, {:out_of_bounds, _, _}} = Archive.produce("games.selfplay", %{"games" => 1_000_000, "sims" => 400, "seed" => 1})
-    # the 0.11 name of the kind still resolves to the same bounded recipe
-    assert {:error, {:out_of_bounds, _, _}} = Archive.produce("games.alphazero", %{"games" => 1_000_000, "sims" => 400, "seed" => 1})
+    # kinds whose producers left in 0.16 (discovery, self-play) are refused by name, not run
+    assert {:error, {:not_replayable, "discover.sorting_network"}} = Archive.produce("discover.sorting_network", %{"n" => 5})
+    assert {:error, {:not_replayable, "games.selfplay"}} = Archive.produce("games.selfplay", %{"games" => 1, "sims" => 4, "seed" => 1})
     assert {:error, _} = Archive.produce("science", %{"experiment" => "nope"})
     assert {:error, _} = Archive.produce("prove.homology", %{"complex" => "nope"})
     assert {:error, _} = Archive.produce("prove.geometry", %{"name" => "nope"})

@@ -15,19 +15,18 @@ defmodule Vapor.Quality.Round10 do
   | twin identification | rod length and damping recovered | time-shuffled measurements |
   | reinforcement | a cart-pole balanced 200/200 on unseen starts | the zero policy |
   | digital twin | alarm within 30 steps of a 0.5 % fault | no fault: no alarm |
-  | networks | BA: power law; WS: clustering z ≫ 0; Louvain on a planted partition | ER: not a power law, z ≈ 0; the partition's null |
   | figures | charts within 1 % of span | permuted tick labels: every chart refused |
   | formulas | LaTeX token error (unseen type families) | the same symbols read flat |
   | CJK | CER on unseen typefaces | random characters: the language model must not help |
   | Arabic | CER on unseen typefaces; logical order = python-bidi's | the Latin reader on the same lines |
   | Cyrillic | CER on unseen typefaces | the Latin reader on the same lines |
   """
-  alias Vapor.{Graph, Physics, Tensor}
+  alias Vapor.{Physics, Tensor}
   alias Vapor.Vision.{CJK, Figure, OCR}
 
   def run(opts \\ []) do
     w = Keyword.get(opts, :worker)
-    checks = List.flatten([airlock(), lm(w), physics(w), networks(), figures(w), formulas(), cjk(w), arabic(w), cyrillic(w)])
+    checks = List.flatten([airlock(), lm(w), physics(w), figures(w), formulas(), cjk(w), arabic(w), cyrillic(w)])
     %{checks: checks}
   end
 
@@ -217,30 +216,6 @@ defmodule Vapor.Quality.Round10 do
     {run.(nil), run.(60)}
   end
 
-  # -------------------------------------------------------------- networks --
-
-  defp networks do
-    ba = Graph.barabasi_albert(1000, 3, 1)
-    er = Graph.erdos_renyi(1000, 6 / 999, 2)
-    pb = Graph.power_law(Graph.degrees(ba), boot: 40)
-    pe = Graph.power_law(Graph.degrees(er), boot: 40)
-    ws = Graph.zscore(Graph.watts_strogatz(500, 10, 0.05, 4), &Graph.avg_clustering/1, 8, 5)
-    erz = Graph.zscore(Graph.erdos_renyi(500, 10 / 499, 1), &Graph.avg_clustering/1, 8, 5)
-    {g, truth} = Graph.planted(4, 50, 0.3, 0.02, 7)
-    labels = Graph.communities(g)
-    null = Graph.rewire(g, 10 * Graph.edge_count(g), 3)
-    q = Graph.modularity(g, labels)
-    q0 = Graph.modularity(null, Graph.communities(null))
-    sf = Graph.barabasi_albert(2000, 2, 3)
-
-    [check("networks: Barabási–Albert degrees, power-law verdict (Clauset–Shalizi–Newman)", pb.verdict, pe.verdict, "power_law vs not (Erdős–Rényi)",
-           pb.verdict == :power_law and pe.verdict in [:rejected, :exponential]),
-     check("networks: small-world clustering, z against the configuration null", ws.z, erz.z, "> 50 vs |z| < 3 (random graph)", ws.z > 50 and abs(erz.z) < 3),
-     check("networks: Louvain on a planted partition (NMI; modularity vs its null)", Graph.nmi(labels, truth), q0, "NMI > 0.95, Q > Q_null + 0.25",
-           Graph.nmi(labels, truth) > 0.95 and q > q0 + 0.25),
-     check("networks: scale-free robustness — giant component after 15 % random failure", Graph.percolation(sf, 0.15, :failure), Graph.percolation(sf, 0.15, :attack),
-           "> 0.9 vs attack < 0.6× failure", Graph.percolation(sf, 0.15, :failure) > 0.9 and Graph.percolation(sf, 0.15, :attack) < 0.6 * Graph.percolation(sf, 0.15, :failure))]
-  end
 
   # --------------------------------------------------------------- figures --
 

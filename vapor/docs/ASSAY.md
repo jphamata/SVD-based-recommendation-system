@@ -19,6 +19,7 @@ frase que diz se é sinal.
 | `contamination` | treino / teste | sobreposição de 13-gramas por item, o subconjunto limpo | — |
 | `dedup` | documentos | MinHash LSH (128 hashes, 16 × 8 bandas) **verificado por Jaccard exato** | erro da estimativa |
 | `scaling` | N, D, L | L = E + A/N^α + B/D^β (Hoffmann, abordagem 3: Huber em log, grade + Nelder–Mead), IC por *bootstrap*, **previsão dos maiores sem eles**, N\*(C) ótimo | perdas embaralhadas: a previsão erra 33 % e o certificado diz |
+| `geometry` (0.16) | model, item, p₁…p_k | distância de Fisher–Rao média entre cada par de modelos com IC *bootstrap*; a distância de cada um ao consenso geométrico (média de Fréchet) — [GEOMETRIA.md](GEOMETRIA.md) | os mesmos modelos com os itens embaralhados; a desigualdade triangular em toda tripla |
 
 O controle da lei de escala achou um defeito real nesta rodada: num ajuste sem estrutura os
 parâmetros em log subiam até estourar `exp`. Agora tudo fica finito e o *holdout* diz que a lei

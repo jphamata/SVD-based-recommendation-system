@@ -18,7 +18,7 @@ defmodule Vapor.Main do
   """
   alias Vapor.Alembic
 
-  @verbs ~w(alembic athanor search game crucible assay mind scene solve verify rebis aludel tabula cupel amalgam help version)
+  @verbs ~w(alembic athanor search game crucible assay mind scene solve verify rebis aludel tabula cupel amalgam chat wzn lsp help version)
 
   @doc "Entry point: run and halt with the exit status."
   def main(argv) do
@@ -54,6 +54,10 @@ defmodule Vapor.Main do
   def run(["tabula" | rest]), do: Vapor.Main.OpusCli.tabula(rest)
   def run(["cupel" | rest]), do: Vapor.Main.OpusCli.cupel(rest)
   def run(["amalgam" | rest]), do: Vapor.Main.OpusCli.amalgam(rest)
+  def run(["chat" | rest]), do: Vapor.Main.ChatCli.run(rest)
+  def run(["wzn" | rest]), do: Vapor.Main.MizanCli.run(rest)
+  def run(["mizan" | rest]), do: Vapor.Main.MizanCli.run(rest)
+  def run(["lsp" | _]), do: (Vapor.LSP.serve(); 0)
   def run([verb | _]) do
     err("vapor: unknown command #{verb}. Commands: #{Enum.join(@verbs, ", ")} (and serve, tui, ocr, merge, quality, rag, lock, train… through bin/vapor)")
     2
@@ -79,6 +83,10 @@ defmodule Vapor.Main do
       vapor aludel decide POLY --box … | REQ.json polynomial claims and barrier certificates, decided exactly
       vapor tabula FILE [--facts a,b]             a contract: antinomies, proofs of consistency, positions
       vapor cupel | vapor amalgam [FILE]          silent-corruption drill · sums that do not depend on order
+      vapor chat [new|say|show|edit|regen|fork|context|search|export|import|share …]
+                                                  conversations as a tree: branches, forks, context, compaction
+      vapor wzn check|show|run|transmute|assay FILE  Al-Mizān: claims decided (Latin or Arabic script), lowered by vapor's compiler
+      vapor lsp                                   the language server for editors (Mizān, Alembic)
       vapor serve | tui | ocr | merge | quality … the console and the older tasks (via bin/vapor)
 
     FILE may be - (standard input). Output is JSON when piped or with --json.
@@ -91,17 +99,35 @@ defmodule Vapor.Main do
   @doc "Write to standard output."
   def out(text), do: IO.puts(text)
 
-  @doc "Write to standard error."
-  def err(text), do: IO.puts(:stderr, text)
-
-  @doc "Is standard output a terminal?"
-  def tty? do
-    case System.get_env("VAPOR_TTY") do
-      "1" -> true
-      "0" -> false
-      _ -> match?({:ok, _}, :io.columns())
+  @doc "Write to standard error (inside `Vapor.Diwan`, to the session's error stream)."
+  def err(text) do
+    case Process.get(:vapor_stderr) do
+      nil -> IO.puts(:stderr, text)
+      io -> IO.puts(io, text)
     end
   end
+
+  @doc "Is standard output a terminal? (`Vapor.Diwan` decides per pipeline stage.)"
+  def tty? do
+    case Process.get(:vapor_tty) do
+      nil ->
+        case System.get_env("VAPOR_TTY") do
+          "1" -> true
+          "0" -> false
+          _ -> match?({:ok, _}, :io.columns())
+        end
+
+      v ->
+        v
+    end
+  end
+
+  @doc """
+  Whether this command runs jailed (`Vapor.Diwan` in the console's
+  terminal): files are the session's, never the server's, and nothing runs
+  outside the BEAM.
+  """
+  def jailed?, do: Process.get(:vapor_jail) != nil
 
   @doc "Should output be JSON (`--json`, or not a terminal)?"
   def json?(opts), do: Keyword.get(opts, :json, false) or not tty?()
@@ -131,9 +157,18 @@ defmodule Vapor.Main do
   end
 
   def read_input(path) do
-    case File.read(path) do
-      {:ok, d} -> {:ok, d}
-      {:error, e} -> {:error, "#{path}: #{:file.format_error(e)}"}
+    case Process.get(:vapor_jail) do
+      nil ->
+        case File.read(path) do
+          {:ok, d} -> {:ok, d}
+          {:error, e} -> {:error, "#{path}: #{:file.format_error(e)}"}
+        end
+
+      files ->
+        case Map.fetch(files, Vapor.Diwan.clean_path(path)) do
+          {:ok, d} -> {:ok, d}
+          :error -> {:error, "#{path}: no such file in this session (ls lists them; files come from > redirection, the editor or an upload)"}
+        end
     end
   end
 

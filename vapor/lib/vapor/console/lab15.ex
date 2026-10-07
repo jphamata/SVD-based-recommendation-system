@@ -413,8 +413,7 @@ defmodule Vapor.Console.Lab15 do
     bits = Enum.map(xs, &to_bits(&1, fmt))
     add = fn a, b -> to_bits(from_bits(a, fmt) + from_bits(b, fmt), fmt) end
     lr = fn list -> Enum.reduce(list, to_bits(0.0, fmt), &add.(&2, &1)) end
-    :rand.seed(:exsss, {7, 7, 7})
-    shuffles = for k <- 1..4, do: {"shuffled #{k}", Enum.shuffle(bits)}
+    shuffles = for k <- 1..4, do: {"shuffled #{k}", Vapor.Entropy.shuffled(bits, {:amalgam_desk, k})}
 
     orders =
       [{"left to right", bits}, {"right to left", Enum.reverse(bits)}, {"ascending", Enum.sort_by(bits, &from_bits(&1, fmt))},

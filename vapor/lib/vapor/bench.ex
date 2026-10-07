@@ -100,7 +100,7 @@ defmodule Vapor.Bench do
                 k: Tensor.random(:f32, [s, hkv * dh], 2), v: Tensor.random(:f32, [s, hkv * dh], 3)}
     table = T.input(:table, :s32, [1, div(s, 16)])
     slot = T.input(:slot, :s32, [1])
-    perm = Enum.shuffle(0..(div(s, 16) - 1))
+    perm = Vapor.Entropy.shuffled(Enum.to_list(0..(div(s, 16) - 1)), {:bench_pages, s})
 
     [
       {"stream y = x + 0.5 (16 M)", Program.new(y: T.add(x.(16_777_216), T.splat(0.5))), %{x: fast(16_777_216)}},

@@ -22,7 +22,7 @@ defmodule Vapor.Agent.Keys do
       case m do
         %{^subject => :shredded} -> {:shredded, m}
         %{^subject => k} -> {k, m}
-        _ -> k = :crypto.strong_rand_bytes(32); {k, Map.put(m, subject, k)}
+        _ -> k = Vapor.Entropy.bytes(32); {k, Map.put(m, subject, k)}
       end
     end)
     |> case do

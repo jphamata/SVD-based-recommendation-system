@@ -20,7 +20,7 @@ defmodule Vapor.Athanor.Session do
   @doc "Start a session for a problem; `{:ok, id}` or `{:error, why}`."
   def start(text, opts \\ []) do
     with {:ok, spec} <- Spec.parse(text, Keyword.take(opts, [:consts, :budget, :seed])) do
-      id = Base.url_encode64(:crypto.strong_rand_bytes(9), padding: false)
+      id = Vapor.Entropy.token(9)
       case DynamicSupervisor.start_child(Vapor.Athanor.Sessions, %{id: id, start: {GenServer, :start_link, [__MODULE__, {id, spec, opts}, [name: via(id)]]}, restart: :temporary}) do
         {:ok, _pid} -> {:ok, id}
         {:error, e} -> {:error, inspect(e)}

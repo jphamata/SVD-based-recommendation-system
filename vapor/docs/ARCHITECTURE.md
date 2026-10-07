@@ -460,11 +460,11 @@ está provado desde 0.6); o driver Vulkan (contido em processo).
 ## 11. Camadas sobre o núcleo
 
 Desde 0.10: pré-treino e contexto sem fim ([TREINO.md](TREINO.md)), física
-para RL e gêmeos digitais ([FISICA.md](FISICA.md)), redes complexas
-([REDES.md](REDES.md)), CJK, árabe, figuras e fórmulas ([OCR.md §3g–§3k](OCR.md)).
-Desde 0.11: cena viva, esboço e arquivos ([CENA.md](CENA.md)), descoberta de
-algoritmos ([DESCOBERTA.md](DESCOBERTA.md)), matemática ([MATEMATICA.md](MATEMATICA.md)),
-ciência ([CIENCIA.md](CIENCIA.md)), autojogo ([JOGOS.md](JOGOS.md)).
+para RL e gêmeos digitais ([FISICA.md](FISICA.md)), CJK, árabe, figuras e fórmulas ([OCR.md §3g–§3k](OCR.md)).
+Desde 0.11: cena viva, esboço e arquivos ([CENA.md](CENA.md)), matemática
+([MATEMATICA.md](MATEMATICA.md)), ciência ([CIENCIA.md](CIENCIA.md)). (Redes
+complexas, descoberta de algoritmos e o autojogo de jogo da velha saíram em
+0.16: eram demonstrações fixas — [DIRETRIZ.md §19](DIRETRIZ.md).)
 Desde 0.12: bancada, engenharia, lógica, tabuleiros, proteínas, render.
 Desde 0.13: finanças e a mesa de operações ([FINANCAS.md](FINANCAS.md)) —
 a primeira camada desde a bancada a **compilar para o núcleo** de novo: o

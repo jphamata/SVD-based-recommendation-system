@@ -138,7 +138,7 @@ defmodule Vapor.Agent.Store.File do
     File.mkdir_p!(rdir)
     final = Path.join(rdir, name(seq))
     # unique across nodes sharing the filesystem, and never truncating another's
-    tag = Base.encode16(:crypto.strong_rand_bytes(8), case: :lower)
+    tag = Base.encode16(Vapor.Entropy.bytes(8), case: :lower)
     tmp = Path.join(rdir, ".#{name(seq)}.#{tag}.tmp")
 
     try do

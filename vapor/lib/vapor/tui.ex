@@ -5,19 +5,18 @@ defmodule Vapor.TUI do
   or on a machine without a browser — no dependency, no curses.
 
       vapor> read scan.pdf          OCR of a picture or of a PDF's scanned pages
-      vapor> listen seven.wav       a spoken digit
-      vapor> draw 7 3               a handwritten 7 by diffusion (seed 3), drawn in the terminal
       vapor> add ./papers           ingest files into the session's library
       vapor> search multa contratual
       vapor> quality <text>         the calibrated noise gate
-      vapor> merge                  the fusion laboratory (regime, every method measured)
+      vapor> chat new --title notas ; chat say t… "…"   conversations (vapor chat)
+      vapor> wzn check energy.wzn | head 3              any vapor verb, with pipes and redirection
       vapor> lang pt | lang en      messages in Portuguese or English
 
   Every answer carries its measurement: OCR lines with their confidence (a
-  `?` marks a line below 80 %), the speech reader's certainty, the drawn
-  digit read back by the real-data classifier with its distance to the
-  nearest training image. Colour (ANSI) only on a terminal and never with
-  `NO_COLOR` set; otherwise plain text.
+  `?` marks a line below 80 %), the passages with their scores, the gate's
+  verdict. Every other line is `Vapor.Diwan`'s — the same interpreter as the
+  console's terminal and `bin/vapor`, so the three answer alike. Colour
+  (ANSI) only on a terminal and never with `NO_COLOR` set.
 
   `eval/2` is the whole interpreter — `(line, state) → {output, state}` —
   so it is tested without a terminal.
@@ -25,15 +24,13 @@ defmodule Vapor.TUI do
   alias Vapor.Docs.Library
 
   @words %{
-    en: %{help: "commands: read FILE · listen FILE.wav · draw DIGIT [SEED] · add PATH · search QUERY · quality TEXT · merge · athanor run FILE · game FILE solve · crucible KIND FILE · assay TOOL FILE · alembic -e EXPR · lang en|pt · quit",
-          unknown: "unknown command — type help", conf: "confidence", check: "check this line", certain: "certain",
-          reads: "the real-data classifier reads", nearest: "distance to the nearest training image", copy: "a copy would be ≈ 0",
-          added: "added", passages: "passages", nothing: "nothing found", regime: "regime", chosen: "chosen on validation",
+    en: %{help: "commands: read FILE · add PATH · search QUERY · quality TEXT · lang en|pt · quit — and every vapor verb (chat, wzn, alembic, athanor, rebis, aludel, tabula, …) with | > < ; (type: vapor help)",
+          unknown: "unknown command — type help", conf: "confidence", check: "check this line",
+          added: "added", passages: "passages", nothing: "nothing found",
           signal: "signal", noise: "noise", short: "too short to judge", bye: "bye", lib_empty: "the library is empty — add PATH first", no_text: "no text found"},
-    pt: %{help: "comandos: read ARQUIVO · listen ARQUIVO.wav · draw DÍGITO [SEMENTE] · add CAMINHO · search CONSULTA · quality TEXTO · merge · athanor run ARQUIVO · game ARQUIVO solve · crucible TIPO ARQUIVO · assay FERRAMENTA ARQUIVO · alembic -e EXPR · lang en|pt · quit",
-          unknown: "comando desconhecido — digite help", conf: "confiança", check: "confira esta linha", certain: "de certeza",
-          reads: "o classificador de dados reais lê", nearest: "distância à imagem de treino mais próxima", copy: "uma cópia daria ≈ 0",
-          added: "adicionado", passages: "passagens", nothing: "nada encontrado", regime: "regime", chosen: "escolhido na validação",
+    pt: %{help: "comandos: read ARQUIVO · add CAMINHO · search CONSULTA · quality TEXTO · lang en|pt · quit — e todo verbo do vapor (chat, wzn, alembic, athanor, rebis, aludel, tabula, …) com | > < ; (digite: vapor help)",
+          unknown: "comando desconhecido — digite help", conf: "confiança", check: "confira esta linha",
+          added: "adicionado", passages: "passagens", nothing: "nada encontrado",
           signal: "sinal", noise: "ruído", short: "curto demais para julgar", bye: "até logo", lib_empty: "a biblioteca está vazia — use add CAMINHO antes", no_text: "nenhum texto encontrado"}
   }
 
@@ -74,15 +71,10 @@ defmodule Vapor.TUI do
       [q] when q in ["quit", "exit", "q"] -> {:quit, w(st, :bye)}
       ["lang", l] when l in ["en", "pt"] -> {"ok", %{st | lang: String.to_atom(l)}}
       ["read", path] -> {read(String.trim(path), st), st}
-      ["listen", path] -> {listen(String.trim(path), st), st}
-      ["draw" | rest] -> {draw(rest, st), st}
       ["add", path] -> add(String.trim(path), st)
       ["search", q] -> {search(q, st), st}
       ["quality", text] -> {quality(text, st), st}
-      ["merge"] -> {merge(st), st}
-      [verb, rest] when verb in ~w(alembic athanor search game crucible assay mind scene solve verify) -> {bench(verb, rest), st}
-      [verb] when verb in ~w(crucible assay) -> {bench(verb, ""), st}
-      _ -> {w(st, :unknown), st}
+      _ -> diwan(line, st)
     end
   rescue
     e -> {paint(st, :red, "error: " <> Exception.message(e)), st}
@@ -92,20 +84,14 @@ defmodule Vapor.TUI do
 
   # ------------------------------------------------------------- commands --
 
-  # the open bench (0.14): the command line's verbs, their standard output captured
-  defp bench(verb, rest) do
-    args = [verb | OptionParser.split(rest)]
-    {:ok, io} = StringIO.open("")
-    old = Process.group_leader()
-    Process.group_leader(self(), io)
-    code =
-      try do
-        Vapor.Main.run(args)
-      after
-        Process.group_leader(self(), old)
-      end
-    {:ok, {_, out}} = StringIO.close(io)
-    String.trim_trailing(out) <> if(code in [0, 1], do: "", else: "\n(exit #{code})")
+  # every other line: the same interpreter as the console's terminal, on the
+  # person's own files (not jailed: this is their terminal)
+  defp diwan(line, st) do
+    d = st[:diwan] || Vapor.Diwan.new(jail: false, tty: st.tty)
+    {r, d} = Vapor.Diwan.eval(line, d)
+    out = String.trim_trailing(r.out <> r.err)
+    out = if r.code in [0, 1], do: out, else: out <> "\n(exit #{r.code})"
+    {if(r.codes == [2] and r.err =~ "unknown command", do: w(st, :unknown), else: out), Map.put(st, :diwan, d)}
   end
 
   defp read(path, st) do
@@ -143,31 +129,6 @@ defmodule Vapor.TUI do
       Enum.intersperse([head | lines], "\n")
     end
     |> Enum.intersperse("\n")
-  end
-
-  defp listen(path, st) do
-    {:ok, clip} = ok!(Vapor.Modal.Audio.read(path))
-    {:ok, model} = ok!(Vapor.Modal.Speech.load())
-    {:ok, r} = Vapor.Modal.Speech.classify(clip, model, worker: worker(st))
-    color = if r.p >= 0.6, do: :green, else: :yellow
-    [paint(st, color, r.label), "  ", pct(r.p, 1), " ", w(st, :certain), "\n", bar_line(r.probs, st)]
-  end
-
-  defp draw(args, st) do
-    {d, seed} =
-      case Enum.flat_map(args, &String.split/1) |> Enum.map(&Integer.parse/1) do
-        [{d, ""}] -> {d, 0}
-        [{d, ""}, {s, ""}] -> {d, s}
-        _ -> throw({:refused, "draw DIGIT [SEED]"})
-      end
-
-    unless d in 0..9, do: throw({:refused, "draw DIGIT [SEED] — a digit from 0 to 9"})
-    r = Vapor.Modal.Digits.draw(d, 1, seed: seed, worker: worker(st))
-    [reading] = r.readings
-    color = if reading.digit == d, do: :green, else: :red
-
-    [pixels(hd(r.images), st), "\n", w(st, :reads), " ", paint(st, color, Integer.to_string(reading.digit)), " (", pct(reading.p, 1), ")  ·  ",
-     w(st, :nearest), " ", :erlang.float_to_binary(hd(r.nearest), decimals: 1), " (", w(st, :copy), ")"]
   end
 
   defp add(path, st) do
@@ -214,36 +175,9 @@ defmodule Vapor.TUI do
     end
   end
 
-  defp merge(st) do
-    r = Vapor.Quality.Suite.merge_real(worker: worker(st))
-
-    for {label, part} <- [{"fine-tunes of one base", r.fine_tune}, {"trained separately", r.independent}] do
-      rows = Enum.map(part.rows, fn x -> "  #{String.pad_trailing(x.method, 24)} #{:erlang.float_to_binary(x.mean, decimals: 3)} bits/char" <> if(x.method == part.chosen, do: paint(st, :green, "  ← #{w(st, :chosen)}"), else: "") end)
-      [paint(st, :cyan, "#{label} · #{w(st, :regime)} #{part.diag.regime}"), "\n", Enum.intersperse(rows, "\n"), "\n"]
-    end
-  end
-
   # -------------------------------------------------------------- drawing --
 
   # an 8×8 image (0–16) as 8 rows of 2-character cells on the 24-step grey ramp
-  defp pixels(levels, st) do
-    levels
-    |> Enum.chunk_every(8)
-    |> Enum.map(fn row ->
-      for v <- row do
-        g = round(min(max(v, 0.0), 16.0) / 16 * 23)
-        if st.color, do: "\e[48;5;#{232 + g}m  \e[0m", else: String.at(" .:-=+*#%@", min(div(g * 10, 24), 9)) |> String.duplicate(2)
-      end
-    end)
-    |> Enum.intersperse("\n")
-  end
-
-  defp bar_line(probs, st) do
-    probs
-    |> Enum.with_index()
-    |> Enum.map(fn {p, i} -> "#{i} #{meter(p, st)} #{pct(p)}" end)
-    |> Enum.intersperse("\n")
-  end
 
   defp meter(x, st) do
     n = round(min(max(x, 0.0), 1.0) * 20)

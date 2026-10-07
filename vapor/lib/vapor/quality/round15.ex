@@ -177,20 +177,21 @@ defmodule Vapor.Quality.Round15 do
         _ -> false
       end
 
-    :rand.seed(:exsss, {15, 4, 4})
+    # keys, IVs and messages from a seeded stream: the same 64 cases on every run
+    bytes = fn n, rng -> if n == 0, do: {"", rng}, else: :rand.bytes_s(n, rng) end
 
-    {same, refused} =
-      for i <- 1..64, reduce: {0, 0} do
-        {s, r} ->
-          key = :crypto.strong_rand_bytes(Enum.random([16, 24, 32]))
-          iv = :crypto.strong_rand_bytes(12)
-          pt = :crypto.strong_rand_bytes(rem(i * 7, 97))
-          aad = :crypto.strong_rand_bytes(rem(i * 5, 41))
+    {{same, refused}, _} =
+      for i <- 1..64, reduce: {{0, 0}, Vapor.Entropy.rng({:round15, :gcm})} do
+        {{s, r}, rng} ->
+          {key, rng} = bytes.(Enum.at([16, 24, 32], rem(i, 3)), rng)
+          {iv, rng} = bytes.(12, rng)
+          {pt, rng} = bytes.(rem(i * 7, 97), rng)
+          {aad, rng} = bytes.(rem(i * 5, 41), rng)
           {ct, tag} = GCM.encrypt(key, iv, pt, aad)
           cipher = %{16 => :aes_128_gcm, 24 => :aes_192_gcm, 32 => :aes_256_gcm}[byte_size(key)]
           {ct2, tag2} = :crypto.crypto_one_time_aead(cipher, key, iv, pt, aad, true)
           <<t0, trest::binary>> = tag
-          {s + if({ct, tag} == {ct2, tag2}, do: 1, else: 0), r + if(GCM.decrypt(key, iv, ct, aad, <<bxor(t0, 1), trest::binary>>) == :error, do: 1, else: 0)}
+          {{s + if({ct, tag} == {ct2, tag2}, do: 1, else: 0), r + if(GCM.decrypt(key, iv, ct, aad, <<bxor(t0, 1), trest::binary>>) == :error, do: 1, else: 0)}, rng}
       end
 
     n = 400

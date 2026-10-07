@@ -69,9 +69,10 @@ perfeito, dos dois lados: em 3×3×3, 300 partidas de treino, com 8
 simulações a rede treinada perde **24 de 114** linhas; a mesma busca sem
 treino (controle) perde **165 de 205**.
 
-Honestamente: o aprendiz especializado de 0.11 (`Vapor.Games`) perde 17
-de 129 com 8 simulações — o genérico é um pouco pior no mesmo jogo
-(21 % contra 13 %), em troca de servir a qualquer jogo.
+Honestamente: o aprendiz especializado de 0.11 (`Vapor.Games`, retirado em
+0.16 em favor deste) perdia 17 de 129 com 8 simulações — o genérico é um
+pouco pior no mesmo jogo (21 % contra 13 %), em troca de servir a qualquer
+jogo.
 
 ## 7. Comparação com o que existe
 

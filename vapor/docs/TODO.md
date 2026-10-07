@@ -1,10 +1,31 @@
-# Pendências — estado em 2026-10-07 (0.15.0)
+# Pendências — estado em 2026-10-07 (0.16.0)
 
 Só o que está **aberto**. O que foi fechado está no [CHANGELOG](../CHANGELOG.md),
 com o teste que o prova. Cada item diz por que importa e o que o fecha;
 ◐ = feito em parte (o que falta está escrito). Os itens dos anexos das
-rodadas 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14 e 0.15 que ficaram de fora estão aqui com o motivo
-([DIRETRIZ.md §9, §11–§18](DIRETRIZ.md)).
+rodadas 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15 e 0.16 que ficaram de fora estão aqui com o motivo
+([DIRETRIZ.md §9, §11–§19](DIRETRIZ.md)).
+
+## Rodada 0.16 — o que ficou aberto
+
+- ☐ **Conversas: *streaming***. Hoje a resposta chega inteira; o servidor já transmite em
+  `/v1/chat/completions` — falta ligar `Majlis.reply` a um *stream* (o nó só é escrito no fim, então
+  a atomicidade não muda) e a página a mostrá-lo.
+- ☐ **Conversas: anexos** (imagens e documentos na mensagem, guardados por hash na Khazāna, lidos
+  pelos leitores do vapor com proveniência) e **memória entre conversas** (fatos fixados que valem
+  para todas, com a mesma barra de contexto mostrando o custo).
+- ☐ **Conversas: agente com passos visíveis** na página (hoje o diário fica guardado e verificável por
+  `GET /v1/vapor/journal/:id`, mas a página mostra só a resposta).
+- ☐ **Mīzān**: fechar as exportações Lean com `lake` quando presente (o livro-razão as marca como
+  devidas); quantificadores limitados sobre inteiros (Presburger) como quarto decisor; `import`
+  entre arquivos com hash fixado (o embrião da Khazāna P2P).
+- ☐ **Khazāna P2P** (o manifesto): dependências por conteúdo trocadas entre pares — precisa antes de
+  um modelo de confiança (quem assina o quê), senão é um vetor de cadeia de suprimentos.
+- ☐ **A raiz da Khazāna provada em Lean** (o protocolo de dois slots), como o ASAS §11 também deve.
+- ☐ **Memória fraca** do protocolo `/dev/shm` do *worker* (litmus contra um modelo RVWMO/TSO) — no
+  livro-razão como devido.
+- ☐ **Editores**: abrir de fato a extensão no VS Code, o *plugin* no Neovim e o modo no Emacs numa
+  máquina que os tenha (aqui só o servidor e os formatos são testados); publicar a extensão.
 
 ## Rodada 0.15 — o que ficou aberto
 

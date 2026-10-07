@@ -45,13 +45,7 @@ defmodule Vapor.ConsoleTest do
     assert {200, %{"content-type" => "image/png"}, <<137, "PNG", _::binary>>} = get(b, "/icon-192.png")
   end
 
-  test "draw: a generated digit, read back by the real-data classifier, never a copy; bad requests refused", %{base: b} do
-    assert {200, j} = post(b, "/v1/vapor/draw", %{digit: 4, seed: 2, steps: 20})
-    assert j["reading"]["digit"] == 4 and length(j["image"]) == 64 and length(j["trace"]) == 20
-    assert j["nearest_train"] > 5.0
-    # the same request is the same image
-    assert {200, ^j} = post(b, "/v1/vapor/draw", %{digit: 4, seed: 2, steps: 20}) |> then(fn {s, x} -> {s, %{x | "ms" => j["ms"]}} end)
-    assert {400, _} = post(b, "/v1/vapor/draw", %{digit: 12})
+  test "a picture the readers cannot read is refused by name", %{base: b} do
     assert {400, _} = post(b, "/v1/vapor/ocr", %{name: "x.bin", data: Base.encode64("hello")})
   end
 
@@ -154,12 +148,16 @@ defmodule Vapor.ConsoleTest do
     assert Enum.all?(t["cells"], &(length(&1["box"]) == 4))
   end
 
-  test "audit: the demonstration dossier verifies; an uploaded one with a flipped byte does not, by name", %{base: b} do
-    assert {200, j} = post(b, "/v1/vapor/audit/demo", %{})
+  test "audit: a dossier verifies with its clauses and anchors; one with a flipped byte does not, by name", %{base: b} do
+    q = Path.join(["docs", "bench", "quality.json"])
+    %{dossier: d, log_key: lk} = Vapor.Audit.demo(quality: if(File.regular?(q), do: File.read!(q)))
+    assert Vapor.Audit.html(d) =~ "<script>"
+    dossier = Base.encode64(Vapor.Audit.encode(d))
+    assert {200, j} = post(b, "/v1/vapor/audit", %{data: dossier, log_key: lk.verifier})
     assert j["ok"] and j["root_ok"] and length(j["items"]) >= 4
     assert Enum.all?(j["items"], &(&1["clauses"] != [])) and map_size(j["clauses"]) >= 12
-    assert j["html"] =~ "<script>"
     assert [%{"check" => "ok"}] = j["anchors"]
+    j = Map.merge(j, %{"dossier" => dossier, "log_key" => lk.verifier})
 
     bin = Base.decode64!(j["dossier"])
     assert {200, again} = post(b, "/v1/vapor/audit", %{data: j["dossier"], log_key: j["log_key"]})
@@ -192,7 +190,7 @@ defmodule Vapor.ConsoleTest do
   end
 
   @tag :native
-  test "0.11 over HTTP: a living scene analysed, directed and exported; sketch, proof, discovery, archive round trip", %{base: b} do
+  test "0.11 over HTTP: a living scene analysed, directed and exported; a sketch; an archive round trip", %{base: b} do
     {200, sc} = post(b, "/v1/vapor/scene/analyze", %{name: "sample:outdoor"})
     assert hd(sc["layers"])["kind"] == "sky" and sc["walk"]["cols"] > 0
     {200, d} = post(b, "/v1/vapor/scene/direct", %{prompt: "noite de chuva, xyzzy"})
@@ -203,17 +201,10 @@ defmodule Vapor.ConsoleTest do
     assert html =~ "SceneEngine.create" and html =~ "data:image/png;base64,"
     {200, sk} = post(b, "/v1/vapor/sketch", %{name: "sample:plan", mode: "plan"})
     assert length(sk["rooms"]) == 2 and String.starts_with?(sk["image"], "data:image/png")
-    {200, pr} = post(b, "/v1/vapor/prove", %{theorem: "euler_line"})
-    assert pr["verdict"] == "proved" and pr["check"] == "holds"
-    {200, net} = post(b, "/v1/vapor/discover", %{task: "network", n: 5})
-    assert net["size"] == 9 and net["sorts"]
-    {200, ar} = post(b, "/v1/vapor/archive", %{kind: "discover.sorting_network", recipe: %{n: 5}})
+    {200, ar} = post(b, "/v1/vapor/archive", %{kind: "prove.homology", recipe: %{complex: "torus"}})
     {200, ck} = post(b, "/v1/vapor/archive/check", %{data: ar["data"]})
     assert ck["intact"] and ck["replay"] == "{:ok, :same}"
     # refusals by name
-    assert {400, %{"error" => %{"message" => m}}} = post(b, "/v1/vapor/prove", %{theorem: "fermat"})
-    assert m =~ "theorem: one of"
     assert {400, _} = post(b, "/v1/vapor/scene/analyze", %{name: "sample:nope"})
-    assert {400, _} = post(b, "/v1/vapor/games/move", %{board: [1, 2]})
   end
 end

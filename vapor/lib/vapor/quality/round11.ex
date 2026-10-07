@@ -2,20 +2,16 @@ defmodule Vapor.Quality.Round11 do
   @moduledoc """
   Quality checks for the 0.11 round, in the suite's discipline: a value, a
   **control** that a broken or naive implementation would produce, and a
-  threshold that separates them.
+  threshold that separates them. (Algorithm discovery and self-play left
+  with their demonstrations in 0.16 — DIRETRIZ §19.)
 
   | check | value | control (must fail) |
   |---|---|---|
-  | sorting networks | sizes found for n = 3…8 equal the known optima | random comparators, redundant ones pruned |
-  | bit-trick synthesis | ⌊(x+y)/2⌋ in 4 operations, nothing in 3, verified to 32 bits | the naive (x+y)>>1 overflows |
-  | matrix multiplication | a 7-product 2×2 algorithm, exact over the integers | rank 6 (impossible): never found |
   | geometry | true theorems proved, symbolically and in exact rationals | false statements of the same shape: refuted by both |
   | conjectures | Euler line and the nine-point circle found unasked | trivially collinear triples: none reported |
   | homology | Betti numbers of the classics; torsion of Klein and RP² | GF(2) alone cannot tell torus from Klein |
   | persistence | one long H₁ bar for a noisy loop | a blob: no long bar |
   | science (11) | each experiment against its closed form or published value | each its own control |
-  | self-play | every optimal line of perfect play: < 20 % lost at 8 sims, none at 128 | the same search untrained loses > 80 % at 8 |
-  | domain randomisation | shifted cart-poles held up | the policy trained on one cart-pole |
   | living scene | sky at infinity, horizon, ground walkable, warm light at the hearth | — |
   | drawing rig | four limb ends where they were drawn | — |
   | direction | prompts → operations, unknown words reported | a nonsense word: reported, not guessed |
@@ -24,32 +20,16 @@ defmodule Vapor.Quality.Round11 do
   | archives | intact archive verifies and replays to the same result | one flipped byte: caught |
   """
   import Bitwise
-  alias Vapor.{Archive, Discover, Games, Prove, Scene, Science, Sketch}
+  alias Vapor.{Archive, Prove, Scene, Science, Sketch}
 
   def run(_opts \\ []) do
-    %{checks: List.flatten([discovery(), mathematics(), science(), games(), scene(), sketch(), archives()])}
+    %{checks: List.flatten([mathematics(), science(), scene(), sketch(), archives()])}
   end
 
   defp check(name, value, control, threshold, pass), do: %{name: name, value: value, control: control, threshold: threshold, pass: pass}
   defp p(rel), do: Path.join(to_string(:code.priv_dir(:vapor)), rel)
   defp picture(rel), do: elem(Vapor.Docs.Pictures.read(:png, File.read!(p(rel))), 1).image
 
-  defp discovery do
-    nets = for n <- 3..8, do: Discover.network(n)
-    optimal = Enum.count(nets, &(&1.sorts and &1.size == &1.known.size))
-    rnd = Discover.random_network(8, 1)
-    # the certificate is not vacuous: every comparator of every network found is needed
-    essential = Enum.all?(nets, fn r -> Enum.all?(0..(r.size - 1), fn i -> not Discover.sorts?(r.n, List.delete_at(r.net, i)) end) end)
-    {:ok, avg} = Discover.synthesize("average")
-    short = Discover.synthesize("average", max_ops: 3)
-    naive = Discover.verify({:shr1, {:add, {:var, 0}, {:var, 1}}}, Discover.specs()["average"], 8, :all)
-    {:ok, mm} = Discover.matmul(2, 7, tries: 30, seed: 1)
-    r6 = Discover.matmul(2, 6, tries: 10, seed: 1)
-
-    [check("discovery: sorting networks — sizes equal to the known optima, n = 3…8 (certified by the 0-1 principle)", "#{optimal}/6", rnd.size, "6/6; removing any comparator breaks each; random-and-pruned n = 8 larger than 19", optimal == 6 and essential and rnd.size > 19),
-     check("discovery: ⌊(x+y)/2⌋ without overflow — shortest program, verified on 8/16/32 bits", "#{avg.ops} ops: #{avg.text}", naive, "4 ops, none in 3, verified; the naive (x+y)>>1 fails", avg.ops == 4 and match?({:error, _}, short) and avg.verified == %{w8: true, w16: true, w32: true} and not naive),
-     check("discovery: 2×2 matrix product in 7 multiplications, exact over the integers", "rank #{mm.rank}, #{mm.adds} additions", inspect(r6), "exact; rank 6 never found (Winograd 1971)", Discover.bilinear_ok?(2, mm) and match?({:error, {:not_found, _}}, r6))]
-  end
 
   defp mathematics do
     ths = Prove.theorems() |> Enum.reject(fn {n, _} -> n =~ "simson" end) |> Map.new()
@@ -80,19 +60,6 @@ defmodule Vapor.Quality.Round11 do
     end
   end
 
-  defp games do
-    {:ok, n, _} = Games.load()
-    {t8, u8} = {Games.versus_every_optimal_line(n, 8), Games.versus_every_optimal_line(Games.net(1), 8)}
-    t128 = Games.versus_every_optimal_line(n, 128)
-    runs = for seed <- 1..3, do: {Games.robustness(Games.train_cartpole(seed: seed).w), Games.robustness(Games.train_cartpole(seed: seed, randomize: true).w)}
-    nominal = Enum.sum(for {a, _} <- runs, do: a.shifted) / 3
-    randomized = Enum.sum(for {_, b} <- runs, do: b.shifted) / 3
-
-    [check("self-play: the tic-tac-toe network against every optimal line of perfect play (lines lost, 8 simulations; 128)", "#{t8.losses}/#{t8.lines}; #{t128.losses}/#{t128.lines}",
-           "#{u8.losses}/#{u8.lines}", "< 20 % at 8 (the untrained search, the control: > 80 %); none at 128",
-           t8.losses / t8.lines < 0.2 and u8.losses / u8.lines > 0.8 and t128.losses == 0),
-     check("domain randomisation: steps up on four unseen cart-poles (mean of 3 seeds)", randomized, nominal, "≥ 400 and > the nominal policy + 100", randomized >= 400 and randomized > nominal + 100)]
-  end
 
   defp scene do
     s = Scene.analyze(picture("quality/scene/outdoor.png"))

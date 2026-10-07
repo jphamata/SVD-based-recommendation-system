@@ -1,0 +1,17 @@
+; A harmonic oscillator: its energy is conserved along the flow — proved over ℚ.
+(claim kinetic (root H-s-b) (wazn fail)
+  (inputs (v q))
+  (body (* 1/2 v v)))
+
+(claim energy (root H-f-Z) (wazn burhan)
+  (inputs (x q) (v q))
+  (field (x v) (v (- x)))
+  (proof conserved)
+  (body (+ (kinetic v) (* 1/2 x x))))
+
+; the same law, damped: the decider refuses it and says where
+(claim damped-energy (root H-f-Z) (wazn burhan)
+  (inputs (x q) (v q))
+  (field (x v) (v (- (- x) (* 1/10 v))))
+  (proof conserved)
+  (body (+ (kinetic v) (* 1/2 x x))))
