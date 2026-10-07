@@ -86,13 +86,13 @@ defmodule Vapor.Main.AthanorCli do
     fn x ->
       show = Alembic.show(x)
       json = Vapor.JSON.encode(Alembic.to_data(x))
-      case System.cmd("sh", ["-c", cmd], env: [{"VAPOR_CANDIDATE", show}, {"VAPOR_CANDIDATE_JSON", json}], stderr_to_stdout: false) do
-        {out, 0} ->
+      case Vapor.Main.Measure.run(cmd, [{"VAPOR_CANDIDATE", show}, {"VAPOR_CANDIDATE_JSON", json}]) do
+        {:ok, out} ->
           case Regex.scan(~r/-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?/, out) |> List.last() do
             [n] -> {:ok, (case Integer.parse(n) do {i, ""} -> i; _ -> String.to_float(normalize(n)) end)}
             nil -> {:error, "the command printed no number"}
           end
-        {_, code} -> {:error, "the command exited with #{code}"}
+        {:error, _} = e -> e
       end
     end
   end

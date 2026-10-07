@@ -20,14 +20,18 @@ defmodule Vapor.AuditTest do
       refute src =~ re, "#{inspect(re)} in #{path}"
     end
 
-    # OS processes: the two substrates that run generated code (isolated), and
-    # the MCP client, which runs an operator-named tool server and never
+    # OS processes: the two substrates that run generated code (isolated), the
+    # MCP client, which runs an operator-named tool server, and the Athanor's
+    # external measure, an operator-named command with a deadline — never
     # generated code
     ports = for p <- @lib, File.read!(p) =~ "Port.open", do: p
-    assert Enum.sort(ports) == ["lib/vapor/agent/mcp.ex", "lib/vapor/runtime/fabric.ex", "lib/vapor/runtime/worker.ex"]
+    assert Enum.sort(ports) == ["lib/vapor/agent/mcp.ex", "lib/vapor/main/measure.ex", "lib/vapor/runtime/fabric.ex", "lib/vapor/runtime/worker.ex"]
     mcp = File.read!("lib/vapor/agent/mcp.ex")
     assert [_] = Regex.scan(~r/Port\.open/, mcp)
     assert mcp =~ "Keyword.fetch!(opts, :cmd)"
+    measure = File.read!("lib/vapor/main/measure.ex")
+    assert [_] = Regex.scan(~r/Port\.open/, measure)
+    assert measure =~ "deadline"
   end
 
   test "the control plane has no dependencies" do
