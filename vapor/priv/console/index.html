@@ -762,6 +762,87 @@ nav button[aria-selected="true"] b { color: var(--ink); }
 .furnace .laws li small { color: rgba(236,228,211,.55); }
 @media (max-width: 1000px) { .bench { grid-template-columns: 1fr; } .vessel textarea.code { min-height: 260px; } }
 @media (max-width: 600px) { .streak, .streak svg { width: 128px; } h2 { font-size: 30px; } .propose { grid-template-columns: 1fr; } }
+
+/* ===================================================================== 0.15
+   Opus: five vessels of the bench. Each carries its answer in one bold
+   element: the seal between two vessels (≡ gold, ≢ cinnabar), the box cut
+   into certified cells, the tablet's clashing lines, the 32 bits of a float
+   filled by what a check can see, one gold mark among scattered sums. */
+.op-pair { display: grid; grid-template-columns: minmax(0, 1fr) 84px minmax(0, 1fr); gap: 12px; max-width: 1180px; align-items: start; }
+.op-pair .op-vessel[hidden] { display: none; }
+.op-pair:has(.op-vessel[hidden]) { grid-template-columns: minmax(0, 1fr) 84px; }
+.op-vessel textarea.code { min-height: 300px; border-radius: 10px; background: var(--slab); border-color: var(--rule); width: 100%; }
+.vtag { font: italic 600 20px var(--head); color: var(--sand); }
+.seal-col { display: grid; place-items: center; padding-top: 120px; }
+.seal-col[hidden] { display: none; }
+svg.seal { width: 76px; height: 76px; }
+svg.seal .lobe, svg.seal .disc { fill: var(--lead); } svg.seal .glyph { font: 600 30px var(--head); fill: var(--mist); }
+svg.seal.ok .lobe, svg.seal.ok .disc { fill: var(--gold); } svg.seal.ok .glyph { fill: var(--soot); }
+svg.seal.no .lobe, svg.seal.no .disc { fill: var(--ember); }
+svg.seal .disc { stroke: rgba(0,0,0,.18); stroke-width: 1; }
+@media (prefers-reduced-motion: no-preference) { svg.seal { transition: transform .25s ease; } svg.seal.ok, svg.seal.no { transform: rotate(-8deg); } }
+.op-row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; margin: 12px 0; max-width: 1180px; }
+.op-form { display: grid; gap: 10px; max-width: 760px; margin: 0 0 6px; }
+.op-form textarea.code { min-height: 64px; }
+.op-field { display: grid; gap: 3px; font-size: 13px; color: var(--silt); }
+.op-field > span:first-child { font: italic 14px var(--head); }
+.op-num { width: 7.5em; } .op-text { min-width: 16em; font-family: var(--mono); } .op-small { min-width: 0; width: 5.5em; }
+.op-num, .op-text { padding: 5px 8px; border: 1px solid var(--rule); border-radius: 7px; background: var(--mist); }
+.op-box { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--mono); color: var(--ink); }
+.op-iv { white-space: nowrap; }
+.op-field .seg { justify-self: start; }
+.op-check { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: end; font-size: 14px; }
+.op-check > label { display: inline-flex; align-items: center; gap: 6px; font: italic 14px var(--head); color: var(--silt); }
+.op-fig { margin: 12px 0; }
+.bitwords { display: grid; gap: 6px; margin: 6px 0 10px; }
+.bitword { display: grid; grid-template-columns: 2.5em auto 1fr; gap: 10px; align-items: center; }
+.bitword b { font-family: var(--mono); }
+.bits { display: inline-flex; gap: 2px; flex-wrap: wrap; }
+.bits i { width: 11px; height: 15px; border-radius: 2px; background: var(--slab); box-shadow: inset 0 0 0 1px var(--rule); }
+.bits i.on { background: var(--ember); box-shadow: none; }
+.qstrip { display: flex; flex-wrap: wrap; gap: 2px; max-width: 1000px; margin: 6px 0; }
+.qstrip i { width: 9px; height: 18px; border-radius: 2px; background: var(--slab); box-shadow: inset 0 0 0 1px var(--rule); }
+.qstrip i.on { background: var(--lock); box-shadow: none; } .qstrip i.rnd { outline: 2px solid var(--gold); outline-offset: 1px; }
+.anf { margin: 0 0 12px; } .anf h3 { margin: 0; font-family: var(--mono); font-size: 15px; }
+.anf-text { display: block; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; background: var(--slab); padding: 8px 10px; border-radius: 8px; max-width: 1000px; }
+svg.aludel-box, svg.phase { width: 100%; max-width: 440px; height: auto; display: block; }
+.aludel-box .frame, .phase .frame { fill: var(--slab); stroke: var(--rule); stroke-width: 1.5; }
+.aludel-box .leaf { fill: var(--lock-soft); stroke: var(--gold); stroke-width: .7; }
+.aludel-box .pending { fill: none; stroke: var(--lead); stroke-width: 2.5; stroke-dasharray: 4 3; }
+.aludel-box .refute { fill: var(--ember); stroke: var(--mist); stroke-width: 2; }
+.aludel-box .axt, .phase .axt { fill: var(--silt); font: 11px var(--body); }
+.phase .init { fill: var(--lock); opacity: .35; } .phase .unsafe { fill: var(--ember); opacity: .35; }
+.phase .flow { stroke: var(--silt); stroke-width: 1; opacity: .75; } .phase .flowtip { fill: var(--silt); }
+.phase .bzero { fill: none; stroke: var(--gold); stroke-width: 2.6; stroke-linecap: round; }
+.legend .linit { background: var(--lock); height: 10px; opacity: .5; } .legend .lunsafe { background: var(--ember); height: 10px; opacity: .5; } .legend .lbzero { background: var(--gold); }
+.facts-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0; }
+.fact { border: 1px solid var(--rule); background: none; border-radius: 999px; padding: 2px 12px; font: 13px var(--mono); cursor: pointer; color: var(--silt); }
+.fact.on { background: var(--sand); border-color: var(--sand); color: var(--on-sand, #FFF8E6); }
+.tabula-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 22px; max-width: 1180px; align-items: start; }
+.tablet { list-style: none; margin: 0; padding: 14px 16px; background: linear-gradient(175deg, var(--slab), var(--mist)); border-radius: 4px 14px 4px 14px; box-shadow: inset 0 0 0 1px var(--rule); counter-reset: none; }
+.tablet li { display: grid; grid-template-columns: 3.4em 1fr; gap: 8px; padding: 4px 6px; border-radius: 6px; font-size: 14px; color: var(--silt); border-left: 3px solid transparent; }
+.tablet li b { font-family: var(--mono); color: var(--ink); }
+.tablet li.active { color: var(--ink); border-left-color: var(--lock); }
+.tablet li.over { text-decoration: line-through; text-decoration-color: var(--sand); opacity: .7; }
+.tablet li.clash { border-left-color: var(--ember); }
+.tablet li.hl { background: var(--lock-soft); }
+.clash { display: grid; gap: 2px; padding: 10px 12px; margin: 0 0 8px; border-radius: 8px; background: var(--slab); border-left: 4px solid var(--ember); }
+.clash.conflict { border-left-color: var(--sand); } .clash.resolved { border-left-color: var(--gold); } .clash.silence { border-left-color: var(--rule); }
+.clash b { font-family: var(--mono); font-size: 13px; } .clash small { color: var(--silt); }
+.clash button { justify-self: start; margin-top: 4px; }
+.claims { margin: 4px 0 0; padding-left: 18px; font-size: 14px; }
+.float32 { display: flex; gap: 10px; align-items: end; margin: 14px 0 6px; flex-wrap: wrap; }
+.fgroup { display: grid; gap: 4px; } .fgroup small { font: italic 13px var(--head); color: var(--silt); }
+.fgroup .cells { display: flex; gap: 2px; }
+.bitcell { position: relative; width: 17px; height: 58px; background: var(--stone); border-radius: 3px; overflow: hidden; }
+.bitcell i { position: absolute; left: 0; right: 0; bottom: 0; background: var(--gold); }
+.fgroup.sign .bitcell i { background: var(--gold); } .fgroup.man .bitcell { width: 13px; }
+svg.amalgam-line { width: 100%; max-width: 640px; height: auto; display: block; }
+.amalgam-line .axis { stroke: var(--rule); stroke-width: 2; }
+.amalgam-line .naive { fill: var(--lead); opacity: .85; }
+.amalgam-line .mark { stroke: var(--gold); stroke-width: 4; stroke-linecap: round; }
+.amalgam-line .marktext { fill: var(--ink); font: italic 13px var(--head); }
+@media (max-width: 900px) { .op-pair, .tabula-grid { grid-template-columns: 1fr; } .seal-col { padding-top: 0; } }
 </style>
 </head>
 <body>
@@ -778,6 +859,12 @@ nav button[aria-selected="true"] b { color: var(--ink); }
       <button role="tab" aria-selected="true" aria-controls="p-work" id="t-work"><b data-i18n="work">Workspace</b><span data-i18n="work_s">any problem, searched and checked</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-crucible" id="t-crucible"><b data-i18n="crucible">Crucible</b><span data-i18n="crucible_s">your own system, with its evidence</span></button>
       <button role="tab" aria-selected="false" aria-controls="p-assay" id="t-assay"><b data-i18n="assay">Assay</b><span data-i18n="assay_s">model evaluations: signal or noise</span></button>
+      <div class="group" data-i18n="g_opus">Opus</div>
+      <button role="tab" aria-selected="false" aria-controls="p-rebis" id="t-rebis"><b data-i18n="rebis">Rebis</b><span data-i18n="rebis_s">two circuits, one function?</span></button>
+      <button role="tab" aria-selected="false" aria-controls="p-aludel" id="t-aludel"><b data-i18n="aludel">Aludel</b><span data-i18n="aludel_s">polynomial claims, barriers</span></button>
+      <button role="tab" aria-selected="false" aria-controls="p-tabula" id="t-tabula"><b data-i18n="tabula">Tabula</b><span data-i18n="tabula_s">contracts without antinomies</span></button>
+      <button role="tab" aria-selected="false" aria-controls="p-cupel" id="t-cupel"><b data-i18n="cupel">Cupel</b><span data-i18n="cupel_s">silent corruption, caught</span></button>
+      <button role="tab" aria-selected="false" aria-controls="p-amalgam" id="t-amalgam"><b data-i18n="amalgam">Amalgam</b><span data-i18n="amalgam_s">sums without order</span></button>
       <div class="group" data-i18n="g_ask">Ask</div>
       <button role="tab" aria-selected="false" aria-controls="p-chat" id="t-chat"><b data-i18n="chat">Chat</b><span data-i18n="chat_s">answers with their sources</span></button>
       <div class="group" data-i18n="g_solve">Solve</div>
@@ -833,6 +920,11 @@ nav button[aria-selected="true"] b { color: var(--ink); }
     <section role="tabpanel" id="p-work" aria-labelledby="t-work"><div id="wb-work"></div></section>
     <section role="tabpanel" id="p-crucible" aria-labelledby="t-crucible" hidden><div id="wb-crucible"></div></section>
     <section role="tabpanel" id="p-assay" aria-labelledby="t-assay" hidden><div id="wb-assay"></div></section>
+    <section role="tabpanel" id="p-rebis" aria-labelledby="t-rebis" hidden><div id="op-rebis"></div></section>
+    <section role="tabpanel" id="p-aludel" aria-labelledby="t-aludel" hidden><div id="op-aludel"></div></section>
+    <section role="tabpanel" id="p-tabula" aria-labelledby="t-tabula" hidden><div id="op-tabula"></div></section>
+    <section role="tabpanel" id="p-cupel" aria-labelledby="t-cupel" hidden><div id="op-cupel"></div></section>
+    <section role="tabpanel" id="p-amalgam" aria-labelledby="t-amalgam" hidden><div id="op-amalgam"></div></section>
     <section role="tabpanel" id="p-chat" aria-labelledby="t-chat" hidden>
       <h2 data-i18n="chat">Chat</h2>
       <p class="lede" data-i18n="chat_lede"></p>
@@ -4344,5 +4436,6 @@ wireDrop($("ar-drop"), $("ar-file"), async (fs) => {
 <script src="/bancada.js"></script>
 <script src="/mercado.js"></script>
 <script src="/athanor.js"></script>
+<script src="/opus.js"></script>
 </body>
 </html>

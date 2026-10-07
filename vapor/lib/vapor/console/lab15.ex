@@ -45,35 +45,35 @@ defmodule Vapor.Console.Lab15 do
   def info do
     %{
       rebis: [
-        %{id: "adders", title: "Two 8-bit adders", about: "ripple-carry against Kogge–Stone: the same function, proved by truth table (2¹⁶ patterns)",
+        %{id: "adders", title_pt: "Dois somadores de 8 bits", about_pt: "ripple-carry contra Kogge–Stone: a mesma função, provada por tabela-verdade (2¹⁶ padrões)", title: "Two 8-bit adders", about: "ripple-carry against Kogge–Stone: the same function, proved by truth table (2¹⁶ patterns)",
           op: "equivalent", a: Gen.ripple(8), b: Gen.kogge_stone(8)},
-        %{id: "adders16", title: "Two 16-bit adders", about: "beyond the truth table: random simulation, then a miter whose UNSAT proof (DRUP) is checked",
+        %{id: "adders16", title_pt: "Dois somadores de 16 bits", about_pt: "além da tabela-verdade: simulação aleatória, depois um miter cuja prova UNSAT (DRUP) é conferida", title: "Two 16-bit adders", about: "beyond the truth table: random simulation, then a miter whose UNSAT proof (DRUP) is checked",
           op: "equivalent", a: Gen.ripple(16), b: Gen.kogge_stone(16)},
-        %{id: "trojan", title: "A 32-bit trojan", about: "one output flipped when a = 0xDEADBEEF: 4096 random patterns miss it, the miter finds the trigger, shrinking leaves exactly it",
+        %{id: "trojan", title_pt: "Um cavalo de Troia de 32 bits", about_pt: "uma saída invertida quando a = 0xDEADBEEF: 4096 padrões aleatórios não o veem, o miter acha o gatilho, o encolhimento deixa só ele", title: "A 32-bit trojan", about: "one output flipped when a = 0xDEADBEEF: 4096 random patterns miss it, the miter finds the trigger, shrinking leaves exactly it",
           op: "equivalent", a: Gen.ripple(32), b: Gen.ripple(32, trojan: 0xDEADBEEF)},
-        %{id: "multiplier", title: "An 8-bit multiplier", about: "m = a·b proved by algebra over ℤ (the circuit's Gröbner basis), where SAT is exponential",
+        %{id: "multiplier", title_pt: "Um multiplicador de 8 bits", about_pt: "m = a·b provado por álgebra sobre ℤ (a base de Gröbner do circuito), onde o SAT é exponencial", title: "An 8-bit multiplier", about: "m = a·b proved by algebra over ℤ (the circuit's Gröbner basis), where SAT is exponential",
           op: "identity", a: Gen.multiplier(8), spec: "m[16] = a[8] * b[8]"},
-        %{id: "anf", title: "A full adder's ANF", about: "the Zhegalkin polynomial of each output, by the Möbius transform", op: "anf", a: @full_adder},
-        %{id: "ghz", title: "A 64-qubit GHZ state", about: "Clifford circuits by the stabilizer tableau: one random outcome, 63 that follow it",
+        %{id: "anf", title_pt: "A FNA de um somador completo", about_pt: "o polinômio de Zhegalkin de cada saída, pela transformada de Möbius", title: "A full adder's ANF", about: "the Zhegalkin polynomial of each output, by the Möbius transform", op: "anf", a: @full_adder},
+        %{id: "ghz", title_pt: "Um estado GHZ de 64 qubits", about_pt: "circuitos de Clifford pelo tableau de estabilizadores: um resultado aleatório, 63 que o seguem", title: "A 64-qubit GHZ state", about: "Clifford circuits by the stabilizer tableau: one random outcome, 63 that follow it",
           op: "stabilizer", n: 64, a: "h 0\n" <> Enum.map_join(1..63, "\n", &"cx 0 #{&1}") <> "\n" <> Enum.map_join(0..63, "\n", &"m #{&1}")}
       ],
       aludel: [
-        %{id: "motzkin", title: "Motzkin + 1/1000 > 0", about: "non-negative but no sum of squares: Bernstein subdivision certifies the strict form on a box",
+        %{id: "motzkin", title_pt: "Motzkin + 1/1000 > 0", about_pt: "não negativo mas não é soma de quadrados: a subdivisão de Bernstein certifica a forma estrita numa caixa", title: "Motzkin + 1/1000 > 0", about: "non-negative but no sum of squares: Bernstein subdivision certifies the strict form on a box",
           op: "decide", vars: "x, y", poly: "x^4*y^2 + x^2*y^4 - 3*x^2*y^2 + 1 + 1/1000", box: [["-2", "2"], ["-2", "2"]], sense: "pos"},
-        %{id: "motzkin0", title: "Motzkin ≥ 0", about: "its zeros sit where Bernstein enclosures cannot close: the verdict is 'exhausted', with the cell — never a guess",
+        %{id: "motzkin0", title_pt: "Motzkin ≥ 0", about_pt: "seus zeros ficam onde os envoltórios de Bernstein não fecham: o veredito é 'esgotado', com a célula — nunca um palpite", title: "Motzkin ≥ 0", about: "its zeros sit where Bernstein enclosures cannot close: the verdict is 'exhausted', with the cell — never a guess",
           op: "decide", vars: "x, y", poly: "x^4*y^2 + x^2*y^4 - 3*x^2*y^2 + 1", box: [["-2", "2"], ["-2", "2"]], sense: "nonneg"},
-        %{id: "refute", title: "A claim that fails", about: "refuted at an exact vertex with its exact value",
+        %{id: "refute", title_pt: "Uma afirmação que falha", about_pt: "refutada num vértice exato com o seu valor exato", title: "A claim that fails", about: "refuted at an exact vertex with its exact value",
           op: "decide", vars: "x, y", poly: "x^2*y - 3/2 + y^2", box: [["-1", "1"], ["-1", "1"]], sense: "nonneg"},
-        %{id: "oscillator", title: "A damped oscillator, barrier given", about: "ẋ = y, ẏ = −x − y: B = x² + y² − 1 separates the initial from the unsafe set",
+        %{id: "oscillator", title_pt: "Um oscilador amortecido, barreira dada", about_pt: "ẋ = y, ẏ = −x − y: B = x² + y² − 1 separa o conjunto inicial do inseguro", title: "A damped oscillator, barrier given", about: "ẋ = y, ẏ = −x − y: B = x² + y² − 1 separates the initial from the unsafe set",
           op: "barrier", vars: "x, y", field: ["y", "-x - y"], domain: [["-2", "2"], ["-2", "2"]], init: [["-1/2", "1/2"], ["-1/2", "1/2"]],
           unsafe: [["3/2", "2"], ["3/2", "2"]], barrier: "x^2 + y^2 - 1"},
-        %{id: "synth", title: "A nonlinear system, barrier found", about: "ẋ = −x + y², ẏ = −y: an exact LP proposes B, the decision accepts it",
+        %{id: "synth", title_pt: "Um sistema não linear, barreira achada", about_pt: "ẋ = −x + y², ẏ = −y: um LP exato propõe B, a decisão aceita", title: "A nonlinear system, barrier found", about: "ẋ = −x + y², ẏ = −y: an exact LP proposes B, the decision accepts it",
           op: "barrier", vars: "x, y", field: ["-x + y^2", "-y"], domain: [["-1", "1"], ["-1", "1"]], init: [["-1/4", "1/4"], ["-1/4", "1/4"]],
           unsafe: [["3/4", "1"], ["3/4", "1"]], synthesize: true, degree: 2}
       ],
-      tabula: [%{id: "sale", title: "A sale contract", about: "antinomies with the scenario that triggers them, proofs of consistency, an override, gaps", text: @contract}],
-      cupel: [%{id: "drill", title: "A fault drill", about: "flip one bit of a correct product: which bit positions can correct arithmetic never produce?", n: 32, k: 64, seed: 5}],
-      amalgam: [%{id: "cancel", title: "Cancellation", about: "1e16, 1, −1e16, 1 … in different orders: left-to-right float sums disagree; the amalgam does not",
+      tabula: [%{id: "sale", title_pt: "Um contrato de compra e venda", about_pt: "antinomias com o cenário que as dispara, provas de consistência, uma prevalência, lacunas", title: "A sale contract", about: "antinomies with the scenario that triggers them, proofs of consistency, an override, gaps", text: @contract}],
+      cupel: [%{id: "drill", title_pt: "Um exercício de falha", about_pt: "inverta um bit de um produto correto: quais posições a aritmética correta nunca produziria?", title: "A fault drill", about: "flip one bit of a correct product: which bit positions can correct arithmetic never produce?", n: 32, k: 64, seed: 5}],
+      amalgam: [%{id: "cancel", title_pt: "Cancelamento", about_pt: "1e16, 1, −1e16, 1 … em ordens diferentes: as somas da esquerda para a direita discordam; a amálgama, não", title: "Cancellation", about: "1e16, 1, −1e16, 1 … in different orders: left-to-right float sums disagree; the amalgam does not",
                   numbers: "1e16 1 -1e16 1 3.25 -2.5e-3 7e15 -7e15 0.1 0.2 0.3", format: "f64"}]
     }
   end
@@ -225,7 +225,7 @@ defmodule Vapor.Console.Lab15 do
         try do
           Aludel.box(Enum.map(pairs, fn [lo, hi] -> {rat(lo), rat(hi)} end))
         rescue
-          _ -> {:error, "#{key}: one [lo, hi] per variable, numbers or fractions"}
+          _ -> {:error, "one [lo, hi] per variable, numbers or fractions"}
         end
         |> case do
           {:ok, b} -> {:ok, b}

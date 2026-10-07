@@ -86,4 +86,16 @@ defmodule Vapor.OpusTest do
     json = capture_io(fn -> Vapor.Main.run(["rebis", "equiv", a, t]) end)
     assert {:ok, %{"verdict" => "different", "counterexample" => _}} = Vapor.JSON.decode(json)
   end
+
+  @tag :playwright
+  @tag timeout: 600_000
+  test "the five desks through the page in headless Chromium: every shelf example, a toggled fact, Portuguese, dark" do
+    {:ok, srv} = Vapor.Serve.start_link(port: 0, model_name: "none")
+    base = "http://127.0.0.1:#{Vapor.Serve.port(srv)}/"
+    js = Path.expand("../js/console_opus.mjs", __DIR__)
+    {out, 0} = System.cmd("node", [js, base] ++ List.wrap(System.get_env("VAPOR_SHOTS")), stderr_to_stdout: true)
+    {:ok, j} = out |> String.split("\n", trim: true) |> List.last() |> Vapor.JSON.decode()
+    assert j["failures"] == [] and j["errors"] == [], inspect(j)
+    assert length(j["checks"]) >= 18
+  end
 end
