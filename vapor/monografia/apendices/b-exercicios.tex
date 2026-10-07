@@ -1,0 +1,72 @@
+% ============================================================================
+\chapter{Exercícios}\label{ap:exercicios}
+% ============================================================================
+
+Os exercícios estão organizados por capítulo e marcados por nível: \textbf{[G]} graduação, \textbf{[M]} mestrado, \textbf{[D]} doutorado (questões abertas, sem resposta conhecida pelo autor). Os de nível G e M podem ser resolvidos com o repositório; vários pedem um experimento.
+
+\section*{Fundamentos}
+Referentes ao \autoref{cap:fundamentos}.
+
+
+\begin{enumerate}
+  \item \textbf{[G]} Mostre um exemplo de três números binary32 $a, b, c$ tais que $(a+b)+c \neq a+(b+c)$. Confira com \code{Vapor.F32}.
+  \item \textbf{[G]} Por que $x + 0 \to x$ não é uma reescrita válida em IEEE-754, mas $x + (-0) \to x$ é? E $x \cdot 0 \to 0$?
+  \item \textbf{[M]} Prove que, para binary32, calcular $\mathrm{fl}_{32}(\mathrm{fl}_{64}(a + b))$ dá o mesmo que $\mathrm{fl}_{32}(a+b)$ quando $a, b$ são binary32. Onde a hipótese $53 \geq 2 \cdot 24 + 2$ entra?
+  \item \textbf{[M]} A cota \eqref{eq:gamma} vale para qualquer ordem de redução. Derive a cota mais apertada para a árvore de 16 acumuladores da \autoref{fig:arvore} aplicada a $n = 16k$ termos.
+  \item \textbf{[G]} Construa uma árvore de Merkle RFC 6962 com 5 folhas e escreva a prova de inclusão da terceira. Por que folhas e nós internos usam prefixos diferentes?
+\end{enumerate}
+
+\section*{Arquitetura}
+Referentes ao \autoref{cap:arquitetura}.
+
+
+\begin{enumerate}
+  \setcounter{enumi}{5}
+  \item \textbf{[G]} Explique por que um GEMV com 16 acumuladores por linha e $R$ linhas por iteração tem os mesmos bits para qualquer $R$ e qualquer número de \textit{threads}, mas um GEMV que divide cada linha entre duas \textit{threads} não tem.
+  \item \textbf{[G]} Liste as quatro condições que \code{check\_alloc} confere. Dê um exemplo de alocação que viola cada uma.
+  \item \textbf{[M]} O \vapor{} não tem \textit{spill}. Descreva um kernel para o qual nenhuma das três estratégias (menor $g$, menos linhas, corte de região) basta. O que o compilador deveria fazer?
+  \item \textbf{[M]} O certificado não inclui tempos nem a decisão de despacho. Que ataque ou falha seria possível se incluísse? E se não incluísse o resumo das fontes Lean?
+  \item \textbf{[M]} Usando a \eqref{eq:roofline}, explique por que o GEMV de 4 bits quase não acelera com AVX-512 (\autoref{tab:gemv}). Que mudança no kernel atacaria o teto de instruções?
+  \item \textbf{[D]} Proponha um método para ligar os codificadores de instruções do \vapor{} a uma semântica formal de ISA sem introduzir dependências no produto. O que seria provado, e o que continuaria testado?
+\end{enumerate}
+
+\section*{Inovações}
+Referentes ao \autoref{cap:inovacoes}.
+
+
+\begin{enumerate}
+  \setcounter{enumi}{11}
+  \item \textbf{[G]} Para cada linha da \autoref{tab:inversoes}, dê um exemplo de sistema que segue a suposição usual.
+  \item \textbf{[M]} Paralelismo de tensor por linha com \textit{all-reduce} reassocia somas; por coluna com \textit{all-gather}, não. Mostre por quê e calcule o tráfego de rede de cada um para uma camada $d \times d$ em $p$ nós.
+  \item \textbf{[M]} Escolha uma verificação da \autoref{tab:qualidade13} e proponha um controle mais forte que o atual. Implemente-o e meça.
+  \item \textbf{[D]} Formalize a noção de ``controle adversarial mínimo'' esboçada na \autoref{sec:inov-inversoes}. Existe uma cota útil sobre a probabilidade de um defeito passar por um conjunto de verificações com controles?
+\end{enumerate}
+
+\section*{Finanças}
+Referentes ao \autoref{cap:financas}.
+
+
+\begin{enumerate}
+  \setcounter{enumi}{15}
+  \item \textbf{[G]} Calcule à mão o rateio de R\$~10,00 em sete partes iguais pelo maior resto. Mostre que o piso em binary64 de cada parte não soma o total.
+  \item \textbf{[G]} Calcule a data da Páscoa de 2027 pelo algoritmo anônimo e, a partir dela, o Carnaval e Corpus Christi. Confira com \code{mix vapor.finance calendar}.
+  \item \textbf{[G]} Mostre que, se o preço de uma \textit{call} está abaixo de $\max(Se^{-qT} - Ke^{-rT}, 0)$, existe uma arbitragem. Escreva o portfólio.
+  \item \textbf{[M]} Demonstre a \autoref{prop:wh} em detalhe. Para quais pares $(a, m)$ com $a \cdot (m-1) < 2^{23}$ o truque falharia sem os seletores de correção?
+  \item \textbf{[M]} Escreva um sinal que passe na invariância de prefixo com oito cortes mas use informação futura. Quantos cortes seriam necessários para pegá-lo?
+  \item \textbf{[M]} Para o binomial de um período com $S_0 = 100$, $S_u = 120$, $S_d = 90$, título que paga 1 cotado a 0,95 e uma \textit{call} $K = 100$ cotada a 12, decida se há arbitragem e dê o certificado (portfólio ou $\psi$). Confira com \code{mix vapor.finance arbitrage}.
+  \item \textbf{[M]} O juiz do livro tem duas camadas: reexecução e invariantes. Construa um defeito que só a reexecução pegaria e outro que só os invariantes pegariam.
+  \item \textbf{[M]} Calcule a razão de ramificação de um Hawkes exponencial e mostre que o processo é estacionário se e só se $\alpha/\beta < 1$. Simule com $\alpha/\beta = 0{,}8$ (exemplo ``Hawkes quente'') e observe o teste de reescala.
+  \item \textbf{[D]} É possível compilar o motor de casamento como programa canônico do \vapor{} (sem ramos dependentes de dados no caminho vetorial) de modo que o diário seja produzido no worker e o juiz rode em paralelo, fora do caminho crítico? Que estrutura de dados para o livro permitiria isso?
+  \item \textbf{[D]} A invariância de prefixo certifica a ausência de antecipação \emph{no código}. Proponha um certificado análogo para a ausência de antecipação \emph{nos dados} (por exemplo, séries revisadas depois da data, ou sobrevivência).
+\end{enumerate}
+
+\section*{Avaliação}
+Referentes ao \autoref{cap:avaliacao}.
+
+
+\begin{enumerate}
+  \setcounter{enumi}{25}
+  \item \textbf{[G]} Classifique cada linha da \autoref{tab:oraculos} quanto ao critério (igualdade bit a bit ou tolerância) e justifique.
+  \item \textbf{[M]} Repita a verificação de Avellaneda--Stoikov com 20 sementes e relate a distribuição da razão $\sigma(\text{P\&L})$ estoque/simétrica. O limiar de 0,6 é adequado?
+  \item \textbf{[D]} Desenhe um protocolo de avaliação que reduza a ameaça de validade interna ``mesmo autor do sistema e dos testes'' sem depender de uma equipe independente.
+\end{enumerate}

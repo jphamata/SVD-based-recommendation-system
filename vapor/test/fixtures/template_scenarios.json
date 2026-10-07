@@ -1,0 +1,433 @@
+[
+ {
+  "name": "system+user",
+  "vars": {
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are terse."
+    },
+    {
+     "role": "user",
+     "content": "Olá! What's 2+2?"
+    }
+   ],
+   "add_generation_prompt": true,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ },
+ {
+  "name": "multi-turn",
+  "vars": {
+   "messages": [
+    {
+     "role": "user",
+     "content": "Hi"
+    },
+    {
+     "role": "assistant",
+     "content": "Hello! How can I help?"
+    },
+    {
+     "role": "user",
+     "content": "Tell me a \"quote\" and a 'word'.\nTwo lines."
+    }
+   ],
+   "add_generation_prompt": true,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ },
+ {
+  "name": "no-generation-prompt",
+  "vars": {
+   "messages": [
+    {
+     "role": "user",
+     "content": "Hi"
+    },
+    {
+     "role": "assistant",
+     "content": "Hey."
+    }
+   ],
+   "add_generation_prompt": false,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ },
+ {
+  "name": "tools",
+  "vars": {
+   "messages": [
+    {
+     "role": "system",
+     "content": "Use tools when useful."
+    },
+    {
+     "role": "user",
+     "content": "Weather in São Paulo for 3 days?"
+    }
+   ],
+   "tools": [
+    {
+     "type": "function",
+     "function": {
+      "name": "get_weather",
+      "description": "Get the forecast",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "city": {
+         "type": "string",
+         "description": "City name"
+        },
+        "days": {
+         "type": "integer"
+        },
+        "units": {
+         "type": "string",
+         "enum": [
+          "c",
+          "f"
+         ]
+        }
+       },
+       "required": [
+        "city",
+        "days"
+       ]
+      }
+     }
+    },
+    {
+     "type": "function",
+     "function": {
+      "name": "search_docs",
+      "description": "Search the corpus",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "query": {
+         "type": "string"
+        },
+        "k": {
+         "type": "integer",
+         "default": 5
+        }
+       },
+       "required": [
+        "query"
+       ]
+      }
+     }
+    }
+   ],
+   "add_generation_prompt": true,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ },
+ {
+  "name": "tool-round-trip",
+  "vars": {
+   "messages": [
+    {
+     "role": "user",
+     "content": "Weather in Lisbon?"
+    },
+    {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "id": "call_1",
+       "type": "function",
+       "function": {
+        "name": "get_weather",
+        "arguments": {
+         "city": "Lisbon",
+         "days": 1
+        }
+       }
+      }
+     ]
+    },
+    {
+     "role": "tool",
+     "tool_call_id": "call_1",
+     "name": "get_weather",
+     "content": "{\"temp\": 21.5, \"sky\": \"clear\"}"
+    }
+   ],
+   "tools": [
+    {
+     "type": "function",
+     "function": {
+      "name": "get_weather",
+      "description": "Get the forecast",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "city": {
+         "type": "string"
+        },
+        "days": {
+         "type": "integer"
+        }
+       },
+       "required": [
+        "city"
+       ]
+      }
+     }
+    }
+   ],
+   "add_generation_prompt": true,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ },
+ {
+  "name": "string-arguments",
+  "vars": {
+   "messages": [
+    {
+     "role": "user",
+     "content": "Weather?"
+    },
+    {
+     "role": "assistant",
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "call_9",
+       "type": "function",
+       "function": {
+        "name": "get_weather",
+        "arguments": "{\"city\": \"Oslo\"}"
+       }
+      }
+     ]
+    },
+    {
+     "role": "tool",
+     "tool_call_id": "call_9",
+     "name": "get_weather",
+     "content": "cold"
+    },
+    {
+     "role": "assistant",
+     "content": "It is cold in Oslo."
+    },
+    {
+     "role": "user",
+     "content": "Thanks"
+    }
+   ],
+   "tools": [
+    {
+     "type": "function",
+     "function": {
+      "name": "get_weather",
+      "description": "Forecast",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "city": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "city"
+       ]
+      }
+     }
+    }
+   ],
+   "add_generation_prompt": true,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ },
+ {
+  "name": "reasoning",
+  "vars": {
+   "messages": [
+    {
+     "role": "user",
+     "content": "Think: 17*3?"
+    },
+    {
+     "role": "assistant",
+     "content": "<think>\n17*3 = 51\n</think>\n\n51"
+    },
+    {
+     "role": "user",
+     "content": "And 18*3?"
+    }
+   ],
+   "add_generation_prompt": true,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ },
+ {
+  "name": "no-thinking",
+  "vars": {
+   "messages": [
+    {
+     "role": "user",
+     "content": "Quick: capital of France?"
+    }
+   ],
+   "add_generation_prompt": true,
+   "enable_thinking": false,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ },
+ {
+  "name": "unicode-and-escapes",
+  "vars": {
+   "messages": [
+    {
+     "role": "system",
+     "content": "Tabs\there, backslash \\ and émojis 🚀 — “quotes”."
+    },
+    {
+     "role": "user",
+     "content": "  leading and trailing spaces  "
+    }
+   ],
+   "add_generation_prompt": true,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ },
+ {
+  "name": "parallel-calls",
+  "vars": {
+   "messages": [
+    {
+     "role": "user",
+     "content": "Weather in Rio and Recife?"
+    },
+    {
+     "role": "assistant",
+     "content": "Checking both.",
+     "tool_calls": [
+      {
+       "id": "a",
+       "type": "function",
+       "function": {
+        "name": "get_weather",
+        "arguments": {
+         "city": "Rio",
+         "days": 2
+        }
+       }
+      },
+      {
+       "id": "b",
+       "type": "function",
+       "function": {
+        "name": "get_weather",
+        "arguments": {
+         "city": "Recife",
+         "days": 2
+        }
+       }
+      }
+     ]
+    },
+    {
+     "role": "tool",
+     "tool_call_id": "a",
+     "name": "get_weather",
+     "content": "sunny"
+    },
+    {
+     "role": "tool",
+     "tool_call_id": "b",
+     "name": "get_weather",
+     "content": "rain"
+    }
+   ],
+   "tools": [
+    {
+     "type": "function",
+     "function": {
+      "name": "get_weather",
+      "description": "Forecast",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "city": {
+         "type": "string"
+        },
+        "days": {
+         "type": "integer"
+        }
+       },
+       "required": [
+        "city"
+       ]
+      }
+     }
+    }
+   ],
+   "add_generation_prompt": true,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ },
+ {
+  "name": "list-content",
+  "vars": {
+   "messages": [
+    {
+     "role": "user",
+     "content": [
+      {
+       "type": "text",
+       "text": "Describe"
+      },
+      {
+       "type": "text",
+       "text": " briefly."
+      }
+     ]
+    }
+   ],
+   "add_generation_prompt": true,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ },
+ {
+  "name": "documents",
+  "vars": {
+   "messages": [
+    {
+     "role": "user",
+     "content": "What does the memo say?"
+    }
+   ],
+   "documents": [
+    {
+     "title": "Memo",
+     "text": "Budget approved: 1.5e6 BRL."
+    },
+    {
+     "title": "Note",
+     "text": "Deadline 2026-12-01."
+    }
+   ],
+   "add_generation_prompt": true,
+   "bos_token": "<s>",
+   "eos_token": "</s>"
+  }
+ }
+]

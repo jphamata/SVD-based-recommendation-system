@@ -1,0 +1,193 @@
+% monografia/monografia.tex — vapor: computação certificada, do termo ao registrador
+% Monografia (abnTeX2, normas ABNT), em português.
+% Compilar:  latexmk -pdf monografia.tex
+%      ou:   pdflatex monografia && bibtex monografia && pdflatex monografia && pdflatex monografia
+% Todo número citado foi medido no repositório (testes, docs/bench/QUALITY.md,
+% docs/FINANCAS.md, docs/bench/BENCH.md) ou vem da fonte citada.
+\documentclass[
+  12pt, openany, oneside, a4paper,
+  chapter=TITLE, section=TITLE,
+  english, brazil
+]{abntex2}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{indentfirst}
+\usepackage{microtype}
+\usepackage{lastpage}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs,array,tabularx,longtable}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric,decorations.pathreplacing,trees}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage[most]{tcolorbox}
+\usepackage[alf,abnt-emphasize=bf]{abntex2cite}
+
+% caracteres que podem escapar no texto: definidos uma vez (pdfTeX)
+\DeclareUnicodeCharacter{2264}{\ensuremath{\leq}}
+\DeclareUnicodeCharacter{2265}{\ensuremath{\geq}}
+\DeclareUnicodeCharacter{2192}{\ensuremath{\rightarrow}}
+\DeclareUnicodeCharacter{00D7}{\ensuremath{\times}}
+\DeclareUnicodeCharacter{2212}{\ensuremath{-}}
+\DeclareUnicodeCharacter{2248}{\ensuremath{\approx}}
+\DeclareUnicodeCharacter{2016}{\ensuremath{\Vert}}
+\DeclareUnicodeCharacter{03C8}{\ensuremath{\psi}}
+\DeclareUnicodeCharacter{03C3}{\ensuremath{\sigma}}
+\DeclareUnicodeCharacter{00B7}{\ensuremath{\cdot}}
+\DeclareUnicodeCharacter{2009}{\,}
+
+% ------------------------------------------------------------------ cores
+\definecolor{vnavy}{HTML}{0F172A}
+\definecolor{vcyan}{HTML}{0B6E6E}
+\definecolor{vslate}{HTML}{334155}
+\definecolor{vcoral}{HTML}{B5482E}
+\definecolor{vsand}{HTML}{A87F22}
+\definecolor{vmist}{HTML}{E9EFEF}
+
+% ------------------------------------------------- caixas didáticas (sóbrias)
+\newtcolorbox{graduacao}[1][]{enhanced,breakable,colback=white,colframe=vslate!50,boxrule=0.5pt,arc=1pt,left=6pt,right=6pt,top=4pt,bottom=4pt,
+  fonttitle=\small\bfseries,coltitle=vslate,colbacktitle=vmist,title={Para começar (graduação)#1},attach boxed title to top left={yshift=-2mm,xshift=3mm},boxed title style={boxrule=0pt,colframe=vmist}}
+\newtcolorbox{mestrado}[1][]{enhanced,breakable,colback=white,colframe=vcyan!60,boxrule=0.5pt,arc=1pt,left=6pt,right=6pt,top=4pt,bottom=4pt,
+  fonttitle=\small\bfseries,coltitle=vcyan!80!black,colbacktitle=vcyan!8,title={Aprofundamento (mestrado)#1},attach boxed title to top left={yshift=-2mm,xshift=3mm},boxed title style={boxrule=0pt,colframe=vcyan!8}}
+\newtcolorbox{doutorado}[1][]{enhanced,breakable,colback=white,colframe=vcoral!60,boxrule=0.5pt,arc=1pt,left=6pt,right=6pt,top=4pt,bottom=4pt,
+  fonttitle=\small\bfseries,coltitle=vcoral!80!black,colbacktitle=vcoral!8,title={Questão em aberto (doutorado)#1},attach boxed title to top left={yshift=-2mm,xshift=3mm},boxed title style={boxrule=0pt,colframe=vcoral!8}}
+\newtcolorbox{ficha}[1]{enhanced,breakable,colback=vmist!50,colframe=vslate!40,boxrule=0.4pt,arc=1pt,left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\small\bfseries,coltitle=vnavy,colbacktitle=vmist,title={#1}}
+
+% ------------------------------------------------------------------ código
+\lstset{basicstyle=\ttfamily\small,columns=fullflexible,keepspaces=true,breaklines=true,frame=lines,framerule=0.3pt,rulecolor=\color{vslate!40},
+  xleftmargin=1em,framexleftmargin=1em,aboveskip=6pt,belowskip=6pt,literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ã}{{\~a}}1 {õ}{{\~o}}1 {ç}{{\c c}}1 {ê}{{\^e}}1 {â}{{\^a}}1 {ô}{{\^o}}1 {°}{{\textdegree}}1 {→}{{$\rightarrow$}}1 {≤}{{$\leq$}}1 {×}{{$\times$}}1}
+
+% ------------------------------------------------------------------ tikz
+\tikzset{
+  box/.style={draw=vslate!50,fill=white,rounded corners=2pt,line width=0.5pt,align=center,font=\footnotesize,inner sep=4pt},
+  dark/.style={fill=vnavy,text=white,rounded corners=2pt,align=center,font=\footnotesize,inner sep=4pt},
+  acc/.style={fill=vcyan!8,draw=vcyan,rounded corners=2pt,line width=0.6pt,align=center,font=\footnotesize,inner sep=4pt},
+  bad/.style={fill=vcoral!8,draw=vcoral,rounded corners=2pt,line width=0.6pt,align=center,font=\footnotesize,inner sep=4pt},
+  arr/.style={-{Stealth[length=4pt]},line width=0.6pt,draw=vslate},
+  carr/.style={-{Stealth[length=4pt]},line width=0.8pt,draw=vcyan},
+  lbl/.style={font=\scriptsize,text=vslate},
+}
+
+\newtheorem{definicao}{Definição}[chapter]
+\newtheorem{proposicao}{Proposição}[chapter]
+\newtheorem{exemplo}{Exemplo}[chapter]
+
+\newcommand{\vapor}{\textsf{vapor}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+% resultados da execução completa desta rodada (preenchidos ao fim da rodada)
+\newcommand{\testesTreze}{108}
+\newcommand{\falhasTreze}{0}
+\newcommand{\obsTreze}{só os 8 arquivos tocados (ver texto)}
+\newcommand{\testesQuatorze}{87}
+\newcommand{\falhasQuatorze}{0}
+\newcommand{\obsQuatorze}{os 8 arquivos da rodada (ver texto)}
+\newcommand{\revisaoTreze}{Na rodada 0.13 a revisão independente foi interrompida antes de concluir, por limite de uso da sessão, e não produziu achados; a conferência desta rodada ficou com os testes, as 23 verificações com controle e uma inspeção visual de cada figura desta monografia e de cada slide --- que achou e corrigiu sobreposições de rótulos, um gráfico com valores em escala logarítmica rotulados como lineares, números de tamanho e de linhas desatualizados nos slides e, no console, rótulos em inglês na versão em português.}
+
+% ----------------------------------------------------------- dados do trabalho
+\titulo{vapor: computação certificada, do termo algébrico ao registrador --- arquitetura, inovações, finanças verificáveis e uma bancada aberta}
+\autor{Projeto vapor}
+\local{São Paulo}
+\data{2026}
+\instituicao{Monografia técnica do projeto vapor (versão 0.14.0)}
+\tipotrabalho{Monografia}
+\preambulo{Monografia que descreve a arquitetura, as inovações e a avaliação do sistema vapor --- um compilador e runtime de tensores certificados, escrito em Elixir sem dependências, e as camadas construídas sobre ele, com ênfase nas rodadas 0.13 (finanças e mesa de operações) e 0.14 (a bancada aberta).}
+
+\makeatletter
+\hypersetup{pdftitle={\@title},pdfauthor={\@author},pdfsubject={vapor: arquitetura e inovações},pdfkeywords={compiladores}{verificação}{reprodutibilidade numérica}{finanças},
+  colorlinks=true,linkcolor=vnavy,citecolor=vcyan!70!black,filecolor=vnavy,urlcolor=vcyan!70!black,bookmarksdepth=4}
+\makeatother
+
+\setlength{\parindent}{1.3cm}
+\setlength{\parskip}{0.2cm}
+\makeindex
+\setsecnumdepth{subsection}
+\settocdepth{subsection}
+
+\begin{document}
+\selectlanguage{brazil}
+\frenchspacing
+
+% ================================================================ pré-textuais
+\imprimircapa
+\imprimirfolhaderosto
+
+\begin{resumo}
+O \vapor{} é um compilador e runtime de tensores escrito em Elixir sem nenhuma dependência externa, que trata a reprodutibilidade numérica e a verificabilidade como requisitos de projeto, e não como propriedades desejáveis. Programas são termos de uma álgebra simbólica; o plano de controle, na máquina virtual do Erlang (BEAM), os reescreve só por identidades exatas, aloca registradores com um algoritmo cujo resultado é conferido por um verificador provado no assistente de provas Lean e extraído para Elixir, e emite diretamente os bits de máquina de cinco alvos --- x86-64 (AVX2 e AVX-512), AArch64 NEON, RISC-V com a extensão vetorial e SPIR-V --- sem assembler, sem C e sem LLVM. O código gerado nunca executa dentro da máquina virtual: roda em processos isolados que podem falhar sem derrubar nada. Cada compilação atravessa uma escada de verificação de seis degraus e sai com um certificado Ed25519 determinístico, co-assinável. A garantia central é que, na política canônica, todo substrato produz os mesmos bits. Sobre esse núcleo, catorze rodadas construíram um ecossistema: modelos de linguagem de fronteira, imagem, áudio, documentos, agentes cuja execução é um objeto de prova e, nas últimas rodadas, mesas de resolução de problemas em que uma busca propõe e um verificador decide. Esta monografia descreve a arquitetura e as inovações --- o que são, para quem servem, para que, por que e como --- e aprofunda a rodada 0.13, que aplica o princípio a finanças: calendários e curvas iguais à biblioteca de referência QuantLib, Monte Carlo compilado com o gerador dentro da álgebra e bits idênticos ao oráculo exato, backtests julgados por quatro portões de ruído (entre eles um certificado de ausência de antecipação por invariância de prefixo), arbitragem decidida exatamente pelo lema de Farkas e um livro de ofertas cujo diário encadeado por hash é julgado por um motor ingênuo independente --- que encontrou um defeito real. A rodada 0.14 troca as mesas por categoria por uma \emph{bancada aberta}: o usuário, ou um modelo de linguagem, escreve qualquer problema numa linguagem pura e saneada; uma fornalha de estratégias o busca contra a busca aleatória com o mesmo orçamento; e uma pedra de toque reconfere o certificado sem confiar na busca --- além de ciência com evidência que dispensa gabarito (leis de conservação provadas sobre os racionais) e de uma suíte que decide se uma diferença de avaliação de IA é real. A avaliação usa oráculos externos e, para cada verificação, um controle que poderia ter falhado.
+
+\textbf{Palavras-chave}: compiladores. reprodutibilidade numérica. verificação de software. certificados. finanças quantitativas.
+\end{resumo}
+
+\begin{resumo}[Abstract]
+\begin{otherlanguage*}{english}
+\vapor{} is a tensor compiler and runtime written in Elixir with no external dependencies, which treats numerical reproducibility and verifiability as design requirements rather than desirable properties. Programs are terms of a symbolic algebra; the control plane, on the Erlang virtual machine (BEAM), rewrites them only by exact identities, allocates registers with an algorithm whose result is checked by a verifier proved in the Lean proof assistant and extracted to Elixir, and emits machine bits for five targets --- x86-64 (AVX2 and AVX-512), AArch64 NEON, RISC-V with the vector extension and SPIR-V --- with no assembler, no C and no LLVM. Generated code never runs inside the virtual machine: it runs in isolated processes that may fail without bringing anything down. Every compilation climbs a six-rung verification ladder and leaves with a deterministic, co-signable Ed25519 certificate. The central guarantee is that, under the canonical policy, every substrate produces the same bits. On this core, fourteen rounds built an ecosystem: frontier language models, image, audio, documents, agents whose execution is a proof object and, in the last rounds, problem-solving desks in which a search proposes and a checker decides. This monograph describes the architecture and the innovations --- what they are, for whom, for what, why and how --- and details round 0.13, which applies the principle to finance: calendars and curves equal to the QuantLib reference library, Monte Carlo compiled with the generator inside the algebra and bits identical to the exact oracle, backtests judged by four noise gates (among them a certificate of no look-ahead by prefix invariance), arbitrage decided exactly by Farkas' lemma, and a limit order book whose hash-chained journal is judged by an independent naive engine --- which found a real defect. Round 0.14 replaces the per-category desks by an \emph{open bench}: the user, or a language model, writes any problem in a pure, sanitised language; a furnace of strategies searches it against random search at the same budget; and a touchstone re-checks the certificate without trusting the search --- together with science whose evidence needs no reference answer (conservation laws proved over the rationals) and a suite that decides whether an AI evaluation difference is real. The evaluation uses external oracles and, for each check, a control that could have failed.
+
+\textbf{Keywords}: compilers. numerical reproducibility. software verification. certificates. quantitative finance.
+\end{otherlanguage*}
+\end{resumo}
+
+\pdfbookmark[0]{\listfigurename}{lof}
+\listoffigures*
+\cleardoublepage
+\pdfbookmark[0]{\listtablename}{lot}
+\listoftables*
+\cleardoublepage
+
+\begin{siglas}
+  \item[ABI] \textit{Application Binary Interface}
+  \item[ANBIMA] Associação Brasileira das Entidades dos Mercados Financeiro e de Capitais
+  \item[BEAM] máquina virtual do Erlang/OTP
+  \item[CSCV] \textit{Combinatorially Symmetric Cross-Validation}
+  \item[DRUP] \textit{Delete Reverse Unit Propagation} (formato de refutação SAT)
+  \item[DSR] \textit{Deflated Sharpe Ratio}
+  \item[DU] dias úteis
+  \item[FIX] \textit{Financial Information eXchange}
+  \item[FTAP] teorema fundamental da precificação de ativos
+  \item[HFT] \textit{High-Frequency Trading}
+  \item[IEEE-754] padrão de aritmética de ponto flutuante
+  \item[ISA] \textit{Instruction Set Architecture}
+  \item[ITCH] protocolo de dados de mercado da Nasdaq (TotalView-ITCH 5.0)
+  \item[KCL] lei de Kirchhoff das correntes
+  \item[KIR] representação intermediária de kernels do \vapor
+  \item[LP] programação linear
+  \item[MCP] \textit{Model Context Protocol}
+  \item[PBO] \textit{Probability of Backtest Overfitting}
+  \item[RVV] extensão vetorial do RISC-V (1.0)
+  \item[SPIR-V] representação intermediária de \textit{shaders} do Vulkan
+  \item[VaR] \textit{Value at Risk}
+\end{siglas}
+
+\pdfbookmark[0]{\contentsname}{toc}
+\tableofcontents*
+\cleardoublepage
+
+% ================================================================ textuais
+\textual
+\include{capitulos/01-introducao}
+\include{capitulos/02-fundamentos}
+\include{capitulos/03-arquitetura}
+\include{capitulos/04-inovacoes}
+\include{capitulos/05-financas}
+\include{capitulos/06-bancada}
+\include{capitulos/06-avaliacao}
+\include{capitulos/07-relacionados}
+\include{capitulos/08-conclusao}
+
+% ================================================================ pós-textuais
+\postextual
+\bibliography{referencias}
+
+\begin{apendicesenv}
+\partapendices
+\include{apendices/a-reproducao}
+\include{apendices/b-exercicios}
+\include{apendices/c-glossario}
+\end{apendicesenv}
+
+\printindex
+\end{document}

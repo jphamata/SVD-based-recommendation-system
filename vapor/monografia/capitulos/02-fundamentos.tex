@@ -1,0 +1,123 @@
+% ============================================================================
+\chapter{Fundamentos}\label{cap:fundamentos}
+% ============================================================================
+
+Este capítulo reúne o que os capítulos seguintes pressupõem. Cada seção começa no nível de um curso de graduação e termina onde o \vapor{} precisa de mais. O leitor que já domina um tema pode pular a seção correspondente sem perda.
+
+% ----------------------------------------------------------------------------
+\section{Aritmética de ponto flutuante}\label{sec:fp}
+
+\begin{graduacao}
+Um número de ponto flutuante binary32 (o \texttt{float} do C) ocupa 32 bits: 1 de sinal, 8 de expoente e 23 de fração. Ele representa $(-1)^s \cdot 1{,}f \cdot 2^{e-127}$ e, portanto, só cerca de 7 dígitos decimais. Cada operação aritmética calcula o resultado exato e o \emph{arredonda} para o número representável mais próximo. Como cada arredondamento perde um pouco, a ordem das operações importa: em binary32, $(10^8 + 1) - 10^8 = 0$, porque $10^8+1$ não é representável e arredonda para $10^8$; mas $(10^8 - 10^8) + 1 = 1$.
+\end{graduacao}
+
+O padrão IEEE-754 \cite{ieee754} define os formatos, o arredondamento ao mais próximo com desempate para o par (RNE) e o comportamento de zeros com sinal, infinitos, NaN e números subnormais. O fato central para este trabalho é o \emph{modelo padrão}: para $\mathrm{op} \in \{+,-,\times,\div\}$ e operandos longe do \textit{underflow},
+\begin{equation}
+  \mathrm{fl}(x \,\mathrm{op}\, y) = (x \,\mathrm{op}\, y)(1 + \delta), \qquad |\delta| \leq u = 2^{-24}\ \text{(binary32)}.
+  \label{eq:modelo-padrao}
+\end{equation}
+
+Duas consequências organizam o \vapor{}. A primeira é a \textbf{não associatividade}: uma soma de $n$ termos tem tantos resultados possíveis quanto ordens de redução. A segunda é que, apesar disso, o erro de \emph{qualquer} ordem é limitado: para uma soma ou um produto interno de $n$ termos, \citeonline{wilkinson1963} e \citeonline{higham2002} mostram que
+\begin{equation}
+  \left|\mathrm{fl}\Big(\sum_{i=1}^{n} x_i y_i\Big) - \sum_{i=1}^{n} x_i y_i\right| \leq \gamma_n \sum_{i=1}^{n} |x_i y_i|, \qquad \gamma_n = \frac{n u}{1 - n u}.
+  \label{eq:gamma}
+\end{equation}
+
+O \vapor{} usa as duas consequências de modos complementares. Para \emph{reprodutibilidade}, fixa uma única ordem: cada produto interno tem exatamente 16 acumuladores, reduzidos numa árvore fixa (\autoref{fig:arvore}), e o paralelismo vem de processar várias \emph{linhas} independentes ao mesmo tempo, nunca de reassociar uma soma. Para \emph{verificação}, usa a cota \eqref{eq:gamma}, calculada em racionais diádicos exatos, como o envelope dentro do qual qualquer substrato conforme tem de cair.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[level distance=0.95cm,
+  level 1/.style={sibling distance=6.2cm},level 2/.style={sibling distance=3.1cm},level 3/.style={sibling distance=1.55cm},
+  every node/.style={box,minimum width=0.9cm,font=\scriptsize}]
+\node {$r$}
+  child {node {$r_2[0]$}
+    child {node {$r_4[0]$} child {node {$r_8[0..1]$}} child {node {$r_8[2..3]$}}}
+    child {node {$r_4[1]$} child {node {$r_8[4..5]$}} child {node {$r_8[6..7]$}}}}
+  child {node {$r_2[1]$}
+    child {node {$r_4[2]$} child {node {$r_8[8..9]$}} child {node {$r_8[10..11]$}}}
+    child {node {$r_4[3]$} child {node {$r_8[12..13]$}} child {node {$r_8[14..15]$}}}};
+\end{tikzpicture}
+\caption{A redução canônica de 16 acumuladores (\texttt{r8} $\to$ \texttt{r4} $\to$ \texttt{r2} $\to$ \texttt{r}). Toda ISA e a GPU executam esta mesma árvore; por isso os bits coincidem.}
+\label{fig:arvore}
+\end{figure}
+
+\begin{mestrado}
+\textbf{Por que} $\mathrm{fl}(a+b)$ \textbf{em binary32 pode ser calculado exatamente em binary64}: a soma exata de dois binary32 cabe em $24 + 24 + 2$ bits significativos no pior caso relevante, e um arredondamento duplo $\mathbb{R} \to$ binary64 $\to$ binary32 é inócuo quando $53 \geq 2 \cdot 24 + 2$ \cite{higham2002}. O oráculo do \vapor{} (\texttt{Vapor.F32}) usa esse fato para somas e produtos e calcula o \textit{fused multiply-add} em racionais diádicos com um único arredondamento --- validado contra o \texttt{fmaf} do \textit{hardware} em 800\,000 operações, inclusive subnormais e zeros com sinal.
+\end{mestrado}
+
+\paragraph{Zeros com sinal e reescrita.} Identidades algébricas que parecem óbvias não valem bit a bit. $x + 0 = x$ é falsa para $x = -0$, porque $(-0) + (+0) = +0$; já $x + (-0) = x$ vale para todo $x$. Um compilador que reescreve expressões precisa distinguir as duas, e o \vapor{} só admite as identidades válidas para todos os valores IEEE --- o que é provado num modelo de bits em Lean (\autoref{sec:arq-compilacao}).
+
+\paragraph{Subnormais, FTZ e DAZ.} GPUs e alguns compiladores descartam números subnormais (\textit{flush-to-zero}, FTZ, na saída; \textit{denormals-are-zero}, DAZ, na entrada). Isso não é um erro de arredondamento --- é outra semântica. O \vapor{} trata essas diferenças como impressões numéricas de um substrato, medidas antes de admiti-lo (\autoref{sec:arq-substratos}).
+
+% ----------------------------------------------------------------------------
+\section{Compiladores, do termo ao registrador}\label{sec:compiladores}
+
+\begin{graduacao}
+Um compilador traduz um programa de uma representação para outra em etapas: análise, representação intermediária (IR), otimizações, seleção de instruções, alocação de registradores e emissão de código. Os registradores são poucos (16 vetoriais no AVX2, 32 no AVX-512); quando faltam, compiladores comuns ``derramam'' valores na memória (\textit{spill}).
+\end{graduacao}
+
+O \vapor{} segue o esquema clássico com três particularidades. A IR de alto nível é uma \emph{álgebra de termos} (\autoref{sec:arq-algebra}); a IR de baixo nível (KIR) é escrita uma vez sobre registradores virtuais \emph{tipados}, que cada \textit{backend} dimensiona; e a alocação de registradores é a de \emph{linear scan} \cite{poletto1999} sem caminho de \textit{spill}: se faltam registradores, o compilador muda a forma do código (menos linhas por iteração, um fator de grupo menor, uma fronteira de região) em vez de derramar.
+
+\paragraph{Codificação de instruções.} Emitir bits sem assembler exige conhecer a codificação de cada ISA. No x86-64, uma instrução vetorial moderna leva um prefixo VEX (AVX2) ou EVEX (AVX-512) que codifica registradores, largura e máscaras, seguido do \textit{opcode}, do byte ModR/M e, quando há memória, do SIB e do deslocamento \cite{intelsdm}. No AArch64, cada instrução é uma palavra de 32 bits. No RISC-V vetorial, o tipo do vetor (\texttt{vtype}) codifica a largura do elemento (SEW) e o agrupamento de registradores (LMUL) \cite{rvv10}. No SPIR-V, um módulo é uma sequência de palavras com seções em ordem fixa \cite{spirv}. Errar um bit produz uma instrução diferente --- válida ou não ---, e por isso todo construtor de kernel é conferido nos testes contra o GNU binutils e o \texttt{spirv-val}.
+
+% ----------------------------------------------------------------------------
+\section{Testar, provar, certificar}\label{sec:verificacao}
+
+\begin{graduacao}
+\emph{Testar} mostra que um programa funciona nos casos testados. \emph{Provar} mostra que funciona em todos, mas exige um modelo formal e muito esforço. \emph{Certificar} é um meio-termo poderoso: o programa produz, junto com a resposta, uma evidência (um \emph{certificado}) que um segundo programa, bem mais simples, confere. Se o conferidor é correto, a resposta aceita é correta --- mesmo que o primeiro programa tenha erros.
+\end{graduacao}
+
+A ideia tem várias formas na literatura: \textit{proof-carrying code} \cite{necula1997}, em que o código carrega a prova da sua segurança; validação de tradução \cite{pnueli1998}, em que cada compilação é conferida em vez de o compilador ser provado; compiladores verificados como o CompCert \cite{leroy2009}, em que o compilador inteiro é provado; e, em lógica, os formatos de refutação como DRUP e DRAT \cite{goldberg2003,wetzler2014}, em que um \textit{solver} SAT entrega uma prova de insatisfatibilidade que um verificador independente reexecuta.
+
+O \vapor{} combina as três: um núcleo pequeno de algoritmos é provado em Lean 4 \cite{moura2021} e \emph{extraído} para Elixir (o verificador de alocação, a decisão do envelope, a aritmética modular); cada compilação é validada por uma escada de verificação (\autoref{sec:arq-escada}); e as aplicações produzem certificados que verificadores independentes conferem.
+
+\begin{mestrado}
+\textbf{O critério de de Bruijn.} Um sistema de prova é confiável na medida em que o seu verificador é pequeno e independente do procedimento de busca. O \vapor{} aplica o critério fora da lógica: o verificador de um livro de ofertas é um motor ingênuo com listas e ordenação, sem nenhuma estrutura de dados compartilhada com o motor de produção; o verificador de uma arbitragem só multiplica racionais; o verificador de um \textit{backtest} recalcula o sinal sobre históricos truncados. Em todos os casos, aceitar exige menos código e menos suposições do que produzir.
+\end{mestrado}
+
+% ----------------------------------------------------------------------------
+\section{Criptografia aplicada: hashes, árvores e assinaturas}\label{sec:cripto}
+
+\begin{graduacao}
+Uma função de \textit{hash} criptográfica como a SHA-256 transforma qualquer dado em 32 bytes de forma que é inviável achar dois dados com o mesmo \textit{hash}. Encadeando \textit{hashes} --- $h_i = H(h_{i-1} \Vert d_i)$ --- obtém-se um diário em que mudar uma entrada antiga muda todos os \textit{hashes} seguintes. Uma \emph{árvore de Merkle} \cite{merkle1987} resume $n$ dados num único \textit{hash} (a raiz) e permite provar que um dado pertence ao conjunto mostrando só $\log_2 n$ \textit{hashes}.
+\end{graduacao}
+
+O \vapor{} usa a construção das árvores do \textit{Certificate Transparency} (RFC 6962 e RFC 9162 \cite{rfc6962,rfc9162}): folhas são $H(\texttt{0x00} \Vert d)$ e nós internos $H(\texttt{0x01} \Vert e \Vert d)$, o que impede confundir uma folha com um nó. As assinaturas são Ed25519 \cite{bernstein2012}, determinísticas: a mesma mensagem e a mesma chave produzem a mesma assinatura, o que permite a co-assinatura de certificados por nós independentes.
+
+\paragraph{Bytes canônicos.} Assinar um valor exige uma única codificação dele. O \vapor{} usa o CBOR determinístico (RFC 8949, §4.2) para tudo que é assinado ou endereçado por conteúdo: ordem de chaves fixa, inteiros na forma mais curta, ponto flutuante na menor largura que preserva o valor. A alternativa óbvia na BEAM --- \texttt{term\_to\_binary} com a opção determinística --- só é estável dentro de uma mesma versão do Erlang/OTP, o que impediria dois nós com versões diferentes de concordar sobre os bytes de um certificado.
+
+% ----------------------------------------------------------------------------
+\section{A máquina virtual do Erlang}\label{sec:beam}
+
+A BEAM \cite{armstrong2003} executa milhões de processos leves isolados, que se comunicam por mensagens e são supervisionados: um processo que falha é reiniciado por quem o supervisiona, sem derrubar os demais. O \vapor{} usa a BEAM como \emph{plano de controle} --- compilação, verificação, orquestração, serviço HTTP --- e mantém todo código gerado \emph{fora} dela: as funções nativas (NIFs), que executariam no espaço de endereçamento da VM, são proibidas por um teste de auditoria. Código de máquina roda em processos do sistema operacional falados por \textit{ports}, com quadros de comprimento prefixado; um processo que morre no meio de um quadro não dessincroniza a VM.
+
+% ----------------------------------------------------------------------------
+\section{Sinal ou ruído: testes, controles, tamanho e poder}\label{sec:sinal}
+
+\begin{graduacao}
+Um teste estatístico tem dois erros possíveis: rejeitar uma hipótese verdadeira (erro tipo I, cuja probabilidade é o \emph{tamanho} do teste, tipicamente 5\%) e aceitar uma falsa (erro tipo II; a probabilidade de evitá-lo é o \emph{poder}). Um teste que nunca rejeita nada não serve para nada, mesmo que nunca erre do primeiro tipo.
+\end{graduacao}
+
+O \vapor{} organiza a sua avaliação de qualidade como uma bateria de verificações em que cada linha tem quatro campos: o valor medido, um \textbf{controle} (o valor que uma implementação quebrada, ingênua ou trapaceira produziria), um limiar e o veredito. Uma verificação só é aceita se o controle cai do outro lado do limiar --- isto é, se ela \emph{poderia ter falhado}. Os testes da rodada 0.13 vão além: o tamanho do teste de Kupiec é medido em 400 séries simuladas sob a hipótese nula, e o seu poder, numa série em que a hipótese é falsa (\autoref{sec:fin-risco}).
+
+\paragraph{Seleção e testes múltiplos.} Quando muitas hipóteses são testadas e só a melhor é relatada, o nível de significância nominal perde o sentido: o máximo de $N$ estatísticas sob a nula cresce com $N$. Em finanças, isso é o \textit{backtest overfitting} \cite{bailey2014pbo,harvey2016}; o \vapor{} o trata com o índice de Sharpe deflacionado \cite{bailey2014dsr}, a probabilidade de sobreajuste por validação cruzada combinatória \cite{bailey2014pbo} e o \textit{Reality Check} de \citeonline{white2000}.
+
+% ----------------------------------------------------------------------------
+\section{Finanças quantitativas: o mínimo necessário}\label{sec:fin-fund}
+
+\begin{graduacao}
+\textbf{Desconto.} Um real amanhã vale menos que um real hoje. O fator de desconto $D(t)$ é o preço hoje de 1 pago em $t$; uma curva de juros é a função $t \mapsto D(t)$. No Brasil, contratos de DI e títulos públicos contam o tempo em dias úteis sobre 252: $D = (1+r)^{-\mathrm{DU}/252}$.
+
+\textbf{Arbitragem.} Uma arbitragem é uma carteira que não custa nada (ou rende algo hoje), nunca perde e às vezes ganha. Mercados razoáveis não têm arbitragens duradouras.
+
+\textbf{Opções.} Uma \textit{call} europeia paga $\max(S_T - K, 0)$ no vencimento $T$. Sob o modelo de \citeonline{black1973} e \citeonline{merton1973}, o seu preço tem fórmula fechada; a volatilidade implícita é o $\sigma$ que reproduz um preço observado.
+\end{graduacao}
+
+\paragraph{O teorema fundamental.} \citeonline{harrison1979} e \citeonline{harrison1981} mostraram que, num mercado com um número finito de estados, não há arbitragem se e somente se existem \emph{preços de estado} estritamente positivos $\psi_s$ tais que todo ativo vale $\sum_s X_{is} \psi_s$, em que $X_{is}$ é o pagamento do ativo $i$ no estado $s$. Com custos de transação (preços de compra e venda), a condição vira $\mathrm{bid}_i \leq \sum_s X_{is}\psi_s \leq \mathrm{ask}_i$ \cite{jouini1995}. O teorema é um caso do \textbf{lema de Farkas} \cite{farkas1902}: de dois sistemas lineares, exatamente um tem solução. Essa observação --- a arbitragem como alternativa de Farkas --- é a base da \autoref{sec:fin-arbitragem}.
+
+\paragraph{Monte Carlo.} Para derivativos sem fórmula fechada, o preço é a esperança do pagamento descontado, estimada pela média de trajetórias simuladas; o erro-padrão cai como $N^{-1/2}$ e técnicas como variáveis de controle o reduzem \cite{glasserman2003}. Um estimador é \emph{viciado} se a sua esperança difere do preço; o exemplo clássico é esquecer o termo $-\sigma^2/2$ de Itô no logaritmo do preço.
+
+\paragraph{Risco.} O \textit{Value at Risk} a 99\% é a perda que só é excedida em 1\% dos dias. Um modelo de VaR se testa contando as exceções: sob o modelo correto, elas seguem uma binomial, e o teste de \citeonline{kupiec1995} compara a proporção observada com a nominal; o de \citeonline{christoffersen1998} verifica se as exceções se agrupam no tempo.
+
+\paragraph{Microestrutura.} Uma bolsa casa ordens num \textbf{livro de ofertas}: ordens de compra e venda limitadas esperam em filas por preço e, dentro do preço, por ordem de chegada (prioridade preço--tempo); uma ordem que cruza o melhor preço do outro lado é executada contra as que esperam. A literatura de microestrutura modela a chegada das ordens \cite{hawkes1971,bacry2015}, a formação de mercado \cite{avellaneda2008} e a execução ótima de grandes ordens \cite{almgren2000}.

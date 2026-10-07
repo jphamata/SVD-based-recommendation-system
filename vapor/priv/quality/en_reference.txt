@@ -1,0 +1,1818 @@
+
+  Immutable agents: an agent is a value (`Vapor.Agent.Spec`), a run is a
+  value (`Vapor.Agent.Journal`), and replaying a run is a proof.
+
+      spec = Spec.new(name: "weather", model: %{"kind" => "local", "id" => model_id},
+                      instructions: "…", tools: [%{name: "get_weather", effect: "observe", parameters: …}])
+      {:ok, run} = Vapor.Agent.run(spec, "Weather in Recife?", backend: backend, impls: %{"get_weather" => &fetch/2})
+      Vapor.Agent.replay(spec, run.journal, backend: backend, impls: impls)
+      #=> {:ok, %{verified: 3, observed: 1, redacted: 0, mismatches: []}}
+
+  A run alternates model decisions and tool executions, and every one of
+  them is an event of the hash-chained journal:
+
+    * `start` — the spec's digest, the input, the run's clock (`now`: the
+      only time anything in the run may read; a template's `strftime_now`
+      reads it), the run nonce;
+    * `model` — the decision (content and tool calls), whether it is
+      re-derivable, and its record (tokens and receipt for a local model;
+      provider and response id for a remote one);
+    * `intent` — before an `act` tool runs: the call, its idempotency key and
+      how it was approved (written, and persisted by a store, *before* the
+      world is touched); `retry` if a crash interrupted it;
+    * `tool` — the call, its effect class, the result or error, and for
+      `act` tools the idempotency key the implementation received;
+    * `final` / `halt` — the answer, or why the run stopped.
+
+  Determinism makes the journal do more than log:
+
+    * **Replay verifies.** `replay/3` rebuilds the run from the journal:
+      every local model decision is *recomputed* and must give the recorded
+      tokens bit for bit (vapor's cross-substrate invariance is what makes
+      this a meaningful check on another machine); `pure` tools are re-run
+      and must agree; `observe` and `act` results — and remote models'
+      answers — are read from the record and never re-executed. The rebuilt
+      journal must end at the recorded head. Replay never touches the world.
+    * **Resume is replay.** A run that crashed resumes from its journal
+      (`run(…, journal: prefix)`): the prefix is replayed (verified, no side
+      effects repeated), then the run continues live — only if the prefix
+      verified (`{:error, {:diverged, mismatches}, _}` otherwise, before any
+      new event) — durable execution without a workflow engine. `act` implementations receive an
+      idempotency key derived from (run, step, call), the same on every
+      attempt, so the outside world can apply a side effect at most once.
+    * **Capabilities are part of identity.** An `act` tool runs only if the
+      spec grants it (and, with `confirm:`, a human approves — the approval
+      or the refusal is recorded). Text a tool reads (a web page, an e-mail) can steer the
+      model, but cannot grant a capability: the grants are in the spec's
+      digest, fixed before the run started.
+    * **Erasure is possible.** With `keys:` and `subject:`, the input, the
+      model's texts and tokens, call arguments, tool results and errors are
+      sealed per data subject (tool names, effect classes, call ids and
+      receipts stay readable for audit);
+      shredding the subject's key erases them everywhere while the chain
+      stays verifiable (`Vapor.Agent.Journal`).
+  
+
+  JSON Schema validation of tool arguments (the subset of
+  `Vapor.Grammar.JSONSchema`), for decisions that were not constrained —
+  remote models may call tools with arguments their schema refuses; the
+  agent refuses them too, and says why, before anything runs.
+  
+
+  Where an agent's decisions come from. `complete/4` takes OpenAI-shaped
+  messages and tools and returns the assistant's content and tool calls,
+  whether the decision is *re-derivable* (`deterministic`), and what to
+  record about it.
+
+  The distinction is the honest boundary of verifiability:
+
+    * `Vapor.Agent.Backend.Local` — a vapor engine. Its output is a function
+      of (model, prompt tokens, sampling parameters, seed) on every
+      substrate, so a replay recomputes it and must get the same tokens.
+    * `Vapor.Agent.Backend.OpenAI` (any OpenAI-compatible server: OpenAI,
+      vLLM, llama.cpp, Ollama, or vapor's own `Vapor.Serve`) and
+      `Vapor.Agent.Backend.Anthropic` (the Messages API) — frontier models
+      as *observations*: their answers are recorded and replay reads the
+      record. Nothing claims they are reproducible; what is guaranteed is
+      that the record cannot be changed unnoticed.
+  
+
+  A local model behind `Vapor.Engine`: the model's own chat template
+  (`Vapor.Chat.load_template/1`) renders tools and history, tool calls are
+  constrained to the declared tools and schemas (`Vapor.Tools`), and the
+  clock the template may read is the run's recorded clock.
+  
+
+  Any OpenAI-compatible chat completions endpoint — OpenAI itself, vLLM,
+  llama.cpp's server, Ollama, or vapor's `Vapor.Serve` (whose
+  `x-vapor-receipt` makes even a remote vapor model checkable by whoever
+  holds the same model). Decisions are recorded as observations.
+  
+
+  Anthropic's Messages API (`POST /v1/messages`, `anthropic-version:
+  2023-06-01`): tools as `{name, description, input_schema}`, calls as
+  `tool_use` blocks, results sent back as `tool_result` blocks. Decisions
+  are recorded as observations.
+  
+
+  The record of one run: an append-only sequence of events, each bound to
+  its predecessor by hash, the whole committed to by a Merkle root.
+
+      hash₀ = SHA-256(canonical({run_id, 0, kind, data}))
+      hashᵢ = SHA-256(canonical({hashᵢ₋₁, i, kind, data}))
+
+  Changing, inserting, dropping or reordering any event changes every hash
+  after it (`verify/1` names the first bad one). `root/1` is the RFC 6962
+  Merkle root over the event hashes, so a single event can be shown to
+  belong to a run with `⌈log₂ n⌉` hashes (`proof/2`) — e.g. to an auditor
+  who must not see the others. Encoding is `Vapor.Canonical` (deterministic
+  CBOR), so any language can recompute the hashes.
+
+  ## Erasure without breaking the chain (crypto-shredding)
+
+  An immutable log of personal data collides with the right to erasure
+  (GDPR art. 17, LGPD art. 18). Values that are personal are stored
+  *sealed* (`seal/4`: AES-256-GCM under a key per data subject, the run id
+  as associated data); the chain hashes the ciphertext. Erasure destroys the
+  subject's key (`Vapor.Agent.Keys.shred/2`): the plaintext becomes
+  unrecoverable everywhere at once — backups included — while every hash,
+  the root and every proof stay valid. Replay reports those events as
+  redacted instead of failing.
+  
+
+  Per-subject data keys for crypto-shredding (`Vapor.Agent.Journal.seal/4`).
+
+  A process holding 256-bit keys by subject id. `shred/2` destroys a key:
+  every sealed value of that subject, in every journal and backup, becomes
+  ciphertext nobody can open. In production the keys belong in an HSM or a
+  KMS (the same three operations); this in-memory holder states the
+  contract and is what the tests use.
+  
+
+  A Model Context Protocol client over stdio (JSON-RPC 2.0, one message per
+  line), with OTP alone: `initialize`, `tools/list`, `tools/call`.
+
+  An MCP server's tools become agent tools (`agent_tools/2`). MCP does not
+  say whether a tool reads or changes the world, so the effect class is the
+  operator's declaration, and an undeclared tool is `"act"` — the most
+  restrictive class: it runs only if the spec grants it, and replay never
+  re-executes it. The server process is isolated like vapor's workers: if it
+  dies, calls fail with an error the agent records; the BEAM is untouched.
+  
+
+  An agent is a value. Everything that decides its behaviour — the model's
+  identity, its instructions, the tools it may call (with their schemas,
+  effect classes and versions), the sampling policy, the capabilities it is
+  granted — is a field of this struct, and the agent's identity is the
+  canonical digest of that struct (`digest/1`). Two operators with the same
+  digest run the same agent; a different digest is a different agent.
+
+  Nothing here is ever modified in place. Improving an agent (new
+  instructions, a new tool, a fine-tuned model) is `evolve/2`, which returns
+  a *new* spec whose `parent` is the old digest — so an agent has a
+  lineage, every journal names the exact version that produced it, and
+  "which agent did this?" always has a precise answer.
+
+  Tool entries (`tool/1`): `name`, `description`, `parameters` (JSON
+  Schema), `effect` and `version`. The effect class is what replay and
+  capability checks rely on:
+
+    * `"pure"` — a deterministic function of its arguments (arithmetic,
+      lookup in a pinned corpus): re-executed on replay, and the result must
+      match the journal;
+    * `"observe"` — reads the world (a web page, a sensor, the clock): the
+      result is recorded and replay reads the record, never the world;
+    * `"act"` — changes the world (sends, writes, pays): runs only when the
+      spec grants it, at most once per idempotency key, and is never
+      re-executed by replay.
+
+  Implementations (functions) are bound at run time by name; the `version`
+  string is the operator's claim about which implementation that is, and
+  replay of `pure` tools checks the claim.
+  
+
+  Durable runs: where journals live between a crash and a resume.
+
+  A store keeps each run's events in order, write-ahead: `hook/1` gives the
+  `on_event:` function for `Vapor.Agent.run/3`, so every event is persisted
+  before the run takes its next step (before the next tool executes). After
+  a crash — of the BEAM, the machine, the region — `resume/4` loads the
+  journal and continues: the prefix is replayed (local decisions recomputed,
+  nothing in the world repeated) and the run goes on live. `act` tools
+  receive the same idempotency key on every attempt, so a side effect whose
+  event did not reach the store before the crash is applied at most once by
+  a receiver that honours the key.
+
+  That is the contract of a durable-workflow engine (Temporal, Oban
+  workflows, AWS Step Functions) obtained from two facts vapor already has —
+  determinism and a hash-chained journal — rather than from a scheduler.
+
+  ## Contract
+
+    * `append(store, run_id, event)` persists event `seq` *exclusively*:
+      if an event with that `seq` already exists, it fails with
+      `{:error, :conflict}`. Two processes resuming the same run cannot both
+      write event *n*; since every `act` call is announced (`intent`, or
+      `retry` after a crash) before it runs, only one of them announces each
+      action — the other stops at its first write. An action announced and
+      still in flight cannot be told from one interrupted by a crash, so a
+      resumer arriving then retries it, with the same idempotency key
+      (closing that needs a lease). (A relational
+      adapter gets this from `UNIQUE (run_id, seq)`; see
+      docs/ECOSSISTEMA_ELIXIR.md.)
+    * `load(store, run_id)` returns the journal — `{:ok, journal}`, or
+      `{:error, :not_found}` — and only events that verify; a torn last
+      write is not an event.
+    * `runs(store)` lists run ids.
+
+  `Vapor.Agent.Store.File` implements it on a POSIX filesystem with OTP
+  alone. Other backends (Ecto/Postgres, S3, a log) implement the behaviour.
+  
+
+  A journal store on a POSIX filesystem: a directory per run, a file per
+  event (`000042.cbor`, the event in canonical CBOR).
+
+  Each event is written to a temporary file, flushed to disk, and then
+  *hard-linked* to its final name. `link(2)` is atomic and fails if the
+  name exists, which gives both properties of the contract at once: a crash
+  mid-write leaves only a temporary file (never a torn event), and two
+  writers of the same `seq` cannot both succeed (`{:error, :conflict}`).
+  `load/2` reads the events in order and keeps the longest prefix whose
+  hashes chain from the run id.
+
+  Durability of the directory entry itself needs a directory `fsync`, which
+  OTP's file API does not expose; on Linux ext4/xfs with default options,
+  link creation after a data `fsync` is ordered in practice, but a
+  power-loss guarantee needs a filesystem mounted with `dirsync` (or a
+  database).
+  
+
+  The `scan` generator over the affine SSM monoid, for exact (integer /
+  fixed-point) states, and its segmented lifting for ragged batches.
+
+  The combine functions are the Lean-extracted `affine_op/2` and
+  `seg_affine/2`; their associativity (`Vapor.affineOp_assoc`,
+  `Vapor.segAffine_monoid`) is what makes the tree-shaped `parallel/1`
+  equal to the sequential `sequential/1` — asserted in the test suite over
+  random ragged batches, i.e. the theorem exercised on the extracted code.
+
+  Elements are `{{a, b}, flag}`: the step `h ↦ a·h + b`; `flag = true`
+  starts a new sequence (no padding between sequences).
+  
+
+  The free many-sorted term algebra F_Σ(X) — *symbolic*, hence emittable.
+
+  The predecessor carried Elixir closures inside terms (`{:iota, fn ... end, t}`),
+  which no emitter can lower to machine code. Every operator here is a
+  name with a fixed, substrate-independent semantics (`Vapor.Runtime.Oracle`).
+
+  Terms (the generators of Σ, spec Definition 2.1):
+
+    * `{:input, name, dtype, shape}`   — variable; dims may be `{:dyn, sym, max}`
+    * `{:const, %Vapor.Tensor{}}`      — airlocked constant
+    * `{:ew, op, [arg]}`               — ι: elementwise f32 homomorphism; `op` is
+                                         a primitive or a canonical function
+                                         (`Vapor.Canon`: exp, rcp, rsqrt, div,
+                                         sigmoid, silu, max, min)
+    * `{:reduce, :sum | :max, x}`      — canonical 16-lane reduction of the last
+                                         axis (kept with extent 1)
+    * `{:linear, x, w}`                — y = x·Wᵀ, W : f32[n,k] (canonical per-row
+                                         order), x : f32[k] or f32[b,k]
+    * `{:gather_row, table, idx}`      — rows of `table : f32[V,d]` at `idx : s32[T]`
+    * `{:rope, x, cos, sin, pos, h}`   — rotary embedding of `x : f32[T, h·dh]`
+                                         (rotate-half pairs `j, j + dh/2`),
+                                         tables `f32[S, dh/2]`, `pos : s32[T]`
+    * `{:kv_write, cache, pos, rows}`  — `cache : f32[S,n]` with row `pos[t]` ←
+                                         `rows[t]` (a functional update; lowered
+                                         in place when the old cache is dead)
+    * `{:attention, q, k, v, pos, {h, hkv}}` — causal softmax attention of
+                                         `q : f32[T, h·dh]` over cache rows
+                                         `0 … pos[t]` of `k, v : f32[S, hkv·dh]`
+                                         (grouped-query when `hkv < h`), scores
+                                         scaled by 1/√dh — or by an explicit
+                                         binary32 `s` with `{h, hkv, {:scale, s}}`
+    * `{:kv_write_paged, pool, table, slot, pos, rows, page}` — paged cache:
+                                         row `t` goes to logical row `pos[t]` of
+                                         sequence `slot[t]`, i.e. pool row
+                                         `table[slot, pos/page]·page + pos mod page`
+                                         (skipped when any index is out of range)
+    * `{:attention_paged, q, kpool, vpool, table, slot, pos, {h, hkv, page}}` —
+                                         `attention` over the logical rows
+                                         `0 … pos[t]` of sequence `slot[t]`
+                                         (bit-identical to the contiguous form)
+    * `{:transpose, x}`                — 2-D transpose
+    * `{:sample, logits, params}`      — per row: greedy when `params[·,0] = +0`,
+                                         else a categorical draw at temperature
+                                         `1/params[·,0]` with uniform `params[·,1]`
+    * `{:qgemv, w, x}`                 — contraction with an `:sb4x` matrix,
+                                         `x : f32[k]` or `f32[b,k]` (row-wise)
+    * `{:gemm_i8, a, w}`               — contraction over (ℤ, +, ×): C = A·Wᵀ, s8 → s32
+
+  An `:ew` argument is a term or `{:splat, bits}` (a broadcast binary32).
+  Operands of `:ew` broadcast NumPy-style at equal rank: an extent-1 axis
+  stretches to the other operand's extent (`[r,1]` against `[r,c]` is a
+  per-row scalar, `[1,c]` a shared row). Nothing broadcasts implicitly
+  across ranks.
+
+  Indices are read as unsigned 32-bit and clamped to the table (`gather_row`,
+  `rope`, `attention`); `kv_write` ignores rows whose position is outside the
+  cache. Every operator is total: no input can make a kernel address memory
+  outside its buffers, and the oracle defines the same result.
+
+  Semi-dynamic dimensions: `{:dyn, :S, 4096}` is a symbolic extent bound at
+  run time and certified at its maximum (every resource and error bound is
+  monotone in the extent), so one certificate covers every `S ≤ max`.
+  
+
+  The control-plane supervision tree. The substrate supervisor owns the
+  worker and fabric OS processes; any of them may crash and be restarted
+  without touching the rest of the node (Axiom 3). Configure with
+  `config :vapor, substrates: [cross: true, fabric: true, sandbox: true]`.
+  
+
+  Section 5 — the mechanical crest arbiter and the analytic benchmark.
+
+  Work is *counted* from the schedule and the emitted code — FLOPs `F`,
+  bytes moved `Q`, and dynamic instructions `I` (the static instruction count
+  of each hot loop body, as emitted, times its trip count) — hardware is
+  *declared* (peak `π`, bandwidth `β`, sustained issue rate `ι`, per-call and
+  per-dispatch overheads: datasheet figures in a profile), and time is
+  *predicted* by a three-roof roofline
+
+      t = Σ max(F/π, Q/β, I/ι) + overheads
+
+  The issue roof matters: a kernel that must decode 4-bit weights is often
+  bound by instruction issue long before bandwidth, and a two-roof model
+  mispredicts it several-fold. No warm-up, no profiling: the same inputs give
+  the same decision on every node (Theorem 5.1).
+
+  Routing picks the substrate with the smallest predicted time. This
+  refines the specification's Eq. 3, which additionally required the
+  intensity `F/Q` to reach the accelerator's crest `φ = π/β`: once the
+  prediction contains every roof and every overhead, that guard can only
+  ever select the *slower* substrate, so it is reported (as `crest`) but no
+  longer decides.
+
+  Separation of concerns: counted work is a property of the program and its
+  code, so it goes into the (portable, co-signable) certificate; profiles
+  are properties of a deployment, so the decision is taken at run time on
+  each node from its own declared profiles.
+  
+
+  Reverse-mode differentiation of terms into terms (phase P7).
+
+  `grad(y, seed, wrt)` returns, for each term in `wrt`, the term computing
+  `(∂y/∂w)ᵀ·seed` — a vector–Jacobian product, built from the same
+  operators as the forward pass, so gradients are programs like any other:
+  lowered, run on every substrate, bit-identical across them and
+  certified. Contributions to one adjoint are summed in a fixed order (the
+  reverse topological order of the forward DAG), so the gradient program —
+  and its bits — are deterministic.
+
+  Differentiable operators: `add sub mul neg div exp rcp rsqrt sigmoid
+  silu` (with broadcasting), `reduce(:sum)`, `linear` (x : f32[T, k]),
+  `transpose`; leaves are inputs and constants. Anything else on a path to
+  a requested leaf is a rejection naming the operator.
+
+  The rules, with `o` the node's value:
+
+  | node | adjoint of each operand |
+  |---|---|
+  | `a + b`, `a − b` | `ḡ`, `±ḡ` (summed over broadcast axes) |
+  | `a·b` | `ḡ·b`, `ḡ·a` |
+  | `a / b` | `ḡ/b`, `−ḡ·o/b` |
+  | `exp a` | `ḡ·o` |
+  | `rcp a` | `−ḡ·o·o` |
+  | `rsqrt a` | `−½·ḡ·o·o·o` |
+  | `σ(a)` | `ḡ·o·(1 − o)` |
+  | `silu a` | `ḡ·σ(a)·(1 + a·(1 − σ(a)))` |
+  | `Σ_last a` | `ḡ` broadcast along the reduced axis |
+  | `x·Wᵀ` | `ḡ·W` (as `linear(ḡ, Wᵀ)`), `ḡᵀ·x` (as `linear(ḡᵀ, xᵀ)`) |
+  | `xᵀ` | `ḡᵀ` |
+
+  Summing over a broadcast axis uses `reduce(:sum)` (rows) or a
+  transpose–reduce–transpose (columns): extents reduced that way must be
+  multiples of 16, like every canonical reduction.
+  
+
+  The measurement apparatus (phase P6). `run/1` measures and writes
+  `BENCH.md`, `roofline.svg` and `engine.svg` into a directory:
+
+    * the machine: CPU, cores, ISA extensions, available event counters;
+    * kernels, per host ISA (AVX2, AVX-512), 1 thread and all cores: time inside the worker (minimum of
+      repeated steps of a resident session), counted FLOPs and bytes
+      (`Vapor.Arbiter.work/2`), achieved GFLOP/s and GB/s, the arbiter's
+      prediction, CPU time from the task-clock counter, speedup;
+    * the roofline: memory roof *measured* (a streaming kernel), compute
+      roof the declared peak of the native profile;
+    * the engine: decode throughput against concurrent sequences, threads
+      and ISA (continuous batching), prefill throughput;
+    * accuracy: ULP histograms of the canonical functions against binary64;
+    * the tokenizer: encoding speed on a real vocabulary (if fixtures exist).
+
+  Every figure is measured when the report is generated; nothing is copied
+  from elsewhere. Wall-clock numbers depend on the machine and its load.
+  
+
+  Two static chart forms for the benchmark report, as self-contained SVG:
+  a log–log roofline (points + roof lines) and a line chart. Colors are
+  roles (CSS custom properties) with light and dark values; every mark
+  carries a `<title>` (the hover tooltip of an SVG viewer); series are
+  direct-labelled and listed in a legend, so identity is never color alone.
+  
+
+  A deployable unit: compiled artifacts + signed certificate. Edge nodes
+  `unpack/3` it — checking the signature quorum and that every code blob and
+  SPIR-V module hashes to what the certificate names — and run it without
+  re-running the verification ladder (proof-carrying code: checking the
+  evidence is cheap, producing it is not).
+  
+
+  Canonical functions: `exp`, `rcp`, `rsqrt`, `div`, `sigmoid`, `silu`,
+  `max`, `min`, `tanh`, `gelu_tanh`, `sel` — each defined as a *microprogram*
+  over primitives whose results are identical on every substrate:
+
+      add sub mul          correctly rounded binary32 (x86, AArch64, RVV, Vulkan)
+      fma                  mul then add (canonical) · fused (:fast)
+      neg relu             exact
+      sel_lt a b x y       (a < b) ? x : y     ordered compare, NaN → y
+      iadd isub iand ixor  32-bit two's-complement lanes (bit patterns)
+      shl shr              logical shifts by an immediate
+
+  Division and square root are deliberately *not* primitives: Vulkan allows
+  2.5 ulp for `OpFDiv`, and ISAs disagree on `max`/`min` with NaN. Building
+  them from the primitives above gives bit-identical results everywhere,
+  including GPUs, and the oracle evaluates them by the very same
+  microprogram — there is exactly one definition.
+
+  Every function keeps its values finite and normal by construction (inputs
+  are clamped into the domain where the recurrence is exact), so devices
+  that flush subnormals to zero remain bit-identical.
+
+  A microprogram is a list of `{{:t, k}, op, [operand]}` with operands
+  `{:in, i}`, `{:t, k}`, `{:splat, bits}` or `{:imm, n}` (shift counts) —
+  the op format of `Vapor.KIR.Kernels.ew/1`, so expansion is inlining.
+  
+
+  Canonical bytes of a term: deterministic CBOR (RFC 8949 §4.2 — preferred
+  serialisation, definite lengths — with the length-first map-key order of
+  §4.2.3, i.e. RFC 7049 canonical CBOR, which `cbor2.dumps(x,
+  canonical=True)` also produces), the encoding under every signature and
+  every content address in vapor.
+
+  Why not `:erlang.term_to_binary(t, [:deterministic])`: OTP documents that
+  option as stable only *within* one release, so two verifier nodes on
+  different OTP versions could compute different bytes for the same payload
+  — and never reach a co-signing quorum — and nothing outside the BEAM can
+  check a signature over it. Deterministic CBOR is a fixed, standard,
+  language-independent function of the value: a Python, Rust or JavaScript
+  verifier recomputes the same bytes with any conforming library.
+
+  The mapping (the *vapor profile* of CBOR):
+
+  | term | CBOR |
+  |---|---|
+  | `nil`, `true`, `false` | simple values 22, 21, 20 |
+  | integers | major types 0/1, shortest form; beyond 64 bits tags 2/3 (bignums, no leading zero bytes) |
+  | floats | the shortest of binary16/32/64 that holds the value exactly |
+  | binaries | byte strings (major 2) |
+  | other atoms | tag 39 ("identifier") over the name as text |
+  | lists | arrays |
+  | tuples | tag 30305 over an array |
+  | maps (structs included) | maps, keys ordered by their encoded bytes: shorter first, then bytewise |
+
+  Pids, references, ports and functions have no canonical form and raise.
+  `decode/2` inverts `encode/1` on everything it produces, refusing
+  non-canonical input (so a value has exactly one accepted encoding).
+  
+
+  Rung 6 — proof-carrying code: the ladder's evidence as a signed artifact.
+
+  The payload names *what* was certified (SHA-256 of the program, of every
+  code blob and SPIR-V module, of the Lean sources the checkers were
+  extracted from) and *what was established* (allocations accepted by the
+  verified checker, admissibility bounds, parity digests per substrate,
+  envelope maxima, the dispatch decision). It is encoded canonically
+  (`Vapor.Canonical`: deterministic CBOR, the same bytes on every OTP
+  release and recomputable outside the BEAM) and signed with Ed25519
+  (`:crypto`, no dependency). Everything in the payload is a deterministic
+  function of the program and the toolchain — no timestamps, no host
+  measurements — so independent verifier nodes that re-run the ladder
+  produce *byte-identical* payloads and can co-sign.
+
+  Quorum: `verify/3` accepts a certificate only with at least `quorum`
+  valid signatures from distinct trusted keys (e.g. `f + 1` of `2f + 1`),
+  so no single compromised compiler node can certify alone.
+  
+
+  Chat messages → prompt text.
+
+  With the model's own chat template (`load_template/1`: `chat_template.jinja`,
+  the `chat_template` of `tokenizer_config.json`, or a GGUF's
+  `tokenizer.chat_template`) the prompt is rendered by `Vapor.Template`
+  exactly as transformers would render it — tools, tool calls and tool
+  results included (`render/3`). Without one, the format is recognised from
+  the vocabulary's special tokens (`render/2`):
+
+    * `<|im_start|>` — ChatML (Qwen2): `<|im_start|>role\\ncontent<|im_end|>\\n`…,
+      then `<|im_start|>assistant\\n`; the turn ends at `<|im_end|>`;
+    * `<|start_header_id|>` — Llama 3: `<|begin_of_text|>` and
+      `<|start_header_id|>role<|end_header_id|>\\n\\ncontent<|eot_id|>`…;
+      the turn ends at `<|eot_id|>`;
+    * otherwise the Llama 2 / Mistral form `[INST] … [/INST]` (a system
+      message folded into the first user turn), ending at EOS.
+
+  Returns `{prompt, add_bos, stop_token_ids}`.
+  
+
+  Section 2.2 — lowering a program to a kernel schedule via the **cut sweep**.
+
+  Nodes are visited in topological order. Elementwise nodes accumulate into a
+  fused region; a candidate region is *admitted* only if every target
+  backend compiles it — i.e. the linear-scan allocator finds a register
+  assignment at some group factor and the Lean-verified checker accepts it.
+  When admitting the next node would fail, the sweep closes the region there
+  (the value crossing the cut is materialised in memory) and starts a new
+  one. Consequently every emitted region is spill-free by construction: the
+  backends contain no spill code at all, and no region reaches emission
+  without a checked allocation.
+
+  Contractions are regions of their own (`qgemv` = sub-block sums + GEMV,
+  `gemm_i8` = one kernel).
+  
+
+  Section 2.2 — equational rewriting `t ⟶ t′` with `⟦t⟧ = ⟦t′⟧` *bit for bit*
+  (static error budget ε = 0). Only identities that hold for every IEEE-754
+  input, signed zeros included, are admitted:
+
+    * `neg(neg x) → x`
+    * `x · 1.0 → x`, `1.0 · x → x` (exact for all x, including ±0 and NaN)
+    * `x + (−0.0) → x` — but **not** `x + 0.0 → x`: `(−0) + (+0) = +0`
+    * `x − (+0.0) → x` — but not `x − (−0.0)`
+    * `relu(relu x) → relu x`
+    * constant folding: a node whose operands are all constants is evaluated
+      by the oracle (the declared semantics itself), under the program's
+      float policy — never reassociated, never approximated.
+
+  Rewriting is innermost-first, bounded, and hash-consed through the DAG.
+  
+
+  The result of lowering: value slots, the kernel schedule, and one linked
+  code blob per ISA (plus SPIR-V modules when the fabric tier is targeted).
+  Schedules are symbolic in the semi-dynamic dimensions; `bind/2` resolves
+  them against concrete inputs.
+  
+
+  Correctly rounded elementary functions — host-independent by *definition*.
+
+  Certified programs carry constants computed in the BEAM (RoPE tables,
+  frequency scalings). Computing them with `:math.cos/1`, `:math.sin/1` or
+  `:math.pow/2` makes the certificate a function of the host's libm: glibc,
+  musl and Apple's libm differ in the last bit on some inputs, so two
+  independent nodes would compile different constants, produce different
+  payloads, and never reach a co-signing quorum (ARCHITECTURE §6).
+
+  The fix is not "a better approximation" but a *mathematical* definition:
+  every function here returns the binary32 (or binary64) value nearest to the
+  exact real result, ties to even. Any correct implementation anywhere gives
+  the same bits, so the result needs no trust in the code that produced it —
+  only in the definition.
+
+  Method (Ziv's strategy):
+
+    1. a fast path in binary64, using only IEEE `+ − × ÷` (correctly rounded
+       on every conforming machine; the BEAM never fuses or extends), with a
+       rigorous, deliberately loose error bound `E`;
+    2. if the interval `y ± E` lies strictly between two consecutive
+       rounding boundaries of the target format, every real in it — the
+       exact result included — rounds to the same value: done;
+    3. otherwise the result is recomputed in fixed point on Erlang integers
+       with `W` bits (π by Machin's formula, ln 2 by an atanh series, Taylor
+       series with truncation counted), and the same test is applied with
+       `W = 128, 256, 512, …` until it decides. Transcendental values of
+       nonzero rationals are never rounding boundaries (Lindemann–Weierstrass),
+       so the loop terminates; exact cases (`cos 0`, `sin 0`, `b^0`, `b^1`)
+       are returned directly.
+
+  The fast path decides almost always (measured in `cr_test`); the integer
+  path makes the answer correct when it does not. Inputs are binary32 or
+  binary64 values given as floats (or integers).
+  
+
+  Text embeddings from any supported decoder: the final normalised hidden
+  state, pooled, as an L2-normalised binary32 vector.
+
+  Decoder-based embedding models (Qwen3-Embedding, gte-Qwen2, e5-mistral)
+  are exactly the architectures vapor runs; with `pooling: :last` (their
+  convention, the last token after the EOS the tokenizer appends —
+  `append_eos: true`) or `:mean`. The program is the model without its
+  vocabulary head (`Vapor.Model.Llama.program(…, head: false, hidden: true)`),
+  so the hidden states are the certified program's bits: an embedding is the
+  same vector on every substrate — which is what makes a vector index
+  reproducible (`Vapor.RAG`). Pooling and normalisation happen in the BEAM
+  in binary64 with `+ − × ÷ √` only (correctly rounded everywhere), then
+  rounded once to binary32.
+  
+
+  AArch64 (A64 + Advanced SIMD/NEON) backend — every instruction a
+  little-endian 32-bit word built from its bit fields.
+
+  AAPCS64: `x0 = args`; callee-saved `x19–x28` and the low halves `d8–d15`
+  are saved in a 16-byte-aligned frame only when the allocator used them;
+  `x16` (IP0) and `v31` are backend scratch; `x18` (platform), `x29`, `x30`
+  are never allocated.
+
+  Register groups: `:strip` = `g` q-registers (4·g lanes), `:f16l` = 4 q,
+  `:i32acc` = 2 q (low/high halves of the widened product).
+  
+
+  Concatenates compiled kernels into one position-independent code blob.
+  Every kernel starts on a 16-byte boundary; padding is a trap instruction
+  of the target ISA (`int3`, `udf #0`, the all-zero illegal RISC-V word), so
+  a stray jump into padding faults instead of sliding into the next kernel.
+  
+
+  The target-independent half of code generation:
+
+      portable IR ──select──▶ machine IR (virtual regs) ──liveness──▶ intervals
+        ──linear scan (group factor g)──▶ assignment ──verified checker──▶
+        ──encode (prologue · body · epilogue, label fixups)──▶ bitstring
+
+  A backend (`Vapor.Emit.X86`, `Vapor.Emit.ARM`, `Vapor.Emit.RVV`) supplies the
+  register model, instruction selection and the bit-level encoders. The group
+  factor loop tries the backend's factors from largest to smallest and keeps
+  the first one whose allocation is accepted; if none is, the kernel is
+  rejected with the pressure point (the cut sweep's signal to split).
+  
+
+  RV64GCV (RVV 1.0) backend — every instruction a 32-bit word built from
+  bit fields (Axiom 4).
+
+  Corrections over the predecessor's encoder, each checked against the
+  ratified RVV 1.0 specification and GNU objdump:
+
+    * `vtype` is `vlmul[2:0] | vsew[5:3] | vta[6] | vma[7]` — the predecessor
+      had SEW and LMUL swapped (the pre-1.0 draft layout).
+    * vector loads/stores live in the LOAD-FP/STORE-FP major opcodes with a
+      width field (`vle8.v` = width 000, `vle32.v` = 110), not in OP-V.
+    * every kernel is a complete psABI function: `a0 = args`, callee-saved
+      `s*`/`fs*` spilled to a 16-byte-aligned frame only when used, and
+      `ret` (= `jalr x0, 0(ra)`).
+
+  Scalar FP uses the static rounding mode RNE (rm = 000), never the dynamic
+  `frm`, so results cannot depend on inherited state. Vector registers are
+  allocated in LMUL-aligned groups; `v0` is reserved for masks, `x31` (t6) is
+  backend scratch.
+
+  Vector length agnosticism: `:f16l` values are e32/m4 with `vl = 16`
+  (legal for every VLEN ≥ 128, i.e. every RVV 1.0 implementation), so the
+  canonical reductions are VLEN-independent; strips use `vsetvli` on the
+  remaining count.
+  
+
+  Direct SPIR-V synthesis (Axiom 4): a symbolic assembler that interns
+  types and constants, numbers ids, orders the module's logical sections
+  and serialises 32-bit words — no glslang, no text, no external tool.
+
+  A module description is a map:
+
+      %{caps: [..], exts: [..], local_size: {x, y, z}, version: {1, 3},
+        buffers: [%{binding: 0, elem: :u32, writable: true}, ...],
+        push: [:n, :rows],            # u32 push-constant members, in order
+        body: [inst]}
+
+  Instructions are `{result | nil, op, type | nil, operands}`; operands are
+  result names (any term), `{:lit, n}`, `{:str, s}`, `{:c, type, value}`
+  (an interned constant) or `{:t, type}` (an interned type id). Built-in
+  names: `:gid` (gl_GlobalInvocationID, a loaded uvec3), `:wid` (workgroup
+  id), `{:buf, k}` (binding k's variable), `{:push, name}` (a loaded u32
+  push constant), `:glsl` (the GLSL.std.450 import).
+
+  With `no_contraction: true`, every `OpFMul`/`OpFAdd`/`OpFSub` result is
+  decorated `NoContraction`, forbidding the driver from fusing them — the
+  canonical float policy on the GPU.
+  
+
+  The kernel library for Substrate II, as SPIR-V compute modules.
+
+  Each kernel reproduces the *canonical order* of `Vapor.Runtime.Oracle`
+  exactly — one invocation per output element or row, the same 16-lane
+  accumulation pattern, the same tree reduction — with every `OpFMul`,
+  `OpFAdd`, `OpFSub` decorated `NoContraction`. Because Vulkan requires
+  those operations to be correctly rounded, the GPU result is bit-identical
+  to every CPU substrate (for denormal-free data on devices that flush).
+
+  ABI: slot arguments become storage-buffer bindings `0..n` (in order), and
+  immediate arguments become 32-bit push constants (in order) — the same
+  argument list as the native kernels.
+  
+
+  x86-64 AVX2/FMA backend — pure binary synthesis (REX, VEX, ModR/M, SIB,
+  opcodes written as bits; no assembler anywhere).
+
+  SysV AMD64 ABI: the kernel receives `const uint64_t *args` in `rdi`;
+  callee-saved `rbx rbp r12–r15` are saved/restored only if the allocator
+  used them; `vzeroupper` precedes `ret` (no AVX→SSE transition penalty for
+  the caller). `r11` and `ymm15` are backend scratch and never allocated.
+
+  Register groups: a `:strip` value of group factor `g` is `g` consecutive
+  ymm registers (8·g lanes), `:f16l` is 2 ymm, `:i32acc` is `g` ymm; a
+  size-1 register used as a vector operand is read by every lane (a
+  broadcast scalar).
+
+  Constants never occupy vector registers: a `{:const, bits}` operand is a
+  RIP-relative 32-byte memory operand into a per-kernel pool appended after
+  the code (x86 has 15 allocatable ymm registers — a canonical `exp` alone
+  uses 15 distinct constants). Where an encoding cannot take memory in that
+  position, the constant is loaded into a fresh allocated register.
+  
+
+  x86-64 AVX-512 backend (the x86-64-v4 level: F, VL, BW, DQ, CD, plus BMI2)
+  — pure binary synthesis like `Vapor.Emit.X86`, which it reuses for the
+  integer side (general-purpose registers, branches, frame); every vector
+  and scalar-float instruction here is EVEX-encoded.
+
+  What the wider ISA buys, without changing a single result bit:
+
+    * **16 lanes per register** — the canonical width. A `:f16l` value (the
+      16 partial sums of every canonical dot product) is one zmm instead
+      of two ymm, so a weight row is one FMA per 16 weights and the
+      canonical reduction tree starts with one `vextractf64x4`.
+    * **32 vector registers** (zmm0–30 allocatable, zmm31 backend scratch),
+      so larger group factors fit without spilling.
+    * **Masked strip tails**: the last `n < 16·g` elements of a strip run
+      the vector body once more with opmask registers `k2…k5` on its loads
+      and stores (`bzhi` builds the mask), instead of a scalar loop.
+      Arithmetic on the masked-off lanes is computed and discarded: lanes
+      are independent, and floating-point exceptions are masked.
+    * **Embedded broadcast** `{1to16}`: a constant operand is a 4-byte pool
+      entry read by every lane, so the pool stays a few cache lines.
+
+  Selections (`vcmpps` into `k1`, then `vblendmps`) and the reduction tree
+  are those of the AVX2 backend lane for lane, so the code is bit-identical
+  to the oracle — tested on every canonical program and whole models.
+
+  EVEX displacements are always disp32 (never the compressed disp8·N), so
+  addressing is the same as in the VEX backend.
+  
+
+  Continuous batching over a paged KV cache, on one resident session.
+
+  The model is compiled once with `kv: {:paged, page, pages, sequences}` and
+  `logits: :last`, and opened as a `Vapor.Runtime.Session` on a worker
+  (optionally with a thread pool). Every step packs rows from *all* active
+  sequences into one call — one row per decoding sequence plus a chunk of
+  prompt from sequences still prefilling, up to `:step_tokens` — so the
+  weights are read once for the whole batch. New requests join at the next
+  step; finished ones leave and free their pages at once.
+
+  Invariants (tested): a sequence's tokens are the same whether it runs
+  alone or with others, however its prompt is chunked, wherever its pages
+  are, and with any thread count — rows are independent in every kernel,
+  attention reads only the sequence's own pages in logical order, and the
+  sampler depends only on the row's logits, the seed and the step.
+
+  Pages are reserved at admission for the prompt plus `max_tokens`, so a
+  running sequence can never stall for memory (no deadlock, no preemption);
+  a request that does not fit waits in the queue, one that can never fit is
+  refused.
+
+  Messages to the requesting process: `{:vapor, ref, {:token, id, bytes}}`
+  per generated token, then `{:vapor, ref, {:done, reason, usage}}` with
+  `reason` in `:stop | :length | :eos | :error | :cancelled` and `usage =
+  %{prompt_tokens, completion_tokens}`. `:error` means the worker died under
+  the step: its caches are gone, so the sequences it held end there (the
+  worker restarts, the session is reopened, and the engine keeps serving).
+
+  A request lives as long as its receiver: the engine monitors it, and when
+  the receiver exits — an HTTP client hung up, a LiveView closed, a job was
+  killed — its sequences leave the batch and their slots and pages go back
+  to the pool at the next step boundary. `cancel/2` does the same on
+  purpose.
+
+  With `replicas: n > 1`, `start_link/1` starts a `Vapor.Engine.Pool` of `n`
+  engines instead — data parallelism over requests, behind the same API.
+  
+
+  Data parallelism over requests: `n` replicas of `Vapor.Engine`, each with
+  its own worker process, behind the engine's own API (`Vapor.Engine.generate/3`,
+  `complete/4`, `info/1` work on a pool unchanged, and so does `Vapor.Serve`).
+
+    * **One compilation, one copy of the weights.** The model is prepared
+      once (`Vapor.Engine.prepare/1`); every replica opens a session on the
+      same compiled program, whose large constants live in content-addressed
+      shared memory — `n` workers map the same physical pages.
+    * **Routing:** a new request goes to the replica with the fewest
+      outstanding requests (ties: the lowest index). Every replica computes
+      the same bits for a request — same program, batch invariance — so the
+      routing decides only *when* a request runs, never *what* it yields
+      (tested).
+    * **Isolation:** a replica that dies takes only its own requests with it
+      (each ends with `{:done, :error, usage}`); the pool starts a new
+      replica in its place and keeps serving. A worker crash inside a
+      replica is handled by the engine itself.
+
+  Threads: `:threads` is the total; each replica gets `max(1, threads ÷ n)`
+  for its intra-op pool. Messages from replicas pass through the pool
+  (one extra local hop per token), which is how it knows what is outstanding.
+  
+
+  Definitions extracted from the Lean 4 development in `proofs/` (see
+  `proofs/Extract.lean`). Each function is the elaborated Lean term that the
+  cited theorems are about, printed as Elixir; the conformance suite
+  `test/vapor/extracted_conformance_test.exs` holds values computed by Lean.
+  Nested pairs follow Lean's `α × β × γ = α × (β × γ)`: `{a, {b, {c, d}}}`.
+  
+
+  Exact IEEE-754 binary32 arithmetic on the BEAM — the numeric ground truth
+  that every substrate (x86, ARM64, RISC-V, SPIR-V) is compared against.
+
+  Values are carried as raw 32-bit patterns, never as "approximately f32"
+  floats, so `-0.0`, subnormals and the exact rounding of every operation are
+  observable and digestible.
+
+    * `add/2`, `sub/2`, `mul/2` evaluate in binary64 and round once to
+      binary32. This is *correctly rounded*: double rounding through a format
+      with p' ≥ 2p + 2 bits of precision is innocuous (Figueroa, 1995;
+      53 ≥ 2·24 + 2).
+    * `fma/3` is computed in exact dyadic arithmetic (arbitrary-precision
+      integers) and rounded exactly once — no double-rounding argument needed.
+    * `round_dyadic/2` is the single rounding primitive (round-to-nearest,
+      ties-to-even, gradual underflow, overflow to ±∞).
+
+  Non-finite operands raise: a certificate only covers finite executions.
+  
+
+  Prime fields for proof systems and lattice cryptography — exact arithmetic
+  on BEAM integers, the reference (oracle) every future kernel of this kind
+  is checked against, as `Vapor.Runtime.Oracle` is for floating point.
+
+  | field | p | 2-adicity | used by |
+  |---|---|---|---|
+  | `:babybear` | 2³¹ − 2²⁷ + 1 | 27 | STARK provers (RISC Zero, SP1) |
+  | `:goldilocks` | 2⁶⁴ − 2³² + 1 | 32 | Plonky2/3-style provers |
+  | `:bn254` | r of BN254 (254 bits) | 28 | Groth16/PLONK (circom, snarkjs), Ethereum precompiles |
+  | `:ntt30` | 998 244 353 = 119·2²³ + 1 | 23 | an NTT-friendly modulus (negacyclic rings up to N = 2²²) |
+
+  A field is a map `%{name, p, g, s}`: modulus, a multiplicative generator,
+  and the 2-adicity `s` (2ˢ ∥ p − 1), so `root_of_unity(f, 2ᵏ)` exists for
+  every `k ≤ s`. Integers enter by the signed embedding (`from_int/2`): a
+  negative `z` is `p + z`, and `to_int/2` reads values above `p/2` back as
+  negatives — injective on `|z| < p/2`, which is what makes an integer
+  computation and its image in the field the same computation (see
+  `Vapor.ZK`).
+  
+
+  The number-theoretic transform over a `Vapor.Field` — the kernel at the
+  heart of both STARK provers (low-degree extension, polynomial commitment)
+  and lattice cryptography (products in `Z_q[X]/(Xᴺ + 1)` for BFV, CKKS,
+  ML-KEM). Exact reference: iterative radix-2 Cooley–Tukey with bit
+  reversal; the negacyclic variant twists by a 2N-th root ψ.
+
+  This module is the oracle a certified NTT kernel will be checked against
+  bit for bit (docs/ZK_FHE.md); it is not itself fast.
+  
+
+  Byte-level grammars for constrained decoding — the output of a model made
+  to *be* a member of a language (a JSON Schema, a tool call), not checked
+  after the fact.
+
+  A grammar is a term of a small IR over bytes:
+
+      {:lit, bytes}                 the exact bytes
+      {:seq, [g]}  {:alt, [g]}      sequence, alternation
+      {:rep, g, min, max}           g repeated min..max times (max :inf); g must not match ""
+      {:class, [lo..hi]}            one byte in the ranges
+      {:str, %{min:, max:}}         a JSON string literal, quotes included (valid UTF-8,
+                                    escapes checked, length counted in characters)
+      {:num, :number | :integer}    a JSON number
+      {:ref, name}                  a named rule (recursion; never left-recursive)
+      {:substr, key}                any non-empty substring of the text whose suffix
+                                    automaton (`suffix_automaton/1`) is `defs[key]`
+
+  plus the rule table `defs`. Matching keeps a *set of configurations*;
+  a configuration is a stack of pending items (a Thompson-style simulation
+  of the pushdown automaton), so alternatives and optional members cost no
+  backtracking: `advance/2` consumes one byte in every configuration at once,
+  and the set is empty exactly when the bytes so far are no prefix of any
+  member of the language. A configuration with an empty stack is a complete
+  member (`complete?/1`); `dead?/1` says no byte can follow.
+
+  Token-level masks are computed by walking the vocabulary trie
+  (`Vapor.Grammar.Vocab`) with this matcher.
+  
+
+  The constraint one generated sequence carries: which token ids may come
+  next, and how each chosen token moves the grammar.
+
+  Two modes:
+
+    * `:strict` — the whole output is a member of the grammar (structured
+      outputs, `tool_choice: "required"`). Once the bytes form a complete
+      member the end-of-sequence ids become allowed; once nothing can
+      follow, *only* they are.
+    * `{:lazy, trigger}` — free text until the generated text contains
+      `trigger` (e.g. Qwen's `<tool_call>`, Mistral's `[TOOL_CALLS]`); then
+      the grammar governs from the byte after the trigger until it is
+      complete, and the text is free again (several calls may follow). This
+      is how a model may either answer or call a tool (`tool_choice: "auto"`).
+
+  Everything is a function of the tokens chosen so far, so a constrained
+  sequence stays reproducible: same logits, seed and step ⇒ same tokens.
+  A guarantee worth stating: when the unconstrained choice is allowed, the
+  constrained choice is the same token (greedy picks the first maximum of a
+  subset that contains it).
+  
+
+  JSON Schema → `Vapor.Grammar`. The subset structured outputs and tool
+  calls use in practice:
+
+    * `type` (a name or a list), `enum`, `const`, `anyOf`/`oneOf`,
+      `$ref` to `#/$defs/…` or `#/definitions/…` (recursion allowed);
+    * objects: `properties`, `required`, `additionalProperties` (false, or
+      a schema when there are no `properties`); members are emitted in a
+      fixed order — the required ones as `required` lists them, then the
+      optional ones by name — and optional ones may be left out;
+    * arrays: `items`, `minItems`, `maxItems`;
+    * strings: `minLength`, `maxLength`, `enum`; numbers and integers;
+      booleans; null; `{}` or `true` for any value.
+
+  Keywords that constrain values in ways a grammar here does not express
+  (`pattern`, `format`, `minimum`, `maximum`, `multipleOf`, `not`,
+  `if`/`then`/`else`, `patternProperties`, `uniqueItems`, …) are a
+  rejection naming the keyword — unless `lenient: true`, which drops them
+  (the output is then valid for the schema without them). Annotations
+  (`title`, `description`, `default`, `examples`, `$schema`, `$id`) are ignored.
+  
+
+  A tokenizer's vocabulary prepared for constrained decoding: the token
+  bytes in a trie, and the class of *string-safe* tokens.
+
+  Which tokens may come next is decided by walking the trie with the
+  grammar's configuration set (`Vapor.Grammar.step_configs/3`): a subtree is
+  abandoned the moment its prefix is rejected, and every token whose bytes
+  survive is allowed. Inside a JSON string with no length limit most of the
+  vocabulary is allowed and the walk would visit all of it, so tokens are
+  split once, at build time: a token is string-safe when its bytes are
+  printable, contain no `"` or `\\`, and form whole UTF-8 characters — such a
+  token takes every unbounded string configuration to an equal one, so all
+  of them are allowed together without a walk, and only the trie of the
+  other tokens is walked (the precomputation in the spirit of XGrammar's
+  context-independent tokens).
+
+  Special tokens (control tokens such as `<|im_end|>`) and empty tokens are
+  never produced by a grammar; the end of a constrained output is signalled
+  by the end-of-sequence ids given to `Vapor.Grammar.Constraint`.
+  
+
+  ggml tensor payloads → binary32, bit-identical to llama.cpp's reference
+  dequantisation (`gguf-py`'s `quants.py`, tested against it):
+
+  `F32 F16 BF16 Q8_0 Q4_0 Q4_1 Q5_0 Q5_1` (32-weight blocks) and
+  `Q4_K Q5_K Q6_K` (256-weight super-blocks).
+
+  The reference computes in binary32, one rounding per operation; here each
+  operation is evaluated in binary64 and rounded to binary32 at once, which
+  yields the same bits for `+ − ×` (binary64 has more than twice binary32's
+  precision plus two bits, so the double rounding is innocuous).
+  
+
+  The GGUF airlock (llama.cpp's container, versions 2 and 3):
+
+      "GGUF" | version:u32 | n_tensors:u64 | n_kv:u64
+      n_kv × (key:str, type:u32, value)          metadata
+      n_tensors × (name:str, n_dims:u32, dims:u64[n_dims], ggml_type:u32, offset:u64)
+      padding to `general.alignment` (default 32)
+      tensor data
+
+  Strings are `u64 length + bytes`; values are the 13 GGUF types (integers,
+  floats, bool, string, and arrays of any of them).
+
+  Nothing is trusted: every count is checked against the bytes that remain
+  in the file before anything is allocated (an array of `n` elements needs
+  at least `n` bytes; `n` strings at least `8n`), strings must be UTF-8,
+  keys must be unique, arrays nest at most 2 deep, tensor dimensions are
+  positive, and every tensor's data lies inside the file, aligned, without
+  overlapping another. Only the metadata and the tensor index are parsed
+  here — from a prefix of the file that grows until it suffices, so a
+  multi-gigabyte model is not read to learn its vocabulary.
+  
+
+  The safetensors airlock: `[u64 header length][JSON header][data]`.
+
+  Nothing from the file is trusted until the header has been checked in
+  full (Axiom 5):
+
+    * the header is bounded (≤ 100 MiB) and is a JSON object without
+      duplicate keys (`Vapor.JSON` refuses them);
+    * every tensor names a known dtype, a shape of non-negative integers and
+      `data_offsets = [begin, end]` inside the data section with
+      `end − begin = numel · sizeof(dtype)`;
+    * the tensors tile the data section exactly — no overlap and no hole
+      (the format's own rule against polyglot files).
+
+  Only then is data read. Every dtype of the format is recognised (sizes
+  checked, sub-byte ones by bits); vapor's tensors are binary32, `s32`,
+  `s8` or `u8`, and each stored dtype maps onto them by a stated rule:
+
+  | stored | vapor | rule |
+  |---|---|---|
+  | `F32` `I32` `I8` `U8` | same | the bytes |
+  | `F16` `BF16` | `f32` | exact widening (`bf16` a 16-bit shift, `f16` incl. subnormals) |
+  | `F8_E4M3` `F8_E4M3FNUZ` `F8_E5M2` `F8_E5M2FNUZ` `F8_E8M0` | `f32` | exact widening (a 256-entry table per format) |
+  | `F64` | `f32` | rounded to nearest-even (overflow to ±∞), as numpy and torch |
+  | `I16` `U16` `BOOL` | `s32` | exact; `BOOL` bytes must be 0 or 1 |
+  | `I64` `U32` `U64` | `s32` | exact when every value fits, else refused |
+  | `F4` `F6_E2M3` `F6_E3M2` `C64` | — | recognised and refused by name |
+
+  Writing stores `f32`, `s32`, `s8`, `u8`, and narrows binary32 to `BF16`
+  or `F16` on request (round to nearest-even, NaN canonical), as torch
+  does. Checkpoints larger than a shard limit are written in the Hugging
+  Face sharded form (`write_sharded/4`). A rejection names the tensor and
+  the violated bound.
+  
+
+  RFC 8259 JSON, in-tree (`deps: []`): the formats vapor ingests —
+  `config.json`, `tokenizer.json`, safetensors headers — and the OpenAI wire
+  format it serves are all JSON.
+
+  Decoding maps objects to maps with string keys, arrays to lists, numbers to
+  integers or floats, `true`/`false`/`null` to `true`/`false`/`nil`.
+  Duplicate keys are an error (a safetensors header must not be able to say
+  two things about one tensor). With `ordered: true` objects decode to
+  `{:dict, [{key, value}]}` in document order instead — what a chat
+  template needs to reproduce Python's insertion-ordered dicts — and
+  `encode/1` writes such a value back in that order. Nesting is bounded (`@max_depth`), so a
+  hostile document cannot exhaust the stack.
+  
+
+  Portable kernel IR — the single description every backend selects from.
+
+  A kernel is a linear list of instructions over *virtual registers*
+  `{:vr, id, kind}`; kinds are substrate-neutral and are sized by each backend
+  (`g` is the register-group factor):
+
+  | kind      | meaning                          | RVV (LMUL)  | AVX2 (ymm) | NEON (q) |
+  |-----------|----------------------------------|-------------|------------|----------|
+  | `:gpr`    | 64-bit integer / pointer         | x-reg       | r64        | x-reg    |
+  | `:fpr`    | scalar binary32                  | f-reg       | xmm lane 0 | s-reg    |
+  | `:strip`  | f32 strip of a strip-mined loop  | m`g`        | `g`        | `g`      |
+  | `:f16l`   | exactly 16 binary32 lanes        | m4          | 2          | 4        |
+  | `:i32acc` | s32 accumulator of an i8 strip   | m`4g`       | `g`        | 2        |
+
+  The group factor generalises RVV's LMUL to every ISA: an AVX2 strip with
+  `g = 4` is four ymm registers processed in lockstep. The cut sweep picks
+  the largest `g` whose allocation succeeds (never spilling).
+
+  Control flow is explicit (`{:label, l}`, branches) except for one
+  structured form, `{:strip, n, ptrs, body}` — "process `n` f32 elements,
+  advancing every pointer in `ptrs` by 4 bytes per element" — which each
+  backend expands into its own strip-mining discipline (RVV `vsetvli`
+  loops; AVX2/NEON vector loop plus a scalar tail on lane 0 of the same
+  registers). `{:strip_i8, n, ptrs, body, tail}` is the byte-stride variant
+  with an explicit scalar tail.
+
+  ## Instruction set
+
+      {:arg, x, i}                 x ← args[i] (u64 argument block)
+      {:li, x, imm}  {:mov, x, y}  {:addi, x, y, imm}  {:add|:sub|:mul, x, y, z}
+      {:label, l}  {:jmp, l}  {:bnez|:beqz, x, l}  {:blt_imm, x, imm, l}  (signed x < imm)
+      {:ld_u8|:ld_s8, x, base, off}  {:st_i32, x, base, off}
+      {:ldf, f, base, off}  {:stf, f, base, off}  {:lif, f, bits}  {:cvt_u8f, f, x}
+      {:fadd|:fsub|:fmul, f, a, b}  {:fmacc, acc, a, b}   (policy-aware acc += a·b)
+      {:vld|:vst, v, base, off}  {:vsplat, v, f}  {:vfadd|:vfsub|:vfmul, v, a, b}
+      {:vfma, v, a, b, c}  {:vfneg|:vrelu, v, a}          (strip kind)
+      {:vzero16, v}  {:vld_nib, lo, hi, base, off}  {:vmul_sf, v, a, f}
+      {:vfmacc_mem, acc, w, base, off}  {:vld16, v, base, off}  {:vfadd16, v, a, b}
+      {:vld_bf16, v, base, off}          (16 bfloat16 → 16 binary32, exact; f16l kind)
+      {:vreduce16, f, v}                                  (canonical tree, f16l kind)
+      {:vzero_i32, acc}  {:vi8mac, acc, pa, pb}  {:vred_i32, x, acc}
+      :ret
+  
+
+  The kernel library, written once in portable IR (`Vapor.KIR`).
+
+  Every kernel has the same ABI on every substrate:
+
+      void kernel(const uint64_t *args)
+
+  so the worker needs exactly one call signature, and a kernel's argument
+  count is bounded by register pressure (decided by the allocator), not by
+  the ABI's argument registers.
+  
+
+  Live intervals over selected machine code (the input of linear scan).
+
+  Machine instructions are `{op, defs, uses, attrs}`; registers are
+  `{:vr, id, class, size}` (virtual) or `{:pr, class, index}` (precoloured).
+  `attrs` may carry `label: l`, `br: l` (with `uncond: true` for jumps),
+  `ret: true`, and `ec: true` (early clobber: the definition is live at the
+  *use* point, so it can never share a register with an operand — required
+  by RVV widening/extension instructions and multi-register expansions).
+
+  Instruction `i` has a use point `2i` and a def point `2i + 1`. Liveness is
+  the standard backward dataflow fixpoint over the CFG (so values carried
+  around loop back-edges are live across the whole loop); an interval is the
+  hull `[start, stop)` of every point where the register is live.
+  
+
+  Linear-scan register allocation with *register groups* (RVV LMUL, and its
+  generalisation to AVX2/NEON unrolled strips), and **no spilling**.
+
+  Each interval asks for a block of `size ∈ {1, 2, 4, 8}` consecutive
+  physical registers starting at a multiple of `size` (RVV 1.0 §3.4.2
+  register-group alignment; imposed uniformly so a single checker covers
+  every ISA). Allocation is first-fit over a preference order — caller-saved
+  registers first, then blocks whose buddy half is already occupied (keeping
+  large aligned blocks whole), then the ISA's order.
+
+  There is deliberately no spill path: when a block cannot be found the
+  allocator returns the pressure point, and the *cut sweep* either lowers the
+  group factor or closes the fused region there. Every accepted allocation is
+  then re-validated by `Vapor.Extracted.check_alloc/2`, a checker proven sound
+  in Lean (`proofs/Vapor/RegAlloc.lean`: an accepted assignment never maps two
+  simultaneously-live values to overlapping registers) and extracted to
+  Elixir — so "spill-free and clobber-free" is established per region by a
+  verified checker, not assumed of the heuristic.
+  
+
+  Merkle trees with the hashing of RFC 6962 (Certificate Transparency):
+  leaves are `SHA-256(0x00 ‖ data)`, inner nodes `SHA-256(0x01 ‖ left ‖
+  right)`, and a tree of `n` leaves splits at the largest power of two
+  below `n` — so the root commits to the exact sequence, and inclusion
+  proofs have `⌈log₂ n⌉` hashes. The empty tree's root is `SHA-256("")`.
+
+  Used for corpus snapshots (`Vapor.RAG`: a retrieved chunk proves it
+  belongs to the corpus the answer claims) and for agent journals
+  (`Vapor.Agent.Journal`: any event proves it belongs to the run).
+  Verification needs nothing but this module and SHA-256, so a verifier in
+  any language can check proofs.
+  
+
+  A model on disk → a vapor program.
+
+      {:ok, %{config: cfg, program: p}} = Vapor.Model.load("path/to/Qwen2-0.5B", max_seq: 512)
+      {:ok, %{config: cfg, program: p}} = Vapor.Model.load("path/to/model-q8_0.gguf")
+
+  Two forms, told apart by the path:
+
+    * a Hugging Face checkpoint directory: `config.json` and either
+      `model.safetensors` or the sharded form (`model.safetensors.index.json`
+      + shards), with `tokenizer.json` or `tokenizer.gguf`;
+    * a llama.cpp `.gguf` file, which carries configuration, weights and
+      vocabulary together (`Vapor.Model.GGUF`).
+
+  Every file passes its airlock (`Vapor.JSON`, `Vapor.Ingest.Safetensors`,
+  `Vapor.Ingest.GGUF`, `Vapor.Model.Config`) before anything is built;
+  shard names from the index must be plain file names inside the directory.
+  
+
+  A Hugging Face `config.json`, checked. Every supported family is one
+  pre-norm decoder — RMSNorm, rotary positions, grouped-query attention,
+  gated MLP — and differs in details this struct makes explicit:
+
+  | `model_type` | attention | MLP | notes |
+  |---|---|---|---|
+  | `llama`   | GQA, `attention_bias` on q/k/v/o | SwiGLU | `rope_scaling` none, `linear`, `llama3` or `yarn` |
+  | `mistral` | GQA | SwiGLU | `sliding_window` must not bind within the cache |
+  | `qwen2`   | GQA, q/k/v bias | SwiGLU | |
+  | `qwen3`   | GQA + per-head q/k RMSNorm | SwiGLU | explicit `head_dim` |
+  | `qwen3_moe` | as `qwen3` | top-k softmax mixture of experts | `norm_topk_prob`, `decoder_sparse_step`, `mlp_only_layers` |
+  | `mixtral` | as `mistral` | top-k softmax mixture of experts (renormalised) | |
+  | `gemma3_text` | GQA + q/k norm, `query_pre_attn_scalar` | GeGLU (tanh) | `(1 + w)` norms, sandwich norms, √d embedding scale, local/global RoPE per layer type |
+  | `deepseek_v3` | multi-head latent attention (MLA) | dense first layers, then sigmoid group-limited MoE with shared experts | `rope_interleave`, YaRN with `mscale_all_dim` |
+
+  Anything else (other activations, MLP biases, attention logit soft-capping,
+  sliding windows shorter than the cache, dynamic or LongRoPE scaling, …) is
+  a rejection naming the field, never a silently wrong model.
+
+  `raw` keeps the checked map: `to_map/1` gives it back for the families
+  whose spelling vapor does not rebuild field by field.
+  
+
+  A llama.cpp GGUF model → `Vapor.Model.Config` + weights with Hugging Face
+  names, through the GGUF airlock (`Vapor.Ingest.GGUF`) and the reference
+  dequantisation (`Vapor.Ingest.GGML`).
+
+  Architectures `llama` (Llama, Mistral) and `qwen2`. Two conventions of
+  llama.cpp's converter are undone so the weights mean what the
+  `rotate-half` RoPE of `Vapor.Model.Llama` expects:
+
+    * for `llama`, the rows of `attn_q`/`attn_k` (weights and biases) are
+      permuted within each head from `(pair, half)` to `(half, pair)` order
+      — the converter's `permute`, inverted;
+    * Llama 3 frequency scaling arrives as a `rope_freqs` tensor of per-pair
+      divisors (applied to θ^(−2i/d) as llama.cpp does).
+
+  Tensors are read one at a time from the file (positioned reads), so the
+  BEAM never holds the raw file.
+
+  `write/4` is the inverse: a configuration and Hugging Face–named weights
+  → a GGUF that llama.cpp loads, with the converter's conventions applied
+  (q/k row order for `llama`, Llama 3 scaling as `rope_freqs`, Mistral
+  written as `llama`, whose GGUF has no sliding window: exact while caches
+  stay within the window) and the vocabulary's `tokenizer.*` metadata
+  copied in. `load(write(m)) = m` bit for bit in `f32` (tested).
+  
+
+  The pre-norm decoder family as a vapor program — every operation a term
+  of the certified algebra (`Vapor.Algebra.Term`), so the whole model
+  inherits the canonical semantics, the ladder and the substrates:
+
+      x      = embed[tok]                           (· √d for Gemma)
+      per layer:
+        h    = rmsnorm(x) ⊙ w₁
+        q,k,v = h·Wqᵀ (+b), h·Wkᵀ (+b), h·Wvᵀ (+b)  (MLA: low-rank q, latent kv)
+        q,k  ← per-head RMSNorm (Qwen3, Gemma 3), then RoPE(pos)
+        K,V  ← write rows pos of the caches (in place)
+        a    = attention(q, K, V, pos)·Woᵀ (+b)     (Gemma: rmsnorm(a))
+        x    = x + a
+        f    = MLP(rmsnorm(x) ⊙ w₂)                 (gated: act(·Wgᵀ) ⊙ (·Wuᵀ), then ·Wdᵀ;
+                                                     or a mixture of experts)
+        x    = x + f                                (Gemma: + rmsnorm(f))
+      logits = (rmsnorm(x) ⊙ w_f)·Wₗₘᵀ               (Wₗₘ = embed when tied; optional soft-cap)
+
+  RMSNorm is `x · rsqrt(Σx²·(1/d) + ε)` with the canonical 16-lane sum and
+  canonical `rsqrt`, then the weight (`1 + w` for Gemma) — the Hugging Face
+  order.
+
+  ## Frontier operators without new kernels
+
+  Three constructions keep the operator set of the algebra unchanged, so
+  every substrate (x86, AVX-512, NEON, RVV, SPIR-V, the oracle) runs the new
+  families bit-identically with no new machine code:
+
+    * **Per-head normalisation by exact selector contractions.** The algebra
+      has no reshape. The per-head sums of squares of `x : f32[T, h·dh]` are
+      `(x⊙x)·Bᵀ` with `B` the 0/1 block indicator; because `dh ≡ 0 (mod 16)`,
+      every 16-lane accumulator of that dot product receives exactly the
+      elements a per-head canonical reduction would, plus `+0` terms, so the
+      sums are *bit for bit* those of a per-head reduction. The inverse root
+      returns to the columns by `r·Eᵀ` (one `1·r` term, the rest `+0`).
+    * **Mixture of experts by ranks and selection.** For each expert `e`,
+      `rank_e = Σ_j [s_j > s_e or (s_j = s_e and j < e)]` (an exact sum of
+      0/1 values); the expert is selected iff `rank_e < k` — the top-k of
+      `torch.topk` with ties to the lower index. The output accumulates in
+      expert-index order, `acc ← sel(rank_e < k, acc + w_e·y_e, acc)`:
+      *selection*, not multiplication by a 0 gate, so a non-selected expert
+      contributes nothing — not even a NaN or the sign of a zero. Hence a
+      runtime that skips non-selected experts produces the same bits: dense
+      evaluation is the definition, sparse dispatch is an optimisation.
+    * **Multi-head latent attention by layout.** DeepSeek's MLA rotates only
+      `qk_rope_head_dim` of each head and shares the rotated key across heads.
+      The head is laid out so that rotate-half pairs `(j, j + dh/2)` are
+      either both rotary or both pass-through (cos = 1, sin = 0 there — an
+      exact identity up to the sign of zero); the interleaved pairing of
+      `rope_interleave` is a permutation folded into the weights; the shared
+      rotary key is placed into every head by an exact 0/1 contraction; the
+      value head is padded with zero columns that the output projection
+      ignores.
+
+  Program interface: inputs `tok, pos : s32[T]` and one cache pair
+  `k{i}, v{i} : f32[S, hkv·dh]` per layer; outputs `logits` and the updated
+  caches `k{i}_next, v{i}_next`, declared as state so a recurrent run feeds
+  them back. With `logits: :last` an input `last : s32[1]` selects the row
+  whose logits are computed (the next-token distribution) — the vocabulary
+  projection, usually the largest matrix, then runs once, not `T` times.
+  With `hidden: true` the final normalised hidden state is an output too
+  (`hidden : f32[T, d]`, embeddings for retrieval).
+  
+
+  Polynomial approximations with a *certified* error bound — what
+  homomorphic encryption (CKKS evaluates only `+` and `×`, so every
+  non-linearity must become a polynomial) and fixed-point circuits need, and
+  what they usually take on faith.
+
+      %{cheb: cs, bound: e, depth: d} = Vapor.Poly.approx(:sigmoid, {-8, 8}, 15)
+      # |sigmoid(x) − p(x)| ≤ e for every real x in [−8, 8]; d = multiplicative depth
+
+  The coefficients come from Chebyshev interpolation (in binary64; they are
+  whatever they are). The bound is then *proved* in exact rational
+  arithmetic, not sampled:
+
+    * on a uniform grid of dyadic points, `p` is evaluated exactly (Clenshaw
+      over rationals) and `f` is enclosed using `Vapor.CR`'s correctly
+      rounded exponential (true value within one ulp);
+    * between two grid points the error `e = f − p` departs from the chord
+      through its end values by at most `h²/8 · sup|e''|` (the interpolation
+      remainder), and `sup|e''| ≤ sup|f''| + sup|p''|`: `sup|f''|` is a known
+      constant of the function (√3/18 < 1/10 for the sigmoid, 4/(3√3) < 4/5
+      for tanh, `e^b` for exp on [a, b]), and `sup|p''| ≤ (2/(b−a))² ·
+      Σ |c_k|·k²(k²−1)/3` (Markov's inequality for the second derivative of
+      each Chebyshev polynomial).
+
+  So `bound = max over the grid + h²/8 · sup|e''|` holds on the whole
+  interval. The
+  multiplicative depth reported is `⌈log₂(d + 1)⌉`, the least number of
+  ciphertext-by-ciphertext levels a degree-`d` evaluation needs — real CKKS
+  evaluations (Paterson–Stockmeyer, plaintext constants) often spend one
+  more; it is the quantity CKKS parameters are chosen for.
+  
+
+  A program is a finite DAG of terms with named outputs, optional
+  *let-bindings* and an optional *state feedback* relation — the carrier of
+  the `scan` generator.
+
+      step : (x_t, h_{t-1}) ↦ (y_t, h_t)        state: [h: :h_next]
+
+  A recurrent program realises the affine scan `h_t = a ⊙ h_{t-1} + u_t` (the
+  σ = 2 streaming monoid of Section 9.1) *without* materialising the sequence:
+  the runtime iterates the step inside the native worker, one BEAM crossing
+  per sequence (not per token), and streams the declared outputs back.
+
+  ## Let-bindings
+
+  `lets: [name: term, …]` names intermediate values; later terms refer to
+  them by the leaf `Term.ref(name, term)` — an `{:input, name, dtype, shape}`
+  the program supplies itself. Semantically a binding is substitution
+  (`let x = e in t` ≡ `t[x := e]`), so nothing downstream changes meaning.
+  It exists for scale: BEAM terms are trees, and a value used `k` times
+  per layer (a residual stream) makes the unshared tree of an `L`-layer
+  model grow like `k^L` — hashing, comparing or copying it would be
+  exponential. With the stream bound once per layer every term stays
+  layer-sized. Weights are bound the same way (`name: {:const, tensor}`),
+  so no term used as a map key ever contains weight bytes.
+
+  Bindings are ordered: a body may refer only to earlier names.
+  
+
+  The `:sb4`-affine superblock (Section 9.3) — storage *and* execution forms.
+
+  ## Storage form `:sb4` (150 B / 256 weights = 4.6875 bit/w, spec Figure 6)
+
+      nibbles[128] | u[8] | v[8] | D:f16 | M0:f16 | MR:f16
+      w_i = MR · (M0 + D · u_s · (q_i − v_s)),   s = i div 32
+
+  Nibble order: byte j holds element 2j in the high and 2j+1 in the low nibble.
+
+  ## Execution form `:sb4x` (152 B / 256 weights = 4.75 bit/w)
+
+  Repacked once at ingest so that every substrate runs the same branch-free
+  inner loop with no f16 arithmetic and contiguous activation loads:
+
+      per sub-block s (×8): 16 B, byte j = q_{32s+j} | q_{32s+16+j} << 4
+      u[8] | v[8] | c1:f32 = MR·D | c0:f32 = MR·M0
+
+  Since `w = c0 + α_s·q − α_s·v_s` with `α_s = c1·u_s`, the declared
+  (canonical) dequantization evaluated identically on every substrate is
+
+      α̃_s = fl(c1 · u_s)      β̃_s = fl(c0 − fl(α̃_s · v_s))      w̃_i = fl(α̃_s · q_i)
+
+  and a row product is  `y = Σ_i w̃_i x_i + Σ_s β̃_s X_s`  with `X_s = Σ_{i∈s} x_i`.
+  `c1`, `c0` are *exact*: a product of two binary16 values has ≤ 22
+  significant bits and fits binary32 without rounding.
+  
+
+  Retrieval-augmented generation whose every step can be checked.
+
+  What breaks RAG in practice is not retrieval quality alone: it is that a
+  result cannot be reproduced (indexes rebuilt on other hardware rank
+  differently; embeddings drift with batch size and kernels), that nobody
+  can prove which corpus an answer came from, and that models invent
+  quotations. Each is addressed at its root:
+
+    * **A corpus is a value.** Text is normalised (NFC), split by a fixed
+      procedure into chunks with byte offsets, and each chunk is a leaf of a
+      Merkle tree (`Vapor.Merkle`, RFC 6962 hashing). The root names the
+      exact corpus; every retrieved chunk carries an inclusion proof.
+    * **Retrieval is a function.** BM25 uses binary64 `+ − × ÷` in a fixed
+      order and a correctly rounded logarithm (`Vapor.CR`); dense scores are
+      a certified program (`Term.linear` of the query against the embedding
+      matrix, canonical policy) run on the worker — the same bits on every
+      substrate, as are the embeddings themselves (`Vapor.Embed`); hybrid
+      fusion is reciprocal-rank fusion in exact rational arithmetic; ties
+      break by chunk id. A retrieval's receipt is the canonical digest of
+      (corpus root, method, parameters, query, embedder, results), and
+      `verify/2` recomputes it.
+    * **Quotations are verbatim by construction.** `citation_constraint/3`
+      lets the model write freely but, inside `<quote src="i">…</quote>`,
+      only bytes that continue a substring of source `i` (a suffix automaton
+      per chunk, `Vapor.Grammar`). `check_citations/2` re-verifies quotes and
+      inclusion proofs after the fact, for answers produced anywhere.
+  
+
+  Axiom 1, rejection side: an explicit counterexample — the violating node,
+  the exceeded bound, and an algebraic repair candidate. Compilation never
+  raises on a well-typed request; it accepts with a certificate or rejects
+  with one of these.
+  
+
+  Resilient execution (Axiom 3, end to end).
+
+  The arbiter's choice is tried first; every failure — a crashed worker or
+  daemon, a lost device, an emulator fault, an unavailable tier — is
+  recorded and the unit is rerouted down the chain
+
+      fabric → host native (AVX-512, then the base ISA) → RVV interpreter → oracle
+
+  The oracle cannot fail for a certified program, so a certified unit always
+  completes; the trace says which substrate produced the result and why the
+  others were skipped. Every substrate on the chain computes the *same*
+  certified semantics (bit-identical under the canonical policy), so
+  rerouting never changes the answer.
+  
+
+  OTP owner of the `vapor-fabric` Vulkan daemon (Substrate II, Axiom 3).
+
+  The daemon is a separate OS process speaking `{packet, 4}` frames on its
+  stdio. A driver fault or lost device terminates only that process: the
+  unit in flight returns `{:error, {:fabric_crashed, status}}` (or
+  `{:device_lost, …}`), the daemon is respawned, and `Vapor.Runtime.Dispatch`
+  reroutes the unit to the native substrate.
+
+  Plans are built from the same `Vapor.Compiled` schedule as the native
+  path: slot arguments become storage-buffer bindings, immediates become
+  push constants, sequence inputs become per-iteration *windows* (the
+  daemon copies slice `t` into a window buffer before iteration `t`).
+  
+
+  Substrate I execution: turns a `Vapor.Compiled` schedule plus concrete
+  inputs into a `Vapor.Runtime.Plan` for a worker, runs it, and decodes the
+  typed results.
+
+  Weights cross the process boundary zero-copy: constants above
+  `@shm_threshold` bytes are written once to a content-addressed file in
+  `/dev/shm` and mapped read-only (copy-on-write) by every worker, native or
+  emulated; small ones travel inline.
+
+  Recurrent programs (state feedback) run all `T` iterations inside one
+  worker call; per-iteration outputs stream back as they are produced.
+  
+
+  The declared semantics of every operator, executed in exact binary32
+  (`Vapor.F32`) and exact integers. This is the reference the whole ladder
+  compares against — and the last-resort substrate: it cannot crash the node
+  and never needs hardware.
+
+  ## Float policies (a certified property, recorded in the certificate)
+
+    * `:canonical` — every multiply and add is rounded separately (no
+      contraction), reductions follow the fixed 16-lane tree below. All
+      substrates reproduce it **bit for bit**; parity is a digest equality.
+    * `:fast` — fused multiply-add where the operator allows it. Substrates
+      are certified only up to the Wilkinson envelope.
+
+  ## The canonical 16-lane reduction (the only reduction order in the system)
+
+      r8[i] = l[i] + l[i+8]   r4[i] = r8[i] + r8[i+4]   r2[i] = r4[i] + r4[i+2]   r = r2[0] + r2[1]
+  
+
+  A self-contained unit of native work — the only thing that crosses the
+  process boundary to `vapor-worker`.
+
+  Stateless by design: a plan carries its code, its buffers (inline, zeroed,
+  or zero-copy file mappings for weights) and its call schedule, so a worker
+  that crashed and was restarted needs no state replay before the unit is
+  retried or rerouted.
+
+  `iterations` repeats the call list; `{:iter, buf, base, stride}` arguments
+  advance by `stride` bytes per iteration (token t reads its input at
+  `base + t·stride`), `emits` stream slices back after every iteration and
+  `copies` realise state feedback (`h ← h_next`) between iterations — the
+  whole autoregressive loop runs behind one BEAM crossing.
+  
+
+  A compiled program resident in a worker: weights mapped once, every slot
+  allocated at its certified maximal extent, state (KV caches) kept in
+  worker memory between steps. A step writes only the inputs it is given,
+  runs the schedule resolved for the step's extents, and returns only the
+  outputs asked for — for autoregressive decoding the per-token traffic is
+  a few ids in and one row of logits out, independent of context length.
+
+  Inputs not given to a step keep their contents (an in-place state such as
+  a KV cache or a page pool is never written by the BEAM at all; it starts
+  zeroed). Dimensions are unified from the given inputs; an input omitted
+  from a step must have a static shape.
+
+  If the worker dies, the session dies with it (`{:error, :session_lost}`
+  thereafter): its caches existed only there. The caller decides whether to
+  reopen and recompute.
+  
+
+  Content-addressed shared memory for weights (`/dev/shm/vapor-<sha256>`).
+
+  Written once (atomically: temp file + rename), then mapped read-only by
+  every worker and by the fabric daemon — the zero-copy path for tensors
+  that dominate memory traffic. Content addressing makes the store safe to
+  share between nodes and restarts: a name *is* its bytes.
+
+  `prune/0` removes the files no process maps (a file that is mapped stays:
+  Linux keeps an unlinked mapping alive, but a worker restarting later
+  would need the name). A writer whose file was pruned simply writes it
+  again: `put/1` checks for the name each time.
+  
+
+  Discovery and supervision of execution substrates.
+
+  | id              | process                         | executes                      |
+  |-----------------|---------------------------------|-------------------------------|
+  | `:host`         | `vapor-worker` (native)         | host ISA machine code         |
+  | `:host_avx512`  | same worker                     | AVX-512 code (x86-64-v4 hosts)|
+  | `:rvv_emulated` | same worker, emulate mode       | RVV code, in-tree interpreter |
+  | `:aarch64_qemu` | worker under `qemu-aarch64`     | NEON code (cross validation)  |
+  | `:riscv64_qemu` | worker under `qemu-riscv64`     | RVV code (cross validation)   |
+  | `:fabric`       | `vapor-fabric` (Vulkan)         | SPIR-V                        |
+  | `:oracle`       | none (in the BEAM, pure)        | declared semantics            |
+
+  Binaries are looked up in `priv/` (installed by `make native`) and then in
+  `native/zig-out/<target>/bin`. A missing tier is simply absent: hardware is
+  a performance tier, never a correctness tier.
+  
+
+  OTP owner of one `vapor-worker` OS process (Axiom 3 for the CPU substrate).
+
+  The worker is spawned as a port with `{:packet, 4}` framing and
+  `:exit_status`. If generated code faults (SIGSEGV, SIGILL, SIGBUS), hits
+  the seccomp allowlist (SIGSYS) or its watchdog (SIGALRM), only that process
+  dies: this GenServer reports `{:error, {:worker_crashed, status}}` for the
+  unit in flight, spawns a fresh worker, and stays up. The BEAM never maps,
+  jumps into, or links against generated code.
+
+  `exec` is the command line — `["path/vapor-worker"]` natively, or under a
+  user-mode emulator for foreign ISAs, e.g.
+  `["qemu-riscv64", "-cpu", "rv64,v=true,vlen=256", "path/vapor-worker"]`.
+
+  `threads: n` gives the worker a pool of `n` threads for intra-operation
+  data parallelism (row ranges of one kernel call; results are identical
+  for every `n`).
+  
+
+  Next-token choice, reproducible bit for bit on any machine.
+
+  The logits are binary32 values from a certified program; everything after
+  them uses only IEEE-754 binary64 `+ − × ÷` (identical on every
+  conforming machine — the BEAM does no fused or extended arithmetic) and a
+  counter-based generator, so a sequence's tokens depend only on its logits,
+  its `seed` and its step — never on the batch it ran in, the thread count
+  or the host.
+
+    * `temperature: 0` → greedy: the first maximum (lowest id).
+    * otherwise `z_i = logit_i / T`; candidates sorted by `(z desc, id asc)`;
+      `top_k` keeps the first `k`; `p_i = exp(z_i − z_max)` with
+      `exp/1` below; `top_p` keeps the shortest prefix whose running sum
+      reaches `top_p · Σp`; a uniform `u ∈ [0, 1)` from SplitMix64 of
+      `(seed, step)` selects the first candidate whose running sum exceeds
+      `u · Σp_kept`.
+
+  Candidates with `z < z_max − 38` are skipped. This is not an
+  approximation: their `p = e^(z − z_max) < 2⁻⁵⁴`, while every running sum
+  is `≥ 1` from its first (largest) term on, so under round-to-nearest
+  adding such a term leaves the sum unchanged — no sum and no selection
+  can differ.
+  
+
+  An OpenAI-compatible HTTP/1.1 server on `:gen_tcp` (no dependencies).
+
+      {:ok, _} = Vapor.Serve.start_link(engine: engine, tokenizer: tk, port: 8000)
+
+  Endpoints: `GET /v1/models`, `POST /v1/completions`,
+  `POST /v1/chat/completions` (both with `"stream": true` as server-sent
+  events over chunked transfer encoding, ending in `data: [DONE]`),
+  `POST /v1/embeddings` (with an `embedder:`, see `Vapor.Embed`) and
+  `GET /health`. Request fields: `prompt` (text, or a list of token ids),
+  `messages`, `max_tokens`, `temperature`, `top_p`, `top_k`, `seed`,
+  `stop`; unknown fields are ignored, as OpenAI's servers do.
+
+  Agents' fields: `tools` with `tool_choice` (`"auto"`, `"none"`,
+  `"required"`, or a named function) and `response_format`
+  (`{"type": "json_object"}` or `{"type": "json_schema", "json_schema":
+  {"schema": …, "strict": …}}`). The prompt is rendered by the model's own
+  chat template when there is one (`template:`, see `Vapor.Chat`), and the
+  output is *constrained* (`Vapor.Grammar`): a structured output is valid
+  JSON for its schema, a tool call names a declared tool with arguments
+  valid for it (`Vapor.Tools`) — by construction, not by retry. Calls come
+  back as `message.tool_calls` with `finish_reason: "tool_calls"`; with
+  tools and `stream: true` the reply is sent as one final chunk.
+
+  Every completion carries `x-vapor-receipt`: the canonical digest
+  (`Vapor.Canonical`) of the model's identity, the prompt token ids, the
+  sampling parameters and the generated ids. The engine's outputs are a
+  deterministic function of exactly these, so anyone with the same model can
+  re-derive the response and check the receipt.
+
+  Concurrency is the BEAM's: an acceptor per listening socket hands each
+  connection to its own process, which submits to the engine and receives
+  that request's tokens as messages — so many clients stream at once while
+  the engine batches all of their sequences into each step. Streaming text
+  is cut only at UTF-8 character boundaries.
+
+  TLS and HTTP/2-3 belong in a reverse proxy in front (see
+  docs/ECOSSISTEMA.md); this server speaks plain HTTP/1.1 with keep-alive.
+  
+
+  Speculative decoding (greedy): a cheap *draft* model proposes `k`
+  tokens one at a time; the *target* model scores all of them in one step
+  (`k + 1` rows); the longest prefix the target agrees with is kept, plus
+  the target's own next token.
+
+  The guarantee is not "close to" the target's greedy output — it is
+  *equal* to it, token for token: the target's logits for a row do not
+  depend on how many rows share the step (batch invariance of every
+  kernel), so verifying `k + 1` positions at once gives the very bits that
+  `k + 1` single decoding steps would. The draft affects only speed.
+
+  Rejected positions leave stale rows in both KV caches; they lie beyond
+  the accepted length and are overwritten before any row attends to them
+  (row `p` reads rows `0 … p` only), so no cleanup is needed.
+
+  Both models are resident sessions (`Vapor.Runtime.Session`) of programs
+  with contiguous caches and `logits: :all`, built for at least `k + 1`
+  rows per step.
+  
+
+  A hermetic evaluator for the Jinja dialect of Hugging Face chat templates.
+
+  A model's `chat_template` (in `tokenizer_config.json` or a `.jinja` file)
+  is the only authoritative description of its prompt format — and of how
+  it expects tools, tool calls and tool results to be written. Hard-coding
+  formats (`Vapor.Chat`) breaks on every new family; executing Jinja through
+  a dependency breaks `deps: []`. This module interprets the subset real
+  templates use, with the environment `transformers` renders them in
+  (`ImmutableSandboxedEnvironment(trim_blocks=True, lstrip_blocks=True)`,
+  loop controls, `tojson` as `json.dumps(ensure_ascii=False, …)`,
+  `raise_exception`, `strftime_now`), and is tested byte for byte against
+  `jinja2` on templates taken from real models (`template_test`).
+
+  Hermetic means: no I/O, no host state. A template that reads the clock
+  (`strftime_now`, used by Llama 3.x templates) gets the time *passed in*
+  (`now:` option) — the clock is an input, so a rendered prompt is a pure
+  function of its arguments, which is what an immutable agent's journal
+  needs (`Vapor.Agent`). Without `now:`, `strftime_now` is an error.
+
+  Supported: `{{ }}`, `{% %}`, `{# #}` with `-` whitespace control;
+  `if/elif/else`, `for … in … [if …]` with `else`, `loop.*` (`index`,
+  `index0`, `revindex`, `revindex0`, `first`, `last`, `length`,
+  `previtem`, `nextitem`, `cycle`), `break`/`continue`, `set` (names, tuple
+  unpacking, `namespace` attributes, block form), `macro` with defaults,
+  `filter` blocks, `generation` blocks; literals, slices, attribute/item
+  access, calls with keyword arguments, Python's operators (chained
+  comparisons, `in`, `~`, `//`, `**`, conditional expressions); the common
+  filters, tests, and `str`/`dict` methods. Values follow Python: truth,
+  `str()`/`repr()` of lists, dicts, floats and `None`, insertion-ordered
+  dicts (`{:dict, pairs}`, as `Vapor.JSON.decode(…, ordered: true)` gives).
+  Anything else is an error naming the construct, never a silent difference.
+  
+
+  A dense tensor: dtype + shape + one contiguous little-endian binary.
+
+  There are no linked lists of numbers anywhere in the data path: element
+  access is `binary_part/3` arithmetic, decoding is typed per dtype
+  (the predecessor decoded every tensor as `s8`, destroying IEEE-754 data).
+
+  Dtypes:
+
+    * `:f32` `:f16` — IEEE-754 (f32 values surface as bit patterns, see `Vapor.F32`)
+    * `:s32` `:s8` `:u8` — two's complement / unsigned integers
+    * `:sb4`  — storage superblock, 150 B per 256 weights (4.6875 bit/w), shape `[rows, k]`
+    * `:sb4x` — execution superblock, 152 B per 256 weights (4.75 bit/w), see `Vapor.Quant.Sb4`
+  
+
+  Text ⇄ token ids for the model families vapor runs, in pure Elixir.
+
+  One algorithm covers both vocabularies in use:
+
+    * **byte-level BPE** (GPT-2, Llama 3, Qwen2): the text is split by a
+      regular expression, each piece starts as its bytes, and ranked merges
+      are applied;
+    * **SentencePiece BPE** (Llama 2, Mistral v1): spaces become `▁`, a
+      `▁` may be prepended, each piece starts as its characters, and pairs
+      merge by vocabulary score (from a GGUF) or by rank (from a
+      `tokenizer.json`); characters without a token fall back to `<0xXX>`
+      byte tokens.
+
+  In both, a word is merged by the same priority procedure — repeatedly
+  merge the best-priority adjacent pair, the leftmost among equals — in
+  `O(n log n)` with a heap and a doubly linked symbol list, so a long
+  unsplit text (SentencePiece has no pre-tokenizer) costs no more than its
+  length warrants.
+
+  Tokens are stored by their *surface bytes*: byte-level tokens un-mapped
+  from GPT-2's printable alias alphabet, SentencePiece pieces with `▁` as a
+  space and byte tokens as the byte. Decoding is then concatenation (minus
+  the one prefix space SentencePiece added), and it returns bytes — a
+  partial UTF-8 sequence at the end of a stream stays intact for the next
+  token.
+
+  Sources: `from_gguf/1` (llama.cpp metadata; the pre-tokenizer regex is
+  chosen by `tokenizer.ggml.pre`, as llama.cpp does) and `from_hf/1`
+  (`tokenizer.json`: the normalizers, pre-tokenizers, models and decoders
+  these families use; anything else is a rejection naming the component).
+  Special tokens are matched in the raw text first, leftmost-longest, as
+  Hugging Face does.
+  
+
+  Tool calling for local models: the dialect a model was trained to call
+  tools in, a grammar that makes its calls well-formed by construction,
+  and the parser that turns the generated text back into OpenAI-shaped
+  `tool_calls`.
+
+  The dialect is read from the model's own chat template (the authority on
+  how the model writes calls), not configured by hand:
+
+  | dialect | recognised by | a call looks like |
+  |---|---|---|
+  | `:hermes` (Qwen 2.5/3, Hermes, QwQ, many fine-tunes) | `<tool_call>` in the template | `<tool_call>\\n{"name": …, "arguments": {…}}\\n</tool_call>` |
+  | `:mistral` | `[TOOL_CALLS]` | `[TOOL_CALLS][{"name": …, "arguments": {…}}]` |
+  | `:llama3` (Llama 3.1–3.3) | `"parameters": dictionary` | `{"name": …, "parameters": {…}}` as the whole reply |
+  | `:generic` | anything else, or no template | Hermes's form, taught by a system note |
+
+  The constraint (`Vapor.Grammar.Constraint`) follows `tool_choice`:
+  `"auto"` leaves the text free until the dialect's opener appears and then
+  admits only a well-formed call to a declared tool with arguments valid for
+  its schema (lazy mode); `"required"` or a named function prefills the
+  opener into the prompt and admits only calls (strict mode). A call can
+  therefore never name an unknown tool or carry arguments its schema
+  refuses — the failure mode that makes small local models unusable as
+  agents is removed by construction, not by retrying.
+  
+
+  LoRA fine-tuning by distillation, as one recurrent program (phase P7).
+
+  The trainable part is the last decoder layer's MLP and everything after
+  it: low-rank adapters `W + s·B·A` (`s = α/r`) on its gate, up and down
+  projections, then the final norm and the output head. The frozen layers
+  before it run once, in inference, to produce the block's input features
+  `h` (`features/4`). One *training step* is then a pure function of terms:
+
+      forward   z = head(norm(h + down_LoRA(silu(gate_LoRA(h₂)) ⊙ up_LoRA(h₂))))
+      loss      KL(p_teacher ‖ softmax z), mean over the T rows
+      backward  ∂loss/∂z = (softmax z − p_teacher)/T   (exact for this loss)
+                then `Vapor.Autodiff` down to the six adapter matrices
+      update    AdamW: m ← β₁m + (1−β₁)g, v ← β₂v + (1−β₂)g²,
+                p ← p − lr·(m·ĉ₁·rsqrt(v·ĉ₂ + ε²) + λp)
+
+  with the bias corrections `ĉ₁ = 1/(1−β₁ᵗ)`, `ĉ₂ = 1/(1−β₂ᵗ)` fed per step.
+  (`rsqrt(v̂ + ε²)` puts ε inside the root — the one deviation from the
+  textbook form, so that only canonical operators appear.)
+
+  Parameters and moments are *state*: the whole training run is
+  `Vapor.Runtime.Native.run(…, iterations: steps)` — every step inside the
+  worker, one crossing in total, the logits of each step streamed back for
+  the loss curve. Like every program it is bit-identical on every
+  substrate and for any thread count, so a training run is reproducible
+  to the last bit.
+
+  The loss itself (`kl/2`) is evaluated in the BEAM from the streamed
+  logits, in binary64.
+  
+
+  Unicode normalization forms NFC and NFKC (UAX #15), exactly.
+
+  OTP's `:unicode.characters_to_nfc_binary/1` composes across a blocking
+  starter: for `и` U+0438, `๎` U+0E4E (a non-spacing mark of combining
+  class 0), `◌̈` U+0308 it returns `ӥ` U+04E5, `๎` — but a class-0
+  character blocks, and the normal form keeps all three. Tokenizers apply
+  NFC before looking up tokens, so such a difference changes token ids.
+
+  This module implements the algorithm from the standard's definition:
+  full decomposition (canonical, or compatibility for NFKC; Hangul
+  arithmetically), canonical ordering of combining marks, then canonical
+  composition in which a mark composes with the last starter only if no
+  character in between has a combining class of 0 or ≥ its own.
+
+  The character data are OTP's (`:unicode_util.lookup/1`: decompositions
+  and combining classes, Unicode #{:unicode_util.spec_version() |> Tuple.to_list() |> Enum.join(".")}).
+  The primary-composite table is derived at compile time: a character with
+  a canonical decomposition `d₁…dₙ` is a primary composite exactly when
+  NFC keeps it in isolation (where OTP's composition is correct — no
+  blocking arises), and its pair is `(NFC(d₁…dₙ₋₁), dₙ)`.
+  
+
+  Theorem 8.1 at run time: shared-memory row padding for tiled kernels,
+  using the Lean-extracted `pad_stride/2` (sufficient by `padStride_coprime`,
+  minimal by `padStride_minimal`) for power-of-two bank counts.
+  
+
+  FNV-1a/64 — the parity digest of Rung 5 (cheap, streaming, identical on
+  every node) — and SHA-256 for the certificate's content addresses.
+  
+
+  Exact dyadic rationals `m·2^e` (arbitrary-precision `m`) — the number system
+  of every error bound in the ladder. Every finite binary32 is one; sums and
+  products stay dyadic, so the verifier never rounds. Only *bounds* are ever
+  shortened, and only upward (`round_up/2`), which keeps them rigorous.
+  
+
+  Theorem 7.2, generalised: a rigorous *a-priori* bound on the distance
+  between any conforming substrate's output and the exact real result, for
+  every output element of a program, computed in exact dyadic arithmetic.
+
+  "Conforming" means: each `add`/`sub`/`mul` correctly rounded (any
+  substrate), `fma` fused *or not*, reductions in *any* order, and
+  underflow either gradual or flushed to zero. So one bound covers x86, ARM,
+  RVV and every Vulkan driver under both float policies.
+
+  Two forms:
+
+    * `{:wilkinson, v, s, a, n}` — a contraction over exact inputs:
+      `|ŷ − v| ≤ γₙ·s + a`. Decided by `Vapor.Extracted.within_envelope/4`,
+      the Lean-extracted decision (`Vapor.withinEnvelope`, monotone in `n`).
+      `n` is the longest rounding path of the declared expression tree
+      (Higham, Lemma 3.1): `K + nsub` products/adds plus 31 adds inside a
+      sub-block sum.
+    * `{:running, v, e}` — running error analysis (Wilkinson/Higham) through
+      elementwise operators and contractions over inexact inputs:
+      `add: e = (1+u)(e₁+e₂) + u|v| + η`,
+      `mul: m = |v₁|e₂ + |v₂|e₁ + e₁e₂, e = m + u(|v₁v₂| + m) + η`,
+      `fma` = `mul` then `add` (covers the fused case), `neg`/`relu` exact
+      (1-Lipschitz); `η = 2⁻¹²⁶` per rounding covers flush-to-zero.
+
+  Row reductions and dense linear maps use the same running analysis with
+  `γₙ` over the reduced length (valid for *any* summation order); `max`/`min`
+  are exact selections (1-Lipschitz: the error is the larger input error).
+  The remaining canonical functions (`exp`, `rcp`, `rsqrt`, `div`,
+  `sigmoid`, `silu`) are defined by their `Vapor.Canon` microprograms rather
+  than by real analysis, so their outputs carry `:na`: under `:canonical`
+  they are certified by bit parity with the oracle (Rung 5), and the ladder
+  refuses `:fast` for programs that contain them.
+
+  The analytic lemma is cited (Higham, *Accuracy and Stability of Numerical
+  Algorithms*, 2nd ed., §3.1–3.5), not machine-checked; the *decision* for
+  the Wilkinson form is.
+  
+
+  Section 10 — the verification ladder. Acceptance produces a signed
+  certificate; rejection produces a `Vapor.Rejection` (Axiom 1).
+
+  | rung | establishes | how |
+  |---|---|---|

@@ -1,0 +1,2562 @@
+{
+"consistency": [
+{
+"desc": "happy path",
+"file": "consistency/0/happy-path.json",
+"proof": null,
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"size1": 1,
+"size2": 1,
+"wantErr": false
+},
+{
+"desc": "empty proof",
+"file": "consistency/1/empty-proof.json",
+"proof": [],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "happy path",
+"file": "consistency/1/happy-path.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": false
+},
+{
+"desc": "modified proof@0 bit @4",
+"file": "consistency/1/modified-proof@0-bit-@4.json",
+"proof": [
+"hqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "modified proof@1 bit @4",
+"file": "consistency/1/modified-proof@1-bit-@4.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Twg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "modified proof@2 bit @4",
+"file": "consistency/1/modified-proof@2-bit-@4.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"e0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "preceding garbage",
+"file": "consistency/1/preceding-garbage.json",
+"proof": [
+"",
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "preceding proof @0",
+"file": "consistency/1/preceding-proof-@0.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "preceding root1",
+"file": "consistency/1/preceding-root1.json",
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "preceding root2",
+"file": "consistency/1/preceding-root2.json",
+"proof": [
+"XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "size1 XOR @2",
+"file": "consistency/1/size1-XOR-@2.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 3,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "size1 plus @1",
+"file": "consistency/1/size1-plus-@1.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 2,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "size1 sub @1",
+"file": "consistency/1/size1-sub-@1.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 0,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "size2 div @2",
+"file": "consistency/1/size2-div-@2.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 4,
+"wantErr": true
+},
+{
+"desc": "size2 mul @2",
+"file": "consistency/1/size2-mul-@2.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 16,
+"wantErr": true
+},
+{
+"desc": "swapped roots",
+"file": "consistency/1/swapped-roots.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"root2": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "trailing garbage",
+"file": "consistency/1/trailing-garbage.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ=",
+""
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "trailing root1",
+"file": "consistency/1/trailing-root1.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ=",
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "trailing root2",
+"file": "consistency/1/trailing-root2.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ=",
+"XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "truncated proof",
+"file": "consistency/1/truncated-proof.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "wrong root1",
+"file": "consistency/1/wrong-root1.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "V3JvbmdSb290",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "wrong root2",
+"file": "consistency/1/wrong-root2.json",
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root1": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"root2": "V3JvbmdSb290",
+"size1": 1,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "empty proof",
+"file": "consistency/2/empty-proof.json",
+"proof": [],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "happy path",
+"file": "consistency/2/happy-path.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": false
+},
+{
+"desc": "modified proof@0 bit @4",
+"file": "consistency/2/modified-proof@0-bit-@4.json",
+"proof": [
+"HrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "modified proof@1 bit @4",
+"file": "consistency/2/modified-proof@1-bit-@4.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"2oVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "modified proof@2 bit @4",
+"file": "consistency/2/modified-proof@2-bit-@4.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"w37kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "preceding garbage",
+"file": "consistency/2/preceding-garbage.json",
+"proof": [
+"",
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "preceding proof @0",
+"file": "consistency/2/preceding-proof-@0.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "preceding root1",
+"file": "consistency/2/preceding-root1.json",
+"proof": [
+"duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "preceding root2",
+"file": "consistency/2/preceding-root2.json",
+"proof": [
+"XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "size1 XOR @2",
+"file": "consistency/2/size1-XOR-@2.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 4,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "size1 plus @1",
+"file": "consistency/2/size1-plus-@1.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 7,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "size1 sub @1",
+"file": "consistency/2/size1-sub-@1.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 5,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "size2 div @2",
+"file": "consistency/2/size2-div-@2.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 4,
+"wantErr": true
+},
+{
+"desc": "size2 mul @2",
+"file": "consistency/2/size2-mul-@2.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 16,
+"wantErr": true
+},
+{
+"desc": "swapped roots",
+"file": "consistency/2/swapped-roots.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"root2": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "trailing garbage",
+"file": "consistency/2/trailing-garbage.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc=",
+""
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "trailing root1",
+"file": "consistency/2/trailing-root1.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc=",
+"duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "trailing root2",
+"file": "consistency/2/trailing-root2.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc=",
+"XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "truncated proof",
+"file": "consistency/2/truncated-proof.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "wrong root1",
+"file": "consistency/2/wrong-root1.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "V3JvbmdSb290",
+"root2": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "wrong root2",
+"file": "consistency/2/wrong-root2.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "V3JvbmdSb290",
+"size1": 6,
+"size2": 8,
+"wantErr": true
+},
+{
+"desc": "empty proof",
+"file": "consistency/3/empty-proof.json",
+"proof": [],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "happy path",
+"file": "consistency/3/happy-path.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": false
+},
+{
+"desc": "modified proof@0 bit @4",
+"file": "consistency/3/modified-proof@0-bit-@4.json",
+"proof": [
+"Twg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "modified proof@1 bit @4",
+"file": "consistency/3/modified-proof@1-bit-@4.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"rBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "preceding garbage",
+"file": "consistency/3/preceding-garbage.json",
+"proof": [
+"",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "preceding proof @0",
+"file": "consistency/3/preceding-proof-@0.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "preceding root1",
+"file": "consistency/3/preceding-root1.json",
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "preceding root2",
+"file": "consistency/3/preceding-root2.json",
+"proof": [
+"Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "size1 XOR @2",
+"file": "consistency/3/size1-XOR-@2.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 0,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "size1 plus @1",
+"file": "consistency/3/size1-plus-@1.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 3,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "size1 sub @1",
+"file": "consistency/3/size1-sub-@1.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 1,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "size2 div @2",
+"file": "consistency/3/size2-div-@2.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 2,
+"wantErr": true
+},
+{
+"desc": "size2 mul @2",
+"file": "consistency/3/size2-mul-@2.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 10,
+"wantErr": true
+},
+{
+"desc": "swapped roots",
+"file": "consistency/3/swapped-roots.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"root2": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "trailing garbage",
+"file": "consistency/3/trailing-garbage.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+""
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "trailing root1",
+"file": "consistency/3/trailing-root1.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "trailing root2",
+"file": "consistency/3/trailing-root2.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "truncated proof",
+"file": "consistency/3/truncated-proof.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "wrong root1",
+"file": "consistency/3/wrong-root1.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "V3JvbmdSb290",
+"root2": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "wrong root2",
+"file": "consistency/3/wrong-root2.json",
+"proof": [
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root1": "+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"root2": "V3JvbmdSb290",
+"size1": 2,
+"size2": 5,
+"wantErr": true
+},
+{
+"desc": "empty proof",
+"file": "consistency/4/empty-proof.json",
+"proof": [],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "happy path",
+"file": "consistency/4/happy-path.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": false
+},
+{
+"desc": "modified proof@0 bit @4",
+"file": "consistency/4/modified-proof@0-bit-@4.json",
+"proof": [
+"HrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "modified proof@1 bit @4",
+"file": "consistency/4/modified-proof@1-bit-@4.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"oIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "modified proof@2 bit @4",
+"file": "consistency/4/modified-proof@2-bit-@4.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"w37kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "preceding garbage",
+"file": "consistency/4/preceding-garbage.json",
+"proof": [
+"",
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "preceding proof @0",
+"file": "consistency/4/preceding-proof-@0.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "preceding root1",
+"file": "consistency/4/preceding-root1.json",
+"proof": [
+"duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "preceding root2",
+"file": "consistency/4/preceding-root2.json",
+"proof": [
+"3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "size1 XOR @2",
+"file": "consistency/4/size1-XOR-@2.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 4,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "size1 plus @1",
+"file": "consistency/4/size1-plus-@1.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 7,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "size1 sub @1",
+"file": "consistency/4/size1-sub-@1.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 5,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "size2 div @2",
+"file": "consistency/4/size2-div-@2.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 3,
+"wantErr": true
+},
+{
+"desc": "size2 mul @2",
+"file": "consistency/4/size2-mul-@2.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 14,
+"wantErr": true
+},
+{
+"desc": "swapped roots",
+"file": "consistency/4/swapped-roots.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"root2": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "trailing garbage",
+"file": "consistency/4/trailing-garbage.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc=",
+""
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "trailing root1",
+"file": "consistency/4/trailing-root1.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc=",
+"duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "trailing root2",
+"file": "consistency/4/trailing-root2.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc=",
+"3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "truncated proof",
+"file": "consistency/4/truncated-proof.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "wrong root1",
+"file": "consistency/4/wrong-root1.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "V3JvbmdSb290",
+"root2": "3bib5AOAnjJXUNPSY814kpwpQreUKjS3fhIslZSnTIw=",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "wrong root2",
+"file": "consistency/4/wrong-root2.json",
+"proof": [
+"DrxdNDf74tsVi58Sah0RjjCBgQMdCpSfje3t68VY72o=",
+"sIaT7C5yFZcTBkHoIR5+7cy0wmQTlj7ubB4u0W/7Gl8=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root1": "duZ9rbzfHhDht03cYIq9L5jfsW+851J3tSMqEn8gh+8=",
+"root2": "V3JvbmdSb290",
+"size1": 6,
+"size2": 7,
+"wantErr": true
+},
+{
+"desc": "consistency check on empty tree (size1 is zero) is useless",
+"file": "consistency/additional/consistency-check-on-empty-tree-size1-is-zero-is-useless.json",
+"proof": [
+"47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
+],
+"root1": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"root2": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"size1": 0,
+"size2": 1,
+"wantErr": true
+},
+{
+"desc": "roots do not match and sizes are zero",
+"file": "consistency/additional/roots-do-not-match-and-sizes-are-zero.json",
+"proof": [],
+"root1": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"root2": "ZG9uJ3QgY2FyZSAy",
+"size1": 0,
+"size2": 0,
+"wantErr": true
+},
+{
+"desc": "roots do not not match and sizes are one",
+"file": "consistency/additional/roots-do-not-not-match-and-sizes-are-one.json",
+"proof": [],
+"root1": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"root2": "ZG9uJ3QgY2FyZSAy",
+"size1": 1,
+"size2": 1,
+"wantErr": true
+},
+{
+"desc": "size1 is greater than size2 again",
+"file": "consistency/additional/size1-is-greater-than-size2-again.json",
+"proof": [],
+"root1": "ZG9uJ3QgY2FyZSAx",
+"root2": "ZG9uJ3QgY2FyZSAy",
+"size1": 2,
+"size2": 1,
+"wantErr": true
+},
+{
+"desc": "size1 is greater than size2",
+"file": "consistency/additional/size1-is-greater-than-size2.json",
+"proof": [],
+"root1": "ZG9uJ3QgY2FyZSAx",
+"root2": "ZG9uJ3QgY2FyZSAy",
+"size1": 1,
+"size2": 0,
+"wantErr": true
+},
+{
+"desc": "size1 is zero and does not equal size2",
+"file": "consistency/additional/size1-is-zero-and-does-not-equal-size2.json",
+"proof": [],
+"root1": "ZG9uJ3QgY2FyZSAx",
+"root2": "ZG9uJ3QgY2FyZSAy",
+"size1": 0,
+"size2": 1,
+"wantErr": true
+},
+{
+"desc": "size1 is zero and size2 is not zero",
+"file": "consistency/additional/size1-is-zero-and-size2-is-not-zero.json",
+"proof": [],
+"root1": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"root2": "ZG9uJ3QgY2FyZSAy",
+"size1": 0,
+"size2": 1,
+"wantErr": true
+},
+{
+"desc": "sizes are equal (one) and proof is empty",
+"file": "consistency/additional/sizes-are-equal-one-and-proof-is-empty.json",
+"proof": [],
+"root1": "ZG9uJ3QgY2FyZSAy",
+"root2": "ZG9uJ3QgY2FyZSAy",
+"size1": 1,
+"size2": 1,
+"wantErr": false
+},
+{
+"desc": "sizes are equal (one) but roots are not",
+"file": "consistency/additional/sizes-are-equal-one-but-roots-are-not.json",
+"proof": [],
+"root1": "ZG9uJ3QgY2FyZSAx",
+"root2": "ZG9uJ3QgY2FyZSAy",
+"size1": 1,
+"size2": 1,
+"wantErr": true
+},
+{
+"desc": "sizes are equal (zero) and proof is empty",
+"file": "consistency/additional/sizes-are-equal-zero-and-proof-is-empty.json",
+"proof": [],
+"root1": "ZG9uJ3QgY2FyZSAx",
+"root2": "ZG9uJ3QgY2FyZSAx",
+"size1": 0,
+"size2": 0,
+"wantErr": true
+},
+{
+"desc": "sizes are equal (zero) but roots are not",
+"file": "consistency/additional/sizes-are-equal-zero-but-roots-are-not.json",
+"proof": [],
+"root1": "ZG9uJ3QgY2FyZSAx",
+"root2": "ZG9uJ3QgY2FyZSAy",
+"size1": 0,
+"size2": 0,
+"wantErr": true
+},
+{
+"desc": "sizes do not watch and proof is empty",
+"file": "consistency/additional/sizes-do-not-watch-and-proof-is-empty.json",
+"proof": [],
+"root1": "ZG9uJ3QgY2FyZSAx",
+"root2": "ZG9uJ3QgY2FyZSAy",
+"size1": 1,
+"size2": 2,
+"wantErr": true
+},
+{
+"desc": "sizes match but proof is not empty and sizes are one",
+"file": "consistency/additional/sizes-match-but-proof-is-not-empty-and-sizes-are-one.json",
+"proof": [
+"47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
+],
+"root1": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"root2": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"size1": 1,
+"size2": 1,
+"wantErr": true
+},
+{
+"desc": "sizes match but proof is not empty and sizes are zero",
+"file": "consistency/additional/sizes-match-but-proof-is-not-empty-and-sizes-are-zero.json",
+"proof": [
+"47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
+],
+"root1": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"root2": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"size1": 0,
+"size2": 0,
+"wantErr": true
+}
+],
+"inclusion": [
+{
+"desc": "empty root",
+"file": "inclusion/0/empty-root.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": null,
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "happy path",
+"file": "inclusion/0/happy-path.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": null,
+"root": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"treeSize": 1,
+"wantErr": false
+},
+{
+"desc": "leafIdx XOR @2",
+"file": "inclusion/0/leafIdx-XOR-@2.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 2,
+"proof": null,
+"root": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "leafIdx plus @1",
+"file": "inclusion/0/leafIdx-plus-@1.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 1,
+"proof": null,
+"root": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "leafIdx sub @1",
+"file": "inclusion/0/leafIdx-sub-@1.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 18446744073709551615,
+"proof": null,
+"root": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "preceding garbage",
+"file": "inclusion/0/preceding-garbage.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+""
+],
+"root": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "preceding root",
+"file": "inclusion/0/preceding-root.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0="
+],
+"root": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "random root",
+"file": "inclusion/0/random-root.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": null,
+"root": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "trailing garbage",
+"file": "inclusion/0/trailing-garbage.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+""
+],
+"root": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "trailing root",
+"file": "inclusion/0/trailing-root.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0="
+],
+"root": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "treeSize div @2",
+"file": "inclusion/0/treeSize-div-@2.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": null,
+"root": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"treeSize": 0,
+"wantErr": true
+},
+{
+"desc": "treeSize mul @2",
+"file": "inclusion/0/treeSize-mul-@2.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": null,
+"root": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"treeSize": 2,
+"wantErr": true
+},
+{
+"desc": "wrong leaf",
+"file": "inclusion/0/wrong-leaf.json",
+"leafHash": "V3JvbmdMZWFm",
+"leafIdx": 0,
+"proof": null,
+"root": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "empty root",
+"file": "inclusion/1/empty-root.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "happy path",
+"file": "inclusion/1/happy-path.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": false
+},
+{
+"desc": "inserted component",
+"file": "inclusion/1/inserted-component.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "leafIdx XOR @2",
+"file": "inclusion/1/leafIdx-XOR-@2.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 2,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "leafIdx plus @1",
+"file": "inclusion/1/leafIdx-plus-@1.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 1,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "leafIdx sub @1",
+"file": "inclusion/1/leafIdx-sub-@1.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 18446744073709551615,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "modified proof[0] bit @3",
+"file": "inclusion/1/modified-proof[0]-bit-@3.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"nqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "modified proof[1] bit @3",
+"file": "inclusion/1/modified-proof[1]-bit-@3.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Vwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "modified proof[2] bit @3",
+"file": "inclusion/1/modified-proof[2]-bit-@3.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"Y0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "preceding garbage",
+"file": "inclusion/1/preceding-garbage.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"",
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "preceding root",
+"file": "inclusion/1/preceding-root.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "random root",
+"file": "inclusion/1/random-root.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "removed component",
+"file": "inclusion/1/removed-component.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "trailing garbage",
+"file": "inclusion/1/trailing-garbage.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ=",
+""
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "trailing root",
+"file": "inclusion/1/trailing-root.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ=",
+"XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "treeSize div @2",
+"file": "inclusion/1/treeSize-div-@2.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 4,
+"wantErr": true
+},
+{
+"desc": "treeSize mul @2",
+"file": "inclusion/1/treeSize-mul-@2.json",
+"leafHash": "bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 16,
+"wantErr": true
+},
+{
+"desc": "wrong leaf",
+"file": "inclusion/1/wrong-leaf.json",
+"leafHash": "V3JvbmdMZWFm",
+"leafIdx": 0,
+"proof": [
+"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "empty root",
+"file": "inclusion/2/empty-root.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "happy path",
+"file": "inclusion/2/happy-path.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": false
+},
+{
+"desc": "inserted component",
+"file": "inclusion/2/inserted-component.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "leafIdx XOR @2",
+"file": "inclusion/2/leafIdx-XOR-@2.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 7,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "leafIdx plus @1",
+"file": "inclusion/2/leafIdx-plus-@1.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 6,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "leafIdx sub @1",
+"file": "inclusion/2/leafIdx-sub-@1.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 4,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "modified proof[0] bit @3",
+"file": "inclusion/2/modified-proof[0]-bit-@3.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"tBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "modified proof[1] bit @3",
+"file": "inclusion/2/modified-proof[1]-bit-@3.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"woVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "modified proof[2] bit @3",
+"file": "inclusion/2/modified-proof[2]-bit-@3.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"237kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "preceding garbage",
+"file": "inclusion/2/preceding-garbage.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "preceding root",
+"file": "inclusion/2/preceding-root.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "random root",
+"file": "inclusion/2/random-root.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "removed component",
+"file": "inclusion/2/removed-component.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "trailing garbage",
+"file": "inclusion/2/trailing-garbage.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc=",
+""
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "trailing root",
+"file": "inclusion/2/trailing-root.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc=",
+"XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "treeSize div @2",
+"file": "inclusion/2/treeSize-div-@2.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 4,
+"wantErr": true
+},
+{
+"desc": "treeSize mul @2",
+"file": "inclusion/2/treeSize-mul-@2.json",
+"leafHash": "QnGia+DYqE8L1UyMMC58s6O10fpngKQLzOKHNHfatlg=",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 16,
+"wantErr": true
+},
+{
+"desc": "wrong leaf",
+"file": "inclusion/2/wrong-leaf.json",
+"leafHash": "V3JvbmdMZWFm",
+"leafIdx": 5,
+"proof": [
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"yoVOoSjtBQtBs1/8G4e46yveRh6eO1WW7Oa51ZdaCuA=",
+"037kGJdt2VdTwcc4Yrk5j6Kiz5tP8P3+izDNlSCWFLc="
+],
+"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+"treeSize": 8,
+"wantErr": true
+},
+{
+"desc": "empty root",
+"file": "inclusion/3/empty-root.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 2,
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "happy path",
+"file": "inclusion/3/happy-path.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 2,
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 3,
+"wantErr": false
+},
+{
+"desc": "leafIdx XOR @2",
+"file": "inclusion/3/leafIdx-XOR-@2.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 0,
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "leafIdx plus @1",
+"file": "inclusion/3/leafIdx-plus-@1.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 3,
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "leafIdx sub @1",
+"file": "inclusion/3/leafIdx-sub-@1.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 1,
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "modified proof[0] bit @3",
+"file": "inclusion/3/modified-proof[0]-bit-@3.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 2,
+"proof": [
+"8sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "preceding garbage",
+"file": "inclusion/3/preceding-garbage.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 2,
+"proof": [
+"",
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "preceding root",
+"file": "inclusion/3/preceding-root.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 2,
+"proof": [
+"rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "random root",
+"file": "inclusion/3/random-root.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 2,
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "removed component",
+"file": "inclusion/3/removed-component.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 2,
+"proof": [],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "trailing garbage",
+"file": "inclusion/3/trailing-garbage.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 2,
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+""
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "trailing root",
+"file": "inclusion/3/trailing-root.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 2,
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU=",
+"rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc="
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "treeSize div @2",
+"file": "inclusion/3/treeSize-div-@2.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 2,
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "treeSize mul @2",
+"file": "inclusion/3/treeSize-mul-@2.json",
+"leafHash": "ApjRIpBtz8EIkstTpzmS/FufST6kybrbJ7eRtBJ6f+c=",
+"leafIdx": 2,
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 6,
+"wantErr": true
+},
+{
+"desc": "wrong leaf",
+"file": "inclusion/3/wrong-leaf.json",
+"leafHash": "V3JvbmdMZWFm",
+"leafIdx": 2,
+"proof": [
+"+sVCA+fMaWzw38tCySodnbr3CtnmIfS9jZhmLwDjwSU="
+],
+"root": "rra8/idLcKFPsGel5VeCZNsPqbUa9eC6FZFY8yngbnc=",
+"treeSize": 3,
+"wantErr": true
+},
+{
+"desc": "empty root",
+"file": "inclusion/4/empty-root.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "happy path",
+"file": "inclusion/4/happy-path.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": false
+},
+{
+"desc": "inserted component",
+"file": "inclusion/4/inserted-component.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "leafIdx XOR @2",
+"file": "inclusion/4/leafIdx-XOR-@2.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 3,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "leafIdx plus @1",
+"file": "inclusion/4/leafIdx-plus-@1.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 2,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "leafIdx sub @1",
+"file": "inclusion/4/leafIdx-sub-@1.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 0,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "modified proof[0] bit @3",
+"file": "inclusion/4/modified-proof[0]-bit-@3.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"ZjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "modified proof[1] bit @3",
+"file": "inclusion/4/modified-proof[1]-bit-@3.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Vwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "modified proof[2] bit @3",
+"file": "inclusion/4/modified-proof[2]-bit-@3.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"tBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "preceding garbage",
+"file": "inclusion/4/preceding-garbage.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"",
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "preceding root",
+"file": "inclusion/4/preceding-root.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "random root",
+"file": "inclusion/4/random-root.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "removed component",
+"file": "inclusion/4/removed-component.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "trailing garbage",
+"file": "inclusion/4/trailing-garbage.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+""
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "trailing root",
+"file": "inclusion/4/trailing-root.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms=",
+"Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "treeSize div @2",
+"file": "inclusion/4/treeSize-div-@2.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 2,
+"wantErr": true
+},
+{
+"desc": "treeSize mul @2",
+"file": "inclusion/4/treeSize-mul-@2.json",
+"leafHash": "lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 10,
+"wantErr": true
+},
+{
+"desc": "wrong leaf",
+"file": "inclusion/4/wrong-leaf.json",
+"leafHash": "V3JvbmdMZWFm",
+"leafIdx": 1,
+"proof": [
+"bjQLnP+zepicpUTmu3gKLHiQHT+zNzh2hRGjBhevoB0=",
+"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+"vBoGQ7EuTS18d5GPROD095qDi2z57FtcKD4fTYhZnms="
+],
+"root": "Tju7H3tHjc/nH7YxYxUZo7yhLJrvyhYSv85ME6hiZNQ=",
+"treeSize": 5,
+"wantErr": true
+},
+{
+"desc": "empty root and random leaf",
+"file": "inclusion/additional/0/empty-root-and-random-leaf.json",
+"leafHash": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"leafIdx": 0,
+"proof": [],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 0,
+"wantErr": true
+},
+{
+"desc": "empty root",
+"file": "inclusion/additional/0/empty-root.json",
+"leafHash": "",
+"leafIdx": 0,
+"proof": [],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 0,
+"wantErr": true
+},
+{
+"desc": "random leaf",
+"file": "inclusion/additional/0/random-leaf.json",
+"leafHash": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"leafIdx": 0,
+"proof": [],
+"root": "",
+"treeSize": 0,
+"wantErr": true
+},
+{
+"desc": "empty root and random leaf",
+"file": "inclusion/additional/1/empty-root-and-random-leaf.json",
+"leafHash": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"leafIdx": 0,
+"proof": [],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "empty root",
+"file": "inclusion/additional/1/empty-root.json",
+"leafHash": "",
+"leafIdx": 0,
+"proof": [],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "random leaf",
+"file": "inclusion/additional/1/random-leaf.json",
+"leafHash": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"leafIdx": 0,
+"proof": [],
+"root": "",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "empty root and random leaf",
+"file": "inclusion/additional/2/empty-root-and-random-leaf.json",
+"leafHash": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"leafIdx": 1,
+"proof": [],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 0,
+"wantErr": true
+},
+{
+"desc": "empty root",
+"file": "inclusion/additional/2/empty-root.json",
+"leafHash": "",
+"leafIdx": 1,
+"proof": [],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 0,
+"wantErr": true
+},
+{
+"desc": "random leaf",
+"file": "inclusion/additional/2/random-leaf.json",
+"leafHash": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"leafIdx": 1,
+"proof": [],
+"root": "",
+"treeSize": 0,
+"wantErr": true
+},
+{
+"desc": "empty root and random leaf",
+"file": "inclusion/additional/3/empty-root-and-random-leaf.json",
+"leafHash": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"leafIdx": 2,
+"proof": [],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "empty root",
+"file": "inclusion/additional/3/empty-root.json",
+"leafHash": "",
+"leafIdx": 2,
+"proof": [],
+"root": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "random leaf",
+"file": "inclusion/additional/3/random-leaf.json",
+"leafHash": "q6yroAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGHgASNFY=",
+"leafIdx": 2,
+"proof": [],
+"root": "",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "empty leaf",
+"file": "inclusion/single-entry/empty-leaf.json",
+"leafHash": "",
+"leafIdx": 0,
+"proof": [],
+"root": "DTrtAjFI/9KiWfvQzcf7PPl1ZYdg03dbgq9vkKrMLfw=",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "empty root and leaf",
+"file": "inclusion/single-entry/empty-root-and-leaf.json",
+"leafHash": "",
+"leafIdx": 0,
+"proof": [],
+"root": "",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "empty root",
+"file": "inclusion/single-entry/empty-root.json",
+"leafHash": "DTrtAjFI/9KiWfvQzcf7PPl1ZYdg03dbgq9vkKrMLfw=",
+"leafIdx": 0,
+"proof": [],
+"root": "",
+"treeSize": 1,
+"wantErr": true
+},
+{
+"desc": "matching root and leaf",
+"file": "inclusion/single-entry/matching-root-and-leaf.json",
+"leafHash": "DTrtAjFI/9KiWfvQzcf7PPl1ZYdg03dbgq9vkKrMLfw=",
+"leafIdx": 0,
+"proof": [],
+"root": "DTrtAjFI/9KiWfvQzcf7PPl1ZYdg03dbgq9vkKrMLfw=",
+"treeSize": 1,
+"wantErr": false
+}
+],
+"source": "https://github.com/transparency-dev/merkle (testdata/, Apache-2.0)"
+}

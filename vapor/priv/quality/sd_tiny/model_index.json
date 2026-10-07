@@ -1,0 +1,1 @@
+{"_class_name": "StableDiffusionPipeline", "unet": ["diffusers", "UNet2DConditionModel"], "vae": ["diffusers", "AutoencoderKL"], "text_encoder": ["transformers", "CLIPTextModel"], "scheduler": ["diffusers", "DDIMScheduler"]}

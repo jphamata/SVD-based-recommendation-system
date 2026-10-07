@@ -1,0 +1,12 @@
+{
+ "source": "scikit-image skimage.data.page() \u2014 a photograph of a printed page (BSD-3-Clause, scikit-image)",
+ "lines": [
+  "Region-based segmentation",
+  "Let us first determine markers of the coins and the",
+  "background. These markers are pixels that we can label",
+  "unambiguously as either object or background. Here,",
+  "the markers are found at the two extreme parts of the",
+  "histogram of grey values:"
+ ],
+ "note": "the first six lines are complete; the code line below them is cut by the frame and not scored"
+}

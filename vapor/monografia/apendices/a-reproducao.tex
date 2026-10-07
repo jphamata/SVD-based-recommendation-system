@@ -1,0 +1,64 @@
+% ============================================================================
+\chapter{Reprodução}\label{ap:reproducao}
+% ============================================================================
+
+Este apêndice diz como refazer cada número da monografia. Todos os comandos rodam a partir da raiz do repositório.
+
+\section{Ambiente}
+
+\begin{lstlisting}
+nix develop          # Elixir, Zig 0.16, QEMU, Vulkan+lavapipe, spirv-tools,
+                     # binutils cruzado, elan (Lean)
+make native cross    # vapor-worker + vapor-fabric e workers aarch64/riscv64
+make fixtures        # vocabulários reais (SHA-256 fixado)
+\end{lstlisting}
+
+Sem Nix, o mínimo é Elixir $\geq$ 1.14 e Zig 0.16 (os testes de finanças pedem também \code{pip install QuantLib simplefix scipy}; os de transistores, o \code{ngspice}). Os níveis cuja ferramenta não está presente são excluídos e relatados no início da execução.
+
+\section{Comandos por afirmação}
+
+\small
+\begin{longtable}{@{}p{4.6cm}p{10.9cm}@{}}
+\caption{Onde cada número é produzido}\label{tab:reproducao}\\
+\toprule
+\textbf{afirmação} & \textbf{comando}\\
+\midrule
+\endfirsthead
+\toprule
+\textbf{afirmação} & \textbf{comando}\\
+\midrule
+\endhead
+mesmos bits em todos os substratos & \code{mix test test/vapor/canon\_test.exs}\newline\code{test/vapor/native\_test.exs}\newline\code{test/vapor/cross\_test.exs}\newline\code{test/vapor/fabric\_test.exs}\\
+invariância a \textit{threads}, lote, réplica & \code{mix test test/vapor/threads\_test.exs}\newline\code{test/vapor/engine\_test.exs}\\
+codificação contra binutils e \code{spirv-val} & \code{mix test test/vapor/encoding\_test.exs}\\
+verificador de alocação extraído & \code{mix test test/vapor/regalloc\_test.exs}\newline\code{test/vapor/extracted\_conformance\_test.exs};\newline provas: \code{cd proofs \&\& lake build}\\
+regras de reescrita provadas & \code{mix test test/vapor/rewrite\_soundness\_test.exs}\\
+oráculo binary32 contra o \textit{hardware} & \code{mix test test/vapor/f32\_test.exs}\\
+contenção das quatro classes de falha & \code{mix test test/vapor/native\_test.exs} (\textit{tag} \code{:native})\\
+escada e certificado & \code{mix test test/vapor/ladder\_test.exs}\\
+árbitro (71,7~ms previsto) & \code{mix test test/vapor/arbiter\_test.exs}; \code{mix vapor.bench}\\
+GEMV (\autoref{tab:gemv}) & \code{mix vapor.bench} $\to$\newline\code{docs/bench/BENCH.md}\\
+qualidade, todas as rodadas & \code{mix vapor.quality} $\to$\newline\code{docs/bench/QUALITY.md} (cerca de 35~min)\\
+qualidade da rodada 0.13 (\autoref{tab:qualidade13}) & \code{mix vapor.quality --only round13} (cerca de 25~s)\\
+qualidade da rodada 0.14 (\autoref{tab:qualidade14}) & \code{mix vapor.quality --only round14} (cerca de 60~s)\\
+bancada aberta (\autoref{cap:bancada}) & \code{mix test test/vapor/alembic\_test.exs}\newline\code{test/vapor/athanor\_test.exs}\newline\code{test/vapor/crucible\_test.exs}\newline\code{test/vapor/assay\_test.exs}\newline\code{test/vapor/workspace\_test.exs}\\
+um certificado reconferido & \code{bin/vapor athanor run euler.alb > c.json}\newline\code{bin/vapor verify euler.alb c.json --replay}\\
+calendários, curvas, opções = QuantLib & \code{mix test test/vapor/financas\_test.exs} (\textit{tag} \code{:quantlib})\\
+Monte Carlo: bits, \textit{threads}, 6--23$\times$ & \code{mix vapor.finance mc arquivo.txt} com\newline\code{call S=100 K=100 T=1 r=5\% vol=20\%}\newline\code{paths=8192 steps=64 threads=2}\\
+portões de \textit{backtest} & \code{mix vapor.finance backtest estrategia.txt}\\
+arbitragem por Farkas & \code{mix vapor.finance arbitrage cotacoes.txt}\\
+livro, juiz, ITCH, FIX & \code{mix vapor.finance book ordens.txt}\\
+sessão de bolsa & \code{mix vapor.finance exchange arquivo.txt} com\newline\code{steps=1500 seed=3}\\
+transistores = ngspice & \code{mix test test/vapor/engenharia\_test.exs} (\textit{tag} \code{:ngspice})\\
+console, todos os exemplos, EN e PT & \code{mix vapor.serve} e\newline\code{node test/js/console\_markets.mjs}\newline\code{http://127.0.0.1:8000/}\\
+exatidão do gerador de Wichmann--Hill & ver a \autoref{prop:wh}; conferência exaustiva em binary32 com NumPy (três laços de cerca de 30\,000 estados)\\
+suíte completa & \code{make test} (cerca de 1 h nesta máquina)\\
+\bottomrule
+\end{longtable}
+
+\section{Os documentos}
+
+\begin{lstlisting}
+cd monografia && latexmk -pdf monografia.tex     # esta monografia
+make slides                                     # a apresentação (slides/vapor.pdf)
+\end{lstlisting}

@@ -1,0 +1,33 @@
+// A CPU stand-in for the Metal standard library — exactly what vapor's
+// translated kernels use (Vapor.Emit.MSL), so that the same MSL text runs
+// under clang and its results can be compared bit for bit with the oracle.
+// Test support only: the product never compiles MSL itself; on a Mac the
+// Metal framework does.
+#pragma once
+#include <cstdint>
+#include <cstring>
+#include <cmath>
+
+typedef unsigned int uint;
+struct uint3 { uint x, y, z; };
+
+#define kernel
+#define device
+#define constant const
+
+namespace metal {
+template <class T, class F> static inline T as_type(F f) {
+    static_assert(sizeof(T) == sizeof(F), "as_type: sizes differ");
+    T t;
+    std::memcpy(&t, &f, sizeof t);
+    return t;
+}
+static inline float fma(float a, float b, float c) { return std::fmaf(a, b, c); }
+}  // namespace metal
+
+// A deliberately non-conforming "device" for the substrate airlock's tests:
+// flush-to-zero and denormals-are-zero set when the module is loaded.
+#ifdef VAPOR_SHIM_FTZ
+#include <xmmintrin.h>
+static int vapor_shim_ftz = (_mm_setcsr(_mm_getcsr() | 0x8040), 0);
+#endif

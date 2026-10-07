@@ -1,0 +1,201 @@
+% ============================================================================
+\chapter{Avaliação}\label{cap:avaliacao}
+% ============================================================================
+
+Este capítulo responde a uma pergunta: \emph{como se sabe que o que os capítulos anteriores afirmam é verdade?} A resposta tem três partes --- oráculos externos, controles e propriedades bit a bit ---, e termina com as ameaças à validade, isto é, com as razões pelas quais a resposta pode estar errada.
+
+% ----------------------------------------------------------------------------
+\section{Metodologia}\label{sec:aval-metodo}
+
+\paragraph{Três tipos de evidência.} (1) \textbf{Oráculos externos}: uma implementação independente, de terceiros, amplamente usada, contra a qual o resultado do \vapor{} é comparado --- com igualdade bit a bit quando a semântica é a mesma, com tolerância declarada quando não é. (2) \textbf{Controles}: para cada verificação, o valor que uma implementação quebrada, ingênua ou trapaceira produziria; a verificação só é aceita se o controle cai do outro lado do limiar. (3) \textbf{Propriedades}: igualdades bit a bit entre substratos, \textit{threads}, lotes e réplicas, que não precisam de oráculo porque comparam o sistema consigo mesmo sob transformações que não deveriam mudar nada.
+
+\paragraph{Oráculos.} A \autoref{tab:oraculos} lista os oráculos por domínio. Todos aparecem só nos testes; o produto não depende de nenhum.
+
+\begin{table}[htbp]
+\centering
+\caption{Oráculos externos usados nos testes}\label{tab:oraculos}
+\small
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\textbf{domínio} & \textbf{oráculo e critério}\\
+\midrule
+codificação de instruções & GNU binutils (x86 com EVEX, AArch64, \code{rv64gcv}); \code{spirv-val} --- toda instrução emitida\\
+execução cruzada & QEMU \textit{user} (aarch64, riscv64, VLEN 128/256/512); Mesa lavapipe (Vulkan)\\
+aritmética & \code{fmaf}, \code{+}, \code{*} do \textit{hardware} --- 800\,000 operações, bit a bit; \code{mpmath} para funções\\
+modelos & \code{transformers}, \code{diffusers} (PyTorch) --- logits, \textit{hidden states}, imagens\\
+formatos & \code{gguf-py}, \code{llama.cpp}, libjpeg, libtiff, jbig2dec, \code{jinja2}, \code{cbor2}\\
+engenharia & ngspice (circuitos, inclusive MOSFET nível 1 e Ebers--Moll); soluções analíticas\\
+finanças & QuantLib 1.43 (calendários, bases, curvas, BSM, Leisen--Reimer, Heston); \code{simplefix} (FIX); SciPy; Python \code{decimal}; artigos (Longstaff--Schwartz, Avellaneda--Stoikov, Gatheral--Jacquier)\\
+protocolos & SDK oficial do MCP; cliente \code{openai}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Máquina.} Os números desta monografia foram medidos num Xeon de 2,1~GHz com 2 vCPUs e AVX-512, sem GPU física e sem contadores de desempenho, com Elixir 1.14/OTP~25 e Zig 0.16. O \autoref{ap:reproducao} lista os comandos.
+
+% ----------------------------------------------------------------------------
+\section{Testes}\label{sec:aval-testes}
+
+A suíte é organizada em \emph{níveis}, cada um ligado à ferramenta externa de que depende; um nível sem a ferramenta presente é excluído e relatado como tal, nunca contado como aprovado. A \autoref{tab:testes} mostra a evolução por rodada.
+
+\begin{table}[htbp]
+\centering
+\caption{Testes por rodada (execução completa de \code{mix test})}\label{tab:testes}
+\small
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+\textbf{rodada} & \textbf{executados} & \textbf{falhas} & \textbf{observação}\\
+\midrule
+0.5 & 343 & 0 & 32 excluídos por ferramenta ausente\\
+0.6 & 400 & 2 $\to$ 0 & uma violação real de arquitetura achada e corrigida\\
+0.7 & 425 & 0 & \\
+0.8 & 469 & 1 $\to$ 0 & teste antigo exigia recusar JBIG2, agora decodificado\\
+0.9 & 501 & 0 & todos os níveis presentes, salvo 18\\
+0.11 & 611 & 0 & \\
+0.12 & 702 & 0 & 115 excluídos por ferramenta ausente na sessão\\
+0.13 & \testesTreze & \falhasTreze & \obsTreze\\
+0.14 & \testesQuatorze & \falhasQuatorze & \obsQuatorze\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Na rodada 0.13, a execução completa da suíte foi interrompida por um reinício da máquina virtual e não foi repetida; o que a tabela registra são os 108 testes dos oito arquivos que a rodada tocou (finanças, console de mercados, rodada 13, arquivos, MCP, engenharia, bancada e lógica), todos aprovados. Os demais módulos não mudaram desde a execução completa da 0.12. Os testes novos de finanças (41) usam o QuantLib, o SciPy e o \code{simplefix} como oráculos; os de transistores, o ngspice; os do console, um navegador sem cabeça que roda \emph{todo exemplo de todo painel} das duas mesas, em inglês e em português, e confere que nenhum rótulo ou frase em inglês sobra na versão em português.
+
+Na rodada 0.14, os 87 testes dos oito arquivos da bancada aberta (Alembic, Athanor, Crucible, Assay, mente, operações de cena, espaço de trabalho de ponta a ponta e MCP) passaram, assim como o teste com o SDK oficial de MCP em Python, o de paridade do ruído em JavaScript e os dois testes de navegador sem cabeça das mesas antigas. Estes últimos acharam duas coisas: a ordem alfabética exigida na barra lateral, que o novo grupo ``Bancada aberta'' quebra de propósito (a ordem dele é a do trabalho: escrever, conferir, medir --- o teste passou a respeitar grupos marcados como fixos); e um defeito real e antigo no Monte Carlo sem o processo nativo, em que o oráculo não carregava o estado do gerador entre chamadas --- invisível na máquina da rodada anterior, que tinha o processo nativo, e corrigido. Nesta máquina, sem o compilador Zig, o processo nativo não existe; o caminho pelo oráculo exato agora está correto, mas os três exemplos de Monte Carlo do console (8\,192 trajetórias) passam do limite de 120~s e são interrompidos com a mensagem de tempo. É uma limitação do ambiente, registrada aqui em vez de omitida; os demais exemplos das duas mesas passaram nas duas línguas.
+
+% ----------------------------------------------------------------------------
+\section{Qualidade: sinal ou ruído}\label{sec:aval-qualidade}
+
+A suíte de qualidade (\code{mix vapor.quality}) é distinta dos testes: em vez de conferir que o código faz o que o programador pretendia, confere que a \emph{saída} é sinal e não ruído, comparando cada valor com a verdade conhecida \emph{e} com um controle. A suíte cresceu de 48 verificações (0.6) para 147 (0.12), todas aprovadas; a rodada 0.13 acrescenta 23, aprovadas em cerca de 23~s (\autoref{tab:qualidade13}), e a 0.14 acrescenta 20, aprovadas em cerca de 60~s (\autoref{tab:qualidade14}).
+
+\begin{table}[htbp]
+\centering
+\caption{As 23 verificações da rodada 0.13: valor, controle e limiar}\label{tab:qualidade13}
+\scriptsize
+\renewcommand{\arraystretch}{1.15}\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.3cm}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{3.3cm}@{}}
+\toprule
+\textbf{verificação} & \textbf{valor} & \textbf{controle} & \textbf{limiar}\\
+\midrule
+calendário: DU ANBIMA 02/01/2025 $\to$ 02/01/2026 & 252 & só feriados fixos $\neq$ 252 & 252\\
+dinheiro: R\$ 100,00 em três partes & 33,34 + 33,33 + 33,33 & piso binary64: 99,99 & soma exata\\
+curva DI1+LTN+NTN-F, todo instrumento reprecificado & $4{,}5\cdot10^{-16}$ & dias corridos: $>10^{-4}$ & $<10^{-12}$\\
+opções: paridade BSM e gregas & $7{,}1\cdot10^{-15}$ & preço abaixo do intrínseco: recusado & $<10^{-12}$\\
+opções: \textit{put} americana (LS 2001, tab.~1) & 4,486076 & europeia 3,844308 & $4{,}486 \pm 0{,}001$\\
+opções: SVI calmo sem borboleta; Vogt com & $g_{\min} = 0{,}084$ & $g_{\min} = -0{,}033$ & $g \geq 0$ / $g < 0$\\
+Monte Carlo: bits do oráculo e de 2 \textit{threads}; BSM no IC 99\% & $z = 1{,}17$ & Itô esquecido: $z = 8{,}70$ & $|z| < 2{,}58$; controle $> 5$\\
+Monte Carlo: asiática com variável de controle & var.\ $\div$ 1\,307 & --- & $> 100$\\
+VaR em $t_3$: Kupiec do histórico & $p = 0{,}43$ & normal: $p = 0{,}038$ & $>0{,}05$ / $<0{,}05$; tamanho 1,5--10\%\\
+\textit{backtest}: AR(1) plantado passa os 4 portões & DSR 1,0 & ruído: DSR 0,10 & DSR $> 0{,}95$, PBO $<0{,}5$, RC $p<0{,}05$\\
+\textit{backtest}: espiada no amanhã & Sharpe 20,4 & pega no dia 89 & antecipação apontada\\
+LP racional: ótimo com dual; inviável com Farkas & 11 & proposta errada recusada & ambos os certificados\\
+arbitragem: borboleta em \textit{calls}; $\psi > 0$ nas coerentes & custo $-1/4$ & 6 preços de estado & exata\\
+livro: 6\,000 eventos aleatórios, motor ingênuo & 6\,000 & negócio forjado pego & relatórios iguais\\
+livro: feed ITCH reconstrói livro e volume & 10 níveis & --- & iguais\\
+pré-negociação: recusas com causa, do diário & 3 & causa trocada pega & todas conferidas\\
+Hawkes: ramificação plantada 0,4 & 0,358 & Poisson $p = 1{,}7\cdot10^{-20}$ & $|n-0{,}4|<0{,}08$\\
+Avellaneda--Stoikov: $\sigma$(P\&L) estoque/simétrica & 0,50 & simétrica $\sigma$ 13,26 & $<0{,}6$ (artigo 0,44)\\
+Almgren--Chriss: forma fechada vs.\ ótimo numérico & $1{,}2\cdot10^{-16}$ & --- & $<10^{-12}$\\
+sessão de bolsa: certificados; mesma semente, mesma cabeça & \code{0a83993d\ldots} & outra semente: \code{cdc60e2b\ldots} & iguais / diferentes\\
+arquivos assinados & válido & manifesto reescrito recusado & assinatura confiável\\
+unidades afins: 98,6~°F em °C & 37,0 & °C num composto recusado & $37 \pm 10^{-9}$\\
+circuito: MOSFET fonte comum vs.\ lei quadrática à mão & $3{,}3\cdot10^{-12}$ & --- & $<10^{-11}$ (GMIN)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+Três verificações não têm controle numérico (``---''). Nelas, o controle é estrutural: a reconstrução pelo feed ITCH é ela mesma o verificador independente do livro; a variância da asiática é comparada com a do estimador sem controle; e o MOSFET é comparado a um cálculo à mão cujo erro esperado é exatamente a corrente de GMIN ($10^{-12}$~S vezes a tensão). A documentação marca esses casos em vez de inventar um controle.
+
+Na rodada 0.14 (\autoref{tab:qualidade14}), a única verificação sem controle é a dos átomos, cuja referência é o próprio número de identificadores criados (2\,000): um interpretador que os convertesse em átomos cresceria a tabela exatamente nessa quantidade.
+
+\begin{table}[htbp]
+\centering
+\caption{As 20 verificações da rodada 0.14: a bancada aberta}\label{tab:qualidade14}
+\scriptsize
+\renewcommand{\arraystretch}{1.15}\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{3.1cm}>{\raggedright\arraybackslash}p{2.8cm}@{}}
+\toprule
+\textbf{verificação} & \textbf{valor} & \textbf{controle} & \textbf{limiar}\\
+\midrule
+fornalha vs.\ acaso: régua de Golomb, 7 marcas & 25 (ótimo) & aleatório: 0 acertos em 3\,923 & 25; controle 0\\
+prova exaustiva: max-cut & 13, igual à força bruta independente & valor forjado 14 recusado & iguais; forjado recusado\\
+prova vs.\ refutação: $R(3,3)$ & provado em 32\,768 grafos & $K_5$: pentágono (5 arestas) & ambos\\
+\textit{holdout} de regras de médias móveis & AR(1) $\varphi=0{,}5$: $\rho=0{,}73$ & passeio aleatório: $\rho=-0{,}33$ & $\geq 0{,}5$ / $<0{,}5$\\
+\textit{replay}: raiz do diário & mesma semente, mesma raiz & semente 2: outra raiz & iguais / diferentes\\
+\textit{sandbox}: bomba de memória, 16 MB & morta (\code{:memory}) & programa pequeno: 385 & ambos\\
+átomos: 2\,000 identificadores novos & 0 & --- & $<50$\\
+leis: hamiltonianos cúbicos aleatórios & 6/6 provados sobre $\mathbb{Q}$ & dissipativos: 0 leis & 6/6; 0\\
+quântica: oscilador harmônico & $|E-(n+\tfrac12)| = 3\cdot10^{-6}$; ordem 1,99 & caixa $\pm1{,}5$: evidência falha & $<2\cdot10^{-4}$; ordem $2\pm0{,}2$\\
+Kepler, $e=0{,}36$, $\approx$250 órbitas, $\Delta t=0{,}1$ & Yoshida: $\leq 1{,}4\cdot10^{-3}$ & RK4: deriva 0,062 & controle $\geq 10\times$\\
+H$_2$ RHF/STO-3G a 1,4 bohr & $-1{,}116714$ & 8 bohr: $-0{,}61 > 2E_H$ & $\pm10^{-4}$\\
+filogenia NJ + \textit{bootstrap} & 3 clados, todos verdadeiros & colunas embaralhadas: 0,43 & controle $<0{,}7$\\
+regressão simbólica $3x^2-2x+1$ & $R^2 = 1{,}0$ & alvo embaralhado: $-0{,}32$ & $>0{,}9999$ / $<0{,}5$\\
+comparação pareada, 60 nulos & erro tipo I 0,00 & efeito plantado: $p = 2{,}5\cdot10^{-4}$ & $\leq0{,}15$; $<0{,}001$\\
+calibração & calibrado: $p=0{,}45$ & confiante: $p=0{,}002$; Platt $0{,}23\to0{,}08$ & $>0{,}05$ / $<0{,}01$\\
+Krippendorff (exemplo publicado) & 0,743 & rótulos ao acaso: 0,007 & $\pm0{,}001$; $|\alpha|<0{,}1$\\
+lei de escala, $\alpha = 0{,}34$ plantado & IC $[0{,}334;\,0{,}351]$, erro 0,3\,\% & perdas embaralhadas: 33\,\% & contém; $<1\,\%$ / $>1\,\%$\\
+deduplicação MinHash & mantém $\{0, 2\}$ & erro da estimativa 0,0 & exato; $<0{,}1$\\
+jogo da velha resolvido & empate em 5\,478; MCTS 0,95 & aleatório vs.\ aleatório 0,60 & ambos\\
+árvore portátil: \code{noise} & 3 valores de ouro & \code{len} numa cena recusado & bit a bit\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+% ----------------------------------------------------------------------------
+\section{Desempenho}\label{sec:aval-desempenho}
+
+O \vapor{} não afirma ser o sistema mais rápido; afirma que reprodutibilidade e verificabilidade custam pouco. A \autoref{tab:gemv} mostra o GEMV, a operação que domina a inferência de modelos de linguagem, nos dois \textit{backends} x86 e com 1 e 2 \textit{threads}, todos com os mesmos bits.
+
+\begin{table}[htbp]
+\centering
+\caption{GEMV nesta máquina (ms por chamada; todos com os mesmos bits)}\label{tab:gemv}
+\small
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+\textbf{operação} & \textbf{ISA} & \textbf{1 \textit{thread}} & \textbf{2 \textit{threads}} & \textbf{GB/s (2 thr.)}\\
+\midrule
+GEMV f32 $2048^2$ & AVX2 & 0,661 & 0,296 & 56,8\\
+GEMV f32 $2048^2$ & AVX-512 & 0,582 & 0,282 & 59,7\\
+GEMV bf16 $2048^2$ & AVX2 & 0,428 & 0,201 & 41,9\\
+GEMV bf16 $2048^2$ & AVX-512 & 0,300 & 0,174 & 48,4\\
+GEMV 4 bits $1024 \times 4096$ & AVX2 & 0,567 & 0,287 & 8,7\\
+GEMV 4 bits $1024 \times 4096$ & AVX-512 & 0,537 & 0,272 & 9,2\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[xbar, bar width=7pt, width=0.80\textwidth, height=5.4cm, xmin=0, xmax=2350, xlabel={ms},
+  symbolic y coords={livro: 12\,500 eventos, MC 16\,384 $\times$ 32, MC 8\,192 $\times$ 64}, ytick=data, enlarge y limits=0.28,
+  y tick label style={font=\footnotesize, align=right}, x tick label style={font=\footnotesize, /pgf/number format/1000 sep={\,}},
+  legend style={at={(0.5,1.02)}, anchor=south, legend columns=2, draw=none, font=\footnotesize, /tikz/every even column/.append style={column sep=10pt}},
+  legend image code/.code={\draw[#1, draw=none] (0cm,-0.1cm) rectangle (0.3cm,0.1cm);},
+  nodes near coords, nodes near coords style={font=\scriptsize, anchor=west, /pgf/number format/1000 sep={\,}}, point meta=rawx, every axis plot/.append style={draw=none}, axis line style={vslate!50}, tick style={vslate!50}]
+\addplot[fill=vcyan] coordinates {(125,MC 8\,192 $\times$ 64) (86,MC 16\,384 $\times$ 32) (150,livro: 12\,500 eventos)};
+\addplot[fill=vsand] coordinates {(750,MC 8\,192 $\times$ 64) (1950,MC 16\,384 $\times$ 32) (106,livro: 12\,500 eventos)};
+\legend{vapor (worker nativo; juiz ingênuo), referência (BEAM em binary64; motor)}
+\end{axis}
+\end{tikzpicture}
+\caption{Rodada 0.13: Monte Carlo no worker contra a BEAM em binary64 (6--23$\times$), e o custo do juiz ingênuo contra o do motor ($\approx$8,5~$\mu$s por evento) para 12\,500 eventos.}
+\label{fig:desempenho13}
+\end{figure}
+
+O árbitro de três tetos acerta o GEMV de 4 bits $4096^2$ a poucos por cento (previsto 71,7~ms, observado 72--75~ms), o que um modelo de dois tetos não faz (erro de cerca de 5$\times$). No livro de ofertas, o juiz custa da ordem do próprio motor: reexecutar uma sessão inteira é barato o bastante para ser feito em toda sessão (\autoref{fig:desempenho13}).
+
+% ----------------------------------------------------------------------------
+\section{Revisões independentes}\label{sec:aval-revisao}
+
+Desde a rodada 0.11, cada rodada termina com uma revisão feita por um agente que não viu o trabalho sendo produzido, com a instrução de procurar defeitos, não de confirmar. Na 0.11 a revisão achou nove problemas --- dois de segurança nos arquivos (receitas sem limite, bomba de zip), um ``provado'' por $0/0$, um ``nunca perde'' que vinha de amostra ---, todos corrigidos e testados. \revisaoTreze
+
+% ----------------------------------------------------------------------------
+\section{Ameaças à validade}\label{sec:aval-ameacas}
+
+\paragraph{Validade interna.} O mesmo projeto escreve o sistema, os testes e os controles. A mitigação principal são os oráculos externos; mas o episódio do FOK a mercado (\autoref{sec:fin-livro}) mostra o risco residual: dois motores escritos pelo mesmo autor podem compartilhar a mesma leitura errada da especificação. Por isso o juiz do livro tem invariantes que não executam nada, e por isso a revisão independente existe.
+
+\paragraph{Validade externa.} Uma única máquina modesta, sem GPU física (Vulkan sob lavapipe), sem \textit{hardware} ARM ou RISC-V (sob QEMU) e sem contadores de desempenho. A escala a muitos núcleos não foi medida. O caminho de \textit{cooperative matrix} do SPIR-V foi emitido e validado mas não executado. Em finanças, nenhum dado de mercado real foi usado.
+
+\paragraph{Validade de construto.} Os controles são escolhidos pelo autor como ``o erro mais plausível''; um controle fraco faria uma verificação parecer mais forte do que é. A documentação publica cada controle, para que possa ser contestado.
+
+\paragraph{Validade de conclusão.} Vários resultados estatísticos (Hawkes, Avellaneda--Stoikov, portões de \textit{backtest}) vêm de uma semente; os limiares têm folga, e o tamanho do teste de Kupiec é medido sobre 400 séries, mas não há, para todos, uma distribuição sobre sementes. Os níveis de teste sem ferramenta na sessão foram excluídos e não reexecutados nesta rodada; os módulos desses níveis não mudaram.

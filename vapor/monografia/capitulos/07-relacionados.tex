@@ -1,0 +1,62 @@
+% ============================================================================
+\chapter{Trabalhos relacionados}\label{cap:relacionados}
+% ============================================================================
+
+O \vapor{} atravessa várias áreas; este capítulo o situa em cada uma, dizendo o que toma emprestado, o que faz diferente e onde fica atrás.
+
+% ----------------------------------------------------------------------------
+\section{Compiladores de tensores}
+
+XLA \cite{xla}, TVM \cite{chen2018tvm}, Halide \cite{ragankelley2013}, Triton \cite{tillet2019} e o ecossistema MLIR \cite{lattner2021} compilam programas de tensores para CPUs, GPUs e aceleradores, e são muito mais rápidos e completos que o \vapor{}. Halide introduziu a separação entre algoritmo e \textit{schedule} que o \vapor{} também usa (a álgebra é o algoritmo; o fator de grupo, as linhas por iteração e o corte de regiões são o \textit{schedule}). A diferença está nos objetivos: esses compiladores otimizam desempenho e tratam a ordem das reduções como um grau de liberdade do \textit{schedule}; o \vapor{} fixa a ordem e trata a igualdade de bits como restrição. Nenhum deles emite um certificado da compilação nem isola o código gerado do processo do \textit{runtime}.
+
+% ----------------------------------------------------------------------------
+\section{Reprodutibilidade numérica}
+
+\citeonline{demmel2015} propõem somas reprodutíveis independentes da ordem por pré-arredondamento a uma grade comum (ReproBLAS); o custo é um fator constante por redução, e a técnica vale para qualquer ordem --- o que é mais forte do que o \vapor{} precisa. O \vapor{} fixa a ordem e paga zero por redução, mas só porque controla o código inteiro. Os modos determinísticos de \textit{frameworks} \cite{pytorchdeterminism} garantem repetição na mesma máquina e versão, não entre arquiteturas. \citeonline{goldberg1991} e \citeonline{higham2002} são a base da análise de erro que o envelope implementa em racionais exatos; \citeonline{monniaux2008} cataloga as armadilhas de verificar programas de ponto flutuante, várias das quais (FMA implícita, precisão estendida) o \vapor{} elimina por construção.
+
+% ----------------------------------------------------------------------------
+\section{Compiladores verificados e validação de tradução}
+
+O CompCert \cite{leroy2009} prova o compilador inteiro em Coq, inclusive a alocação de registradores, que é validada \textit{a posteriori} por um verificador provado \cite{rideau2010} --- o mesmo desenho que o \vapor{} usa, em escala muito maior e com garantias muito mais completas. O CakeML \cite{kumar2014} faz o mesmo para uma linguagem funcional, até o código de máquina. Alive2 \cite{lopes2021} valida otimizações do LLVM por tradução. A validação de tradução \cite{pnueli1998} e o \textit{proof-carrying code} \cite{necula1997} são as ideias de que o \vapor{} deriva a escada de verificação e o certificado. A contribuição do \vapor{} aqui não é teórica: é mostrar que essas ideias cabem num compilador de tensores pequeno, sem dependências, que emite cinco ISAs, e combiná-las com execução isolada e co-assinatura.
+
+% ----------------------------------------------------------------------------
+\section{Algoritmos certificadores e verificação de saídas}
+
+\citeonline{mcconnell2011} sistematizam os \emph{algoritmos certificadores}: algoritmos que produzem, com a saída, uma testemunha que um verificador simples confere. O padrão proponente/verificador do \vapor{} é uma aplicação direta, estendida em duas direções: o proponente pode ser qualquer um (inclusive um modelo de linguagem pelo MCP \cite{mcp2024}), e cada verificador vem acompanhado de um controle. Em SAT, os formatos DRUP/DRAT \cite{goldberg2003,wetzler2014} são o exemplo canônico, usado pelo \vapor{} na mesa de lógica. Em programação linear, os certificados de dualidade e de Farkas \cite{schrijver1986} são o que a mesa de finanças devolve para arbitragem. Em transparência, o \textit{Certificate Transparency} \cite{rfc6962,rfc9162} fornece a estrutura dos logs e diários.
+
+% ----------------------------------------------------------------------------
+\section{Inferência de modelos de linguagem}
+
+O \code{llama.cpp} e o vLLM \cite{kwon2023} são as referências de inferência em CPU e GPU; o vLLM introduziu o cache KV paginado que o \vapor{} também implementa. A decodificação especulativa \cite{leviathan2023} e o MLA \cite{deepseek2024} são técnicas que o \vapor{} reformula para não mudar bits. Esses sistemas são várias vezes mais rápidos que o \vapor{}; nenhum oferece igualdade de bits entre substratos ou certificados.
+
+% ----------------------------------------------------------------------------
+\section{Finanças quantitativas}
+
+O QuantLib \cite{quantlib} é a biblioteca aberta de referência e o oráculo dos testes de calendários, curvas e opções; o \vapor{} cobre uma fração pequena dele. A diferença é o certificado: o QuantLib devolve números; o \vapor{} devolve números com o objeto que os julga (reprecificação, paridade, limites, $g(k)$, KKT). Em \textit{backtesting}, \textit{frameworks} abertos como o zipline e o backtrader oferecem simulação de carteiras, mas não portões de seleção nem certificados de causalidade; a literatura de \citeonline{bailey2014dsr,bailey2014pbo}, \citeonline{harvey2016} e \citeonline{white2000} fornece os testes que o \vapor{} implementa. Até onde este trabalho pôde verificar, a \emph{invariância de prefixo bit a bit como certificado de ausência de antecipação} não aparece nessas ferramentas; a ideia é próxima da validação \textit{walk-forward}, mas com outro objetivo (detectar vazamento, não estimar desempenho fora da amostra) e com igualdade exata em vez de comparação estatística.
+
+Em microestrutura, os simuladores baseados em agentes como o ABIDES \cite{byrd2020} modelam bolsas para pesquisa; o LOBSTER fornece dados reconstruídos de livros da Nasdaq. A sessão de bolsa do \vapor{} é menor que esses simuladores, mas usa o próprio motor de produção, verificado por um juiz independente, com reprodução por \textit{hash}. A arbitragem como problema de LP é clássica \cite{harrison1979,jouini1995}; a contribuição é a decisão em aritmética racional com o certificado entregue para conferência por terceiros.
+
+% ----------------------------------------------------------------------------
+\section{Síntese}
+
+A \autoref{tab:comparacao} resume as propriedades que distinguem o \vapor{}. Ela não mede desempenho nem completude, em que os sistemas comparados são superiores.
+
+\begin{table}[htbp]
+\centering
+\caption{Propriedades de verificabilidade em sistemas representativos}\label{tab:comparacao}
+\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+ & \textbf{bits iguais} & \textbf{fase crítica} & \textbf{código} & \textbf{certificado} & \textbf{verificador}\\
+\textbf{sistema} & \textbf{entre ISAs} & \textbf{verificada} & \textbf{isolado} & \textbf{co-assinável} & \textbf{por resposta}\\
+\midrule
+XLA, TVM, Triton & não & não & não & não & não\\
+PyTorch (determinístico) & não & não & não & não & não\\
+ReproBLAS & sim (somas) & não & não & não & não\\
+CompCert & n/a & sim (tudo) & não & não & não\\
+llama.cpp, vLLM & não & não & não & não & não\\
+QuantLib & n/a & não & não & não & não\\
+\vapor{} & \textbf{sim} & \textbf{sim (alocação)} & \textbf{sim} & \textbf{sim} & \textbf{sim}\\
+\bottomrule
+\end{tabular}
+\end{table}

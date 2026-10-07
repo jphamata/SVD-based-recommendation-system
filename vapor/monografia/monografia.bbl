@@ -1,0 +1,453 @@
+\providecommand{\abntreprintinfo}[1]{%
+ \citeonline{#1}}
+\setlength{\labelsep}{0pt}\begin{thebibliography}{}
+\providecommand{\abntrefinfo}[3]{}
+\providecommand{\abntbstabout}[1]{}
+\abntbstabout{v-1.9.7 }
+
+\bibitem[Albrecher et al. 2007]{albrecher2007}
+\abntrefinfo{Albrecher et al.}{ALBRECHER et al.}{2007}
+{ALBRECHER, H. et al. The little {Heston} trap.
+\textbf{Wilmott Magazine}, p. 83--92, jan 2007.}
+
+\bibitem[Almgren e Chriss 2000]{almgren2000}
+\abntrefinfo{Almgren e Chriss}{ALMGREN; CHRISS}{2000}
+{ALMGREN, R.; CHRISS, N. Optimal execution of portfolio transactions.
+\textbf{Journal of Risk}, v.~3, n.~2, p. 5--39, 2000.}
+
+\bibitem[{Anthropic} 2024]{mcp2024}
+\abntrefinfo{{Anthropic}}{{Anthropic}}{2024}
+{{Anthropic}. \textbf{Model Context Protocol: specification}.
+[S.l.], 2024.}
+
+\bibitem[Armstrong 2003]{armstrong2003}
+\abntrefinfo{Armstrong}{ARMSTRONG}{2003}
+{ARMSTRONG, J.
+\textbf{Making reliable distributed systems in the presence of software
+  errors}.
+Tese (Doutorado) --- Royal Institute of Technology (KTH), Estocolmo, 2003.}
+
+\bibitem[Avellaneda e Stoikov 2008]{avellaneda2008}
+\abntrefinfo{Avellaneda e Stoikov}{AVELLANEDA; STOIKOV}{2008}
+{AVELLANEDA, M.; STOIKOV, S. High-frequency trading in a limit order book.
+\textbf{Quantitative Finance}, v.~8, n.~3, p. 217--224, 2008.}
+
+\bibitem[Bacry, Mastromatteo e Muzy 2015]{bacry2015}
+\abntrefinfo{Bacry, Mastromatteo e Muzy}{BACRY; MASTROMATTEO; MUZY}{2015}
+{BACRY, E.; MASTROMATTEO, I.; MUZY, J.-F. Hawkes processes in finance.
+\textbf{Market Microstructure and Liquidity}, v.~1, n.~1, p. 1550005, 2015.}
+
+\bibitem[Bailey et al. 2017]{bailey2014pbo}
+\abntrefinfo{Bailey et al.}{BAILEY et al.}{2017}
+{BAILEY, D.~H. et al. The probability of backtest overfitting.
+\textbf{Journal of Computational Finance}, v.~20, n.~4, p. 39--69, 2017.}
+
+\bibitem[Bailey e {López de Prado} 2014]{bailey2014dsr}
+\abntrefinfo{Bailey e {López de Prado}}{BAILEY; {López de Prado}}{2014}
+{BAILEY, D.~H.; {López de Prado}, M. The deflated {Sharpe} ratio: correcting
+  for selection bias, backtest overfitting and non-normality.
+\textbf{The Journal of Portfolio Management}, v.~40, n.~5, p. 94--107, 2014.}
+
+\bibitem[{Basel Committee on Banking Supervision} 1996]{basel1996}
+\abntrefinfo{{Basel Committee on Banking Supervision}}{{Basel Committee on
+  Banking Supervision}}{1996}
+{{Basel Committee on Banking Supervision}. \textbf{Supervisory framework for
+  the use of ``backtesting'' in conjunction with the internal models approach
+  to market risk capital requirements}.
+Basileia, 1996.}
+
+\bibitem[Bernstein et al. 2012]{bernstein2012}
+\abntrefinfo{Bernstein et al.}{BERNSTEIN et al.}{2012}
+{BERNSTEIN, D.~J. et al. High-speed high-security signatures.
+\textbf{Journal of Cryptographic Engineering}, v.~2, n.~2, p. 77--89, 2012.}
+
+\bibitem[Black e Scholes 1973]{black1973}
+\abntrefinfo{Black e Scholes}{BLACK; SCHOLES}{1973}
+{BLACK, F.; SCHOLES, M. The pricing of options and corporate liabilities.
+\textbf{Journal of Political Economy}, v.~81, n.~3, p. 637--654, 1973.}
+
+\bibitem[Byrd, Hybinette e Balch 2020]{byrd2020}
+\abntrefinfo{Byrd, Hybinette e Balch}{BYRD; HYBINETTE; BALCH}{2020}
+{BYRD, D.; HYBINETTE, M.; BALCH, T.~H. {ABIDES}: towards high-fidelity
+  multi-agent market simulation. In:  \textbf{Proceedings of the 2020 ACM
+  SIGSIM Conference on Principles of Advanced Discrete Simulation}. [S.l.:
+  s.n.], 2020. p. 11--22.}
+
+\bibitem[Chen et al. 2018]{chen2018tvm}
+\abntrefinfo{Chen et al.}{CHEN et al.}{2018}
+{CHEN, T. et al. {TVM}: an automated end-to-end optimizing compiler for deep
+  learning. In:  \textbf{13th USENIX Symposium on Operating Systems Design and
+  Implementation (OSDI)}. [S.l.: s.n.], 2018. p. 578--594.}
+
+\bibitem[Christoffersen 1998]{christoffersen1998}
+\abntrefinfo{Christoffersen}{CHRISTOFFERSEN}{1998}
+{CHRISTOFFERSEN, P.~F. Evaluating interval forecasts.
+\textbf{International Economic Review}, v.~39, n.~4, p. 841--862, 1998.}
+
+\bibitem[{Comissão Europeia} 2017]{rts6}
+\abntrefinfo{{Comissão Europeia}}{{Comissão Europeia}}{2017}
+{{Comissão Europeia}. \textbf{Regulamento Delegado ({UE}) 2017/589 ({RTS} 6):
+  requisitos organizacionais das empresas de investimento que operam
+  negociação algorítmica}.
+[S.l.], 2017.}
+
+\bibitem[{DeepSeek-AI} 2024]{deepseek2024}
+\abntrefinfo{{DeepSeek-AI}}{{DeepSeek-AI}}{2024}
+{{DeepSeek-AI}. \textbf{{DeepSeek-V2}: a strong, economical, and efficient
+  mixture-of-experts language model}. 2024. ArXiv:2405.04434.}
+
+\bibitem[Demmel e Nguyen 2015]{demmel2015}
+\abntrefinfo{Demmel e Nguyen}{DEMMEL; NGUYEN}{2015}
+{DEMMEL, J.; NGUYEN, H.~D. Parallel reproducible summation.
+\textbf{IEEE Transactions on Computers}, v.~64, n.~7, p. 2060--2070, 2015.}
+
+\bibitem[Farkas 1902]{farkas1902}
+\abntrefinfo{Farkas}{FARKAS}{1902}
+{FARKAS, J. Theorie der einfachen {Ungleichungen}.
+\textbf{Journal für die reine und angewandte Mathematik}, v.~124, p. 1--27,
+  1902.}
+
+\bibitem[{FIX Trading Community} 2003]{fix44}
+\abntrefinfo{{FIX Trading Community}}{{FIX Trading Community}}{2003}
+{{FIX Trading Community}. \textbf{Financial Information eXchange Protocol,
+  version 4.4}.
+[S.l.], 2003.}
+
+\bibitem[Gatheral e Jacquier 2014]{gatheral2014}
+\abntrefinfo{Gatheral e Jacquier}{GATHERAL; JACQUIER}{2014}
+{GATHERAL, J.; JACQUIER, A. Arbitrage-free {SVI} volatility surfaces.
+\textbf{Quantitative Finance}, v.~14, n.~1, p. 59--71, 2014.}
+
+\bibitem[Glasserman 2003]{glasserman2003}
+\abntrefinfo{Glasserman}{GLASSERMAN}{2003}
+{GLASSERMAN, P. \textbf{Monte Carlo methods in financial engineering}. Nova
+  York: Springer, 2003.}
+
+\bibitem[Goldberg 1991]{goldberg1991}
+\abntrefinfo{Goldberg}{GOLDBERG}{1991}
+{GOLDBERG, D. What every computer scientist should know about floating-point
+  arithmetic.
+\textbf{ACM Computing Surveys}, v.~23, n.~1, p. 5--48, 1991.}
+
+\bibitem[Goldberg e Novikov 2003]{goldberg2003}
+\abntrefinfo{Goldberg e Novikov}{GOLDBERG; NOVIKOV}{2003}
+{GOLDBERG, E.; NOVIKOV, Y. Verification of proofs of unsatisfiability for {CNF}
+  formulas. In:  \textbf{Design, Automation and Test in Europe (DATE)}. [S.l.:
+  s.n.], 2003. p. 886--891.}
+
+\bibitem[Harrison e Kreps 1979]{harrison1979}
+\abntrefinfo{Harrison e Kreps}{HARRISON; KREPS}{1979}
+{HARRISON, J.~M.; KREPS, D.~M. Martingales and arbitrage in multiperiod
+  securities markets.
+\textbf{Journal of Economic Theory}, v.~20, n.~3, p. 381--408, 1979.}
+
+\bibitem[Harrison e Pliska 1981]{harrison1981}
+\abntrefinfo{Harrison e Pliska}{HARRISON; PLISKA}{1981}
+{HARRISON, J.~M.; PLISKA, S.~R. Martingales and stochastic integrals in the
+  theory of continuous trading.
+\textbf{Stochastic Processes and their Applications}, v.~11, n.~3, p. 215--260,
+  1981.}
+
+\bibitem[Harvey, Liu e Zhu 2016]{harvey2016}
+\abntrefinfo{Harvey, Liu e Zhu}{HARVEY; LIU; ZHU}{2016}
+{HARVEY, C.~R.; LIU, Y.; ZHU, H. \ldots{} and the cross-section of expected
+  returns.
+\textbf{The Review of Financial Studies}, v.~29, n.~1, p. 5--68, 2016.}
+
+\bibitem[Hawkes 1971]{hawkes1971}
+\abntrefinfo{Hawkes}{HAWKES}{1971}
+{HAWKES, A.~G. Spectra of some self-exciting and mutually exciting point
+  processes.
+\textbf{Biometrika}, v.~58, n.~1, p. 83--90, 1971.}
+
+\bibitem[Heston 1993]{heston1993}
+\abntrefinfo{Heston}{HESTON}{1993}
+{HESTON, S.~L. A closed-form solution for options with stochastic volatility
+  with applications to bond and currency options.
+\textbf{The Review of Financial Studies}, v.~6, n.~2, p. 327--343, 1993.}
+
+\bibitem[Higham 2002]{higham2002}
+\abntrefinfo{Higham}{HIGHAM}{2002}
+{HIGHAM, N.~J. \textbf{Accuracy and stability of numerical algorithms}. 2. ed.
+  Filadélfia: SIAM, 2002.}
+
+\bibitem[{IEEE} 2019]{ieee754}
+\abntrefinfo{{IEEE}}{{IEEE}}{2019}
+{{IEEE}. \textbf{{IEEE} Standard for Floating-Point Arithmetic ({IEEE} Std
+  754-2019)}.
+Nova York, 2019.}
+
+\bibitem[{Intel Corporation} 2024]{intelsdm}
+\abntrefinfo{{Intel Corporation}}{{Intel Corporation}}{2024}
+{{Intel Corporation}. \textbf{Intel 64 and {IA}-32 Architectures Software
+  Developer's Manual}.
+[S.l.], 2024.}
+
+\bibitem[Jouini e Kallal 1995]{jouini1995}
+\abntrefinfo{Jouini e Kallal}{JOUINI; KALLAL}{1995}
+{JOUINI, E.; KALLAL, H. Martingales and arbitrage in securities markets with
+  transaction costs.
+\textbf{Journal of Economic Theory}, v.~66, n.~1, p. 178--197, 1995.}
+
+\bibitem[Kemna e Vorst 1990]{kemna1990}
+\abntrefinfo{Kemna e Vorst}{KEMNA; VORST}{1990}
+{KEMNA, A. G.~Z.; VORST, A. C.~F. A pricing method for options based on average
+  asset values.
+\textbf{Journal of Banking \& Finance}, v.~14, n.~1, p. 113--129, 1990.}
+
+\bibitem[Kumar et al. 2014]{kumar2014}
+\abntrefinfo{Kumar et al.}{KUMAR et al.}{2014}
+{KUMAR, R. et al. {CakeML}: a verified implementation of {ML}. In:
+  \textbf{Proceedings of the 41st ACM SIGPLAN-SIGACT Symposium on Principles of
+  Programming Languages (POPL)}. [S.l.: s.n.], 2014. p. 179--191.}
+
+\bibitem[Kupiec 1995]{kupiec1995}
+\abntrefinfo{Kupiec}{KUPIEC}{1995}
+{KUPIEC, P.~H. Techniques for verifying the accuracy of risk measurement
+  models.
+\textbf{The Journal of Derivatives}, v.~3, n.~2, p. 73--84, 1995.}
+
+\bibitem[Kwon et al. 2023]{kwon2023}
+\abntrefinfo{Kwon et al.}{KWON et al.}{2023}
+{KWON, W. et al. Efficient memory management for large language model serving
+  with {PagedAttention}. In:  \textbf{Proceedings of the 29th Symposium on
+  Operating Systems Principles (SOSP)}. [S.l.: s.n.], 2023. p. 611--626.}
+
+\bibitem[Lattner et al. 2021]{lattner2021}
+\abntrefinfo{Lattner et al.}{LATTNER et al.}{2021}
+{LATTNER, C. et al. {MLIR}: scaling compiler infrastructure for domain specific
+  computation. In:  \textbf{IEEE/ACM International Symposium on Code Generation
+  and Optimization (CGO)}. [S.l.: s.n.], 2021. p. 2--14.}
+
+\bibitem[Laurie, Langley e Kasper 2013]{rfc6962}
+\abntrefinfo{Laurie, Langley e Kasper}{LAURIE; LANGLEY; KASPER}{2013}
+{LAURIE, B.; LANGLEY, A.; KASPER, E. \textbf{Certificate Transparency ({RFC}
+  6962)}.
+[S.l.], 2013.}
+
+\bibitem[Laurie, Messeri e Stradling 2021]{rfc9162}
+\abntrefinfo{Laurie, Messeri e Stradling}{LAURIE; MESSERI; STRADLING}{2021}
+{LAURIE, B.; MESSERI, E.; STRADLING, R. \textbf{Certificate Transparency
+  Version 2.0 ({RFC} 9162)}.
+[S.l.], 2021.}
+
+\bibitem[L'Ecuyer e Simard 2007]{lecuyer2007}
+\abntrefinfo{L'Ecuyer e Simard}{L'ECUYER; SIMARD}{2007}
+{L'ECUYER, P.; SIMARD, R. {TestU01}: a {C} library for empirical testing of
+  random number generators.
+\textbf{ACM Transactions on Mathematical Software}, v.~33, n.~4, p.
+  22:1--22:40, 2007.}
+
+\bibitem[Ledoit e Wolf 2004]{ledoit2004}
+\abntrefinfo{Ledoit e Wolf}{LEDOIT; WOLF}{2004}
+{LEDOIT, O.; WOLF, M. A well-conditioned estimator for large-dimensional
+  covariance matrices.
+\textbf{Journal of Multivariate Analysis}, v.~88, n.~2, p. 365--411, 2004.}
+
+\bibitem[Leisen e Reimer 1996]{leisen1996}
+\abntrefinfo{Leisen e Reimer}{LEISEN; REIMER}{1996}
+{LEISEN, D. P.~J.; REIMER, M. Binomial models for option valuation -- examining
+  and improving convergence.
+\textbf{Applied Mathematical Finance}, v.~3, n.~4, p. 319--346, 1996.}
+
+\bibitem[Leroy 2009]{leroy2009}
+\abntrefinfo{Leroy}{LEROY}{2009}
+{LEROY, X. Formal verification of a realistic compiler.
+\textbf{Communications of the ACM}, v.~52, n.~7, p. 107--115, 2009.}
+
+\bibitem[Leviathan, Kalman e Matias 2023]{leviathan2023}
+\abntrefinfo{Leviathan, Kalman e Matias}{LEVIATHAN; KALMAN; MATIAS}{2023}
+{LEVIATHAN, Y.; KALMAN, M.; MATIAS, Y. Fast inference from transformers via
+  speculative decoding. In:  \textbf{Proceedings of the 40th International
+  Conference on Machine Learning (ICML)}. [S.l.: s.n.], 2023. p. 19274--19286.}
+
+\bibitem[Longstaff e Schwartz 2001]{longstaff2001}
+\abntrefinfo{Longstaff e Schwartz}{LONGSTAFF; SCHWARTZ}{2001}
+{LONGSTAFF, F.~A.; SCHWARTZ, E.~S. Valuing {American} options by simulation: a
+  simple least-squares approach.
+\textbf{The Review of Financial Studies}, v.~14, n.~1, p. 113--147, 2001.}
+
+\bibitem[Lopes et al. 2021]{lopes2021}
+\abntrefinfo{Lopes et al.}{LOPES et al.}{2021}
+{LOPES, N.~P. et al. {Alive2}: bounded translation validation for {LLVM}. In:
+  \textbf{Proceedings of the 42nd ACM SIGPLAN Conference on Programming
+  Language Design and Implementation (PLDI)}. [S.l.: s.n.], 2021. p. 65--79.}
+
+\bibitem[{López de Prado} 2016]{lopezdeprado2016}
+\abntrefinfo{{López de Prado}}{{López de Prado}}{2016}
+{{López de Prado}, M. Building diversified portfolios that outperform out of
+  sample.
+\textbf{The Journal of Portfolio Management}, v.~42, n.~4, p. 59--69, 2016.}
+
+\bibitem[McConnell et al. 2011]{mcconnell2011}
+\abntrefinfo{McConnell et al.}{MCCONNELL et al.}{2011}
+{MCCONNELL, R.~M. et al. Certifying algorithms.
+\textbf{Computer Science Review}, v.~5, n.~2, p. 119--161, 2011.}
+
+\bibitem[Merkle 1987]{merkle1987}
+\abntrefinfo{Merkle}{MERKLE}{1987}
+{MERKLE, R.~C. A digital signature based on a conventional encryption function.
+  In:  \textbf{Advances in Cryptology -- CRYPTO '87}. [S.l.]: Springer, 1987.
+  (Lecture Notes in Computer Science, v.~293), p. 369--378.}
+
+\bibitem[Merton 1973]{merton1973}
+\abntrefinfo{Merton}{MERTON}{1973}
+{MERTON, R.~C. Theory of rational option pricing.
+\textbf{The Bell Journal of Economics and Management Science}, v.~4, n.~1, p.
+  141--183, 1973.}
+
+\bibitem[Monniaux 2008]{monniaux2008}
+\abntrefinfo{Monniaux}{MONNIAUX}{2008}
+{MONNIAUX, D. The pitfalls of verifying floating-point computations.
+\textbf{ACM Transactions on Programming Languages and Systems}, v.~30, n.~3, p.
+  12:1--12:41, 2008.}
+
+\bibitem[Moura e Ullrich 2021]{moura2021}
+\abntrefinfo{Moura e Ullrich}{MOURA; ULLRICH}{2021}
+{MOURA, L. de; ULLRICH, S. The {Lean} 4 theorem prover and programming
+  language. In:  \textbf{Automated Deduction -- CADE 28}. [S.l.]: Springer,
+  2021.  (Lecture Notes in Computer Science, v. 12699), p. 625--635.}
+
+\bibitem[{Nasdaq} 2020]{itch50}
+\abntrefinfo{{Nasdaq}}{{Nasdaq}}{2020}
+{{Nasdaq}. \textbf{Nasdaq {TotalView-ITCH} 5.0}.
+[S.l.], 2020.}
+
+\bibitem[Necula 1997]{necula1997}
+\abntrefinfo{Necula}{NECULA}{1997}
+{NECULA, G.~C. Proof-carrying code. In:  \textbf{Proceedings of the 24th ACM
+  SIGPLAN-SIGACT Symposium on Principles of Programming Languages (POPL)}.
+  [S.l.: s.n.], 1997. p. 106--119.}
+
+\bibitem[Ogata 1981]{ogata1981}
+\abntrefinfo{Ogata}{OGATA}{1981}
+{OGATA, Y. On {Lewis}' simulation method for point processes.
+\textbf{IEEE Transactions on Information Theory}, v.~27, n.~1, p. 23--31,
+  1981.}
+
+\bibitem[{OpenXLA Project} 2024]{xla}
+\abntrefinfo{{OpenXLA Project}}{{OpenXLA Project}}{2024}
+{{OpenXLA Project}. \textbf{{XLA}: optimizing compiler for machine learning}.
+[S.l.], 2024.}
+
+\bibitem[Pnueli, Siegel e Singerman 1998]{pnueli1998}
+\abntrefinfo{Pnueli, Siegel e Singerman}{PNUELI; SIEGEL; SINGERMAN}{1998}
+{PNUELI, A.; SIEGEL, M.; SINGERMAN, E. Translation validation. In:
+  \textbf{Tools and Algorithms for the Construction and Analysis of Systems
+  (TACAS)}. [S.l.]: Springer, 1998.  (Lecture Notes in Computer Science,
+  v.~1384), p. 151--166.}
+
+\bibitem[Poletto e Sarkar 1999]{poletto1999}
+\abntrefinfo{Poletto e Sarkar}{POLETTO; SARKAR}{1999}
+{POLETTO, M.; SARKAR, V. Linear scan register allocation.
+\textbf{ACM Transactions on Programming Languages and Systems}, v.~21, n.~5, p.
+  895--913, 1999.}
+
+\bibitem[Politis e Romano 1994]{politis1994}
+\abntrefinfo{Politis e Romano}{POLITIS; ROMANO}{1994}
+{POLITIS, D.~N.; ROMANO, J.~P. The stationary bootstrap.
+\textbf{Journal of the American Statistical Association}, v.~89, n.~428, p.
+  1303--1313, 1994.}
+
+\bibitem[{PyTorch Contributors} 2024]{pytorchdeterminism}
+\abntrefinfo{{PyTorch Contributors}}{{PyTorch Contributors}}{2024}
+{{PyTorch Contributors}. \textbf{Reproducibility}.
+[S.l.], 2024.}
+
+\bibitem[Ragan-Kelley et al. 2013]{ragankelley2013}
+\abntrefinfo{Ragan-Kelley et al.}{RAGAN-KELLEY et al.}{2013}
+{RAGAN-KELLEY, J. et al. Halide: a language and compiler for optimizing
+  parallelism, locality, and recomputation in image processing pipelines. In:
+  \textbf{Proceedings of the 34th ACM SIGPLAN Conference on Programming
+  Language Design and Implementation (PLDI)}. [S.l.: s.n.], 2013. p. 519--530.}
+
+\bibitem[Rideau e Leroy 2010]{rideau2010}
+\abntrefinfo{Rideau e Leroy}{RIDEAU; LEROY}{2010}
+{RIDEAU, S.; LEROY, X. Validating register allocation and spilling. In:
+  \textbf{Compiler Construction (CC)}. [S.l.]: Springer, 2010.  (Lecture Notes
+  in Computer Science, v.~6011), p. 224--243.}
+
+\bibitem[{RISC-V International} 2021]{rvv10}
+\abntrefinfo{{RISC-V International}}{{RISC-V International}}{2021}
+{{RISC-V International}. \textbf{{RISC-V} ``{V}'' Vector Extension, version
+  1.0}.
+[S.l.], 2021.}
+
+\bibitem[Salmon et al. 2011]{salmon2011}
+\abntrefinfo{Salmon et al.}{SALMON et al.}{2011}
+{SALMON, J.~K. et al. Parallel random numbers: as easy as 1, 2, 3. In:
+  \textbf{Proceedings of the International Conference for High Performance
+  Computing, Networking, Storage and Analysis (SC11)}. [S.l.: s.n.], 2011.}
+
+\bibitem[Schrijver 1986]{schrijver1986}
+\abntrefinfo{Schrijver}{SCHRIJVER}{1986}
+{SCHRIJVER, A. \textbf{Theory of linear and integer programming}. Chichester:
+  Wiley, 1986.}
+
+\bibitem[Spinu 2013]{spinu2013}
+\abntrefinfo{Spinu}{SPINU}{2013}
+{SPINU, F. \textbf{An algorithm for computing risk parity weights}. 2013. SSRN
+  2297383.}
+
+\bibitem[{The Khronos Group} 2024]{spirv}
+\abntrefinfo{{The Khronos Group}}{{The Khronos Group}}{2024}
+{{The Khronos Group}. \textbf{{SPIR-V} Specification}.
+[S.l.], 2024.}
+
+\bibitem[{The QuantLib Contributors} 2026]{quantlib}
+\abntrefinfo{{The QuantLib Contributors}}{{The QuantLib Contributors}}{2026}
+{{The QuantLib Contributors}. \textbf{{QuantLib}: a free/open-source library
+  for quantitative finance}.
+1.43. ed. [S.l.], 2026.}
+
+\bibitem[Tillet, Kung e Cox 2019]{tillet2019}
+\abntrefinfo{Tillet, Kung e Cox}{TILLET; KUNG; COX}{2019}
+{TILLET, P.; KUNG, H.~T.; COX, D. Triton: an intermediate language and compiler
+  for tiled neural network computations. In:  \textbf{Proceedings of the 3rd
+  ACM SIGPLAN International Workshop on Machine Learning and Programming
+  Languages (MAPL)}. [S.l.: s.n.], 2019. p. 10--19.}
+
+\bibitem[{U.S. Securities and Exchange Commission} 2010]{sec15c35}
+\abntrefinfo{{U.S. Securities and Exchange Commission}}{{U.S. Securities and
+  Exchange Commission}}{2010}
+{{U.S. Securities and Exchange Commission}. \textbf{Risk management controls
+  for brokers or dealers with market access (Rule 15c3-5, 17 CFR 240.15c3-5)}.
+[S.l.], 2010.}
+
+\bibitem[Wetzler, Heule e Jr. 2014]{wetzler2014}
+\abntrefinfo{Wetzler, Heule e Jr.}{WETZLER; HEULE; JR.}{2014}
+{WETZLER, N.; HEULE, M. J.~H.; JR., W. A.~H. {DRAT-trim}: efficient checking
+  and trimming using expressive clausal proofs. In:  \textbf{Theory and
+  Applications of Satisfiability Testing -- SAT 2014}. [S.l.]: Springer, 2014.
+  (Lecture Notes in Computer Science, v.~8561), p. 422--429.}
+
+\bibitem[White 2000]{white2000}
+\abntrefinfo{White}{WHITE}{2000}
+{WHITE, H. A reality check for data snooping.
+\textbf{Econometrica}, v.~68, n.~5, p. 1097--1126, 2000.}
+
+\bibitem[Wichmann e Hill 1982]{wichmann1982}
+\abntrefinfo{Wichmann e Hill}{WICHMANN; HILL}{1982}
+{WICHMANN, B.~A.; HILL, I.~D. Algorithm {AS} 183: an efficient and portable
+  pseudo-random number generator.
+\textbf{Applied Statistics}, v.~31, n.~2, p. 188--190, 1982.}
+
+\bibitem[Wichura 1988]{wichura1988}
+\abntrefinfo{Wichura}{WICHURA}{1988}
+{WICHURA, M.~J. Algorithm {AS} 241: the percentage points of the normal
+  distribution.
+\textbf{Applied Statistics}, v.~37, n.~3, p. 477--484, 1988.}
+
+\bibitem[Wilkinson 1963]{wilkinson1963}
+\abntrefinfo{Wilkinson}{WILKINSON}{1963}
+{WILKINSON, J.~H. \textbf{Rounding errors in algebraic processes}. Englewood
+  Cliffs: Prentice-Hall, 1963.}
+
+\bibitem[Williams, Waterman e Patterson 2009]{williams2009}
+\abntrefinfo{Williams, Waterman e Patterson}{WILLIAMS; WATERMAN;
+  PATTERSON}{2009}
+{WILLIAMS, S.; WATERMAN, A.; PATTERSON, D. Roofline: an insightful visual
+  performance model for multicore architectures.
+\textbf{Communications of the ACM}, v.~52, n.~4, p. 65--76, 2009.}
+
+\end{thebibliography}

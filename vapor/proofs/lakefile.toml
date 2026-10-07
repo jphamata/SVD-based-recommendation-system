@@ -1,0 +1,19 @@
+name = "vapor-proofs"
+defaultTargets = ["Vapor", "vapor-extract"]
+
+# Core Lean 4 only: no Mathlib, no Batteries — every lemma used is either in
+# Lean's `Init` or proved here. `lake build` must report no warnings and no
+# `sorry`; `axiom` is banned by the audit test.
+[leanOptions]
+autoImplicit = false
+
+[[lean_lib]]
+name = "Vapor"
+
+[[lean_lib]]
+name = "Extract"
+
+[[lean_exe]]
+name = "vapor-extract"
+root = "Main"
+supportInterpreter = true

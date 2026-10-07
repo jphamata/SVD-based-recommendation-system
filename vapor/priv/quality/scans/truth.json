@@ -1,0 +1,335 @@
+{
+ "p1_one_col": {
+  "layout": "1col",
+  "font": "C059",
+  "source": "pt_holdout",
+  "coding": "g4",
+  "size": [
+   1700,
+   846
+  ],
+  "blocks": [
+   [
+    "e Riak. Ponderar é decidir, para cada item, se ele resolve uma dor que o vapor tem (ou cria), e não integrar",
+    "tudo. Princípio O núcleo continua com deps: . Ele é a base confiável: um certificado vale tanto quanto o",
+    "código que o produziu, e cada dependência entraria nessa base. Por isso o núcleo expõe pontos de extensão",
+    "sem dependências ( behaviours , ganchos, um despacho independente de transporte), e as integrações que",
+    "precisam de pacotes vivem em integrations/ , cada uma um projeto Mix próprio. Elas foram compiladas e",
+    "testadas aqui contra os fontes dos pacotes (clonados do GitHub, porque o Hex não é alcançável desta",
+    "máquina) com VAPOR ECO= dir . Sem a variável, as dependências vêm do Hex normalmente. integração",
+    "versões testadas testes --- --- --- integrations/vapor plug Plug 1.21.0-dev (master), Bandit 1.12.5, Elixir",
+    "1.18.4 3: corpos e recibos iguais ao Vapor.Serve , streaming, servidor real com chamadas de ferramenta e",
+    "desconexão integrations/vapor nx Nx 1.0.0 (master), Elixir 1.18.4 5: conversão, + bit a bit iguais ao",
+    "avaliador do Nx, cotas de ulp, paridade entre substratos, recusas notebooks/vapor tour.livemd Livebook",
+    "(formato), Elixir 1.14 e 1.18 notebook test : as células rodam em ordem e as afirmações do texto são",
+    "reconferidas Veredito por item item veredito por quê / o que foi feito --- --- --- Plug feito ( Vapor.Plug ) É o",
+    "ponto de entrada de todo servidor HTTP Elixir. O Vapor.Serve foi refeito sobre um despacho independente"
+   ]
+  ]
+ },
+ "p2_two_col": {
+  "layout": "2col",
+  "font": "P052",
+  "source": "pt_holdout",
+  "coding": "g4",
+  "size": [
+   1700,
+   802
+  ],
+  "blocks": [
+   [
+    "de transporte ( context/1 , dispatch/3 com um",
+    "responder ), e o Vapor.Plug é um responder sobre",
+    "Plug.Conn . TLS, HTTP/2, autenticação e telemetria",
+    "passam a ser os do endpoint da aplicação. Phoenix",
+    "feito, via Plug forward /llm, Vapor.Plug, name:",
+    "MyApp.LLM . O contexto (índice do vocabulário",
+    "para a decodificação restrita, que é caro) é montado",
+    "uma vez, na árvore de supervisão. O Phoenix não",
+    "precisa de mais nada. LiveView gancho no núcleo +",
+    "receita A dor real é mostrar um agente trabalhando",
+    "ao vivo. Vapor.Agent.run(, on event: fn e, - end)",
+    "entrega cada evento do diário no momento em que é",
+    "gravado. Os tokens de geração já chegam como"
+   ],
+   [
+    "mensagens ao processo que pediu ( :vapor, ref,",
+    ":token, ), e uma LiveView é um processo. A receita",
+    "está abaixo. Ecto behaviour no núcleo + esboço",
+    "Vapor.Agent.Store define o contrato (gravar o evento",
+    "seq com exclusividade; carregar só o prefixo que",
+    "verifica). Store.File o implementa com OTP puro e",
+    "está testado. Um adaptador Ecto/Postgres obtém a",
+    "exclusividade de UNIQUE (run id, seq) . O esboço",
+    "está abaixo; não foi executado aqui por falta de",
+    "Postgres. Oban o núcleo já entrega o contrato; Oban",
+    "agenda Os workflows duráveis do Oban resolvem",
+    "retomar depois de cair. Com Store + resume/4 , a",
+    "retomada vem do diário: repete-se o que foi gravado,"
+   ]
+  ]
+ },
+ "p3_three_col": {
+  "layout": "3col",
+  "font": "Carlito",
+  "source": "en_holdout",
+  "coding": "g3_2d",
+  "size": [
+   1700,
+   758
+  ],
+  "blocks": [
+   [
+    "every output inside the rigorous",
+    "error envelope (all policies) 6",
+    "proof-carrying code Ed25519-signed",
+    "certificate; quorum by co-signature",
+    "Rungs 35 execute deterministic",
+    "probe inputs (seeded from the",
+    "program digest) at probe extents;",
+    "bounds are established at the",
+    "maximal extents, which the",
+    "monotonicity lemmas ( admissible",
+    "mono , withinEnvelope mono )",
+    "show covers every smaller extent."
+   ],
+   [
+    "Zero-knowledge proofs of integer",
+    "inference: a quantized network",
+    "compiled to a rank-1 constraint",
+    "system (R1CS) over a prime field, a",
+    "witness that satisfies it, and both",
+    "written in the formats of",
+    "circom/snarkjs ( .r1cs , .wtns ) so any",
+    "Groth16 or PLONK prover of that",
+    "ecosystem can prove, and any",
+    "verifier (including the Solidity one",
+    "snarkjs exports) can check, that this",
+    "public model mapped a private"
+   ],
+   [
+    "input to a public output. model =",
+    ":linear, w1, b1 , :relu, :linear, w2, b2",
+    "w1 int8, weights public c =",
+    "Vapor.ZK.compile(model, k: 16) :ok,",
+    "wit = Vapor.ZK.witness(c, x) x : int8,",
+    "kept private :ok = Vapor.ZK.check(c,",
+    "wit) Vapor.ZK.write r1cs(c, m.r1cs);",
+    "Vapor.ZK.write wtns(c, wit, m.wtns)",
+    "Why the integer fragment, and why",
+    "public weights Field arithmetic is",
+    "integer arithmetic. + and of a field",
+    "are exactly those of the integers as"
+   ]
+  ]
+ },
+ "p4_two_col_title": {
+  "layout": "2col_title_footer",
+  "font": "URWBookman",
+  "source": "pt_holdout",
+  "coding": "mask",
+  "size": [
+   1700,
+   850
+  ],
+  "blocks": [
+   [
+    "sem efeitos, e segue-se ao vivo. Um job Oban que chama"
+   ],
+   [
+    "Store.resume/4 é a forma de agendar e repetir.",
+    "A unicidade do job evita trabalho duplicado.",
+    "Toda ação é anunciada no Store antes de",
+    "acontecer, então dois nós que retomam a",
+    "mesma execução não anunciam a mesma ação",
+    "duas vezes. Uma ação já anunciada e ainda em",
+    "curso não se distingue de uma interrompida, e",
+    "pode ser tentada de novo com a mesma chave",
+    "de idempotência. Broadway receita Ingestão em",
+    "escala com contrapressão: embeddings em lote"
+   ],
+   [
+    "( Vapor.Embed.embed/2 aceita listas) e",
+    "construção de corpus RAG. O ganho específico",
+    "do vapor é que embeddings e escores densos",
+    "são iguais bit a bit em qualquer nó: um índice",
+    "construído em paralelo por N máquinas é o",
+    "mesmo índice. Nx feito ( Vapor.Nx.Compiler )",
+    "Um compilador Nx.Defn que transforma um",
+    "defn em programa vapor certificado: os mesmos",
+    "bits em x86 (AVX2, AVX-512), RVV, Vulkan e no",
+    "oráculo. Para + também são os mesmos bits do"
+   ],
+   [
+    "avaliador de referência do Nx. Cobre só um fragmento (aritmética f32 com broadcasting , exp ,",
+    "sigmoid , tanh , rsqrt , max / min , select sobre less , dot contra posto 2, somas e máximos no"
+   ]
+  ]
+ },
+ "p5_two_col": {
+  "layout": "2col",
+  "font": "C059",
+  "source": "en_holdout",
+  "coding": "black_is_1",
+  "size": [
+   1700,
+   802
+  ],
+  "blocks": [
+   [
+    "long as no value reaches p/2 (the signed",
+    "embedding, Vapor.Field ). vapor's int8 contraction",
+    "is already proved (Lean, integer parity ) never to",
+    "wrap 32-bit accumulators under its admissibility",
+    "bound; the same bound, checked against p/2 ,",
+    "makes the kernel's result and the circuit's the",
+    "same number so the witness can be computed by",
+    "the certified gemm i8 kernels on any substrate (",
+    "witness/3 , certified: true ) and the circuit merely",
+    "checks it. Floating point, by contrast, is not field",
+    "arithmetic: every rounding would cost a range",
+    "proof. That is why f32 programs are not compiled",
+    "here. Weights are constants of the circuit. A"
+   ],
+   [
+    "product by a constant is free in R1CS (it is part of",
+    "a linear combination): a hidden dense layer costs",
+    "no constraint at all and the last one one per",
+    "output; the cost of a proof is in the non-linearities",
+    "(ReLU: a bit decomposition, B + 3 constraints per",
+    "neuron) and in the input range check (9 per",
+    "private int8 input). What is proved: there exists an",
+    "int8 vector x with model(x) = y for the public y the",
+    "range check makes x int8 a fact of the circuit, and",
+    "then every intermediate value is the integer the",
+    "model computes (each stays below p/2 and below",
+    "the ReLU decompositions' range, checked at",
+    "compile time; Lean: field parity ). Constants also"
+   ]
+  ]
+ },
+ "p6_legal_two_col": {
+  "layout": "2col",
+  "font": "P052",
+  "source": "apache",
+  "coding": "g4",
+  "size": [
+   1700,
+   802
+  ],
+  "blocks": [
+   [
+    "configuration files. Object form shall mean any form",
+    "resulting from mechanical transformation or",
+    "translation of a Source form, including but not",
+    "limited to compiled object code, generated",
+    "documentation, and conversions to other media",
+    "types. Work shall mean the work of authorship,",
+    "whether in Source or Object form, made available",
+    "under the License, as indicated by a copyright notice",
+    "that is included in or attached to the work (an",
+    "example is provided in the Appendix below).",
+    "Derivative Works shall mean any work, whether in",
+    "Source or Object form, that is based on (or derived",
+    "from) the Work and for which the editorial revisions,"
+   ],
+   [
+    "annotations, elaborations, or other modifications",
+    "represent, as a whole, an original work of authorship.",
+    "For the purposes of this License, Derivative Works",
+    "shall not include works that remain separable from,",
+    "or merely link (or bind by name) to the interfaces of,",
+    "the Work and Derivative Works thereof. Contribution",
+    "shall mean any work of authorship, including the",
+    "original version of the Work and any modifications",
+    "or additions to that Work or Derivative Works",
+    "thereof, that is intentionally submitted to Licensor",
+    "for inclusion in the Work by the copyright owner or",
+    "by an individual or Legal Entity authorized to",
+    "submit on behalf of the copyright owner. For the"
+   ]
+  ]
+ },
+ "p7_legal_one_col": {
+  "layout": "1col",
+  "font": "Carlito",
+  "source": "mpl",
+  "coding": "g4",
+  "size": [
+   1700,
+   846
+  ],
+  "blocks": [
+   [
+    "Source Code Form. 1.7. Larger Work means a work that combines Covered Software with other material, in a separate file",
+    "or files, that is not Covered Software. 1.8. License means this document. 1.9. Licensable means having the right to grant,",
+    "to the maximum extent possible, whether at the time of the initial grant or subsequently, any and all of the rights",
+    "conveyed by this License. 1.10. Modifications means any of the following: (a) any file in Source Code Form that results",
+    "from an addition to, deletion from, or modification of the contents of Covered Software; or (b) any new file in Source",
+    "Code Form that contains any Covered Software. 1.11. Patent Claims of a Contributor means any patent claim(s), including",
+    "without limitation, method, process, and apparatus claims, in any patent Licensable by such Contributor that would be",
+    "infringed, but for the grant of the License, by the making, using, selling, offering for sale, having made, import, or transfer",
+    "of either its Contributions or its Contributor Version. 1.12. Secondary License means either the GNU General Public",
+    "License, Version 2.0, the GNU Lesser General Public License, Version 2.1, the GNU Affero General Public License, Version",
+    "3.0, or any later versions of those licenses. 1.13. Source Code Form means the form of the work preferred for making",
+    "modifications. 1.14. You (or Your) means an individual or a legal entity exercising rights under this License. For legal",
+    "entities, You includes any entity that controls, is controlled by, or is under common control with You. For purposes of this",
+    "definition, control means (a) the power, direct or indirect, to cause the direction or management of such entity, whether"
+   ]
+  ]
+ },
+ "p8_three_col": {
+  "layout": "3col",
+  "font": "URWGothic",
+  "source": "pt_holdout",
+  "coding": "g4",
+  "size": [
+   1700,
+   758
+  ],
+  "blocks": [
+   [
+    "último eixo, com keep axes:",
+    "true quando o resultado é",
+    "reutilizado). O resto é",
+    "recusado pelo nome da",
+    "operação, nunca",
+    "aproximado. É uma",
+    "ferramenta para quando a",
+    "reprodutibilidade entre",
+    "hardwares é o requisito; o",
+    "EXLA continua sendo a",
+    "escolha para desempenho",
+    "geral. Livebook feito"
+   ],
+   [
+    "notebooks/vapor tour.livemd :",
+    "programa certificado, MoE de",
+    "fronteira com invariância a",
+    "lote, JSON por construção,",
+    "RAG com recibo, agente que",
+    "cai e retoma do disco,",
+    "repetição como prova. É",
+    "testado como código.",
+    "Bumblebee não integrar",
+    "agora Sobrepõe-se ao que o",
+    "vapor já faz (carregar",
+    "checkpoints do HF, tokenizar,"
+   ],
+   [
+    "servir) e chega aos pesos",
+    "pelos nomes de camada do",
+    "Axon. O vapor lê o",
+    "checkpoint HF diretamente, e",
+    "a ponte de tensores (",
+    "Vapor.Nx.from nx/1 ) basta",
+    "para quem já tem pesos no",
+    "Nx. Uma ponte",
+    "Bumblebeevapor só se",
+    "justificaria por modelos que o",
+    "vapor ainda não constrói.",
+    "Axon não integrar Treino e"
+   ]
+  ]
+ }
+}

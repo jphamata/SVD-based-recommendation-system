@@ -1,0 +1,263 @@
+# vapor — um passeio executável
+
+```elixir
+# No Livebook: aponte para o checkout do vapor (com `make native` feito).
+Mix.install([{:vapor, path: Path.join(__DIR__, "..")}])
+```
+
+## O que este caderno mostra
+
+Cada seção é uma afirmação do projeto, conferida na hora — na sua máquina,
+sem rede e sem arquivos de modelo (os pesos são aleatórios e pequenos; o
+que se demonstra são propriedades, não qualidade de texto):
+
+1. um programa vira código de máquina **certificado**, e todo substrato dá os mesmos bits;
+2. um modelo de família de fronteira (Qwen3-MoE) gera de forma **invariante ao lote**;
+3. a saída estruturada é válida **por construção**, não por nova tentativa;
+4. a recuperação (RAG) tem **recibo** e prova de pertinência;
+5. um agente é um **valor**; sua execução é um diário encadeado; repetir é provar;
+   e uma execução que caiu **retoma** do disco sem repetir o que fez.
+
+## 1. Um programa certificado
+
+```elixir
+alias Vapor.{Program, Tensor, Certificate}
+alias Vapor.Algebra.Term, as: T
+
+x = T.input(:x, :f32, [T.dyn(:n, 1024)])
+program = Program.new(y: T.silu(T.mul(x, x)))
+
+key = Certificate.keygen()
+{:ok, compiled} = Vapor.compile(program, key: key)
+p = compiled.certificate.payload
+
+%{
+  policy: p.policy,
+  substrates_bit_identical: p.parity.bit_identical,
+  substrates: p.parity.substrates,
+  signatures: length(compiled.certificate.signatures)
+}
+```
+
+```elixir
+input = Tensor.random(:f32, [1000], 42, scale: 4.0)
+{:ok, %{outputs: %{y: y}}, trace} = Vapor.run(compiled, %{x: input})
+# o rastro diz qual substrato executou (o árbitro escolhe; a falha de um passa ao próximo)
+{trace, Tensor.to_list(y) |> Enum.take(4)}
+```
+
+## 2. Um modelo de fronteira em miniatura
+
+Uma configuração `qwen3_moe` (8 especialistas, 2 ativos por token, normas
+por cabeça) com pesos aleatórios, e um tokenizador BPE byte-level de 259
+tokens — o mesmo código que carrega um checkpoint real do Hugging Face.
+
+```elixir
+alias Vapor.Model.{Config, Llama}
+
+{:ok, cfg} =
+  Config.from_map(%{
+    "model_type" => "qwen3_moe", "vocab_size" => 259, "hidden_size" => 64,
+    "intermediate_size" => 96, "moe_intermediate_size" => 32, "num_experts" => 8,
+    "num_experts_per_tok" => 2, "norm_topk_prob" => true, "num_hidden_layers" => 2,
+    "num_attention_heads" => 4, "num_key_value_heads" => 2, "head_dim" => 16,
+    "max_position_embeddings" => 1024, "rms_norm_eps" => 1.0e-6, "rope_theta" => 1.0e6,
+    "hidden_act" => "silu", "tie_word_embeddings" => false
+  })
+
+weights =
+  cfg
+  |> Llama.expected_weights()
+  |> Enum.with_index(1000)
+  |> Map.new(fn
+    {{name, shape, :norm}, i} ->
+      r = Tensor.random(:f32, shape, i, scale: 0.2) |> Tensor.to_floats()
+      {name, Tensor.from_list(:f32, shape, Enum.map(r, &(&1 + 1.0)))}
+
+    {{name, shape, _}, i} ->
+      {name, Tensor.random(:f32, shape, i, scale: if(name == "model.embed_tokens.weight", do: 1.0, else: 0.2))}
+  end)
+
+# um tokenizador byte-level sem merges: cada byte é um token (aliases do GPT-2)
+printable = Enum.to_list(?!..?~) ++ Enum.to_list(0xA1..0xAC) ++ Enum.to_list(0xAE..0xFF)
+
+{byte_alias, _} =
+  Enum.reduce(0..255, {%{}, 0}, fn b, {m, n} ->
+    if b in printable, do: {Map.put(m, b, b), n}, else: {Map.put(m, b, 256 + n), n + 1}
+  end)
+
+{:ok, tk} =
+  Vapor.Tokenizer.from_gguf(%{
+    "tokenizer.ggml.model" => "gpt2", "tokenizer.ggml.pre" => "qwen2",
+    "tokenizer.ggml.tokens" => Enum.map(0..255, &<<byte_alias[&1]::utf8>>) ++ ["<|im_start|>", "<|im_end|>", "<|endoftext|>"],
+    "tokenizer.ggml.token_type" => List.duplicate(1, 256) ++ [3, 3, 3], "tokenizer.ggml.merges" => [],
+    "tokenizer.ggml.eos_token_id" => 257, "tokenizer.ggml.add_bos_token" => false
+  })
+
+{:ok, engine} =
+  Vapor.Engine.start_link(config: cfg, weights: weights, tokenizer: tk, max_seq: 1024, page: 16,
+                          sequences: 4, step_tokens: 64)
+
+Vapor.Engine.info(engine) |> Map.take([:model, :sequences, :pages, :max_seq])
+```
+
+Invariância ao lote: a mesma requisição, sozinha ou disputando o passo com
+outras três, dá os mesmos tokens.
+
+```elixir
+prompt = Vapor.Tokenizer.encode(tk, "Era uma vez")
+opts = [max_tokens: 24, temperature: 0.9, seed: 7]
+
+{:ok, alone, _, _} = Vapor.Engine.complete(engine, prompt, opts)
+
+crowd = for s <- 1..3, do: Task.async(fn -> Vapor.Engine.complete(engine, prompt ++ [s], max_tokens: 40, seed: s) end)
+{:ok, crowded, _, _} = Vapor.Engine.complete(engine, prompt, opts)
+Enum.each(crowd, &Task.await(&1, 120_000))
+
+{alone == crowded, Vapor.Tokenizer.decode(tk, alone) |> inspect()}
+```
+
+## 3. Saída estruturada por construção
+
+Um JSON Schema vira gramática; a cada passo só os tokens que mantêm a saída
+dentro da gramática podem ser escolhidos. Mesmo um modelo aleatório produz
+JSON válido para o esquema.
+
+```elixir
+alias Vapor.Grammar.{Constraint, JSONSchema, Vocab}
+
+schema = %{
+  "type" => "object",
+  "properties" => %{
+    "cidade" => %{"type" => "string", "maxLength" => 12},
+    "chove" => %{"type" => "boolean"},
+    "escala" => %{"enum" => ["C", "F"]}
+  },
+  "required" => ["cidade", "chove", "escala"]
+}
+
+{:ok, grammar} = JSONSchema.compile(schema)
+vocab = Vocab.build(tk)
+
+for seed <- 1..3 do
+  c = Constraint.new(grammar, vocab, [257])
+  {:ok, ids, _, _} = Vapor.Engine.complete(engine, prompt, max_tokens: 200, temperature: 1.0, seed: seed, constraint: c)
+  text = Vapor.Tokenizer.decode(tk, ids)
+  {:ok, value} = Vapor.JSON.decode(text)
+  {Vapor.Agent.Validate.check(schema, value), text}
+end
+```
+
+## 4. Recuperação com recibo
+
+```elixir
+alias Vapor.RAG
+
+docs = [
+  {"ai-act", "Sistemas de IA de alto risco devem registrar eventos automaticamente (logs) durante toda a vida útil, para rastreabilidade."},
+  {"lgpd", "O titular pode pedir a eliminação dos dados pessoais tratados com o seu consentimento."},
+  {"receita", "Pão de queijo: polvilho, ovos, leite e queijo; asse por 30 minutos."}
+]
+
+corpus = RAG.corpus(docs, max_chars: 200)
+result = RAG.retrieve(corpus, "rastreabilidade logs alto risco", k: 2, method: :bm25)
+
+%{
+  raiz_do_corpus: RAG.root_hex(corpus),
+  recibo: result.receipt,
+  documentos: Enum.map(result.hits, & &1.doc),
+  reverifica: RAG.verify(corpus, result)
+}
+```
+
+## 5. Agentes imutáveis
+
+O agente é um valor com digest; as ferramentas declaram seu efeito (`pure`,
+`observe`, `act`) e só as `act` concedidas na especificação podem agir.
+Aqui as decisões vêm de um *backend* roteirizado (determinístico) para que o
+caderno não dependa de um modelo treinado — com o modelo local acima, a
+repetição recomputaria os tokens.
+
+```elixir
+defmodule Tour.Script do
+  @behaviour Vapor.Agent.Backend
+  defstruct []
+
+  @impl true
+  def complete(_, messages, _tools, opts) do
+    results = for %{"role" => "tool", "content" => c} <- messages, do: c
+
+    if results == [] do
+      {:ok, %{content: "", deterministic: true, record: %{"seed" => opts["seed"]},
+              calls: [%{"id" => "c0", "name" => "soma", "arguments" => %{"a" => 2, "b" => 40}},
+                      %{"id" => "c1", "name" => "notifica", "arguments" => %{"para" => "ops"}}]}}
+    else
+      {:ok, %{content: "feito: " <> Enum.join(results, " | "), calls: [], deterministic: true, record: %{"seed" => opts["seed"]}}}
+    end
+  end
+end
+
+alias Vapor.Agent
+alias Vapor.Agent.{Journal, Spec, Store}
+
+spec =
+  Spec.new(name: "operador", instructions: "Seja preciso.", model: %{"kind" => "local", "id" => "roteiro"},
+           tools: [%{name: "soma", effect: "pure", parameters: %{"type" => "object", "properties" => %{"a" => %{"type" => "integer"}, "b" => %{"type" => "integer"}}, "required" => ["a", "b"]}},
+                   %{name: "notifica", effect: "act", parameters: %{"type" => "object", "properties" => %{"para" => %{"type" => "string"}}, "required" => ["para"]}}],
+           grants: ["notifica"])
+
+{:ok, sent} = Elixir.Agent.start_link(fn -> [] end)
+
+impls = %{
+  "soma" => fn %{"a" => a, "b" => b}, _ -> {:ok, a + b} end,
+  "notifica" => fn %{"para" => to}, ctx -> Elixir.Agent.update(sent, &[{to, ctx.idempotency_key} | &1]); {:ok, "enviado"} end
+}
+
+{Spec.digest(spec), spec.grants}
+```
+
+Uma execução que **cai** antes de notificar (o disco recusa o registro da
+soma, evento 2: tudo que vem depois espera por ele), e a retomada a partir
+do que ficou gravado. Se a queda fosse *depois* da notificação e antes do
+seu registro, a retomada a repetiria com a mesma chave de idempotência — o
+destinatário que respeita a chave aplica uma vez só.
+
+```elixir
+dir = Path.join(System.tmp_dir!(), "vapor-tour-#{System.unique_integer([:positive])}")
+store = Store.File.new(dir)
+crash = fn e, _journal -> if e["seq"] >= 2, do: {:error, :disco_cheio}, else: :ok end
+
+{:error, {:on_event, :disco_cheio}, _} =
+  Agent.run(spec, "Some 2+40 e avise ops.", backend: %Tour.Script{}, impls: impls, on_event: [crash, Store.hook(store)])
+
+[run_id] = Store.unfinished(store)
+{:ok, done} = Store.resume(store, spec, run_id, backend: %Tour.Script{}, impls: impls)
+
+%{
+  resposta: done.answer,
+  eventos: Enum.map(done.journal.events, & &1["kind"]),
+  notificacoes: Elixir.Agent.get(sent, & &1) |> length(),
+  raiz_merkle: Journal.root(done.journal)
+}
+```
+
+Repetir é provar: as decisões e a ferramenta `pure` são recomputadas; a
+ação é lida do diário, nunca reexecutada. Adulterar um evento quebra a
+cadeia.
+
+```elixir
+{:ok, report} = Agent.replay(spec, done.journal, backend: %Tour.Script{}, impls: impls)
+forged = %{done.journal | events: List.update_at(done.journal.events, 2, &put_in(&1, ["data", "result"], 41))}
+
+%{
+  repeticao: Map.take(report, [:verified, :observed, :mismatches, :head]),
+  notificacoes_depois: Elixir.Agent.get(sent, & &1) |> length(),
+  adulterado: Journal.verify(forged)
+}
+```
+
+## Para onde ir
+
+* `docs/AGENTES.md` — a reflexão sobre agentes imutáveis e o que cada peça resolve;
+* `docs/ECOSSISTEMA_ELIXIR.md` — Phoenix/LiveView, Ecto, Oban, Broadway, Nx, Nerves… com escrutínio;
+* `integrations/vapor_plug` — a API compatível com OpenAI montada num roteador Phoenix.
