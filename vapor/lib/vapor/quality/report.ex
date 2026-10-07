@@ -99,6 +99,7 @@ defmodule Vapor.Quality.Report do
     #{round12(Map.get(r, :round12))}
     #{round13(Map.get(r, :round13))}
     #{round14(Map.get(r, :round14))}
+    #{round15(Map.get(r, :round15))}
 
     ## 6. Custo da eclusa
 
@@ -154,6 +155,27 @@ defmodule Vapor.Quality.Report do
     JBIG2 contra o jbig2dec, a sessão residente na GPU contra a CPU, os especialistas de 4 bits
     predicados contra os densos, o Mamba-2 contra os logits do próprio transformers, o dossiê de
     auditoria contra adulteração e os *shards* entre nós BEAM contra um nó só.
+
+    | verificação | valor | controle | limiar | ok |
+    |---|---|---|---|---|
+    #{Enum.map_join(x.checks, "\n", fn c -> "| #{c.name} | #{v(c.value)} | #{v(c.control)} | #{c.threshold} | #{ok(c.pass)} |" end)}
+    """
+  end
+
+  defp round15(nil), do: ""
+
+  defp round15(x) do
+    """
+    ## 5k. Rodada 0.15 — o Opus: Amálgama, Copela, Rebis, Aludel, Tábua
+
+    Cada peça da rodada decide alguma coisa, então cada controle pergunta: *teria dito o mesmo se a
+    afirmação fosse falsa?* A soma exata contra a soma da esquerda para a direita; o bit trocado
+    contra o bit abaixo do envelope (dito, não fingido); somadores conformes que não podem ser
+    acusados contra o falsificador que conhece a semente; o cavalo de Troia contra a simulação
+    aleatória que não o vê; o multiplicador contra o produto parcial errado; o AES-GCM contra o
+    OpenSSL e a etiqueta adulterada; o GHZ contra Hadamards independentes; Motzkin + 1/1000 contra
+    Motzkin que toca o zero; a barreira contra o campo instável; o contrato contra as suas
+    precedências; a fusão alinhada contra a ingênua.
 
     | verificação | valor | controle | limiar | ok |
     |---|---|---|---|---|

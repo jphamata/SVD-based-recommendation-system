@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Vapor.Quality do
   @moduledoc """
       mix vapor.quality [--oracle] [--out docs/bench] [--no-gallery]
       mix vapor.quality --model PATH [--text FILE] [--reference FILE] [--samples 3]
-      mix vapor.quality --only round14                      # one round's checks, printed (no files written)
+      mix vapor.quality --only round15 [--md FILE]          # one round's checks, printed (and, with --md, written as a table)
 
   Runs `Vapor.Quality.Suite`: calibrated noise gates, a planted model through
   the whole stack, every any-to-any route of the world hub on held-out
@@ -24,11 +24,11 @@ defmodule Mix.Tasks.Vapor.Quality do
   @impl true
   def run(argv) do
     {o, _, _} = OptionParser.parse(argv, strict: [oracle: :boolean, out: :string, gallery: :boolean, model: :string,
-                                                  text: :string, reference: :string, samples: :integer, only: :string])
+                                                  text: :string, reference: :string, samples: :integer, only: :string, md: :string])
     Mix.Task.run("app.start")
     cond do
       o[:model] -> judge(o)
-      o[:only] -> only(o[:only])
+      o[:only] -> only(o[:only], o[:md])
       true -> suite(o)
     end
   end
@@ -50,11 +50,11 @@ defmodule Mix.Tasks.Vapor.Quality do
     end
   end
 
-  defp only(round) do
+  defp only(round, md) do
     mod =
       case Regex.run(~r/^round(\d\d)$/, round) do
         [_, n] -> Module.concat(Vapor.Quality, "Round" <> n)
-        _ -> Mix.raise("--only roundNN (round06 … round14)")
+        _ -> Mix.raise("--only roundNN (round06 … round15)")
       end
     unless Code.ensure_loaded?(mod), do: Mix.raise("no #{inspect(mod)}")
     w = Vapor.Modal.Runner.worker()
@@ -62,7 +62,23 @@ defmodule Mix.Tasks.Vapor.Quality do
     r = mod.run(worker: w)
     for c <- r.checks, do: Mix.shell().info("#{if c.pass, do: "ok  ", else: "FAIL"} #{c.name}\n       value #{inspect(c.value)} · control #{inspect(c.control)} · #{c.threshold}")
     Mix.shell().info("#{Enum.count(r.checks, & &1.pass)}/#{length(r.checks)} checks passed in #{System.monotonic_time(:millisecond) - t0} ms")
+    if md, do: File.write!(md, only_md(round, r, System.monotonic_time(:millisecond) - t0))
     unless Enum.all?(r.checks, & &1.pass), do: exit({:shutdown, 1})
+  end
+
+  defp only_md(round, r, ms) do
+    cell = fn x -> x |> to_string() |> String.replace("|", "\\|") end
+    """
+    # #{round} — checks against their controls
+
+    Written by `mix vapor.quality --only #{round} --md …` (#{Enum.count(r.checks, & &1.pass)}/#{length(r.checks)} passed in #{ms} ms,
+    substrate: the exact oracle). Each check has a value, a control that a broken, naive or lucky
+    implementation would produce, and the threshold that separates them; see `Vapor.Quality.#{Macro.camelize(round)}`.
+
+    | check | value | control | threshold | ok |
+    |---|---|---|---|---|
+    #{Enum.map_join(r.checks, "\n", fn c -> "| #{cell.(c.name)} | #{cell.(c.value)} | #{cell.(c.control)} | #{cell.(c.threshold)} | #{if c.pass, do: "✓", else: "✗"} |" end)}
+    """
   end
 
   defp suite(o) do
