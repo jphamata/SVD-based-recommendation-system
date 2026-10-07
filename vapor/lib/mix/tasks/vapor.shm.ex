@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Vapor.Shm do
       mix vapor.shm
 
   Removes the content-addressed weight files that no process maps
-  (`Vapor.Runtime.Shm.prune/0`) and reports what was freed.
+  (`Vapor.Runtime.Shm.prune/1`, files unused for ten minutes) and reports what was freed.
   """
   use Mix.Task
 
