@@ -82,7 +82,7 @@ defmodule Vapor.JBIG2Test do
     end
   end
 
-  test "Huffman coding with refinement, and halftones, are refused with a reason, not misread" do
+  test "Huffman coding with refinement, and a halftone with no pattern dictionary, are refused with a reason, not misread" do
     seg = fn num, type, data, refs ->
       <<num::32, type, length(refs) <<< 5>> <> for(r <- refs, into: <<>>, do: <<r>>) <> <<1, byte_size(data)::32>> <> data
     end

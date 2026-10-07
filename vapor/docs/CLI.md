@@ -18,6 +18,11 @@ vapor assay TOOL FILE                   # `vapor assay` lista; --example mostra 
 vapor mind ask|formalize|transcript     # --model ou VAPOR_MIND
 vapor scene new|edit|direct|export|card
 vapor solve FILE                        # a bancada de equações
+vapor rebis equiv|anf|identity|stabilizer|aiger FILE…   # circuitos sobre GF(2) (0.15)
+vapor aludel decide P --vars x,y --box '0,1;0,1' | REQUEST.json   # positividade, barreiras
+vapor tabula FILE [--facts a,b]          # um contrato: antinomias, provas, lacunas
+vapor cupel [--n 32 --k 64 --bit 26]     # o exercício de corrupção silenciosa
+vapor amalgam FILE|- [--f32]             # uma soma que não depende da ordem
 vapor serve | tui | ocr | merge | quality …   # as tarefas mix anteriores
 ```
 
@@ -45,11 +50,30 @@ vapor athanor run hp.alb --measure './treina.sh'   # lê $VAPOR_CANDIDATE_JSON, 
 vapor scene new > s.json && vapor scene edit s.json "add glow sol { x: 0.7, y: 0.2 }" > s2.json
 ```
 
+## O Opus pelo terminal (0.15)
+
+Os mesmos códigos de saída: `0` é equivalente, provado, certificado ou consistente; `1` é
+diferente, refutado, esgotado ou com antinomias — então um *script* pode exigir a prova.
+
+```sh
+# a netlist depois da síntese contra a especificação; o contraexemplo agrupado em palavras
+vapor rebis equiv spec.net synth.aag || echo "não é a mesma função"
+
+# um multiplicador provado por álgebra sobre ℤ (onde o SAT é exponencial)
+vapor rebis identity mul16.net --spec 'm[32] = a[16] * b[16]'
+
+# uma afirmação estrita sobre um polinômio, com a testemunha reproduzível no JSON
+vapor aludel decide 'x^4*y^2 + x^2*y^4 - 3*x^2*y^2 + 1 + 1/1000' --vars x,y --box '-2,2;-2,2' --strict --json > w.json
+
+# um contrato: antinomias com o cenário; as posições quando a entrega atrasou
+vapor tabula venda.txt --facts delivered,late
+```
+
 ## Agentes e console de terminal
 
 Os mesmos verbos são ferramentas MCP (`mix vapor.mcp`: `alembic_eval`, `athanor_run` com
-`proposals`, `athanor_verify`, `game_query`, `crucible_run`, `assay_run`, `scene_ops` — 20 ao
-todo) e comandos da TUI (`mix vapor.tui`: `alembic -e "…"`, `athanor run arquivo`, …). Um
+`proposals`, `athanor_verify`, `game_query`, `crucible_run`, `assay_run`, `scene_ops`; na 0.15
+`rebis_check`, `aludel_decide`, `tabula_analyze`, `cupel_drill`, `amalgam_sum` — 25 ao todo) e comandos da TUI (`mix vapor.tui`: `alembic -e "…"`, `athanor run arquivo`, …). Um
 agente propõe; a Touchstone confere — a mesma porta para pessoas, modelos e programas.
 
 ## Mente

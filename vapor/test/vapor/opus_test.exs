@@ -89,6 +89,25 @@ defmodule Vapor.OpusTest do
 
   @tag :playwright
   @tag timeout: 600_000
+  # every page script merges its strings into one I18N table; a key defined twice with
+  # different text silently relabels another desk (opus.js once turned the Bancada's
+  # "bias detected" into "caught")
+  test "the Opus strings never redefine another script's key with other text" do
+    keys = fn text ->
+      # the per-script additions, and the base table of index.html
+      (Regex.scan(~r/Object\.assign\(I18N\.(en|pt), \{(.*?)\n\}\);/s, text) ++ Regex.scan(~r/\n  (en|pt): \{(.*?)\n  \}/s, text))
+      |> Enum.flat_map(fn [_, lang, body] -> for [_, k, v] <- Regex.scan(~r/(?:^|[{,]\s*)([A-Za-z_]\w*): "([^"]*)"/m, body), do: {{lang, k}, v} end)
+      |> Map.new()
+    end
+
+    dir = Path.join(:code.priv_dir(:vapor), "console")
+    opus = keys.(File.read!(Path.join(dir, "opus.js")))
+    others = for f <- ["index.html", "athanor.js", "bancada.js", "mercado.js"], reduce: %{}, do: (acc -> Map.merge(acc, keys.(File.read!(Path.join(dir, f)))))
+    assert map_size(opus) > 100
+    clashes = for {k, v} <- opus, Map.has_key?(others, k), others[k] != v, do: {k, v, others[k]}
+    assert clashes == [], inspect(clashes)
+  end
+
   test "the five desks through the page in headless Chromium: every shelf example, a toggled fact, Portuguese, dark" do
     {:ok, srv} = Vapor.Serve.start_link(port: 0, model_name: "none")
     base = "http://127.0.0.1:#{Vapor.Serve.port(srv)}/"

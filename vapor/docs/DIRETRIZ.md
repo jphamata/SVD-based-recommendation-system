@@ -1183,3 +1183,157 @@ node test/js/scene_noise.mjs
 mix vapor.quality --only round14                      # §5j, em ~60 s
 bin/vapor alembic --card                              # e então escreva o seu problema
 ```
+
+## 18. Rodada 0.15: o Opus — decidir, não exibir
+
+> Pedido 7 (2026-10-07): "reengenharia completa e inovadora do material fornecido nos anexos,
+> operando sob primeiros princípios e pensamento lateral", em seis fases (auditoria crítica,
+> limpeza implacável, reconstrução do núcleo, UI/UX autoral, testes rigorosos, entrega em
+> `.zip`). "A base a ser refinada é o sistema vapor, os demais anexos devem ser fagocitados +
+> liberdade total para rebatizar sistemas/componentes mantendo a temática alquimia." Anexos: o
+> vapor 0.14.0 (código, qualidade, modelos) e um arquivo com três projetos — **PALADIN** (com
+> JESTER e WIZARD), **HYDRA-Z** e **GHOST**. E duas longas listas de ideias: 19 frentes (de
+> circuitos sobre GF(2) a teoria das cordas) e 13 "fronteiras" (de criptografia pós-quântica a
+> direito deôntico).
+
+### A instrução, escrutinada
+
+- **"Reengenharia completa"** — tomada ao pé da letra, reescrever 88 mil linhas de um sistema
+  testado, com semântica canônica assinada e provas em Lean, destrói o que ele tem de mais
+  valioso: a continuidade da evidência. Uma reescrita não é mais confiável que o original até
+  passar pela mesma escada, e a escada é o vapor. A leitura adotada: **reengenharia onde o
+  primeiro princípio muda a resposta**, e só ali — a redução canônica (que fixava a forma em vez
+  de eliminar a dependência da ordem), a verificação de resultados (que replicava em vez de
+  conferir), os caminhos recusados dos documentos, a fusão sem alinhamento.
+- **"Rebatizar mantendo a temática alquimia"** — o vapor já é alquímico (Alembic, Athanor,
+  Touchstone, Crucible, Assay). Rebatizar o que existe só quebraria referências, recibos e
+  documentos; os nomes novos vão para o que é novo: **Amálgama**, **Copela**, **Rebis**,
+  **Aludel**, **Tábua**, e o grupo do console que os reúne, **Opus** (a obra).
+- **"Zero débito técnico, nenhum TODO"** — a base não tem `TODO`/`FIXME` no código (o
+  `docs/TODO.md` é um roteiro, não débito escondido). O débito real estava em outro lugar e foi
+  procurado com instrumentos: um rastreador de chamadas em tempo de compilação achou **15
+  funções públicas sem chamador** na base (removidas; outras duas, API documentada sem uso,
+  ganharam testes); o teste de auditoria falhava na
+  própria 0.14 (um `System.cmd` fora dos portos sancionados); um teste de figuras falhava por uma
+  corrida na limpeza de `/dev/shm` entre suítes; o oráculo `dot16` truncava em silêncio. Os
+  quatro estão corrigidos, com o teste que os pegou.
+- **"Fagocitar os anexos"** — um projeto em Racket, outro em Clojure, outro em Zig com Lean, três
+  em Guix: absorver o código seria trazer três linguagens e três ambientes para dentro de um
+  sistema cujo princípio é ter **uma** linguagem de controle e **um** executor. O que se absorve
+  é a ideia que resolve uma dor, reescrita sobre o que o vapor já tem:
+  - **PALADIN** ("positividade polinomial numa caixa racional, decidida por um procedimento em
+    aritmética inteira exata, com orçamento esgotado como veredito com nome") → **Aludel**, quase
+    inteiro: Bernstein, de Casteljau, três vereditos, testemunha reproduzível, barreiras.
+  - **WIZARD** ("a ordem de redução é declarada, então os resultados são idênticos bit a bit entre
+    tamanhos de bloco e executores") é a política canônica que o vapor já tinha — e o primeiro
+    princípio por trás dela vai além: **Amálgama** elimina a dependência da ordem em vez de
+    fixá-la.
+  - **GHOST** (quórum `n ≥ 3f + 1`, réplicas que votam) → **Copela**: para detectar um núcleo
+    defeituoso não é preciso votar entre réplicas; basta **conferir** o produto com uma
+    identidade adjunta, mais barata que o produto, com tolerância provada. Uma réplica
+    só entra quando a conferência reprova.
+  - **JESTER** (raiz de época determinística, livro-razão persistente) já é o diário Merkle do
+    vapor; nada a absorver além da confirmação.
+  - **HYDRA-Z** (NCD de todos os pares, com partição provada em Lean): a peça formal é bonita, mas
+    a dor que resolve — `O(N²)` compressões — o vapor já evita por outro caminho (MinHash + LSH
+    com Jaccard exato nos candidatos, sub-quadrático). E o próprio NCD com compressores reais
+    **não é uma métrica**: `C(xx) ≠ C(x)`, e além da janela do compressor (32 KiB no deflate)
+    a distância deixa de medir semelhança. Absorvido como crítica, não como código.
+- **"Seis fases em sequência"** — a ordem sugerida (limpar, depois inovar, depois testar) é a
+  ordem errada para testes: cada peça nova entrou **com** o seu teste e o seu controle, e a fase 4
+  é uma rodada de qualidade que mede cada decisão contra o que um método errado diria (§5k,
+  `--only round15`).
+- **"Determinístico em condições de falha"** — já era a tese do vapor (a mesma resposta com
+  qualquer trabalhador, qualquer queda). A rodada a estende para onde ela ainda dependia de
+  forma: o treino com `reduce: :exact` dá um só *digest* com 1, 2 ou 3 trabalhadores, qualquer
+  atribuição e um trabalhador morto no meio, para **qualquer** número de micro-lotes.
+
+### As listas de ideias, uma a uma
+
+Quatro destinos: **feito** (nesta rodada, com teste), **já existia** (e onde), **adiado** (com o
+que fecha), **recusado** (com o motivo).
+
+| ideia | destino |
+|---|---|
+| Circuitos sobre GF(2), bases de Gröbner, equivalência formal de hardware | **feito**: Rebis — com a correção de que a ANF *é* a forma normal (Möbius, sem Buchberger) e de que Gröbner sobre ℤ é a ferramenta para aritmética de palavras ([REBIS.md](REBIS.md)) |
+| Multiplicação sem vai-um GF(2¹²⁸), AES, GHASH | **feito**: `Rebis.Field`, AES-GCM = OpenSSL; o *kernel* com `PCLMULQDQ` no worker fica adiado (multiplicação inteira alta nos emissores, a mesma falta do NTT) |
+| Corrupção silenciosa: identidade adjunta ⟨Wx, v⟩ = ⟨x, Wᵀv⟩ | **feito**: Copela + sentinela, com tolerância de Higham provada e a cota do que não se vê ([COPELA.md](COPELA.md)) |
+| *All-reduce* determinístico bit a bit | **feito**: Amálgama, e o treino `reduce: :exact` ([AMALGAMA.md](AMALGAMA.md)) |
+| Diário Merkle do treino, certificado Ed25519 | **já existia** (diários, recibos, `Keys`). **Corrigida a afirmação**: uma raiz de Merkle prova *o que foi declarado* como entrada, não a *ausência* de dados não autorizados — um negativo sobre a origem dos dados não se prova por hash |
+| Estabilizadores sobre GF(2) | **feito**: quadro CHP com fase por máscaras, 400 qubits |
+| PQC, reticulados, NTT | **já existia**: `Vapor.NTT` negacíclica (o anel do ML-KEM) ([ZK_FHE.md](ZK_FHE.md)); *kernel* adiado |
+| FHE exata sobre portas | **recusado como antes** (ZK_FHE §2.1): um esquema sem auditoria e sem os parâmetros do padrão é um brinquedo perigoso |
+| VM STARK, torres binárias (Binius), "economia baseada em física" / moeda | GF(2ⁿ) **feito** (a base de uma torre binária); a VM STARK **adiada** (sem caso de uso no vapor que precise de prova de execução sucinta); a moeda **recusada** — não há dor nomeada que ela resolva aqui |
+| Tokamak, estabilidade MHD | equilíbrio de Grad–Shafranov **já existia** (CIENCIA); o que esta rodada acrescenta é o meio de **provar** propriedades de um modelo polinomial reduzido (Aludel, barreiras). Controlar um reator real: fora do alcance, e dito |
+| Astrodinâmica sem deriva | **já existia**: integradores simpléticos (Yoshida 4) no Crucible, com o RK4 como controle |
+| Robótica axiomática, aviônica "além do DO-178C" | o núcleo **feito** é o certificado de barreira (Aludel). Certificação DO-178C é um processo de engenharia com rastreabilidade e independência, não um teorema; "transcender o nível A" por prova é uma afirmação que nenhuma prova sustenta. Kits de evidência: **adiado** (TODO) |
+| Direito deôntico computável | **feito**: Tábua ([TABULA.md](TABULA.md)) — antinomias com cenário, consistência com prova DRUP, precedências, silêncios, Hohfeld |
+| Mecanismos (VCG, Gale–Shapley) | **adiado**: pequenos e úteis (estabilidade e veracidade são conferíveis por enumeração), mas sem um caso no vapor que os peça agora |
+| Autoformalização sem alucinação | **já existia** em parte (`Mind.formalize` com retrotradução e o verificador decidindo). Lean não está nesta máquina; exportar certificados para o Lean segue no TODO |
+| *Trusting trust* | **adiado** com a técnica certa nomeada: compilação dupla diversificada (Wheeler, 2009) — o worker compilado por dois Zig independentes e comparado; "500 linhas de Assembly auditadas" é uma semente, não uma prova |
+| Alinhamento de modelos para fusão | **feito**: Git Re-Basin com Hungariano exato (FUSAO §8) — fechou a pendência que o `diagnose` apontava |
+| Emulação limpa de chips antigos como redes sobre GF(2⁸) | **adiado** (Rebis confere uma *netlist*; um emulador é outro projeto). **Recusada a afirmação** do "certificado de não-infringência em Lean 4": uma prova matemática não estabelece um fato jurídico, e re-sintetizar a partir do binário original não é *clean room* (que exige separação de pessoas e de acesso, não de algoritmos) |
+| Áudio: "permutação isomórfica" para manter a colisão de n-gramas **abaixo dos limiares periciais de plágio** "preservando a identidade perceptiva" | **recusado**. É, por construção, uma ferramenta para copiar uma obra e escapar da detecção — o uso pretendido é a evasão, não a análise. Também recusada a premissa da "superação do fonograma": reconstruir uma gravação a partir da pressão do ar não dissolve os direitos sobre a composição. O sentido defensivo está disponível: medir semelhança melódica para **detectar** cópia |
+| Super-resolução (vídeo, espectrogramas), vocoders | **já existia** em parte (estúdio: ampliação, áudio); vocoders treinados exigem pesos: adiado |
+| BCI, implantes de baixo consumo, vida artificial | **adiado**: sem sinais, sem hardware, sem dor que o vapor resolva hoje; o que é transferível (decodificação em ponto fixo verificada) é a escada que já existe |
+| "Sócrates digital": rastejadores P2P, filtro de entropia | **adiado/recusado**: rastrear a internet não cabe nesta máquina sem rede, e um filtro "por entropia" de texto "sem valor epistêmico" mede compressibilidade, não verdade (a crítica da 0.7 vale) |
+| Areia inteligente, sondas de von Neumann auto-replicantes | **recusado como engenharia** (não há hardware nem caso); a parte formal — replicação condicionada a uma verificação — é o que a eclusa já faz com programas |
+| Teoria da informação "pós-NCD" | crítica **feita** (acima, HYDRA-Z); um substituto mensurável (Jaccard exato, MinHash) já existia |
+| Geometria da informação em compiladores | **já existia** onde mede algo (Fisher no Crucible e no Assay); "compilador guiado por métrica de Fisher": sem um caso, adiado |
+| Web semântica categórica | **adiado**: sem dor nomeada |
+| Eliminar o sistema operacional (bare-metal) | **adiado** (TODO: PMU e RAPL em *bare-metal*); o worker já fala com o núcleo por um punhado de chamadas |
+| Gêmeo digital fisiológico | gêmeos de sistemas físicos **já existiam** (FISICA); fisiologia multiescala: sem dados nem validação possível aqui |
+| Resolver as 10⁵⁰⁰ paisagens da teoria das cordas | **recusada a afirmação**. Os dados topológicos (números de Hodge) são inteiros, e um filtro como `|χ|/2 = 3` gerações é real — mas é uma condição necessária, não suficiente, e o número 10⁵⁰⁰ conta fluxos, não variedades enumeráveis. Busca com controle sobre uma lista dada (Kreuzer–Skarke) cabe no Athanor como qualquer espaço finito; "resolver o problema" não |
+| Química quântica exata, DMRG, baterias sem dendritos | RHF/STO-3G **já existia**; DMRG adiado (TODO do Crucible). **Recusada** a "prova de que dendritos são topologicamente impossíveis": uma barreira prova algo sobre um modelo, e a nucleação de dendritos não é um modelo polinomial de poucas variáveis com validação |
+| Compilação reversível, limite de Landauer | **adiado**: Toffoli/Fredkin sobre GF(2) são circuitos que o Rebis já lê; o ganho energético exige hardware adiabático que não existe aqui |
+| Fotônica integrada | **adiado**: sem caso; a malha unitária ideal é álgebra linear que o vapor já tem |
+| Modelagem geofísica sem parametrização | **adiado**: as EDPs 2-D no tempo estão no TODO da bancada |
+| HFT em nanossegundos | a 0.13 tratou (casamento verificável, juiz independente); o motor no worker segue no TODO |
+
+### O que foi feito
+
+[AMALGAMA.md](AMALGAMA.md), [COPELA.md](COPELA.md), [REBIS.md](REBIS.md),
+[ALUDEL.md](ALUDEL.md), [TABULA.md](TABULA.md); a fusão com alinhamento ([FUSAO.md §8](FUSAO.md));
+JBIG2 Huffman e meio-tom ([OCR.md §3f](OCR.md)); console (grupo Opus), terminal
+(`vapor rebis|aludel|tabula|cupel|amalgam`), MCP (25 ferramentas); a rodada de qualidade §5k.
+
+### O que foi achado no caminho
+
+- **O oráculo `dot16` truncava a cauda** de contrações com `k` fora de múltiplo de 16 — em
+  silêncio. Achado ao escrever a Copela, cuja tolerância não fechava; agora é um erro.
+- **O teste de auditoria já falhava na 0.14**: um `System.cmd` no `--measure` do Athanor, fora
+  dos portos sancionados. O comando externo passou a `Vapor.Main.Measure`: grupo de processos
+  próprio (`setsid`), prazo com morte do grupo inteiro (o primeiro desenho segurava o *pipe* e
+  deixava órfãos), teto de saída.
+- **Uma corrida entre suítes em `/dev/shm`**: a limpeza de uma removia o arquivo que outra
+  acabara de escrever. A limpeza ganhou um prazo de carência e a escrita toca o arquivo.
+- **O jbig2dec 0.20 erra o `HDEFPIXEL = 1`** nas regiões de meio-tom: preenche com o byte `0x01`
+  (um pixel preto em oito) em vez de preto. A fixture desse caso é julgada pelo T.88 6.6.5.2, e a
+  diferença fica registrada no manifesto.
+- **A tabela B.2 tem larguras negativas e a B.11 não tem `DT = 0`** — o codificador de teste
+  precisou respeitar isso; o decodificador já respeitava.
+- **Miter com literais repetidos travava o resolvedor**; **AIGER fora de ordem** era recusado;
+  **a fase das desestabilizadoras** do CHP pode ser ímpar. Os três, corrigidos com teste.
+- **A comutatividade de um multiplicador** é exponencial para resolução (2 963 conflitos a 5 bits;
+  6 bits não termina), e polinomial para a álgebra sobre ℤ — e o contrário nos somadores de
+  prefixo paralelo. A rodada mede os dois e diz qual usar.
+
+### O que este documento não afirma
+
+- Que a Copela veja tudo: abaixo do envelope de arredondamento, uma troca de bit é
+  indistinguível do arredondamento, e o perfil por bit diz onde fica a linha.
+- Que a Amálgama sirva para o laço interno de um *kernel*: é uma redução do plano de controle.
+- Que o Aludel prove algo sobre o mundo: prova sobre o polinômio que recebe.
+- Que a Tábua leia contratos: decide sobre cláusulas escritas na sua forma.
+- Que AES-GCM do Rebis sirva para cifrar dados: é um conferidor, sem tempo constante.
+
+### Como contestar
+
+```sh
+mix test test/vapor/amalgam_test.exs test/vapor/train_exact_test.exs test/vapor/cupel_test.exs \
+         test/vapor/rebis_test.exs test/vapor/aludel_test.exs test/vapor/tabula_test.exs \
+         test/vapor/merge_align_test.exs test/vapor/jbig2_test.exs test/vapor/opus_test.exs
+python3 test/python/jbig2_streams.py /tmp/jb2          # as fixtures JBIG2 de novo, cada uma julgada pelo jbig2dec
+mix vapor.quality --only round15                        # §5k, em ~2 s
+bin/vapor rebis equiv a.net b.net                       # e então traga os seus circuitos
+```

@@ -203,6 +203,36 @@ saída com significado), por MCP e pela TUI; o console ganhou uma identidade
 própria em que a fornalha é o gráfico da busca e a pedra de toque é o
 veredito.
 
+Desde 0.15.0, o vapor **decide** onde antes exibia ou replicava — o grupo
+**Opus**. A **Amálgama** soma qualquer coisa em qualquer ordem, com qualquer
+agrupamento e qualquer número de nós, e dá **um** resultado: a soma real
+exata arredondada uma vez (um acumulador de Kulisch nos inteiros da BEAM);
+o treino com `reduce: :exact` dá os mesmos bits com 1, 2 ou 3 trabalhadores
+e uma queda no meio, para qualquer número de micro-lotes. A **Copela** pega
+corrupção silenciosa de silício conferindo `y·r = x·(Wᵀr)` em aritmética
+exata, com a tolerância de Higham **provada**: a conferência custa
+`O(b·(n + k))` contra `O(b·n·k)` do produto (256 × 256, lote 8, na BEAM:
+3 ms contra 142 ms do produto pelo oráculo exato), nenhuma acusação contra
+quatro ordens de soma conformes, quarentena com diário Merkle. O **Rebis** decide se dois circuitos são a mesma
+função (tabela-verdade, ou *miter* + SAT com prova DRUP conferida) e prova
+identidades de palavra por álgebra sobre ℤ — um multiplicador de 32 bits em
+1,4 s, onde o SAT é exponencial; acha o gatilho de 32 bits de um cavalo de
+Troia que 4 096 padrões aleatórios não viram; AES-GCM derivado de GF(2⁸) e
+GF(2¹²⁸) igual ao OpenSSL; estabilizadores em 400 qubits. O **Aludel**
+(absorvido do PALADIN) decide afirmações polinomiais numa caixa em inteiros
+exatos — certificado com testemunha reproduzível, refutado num ponto exato
+ou esgotado, nunca um palpite — e prova certificados de barreira. A
+**Tábua** acha antinomias em contratos com o cenário que as dispara e prova
+(DRUP) os pares que nunca colidem. E dois caminhos antes recusados foram
+fechados: **JBIG2 Huffman e meio-tom** (conferidos por um codificador
+independente e pelo jbig2dec, cujo defeito em `HDEFPIXEL` ficou registrado)
+e o **alinhamento de permutações** antes da fusão (Git Re-Basin com húngaro
+exato: a rede fundida com a sua cópia embaralhada volta a ser ela mesma).
+
+- Rodada 0.15 — o Opus: Amálgama **[docs/AMALGAMA.md](docs/AMALGAMA.md)** · Copela **[docs/COPELA.md](docs/COPELA.md)** · Rebis **[docs/REBIS.md](docs/REBIS.md)** · Aludel **[docs/ALUDEL.md](docs/ALUDEL.md)** · Tábua **[docs/TABULA.md](docs/TABULA.md)** · fusão alinhada **[docs/FUSAO.md §8](docs/FUSAO.md)** · JBIG2 **[docs/OCR.md §3f](docs/OCR.md)** · o escrutínio do pedido e dos anexos: **[docs/DIRETRIZ.md §18](docs/DIRETRIZ.md)**
+
+<p><img src="docs/img/opus-tabula.png" alt="a Tábua: um contrato de venda com a antinomia C1 × C6 e o cenário que a dispara, as cláusulas em vigor e a sobreposta riscada" width="760"></p>
+
 - Rodada 0.14 — a bancada aberta: Alembic **[docs/ALEMBIC.md](docs/ALEMBIC.md)** · Athanor e Touchstone **[docs/ATHANOR.md](docs/ATHANOR.md)** · Crucible **[docs/CRUCIBLE.md](docs/CRUCIBLE.md)** · Assay **[docs/ASSAY.md](docs/ASSAY.md)** · terminal **[docs/CLI.md](docs/CLI.md)** · o escrutínio: **[docs/DIRETRIZ.md §17](docs/DIRETRIZ.md)**
 
 <p><img src="docs/img/bancada-athanor-escuro.png" alt="a fornalha ao vivo: a régua de Golomb de 7 marcas achada em 25, a linha tracejada da busca aleatória, a partilha do portfólio" width="760"></p>
@@ -273,6 +303,7 @@ veredito.
 | Finanças | `Vapor.Finance`: dinheiro exato, calendários (= QuantLib), curvas, opções (= QuantLib), Monte Carlo no worker com bits canônicos, VaR com backtests estatísticos, carteiras com KKT, **backtests com portões de ruído**, arbitragem por LP exato |
 | Mesa de operações | livro preço–tempo com diário SHA-256 + Merkle, **juiz ingênuo independente**, ITCH 5.0, FIX 4.4, risco pré-negociação, Hawkes, Avellaneda–Stoikov, Almgren–Chriss, sessão de bolsa auditada |
 | Treino | autodiff reverso em termos, LoRA + AdamW + destilação KL como um programa recorrente |
+| Opus (0.15) | **Amálgama** (soma exata sem ordem, f16/bf16/f32/f64; treino `reduce: :exact`), **Copela** (corrupção silenciosa por identidade adjunta com tolerância provada; sentinela com quarentena e diário), **Rebis** (equivalência de circuitos com prova DRUP, Gröbner sobre ℤ, GF(2ⁿ), AES-GCM, estabilizadores, AIGER), **Aludel** (positividade de Bernstein em inteiros, barreiras, síntese por LP), **Tábua** (antinomias deônticas, precedências, silêncios, Hohfeld); console, terminal e MCP |
 
 ## Início rápido
 
@@ -560,6 +591,9 @@ Num app Phoenix: `forward "/llm", Vapor.Plug, name: MyApp.LLM` (ver
 | `lib/vapor/finance.ex`, `finance/` | finanças e a mesa de operações: dinheiro, calendários, curvas, opções, Monte Carlo, risco, backtests, arbitragem, livro e juiz, ITCH, FIX, pré-negociação, microestrutura, sessão de bolsa |
 | `lib/vapor/logic/lp.ex` | simplex racional exato com certificados (dual, Farkas, raio) |
 | `lib/vapor/console/lab13.ex`, `priv/console/mercado.js` | os painéis da 0.13 (*Mercados*) e a sua chamada |
+| `lib/vapor/amalgam.ex`, `cupel.ex`, `cupel/`, `rebis.ex`, `rebis/`, `aludel.ex`, `tabula.ex` | o Opus (0.15): soma exata, corrupção silenciosa, circuitos, polinômios, contratos |
+| `lib/vapor/merge/align.ex`, `docs/jbig2_huffman.ex`, `main/measure.ex` | alinhamento antes da fusão; JBIG2 Huffman; o comando externo com grupo de processos e prazo |
+| `lib/vapor/console/lab15.ex`, `main/opus_cli.ex`, `priv/console/opus.js` | o Opus no console, no terminal e as suas chamadas |
 | `monografia/` | a monografia (abnTeX2) com as figuras, e o roteiro da defesa oral |
 | `lib/vapor/tui.ex` | o console no terminal |
 | `priv/ocr`, `priv/ocr-arabic`, `priv/ocr-cyrillic`, `priv/ocr-cjk-*`, `priv/math`, `priv/lm`, `priv/games`, `priv/speech`, `priv/digits`, `priv/upscale`, `priv/rl`, `priv/quality/*` | os leitores e políticas treinados, o checkpoint SD minúsculo e os dados retidos da suíte |
@@ -579,7 +613,7 @@ Num app Phoenix: `forward "/llm", Vapor.Plug, name: MyApp.LLM` (ver
 | `native/src/` | worker (seccomp no Linux, Capsicum no FreeBSD, `MAP_JIT` no macOS; pool, contadores, interpretador RVV), daemons Vulkan e Metal (e o simulador sobre o *shim*), em Zig |
 | `proofs/` | Lean 4 + extrator |
 | `test/`, `test/python/` | testes por nível e scripts dos oráculos diferenciais |
-| `slides/`, `flake.nix`, `scripts/` | apresentação, Nix, e2e |
+| `slides/`, `flake.nix`, `scripts/` | apresentação, Nix, e2e; `scripts/pack.py` empacota os três `.zip` (código, qualidade, modelos) de forma reprodutível, com `SHA256SUMS` |
 
 ## Limitações
 

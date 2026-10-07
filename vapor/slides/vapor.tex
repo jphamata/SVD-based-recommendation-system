@@ -1382,6 +1382,48 @@ $ vapor scene edit s.json "add glow sol { x: 0.7 }"
 \tese{Nenhuma capacidade existe só na interface gráfica: \hl{o console é um cliente do terminal}, não o contrário.}
 \end{frame}
 
+\begin{frame}{0.15: o Opus --- decidir, não exibir}
+{\tiny\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{1.6cm}p{4.4cm}p{3.1cm}p{3.6cm}@{}}
+\toprule
+\textbf{peça} & \textbf{primeiro princípio} & \textbf{valor} & \textbf{controle}\\ \midrule
+Amálgama & todo binário é inteiro $\times\,2^{q_{\min}}$: soma de inteiros é associativa (Kulisch na BEAM) & \hl{1} resultado em 30 ordens, = soma exata arredondada uma vez & esquerda $\to$ direita: \bad{30} resultados\\
+Copela & $y\cdot r = x\cdot(W^{\top} r)$ em aritmética exata; tolerância de Higham \emph{provada} & bits 19--31: \hl{100\,\%}; 0 acusações em 24 ordens conformes & bit 0: 0\,\% (abaixo do envelope, \emph{dito})\\
+Rebis & a ANF \emph{é} a forma normal (Möbius); Gröbner sobre $\mathbb{Z}$ para palavras & cavalo de Troia de 32 bits: \hl{0xDEADBEEF}; multiplicador 32 bits em 1,4\,s & 4\,096 padrões aleatórios: \bad{não viram}\\
+Aludel & Bernstein + de Casteljau em inteiros; três vereditos (do PALADIN) & Motzkin $+\frac{1}{1000}>0$: \hl{certificado}, testemunha reproduzida & Motzkin $\ge 0$: \bad{esgotado}, não fingido\\
+Tábua & antinomia = cenário satisfazível; consistência = prova DRUP & C1 $\times$ C6 com o cenário; C1 $\times$ C3 \hl{provado} & com as precedências: 0 antinomias\\
+\bottomrule
+\end{tabular}}\\[4pt]
+{\scriptsize e dois caminhos antes recusados, fechados: \textbf{JBIG2 Huffman e meio-tom} (64 fixtures, um defeito do jbig2dec registrado) e o \textbf{alinhamento antes da fusão} (Git Re-Basin, húngaro exato: a cópia embaralhada volta a ser a rede)}
+\tese{Cada peça devolve um \hl{veredito que se confere sem confiar nela} --- e diz o que não vê.}
+\end{frame}
+
+\begin{frame}{0.15: o pedido escrutinado}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+{\tiny
+\textbf{\scriptsize os anexos, fagocitados como ideias}\\[3pt]
+\begin{tabular}{@{}p{1.3cm}p{3.9cm}@{}}
+\toprule
+PALADIN & $\to$ \hl{Aludel}, quase inteiro\\
+WIZARD & ordem declarada $\to$ \hl{Amálgama}: a ordem deixa de importar\\
+GHOST & quórum $3f{+}1$ $\to$ \hl{Copela}: conferir em vez de votar\\
+JESTER & raiz de época = o diário Merkle que já existia\\
+HYDRA-Z & NCD não é métrica com compressores reais; LSH já evita os $O(N^2)$ pares\\
+\bottomrule
+\end{tabular}}
+\end{column}
+\begin{column}{0.48\textwidth}
+{\tiny
+\textbf{\scriptsize achado no caminho}\\[2pt]
+\texttt{dot16} truncava a cauda em silêncio; o teste de auditoria e um de figuras já falhavam na 0.14 (\texttt{System.cmd}; corrida em \texttt{/dev/shm}); 15 funções sem chamador.\\[5pt]
+\textbf{\scriptsize recusado, com o motivo}\\[2pt]
+\bad{``permutação isomórfica''} para ficar abaixo dos limiares de plágio (evasão de detecção); ``certificado de não-infringência em Lean''; Merkle provando \emph{ausência} de dados; ``resolver'' a paisagem das cordas.}
+\end{column}
+\end{columns}
+\tese{Reescrever 88 mil linhas destruiria a continuidade da evidência: \hl{reengenharia onde o primeiro princípio muda a resposta}, e só ali.}
+\end{frame}
+
 % =========================================================================
 \section{8 · Contribuição}
 % =========================================================================

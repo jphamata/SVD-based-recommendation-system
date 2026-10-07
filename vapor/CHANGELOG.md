@@ -1,5 +1,90 @@
 # Mudanças
 
+## 0.15.0 — 2026-10-07
+
+Escrutínio do sétimo pedido ("reengenharia completa sob primeiros princípios, em seis fases;
+fagocitar os anexos; rebatizar mantendo a alquimia") e dos anexos (PALADIN com JESTER e WIZARD,
+HYDRA-Z, GHOST) e das duas listas de ideias, item a item — feito, já existia, adiado ou recusado,
+com o motivo: [docs/DIRETRIZ.md §18](docs/DIRETRIZ.md). A tese: **decidir, não exibir** — cada
+peça nova devolve um veredito que se confere sem confiar nela. Verificações com controle em
+`mix vapor.quality` (§5k, 12; `--only round15`, ~2 s, e `--md` para escrever a tabela:
+[docs/bench/ROUND15.md](docs/bench/ROUND15.md)).
+
+**Amálgama** ([AMALGAMA.md](docs/AMALGAMA.md))
+- `Vapor.Amalgam`: soma exata e sem ordem (acumulador de Kulisch nos inteiros da BEAM) para
+  f16/bf16/f32/f64; `merge/2` é um monoide comutativo; arredonda uma vez, ao par, com
+  *underflow* gradual; especiais pela IEEE 754 §6.3 em qualquer ordem; `dot`/`partial_dot`
+  (fatias de uma contração juntadas em qualquer ordem = o produto sem fatias); `mean` corretamente
+  arredondada; `to_wire`/`from_wire`.
+- Treino `reduce: :exact`: qualquer número de micro-lotes; os bits dependem só do conjunto de
+  micro-lotes (1, 2 ou 3 trabalhadores, qualquer atribuição, uma queda, o oráculo — um *digest*);
+  *checkpoint* e retomada preservam os bits.
+
+**Copela** ([COPELA.md](docs/COPELA.md))
+- `Vapor.Cupel`: corrupção silenciosa por `y·r = x·(Wᵀr)` em aritmética exata com a tolerância de
+  Higham provada (+ FTZ/DAZ); `:ok | :corrupt | :unchecked` por linha; int8 exato; perfil de
+  detecção por bit (`sensitivity/3`).
+- `Vapor.Cupel.Sentinel`: guarda de um conjunto de substratos com quarentena pela evidência,
+  recálculo no próximo saudável ou no oráculo, diário SHA-256 + Merkle; chamadas concorrentes.
+
+**Rebis** ([REBIS.md](docs/REBIS.md))
+- Equivalência de circuitos: tabela-verdade em bits (≤ 16 entradas) e ANF por Möbius; além,
+  simulação aleatória e *miter* + CDCL com prova **DRUP conferida**; contraexemplo encolhido;
+  *netlist* própria e AIGER ASCII (leitura e escrita).
+- `Rebis.Ideal`: identidades de palavra por reescrita algébrica sobre ℤ (base de Gröbner do
+  circuito) — multiplicador de 32 bits em 1,4 s; `:unknown` com teto, nunca palpite.
+- `Rebis.Field` (GF(2ⁿ), sem vai-um, S-box derivada, GHASH de dois jeitos), `Rebis.GCM`
+  (= OpenSSL), `Rebis.Stabilizer` (quadro CHP com fase por máscaras, = simulador denso),
+  `Rebis.Gen` (somadores *ripple* e Kogge–Stone, multiplicador, cavalo de Troia).
+
+**Aludel** ([ALUDEL.md](docs/ALUDEL.md)) — absorvido do PALADIN: positividade polinomial numa
+caixa em inteiros exatos (Bernstein denso, de Casteljau), três vereditos, testemunha reproduzida
+por conversão direta por folha, `enclose`, certificados de barreira e síntese por LP exato com
+geração de restrições.
+
+**Tábua** ([TABULA.md](docs/TABULA.md)) — contratos como normas sobre fatos (inglês e
+português): antinomias com cenário, pares provados sem colisão (DRUP), precedências (*lex
+specialis*), silêncios, posições de Hohfeld sob um conjunto de fatos.
+
+**Caminhos antes recusados, fechados**
+- JBIG2 **Huffman** (tabelas B.1–B.15, tabelas do usuário, dicionários SDHUFF, texto SBHUFF) e
+  **meio-tom** (dicionários de padrões, planos de Gray, grade, `HSKIP`), conferidos por um
+  codificador Python independente e pelo jbig2dec: 21 fixtures novas, 64 no total
+  ([OCR.md §3f](docs/OCR.md)).
+- **Alinhamento de permutações** antes da fusão (`merge align: true`, Git Re-Basin com húngaro
+  exato; [FUSAO.md §8](docs/FUSAO.md)).
+
+**Interfaces**
+- Console: grupo **Opus** com cinco mesas (o selo do Rebis, as células e o retrato de fase do
+  Aludel, a tábua com fatos e cenários, a faixa de bits da Copela, a reta da Amálgama); estado da
+  mesa preservado na troca de idioma; teste de navegador sem cabeça. `GET /v1/vapor/opus`,
+  `POST /v1/vapor/{rebis,aludel,tabula,cupel,amalgam}`.
+- Terminal: `vapor rebis|aludel|tabula|cupel|amalgam`, com códigos de saída que um *script* pode
+  exigir (0 provado/equivalente/certificado/consistente, 1 o contrário).
+- MCP: `rebis_check`, `aludel_decide`, `tabula_analyze`, `cupel_drill`, `amalgam_sum` (25
+  ferramentas).
+
+**Corrigido no caminho**
+- O oráculo `dot16` truncava em silêncio contrações com `k` fora de múltiplo de 16; agora recusa.
+- O teste de auditoria falhava na própria 0.14 (`System.cmd` no `--measure`):
+  `Vapor.Main.Measure` com grupo de processos (`setsid`), prazo que mata o grupo e teto de saída.
+- Corrida entre suítes na limpeza de `/dev/shm` (o teste de figuras falhava na 0.14): prazo de
+  carência e escrita que toca o arquivo.
+- 15 funções públicas sem chamador removidas (achadas por um rastreador de chamadas em tempo de
+  compilação); duas de API documentada ganharam testes.
+- Defeito do jbig2dec 0.20 com `HDEFPIXEL = 1` registrado (a fixture é julgada pelo T.88).
+- Strings do console: uma chave de tradução repetida entre scripts reescrevia o texto de outra
+  mesa; um teste agora proíbe chaves repetidas com texto diferente.
+
+**Entrega**: `scripts/pack.py` empacota os três arquivos (`-1-codigo`, `-2-qualidade`,
+`-3-modelos`) a partir do `git ls-files`, com entradas ordenadas, datas fixas e permissões
+normalizadas — a mesma árvore dá os mesmos bytes, conferíveis pelo `SHA256SUMS`.
+
+**Recusado**, com o motivo na §18: a "permutação isomórfica" de áudio para ficar abaixo dos
+limiares periciais de plágio (é evasão de detecção de cópia), o "certificado de não-infringência
+em Lean", a afirmação de que uma raiz de Merkle prova *ausência* de dados não autorizados,
+"resolver" a paisagem da teoria das cordas, a prova de impossibilidade de dendritos.
+
 ## 0.14.0 — 2026-10-05
 
 Escrutínio do sexto pedido ("de expositivo a ferramenta real, entrada aberta e saneada, sem categorias pré-definidas, humano e modelo no laço, pesquisa em IA, tudo pelo terminal, cenas livres"; e "nomes de alquimia em inglês, nada de nomes consagrados, foco em ciência, computação, matemática, IA e finanças, uma interface mais marcante"): [docs/DIRETRIZ.md §17](docs/DIRETRIZ.md). A tese: **uma linguagem, uma fornalha, uma pedra de toque** — os buscadores famosos são casos de *proponha, avalie, certifique*, então o produto é o caso geral, e os casos viram exemplos. Verificações com controle em `mix vapor.quality` (§5j, 20; `--only round14`).

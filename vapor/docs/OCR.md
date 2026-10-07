@@ -294,7 +294,7 @@ corpo.
 Fora: tabelas sem nenhuma régua (só alinhamento), tabelas que atravessam
 páginas, células com várias linhas de texto em tabelas só de filetes.
 
-## 3f. JBIG2: o último formato de escaneados (0.8.0)
+## 3f. JBIG2: o último formato de escaneados (0.8.0; Huffman e meio-tom na 0.15)
 
 `Vapor.Docs.JBIG2` decodifica JBIG2 (ITU-T T.88) com **codificação
 aritmética**, sem dependência: o decodificador MQ, os contextos IAx/IAID,
@@ -321,10 +321,35 @@ sem deslocamento (T.88 7.4.7.4 diz a região), e os contextos SLTP do TPGRON
 do modelo 1 diferem entre jbig2dec e pdf.js (seguimos o jbig2dec, que é o
 que se confere aqui).
 
-**Recusados com aviso**, pelo nome: codificação **Huffman** (tabelas B.1–B.15
-e tabelas do usuário) e **regiões de meio-tom** (padrões + grade). Nenhum
-codificador aberto daqui as emite, e decodificar sem poder conferir seria
-fachada; ficam no TODO.
+**Huffman e meio-tom (0.15).** O que a 0.8 recusava por não haver codificador
+aberto que os emitisse para conferir foi fechado do outro lado: um codificador
+**independente** em Python (`test/python/jbig2_streams.py`, sem código em comum
+com o decodificador) emite os fluxos, e cada um é julgado pelo jbig2dec antes de
+virar fixture. Decodificados agora:
+
+- **codificação Huffman** (`Vapor.Docs.JBIG2Huffman`): as quinze tabelas
+  padrão B.1–B.15 (com as linhas de faixa inferior/superior e OOB), tabelas do
+  usuário (segmento tipo 53, construídas pelo algoritmo B.3), dicionários de
+  símbolos SDHUFF (alturas, larguras, tamanhos de agregação, e o bitmap coletivo
+  de cada classe de altura cru ou MMR) e regiões de texto SBHUFF (a tabela de
+  IDs de símbolo por comprimentos de código em *run-length*, faixas e
+  coordenadas, com as tabelas do usuário na ordem FS, DS, DT, …);
+- **dicionários de padrões e regiões de meio-tom** (tipos 16, 20, 22, 23): os
+  planos de cinza em código de Gray (genéricos ou MMR), a grade rotacionada,
+  `HSKIP` (células fora da região puladas), as quatro combinações e
+  `HDEFPIXEL`.
+
+21 fixtures novas (13 Huffman, 8 meio-tom), **64 no total**, todas bit a bit; as
+39 antigas regeneram byte a byte. Um defeito do **jbig2dec** apareceu no caminho:
+com `HDEFPIXEL = 1` ele preenche a região com o byte `0x01` (um pixel preto em
+oito, listras verticais) em vez de preto. Essa fixture é julgada pelo T.88
+6.6.5.2 passo 1, e a diferença (em pixels) fica no manifesto. Outras duas
+armadilhas da especificação, respeitadas: a tabela B.2 tem larguras negativas e
+a B.11 não tem `DT = 0`.
+
+**Ainda recusados com aviso**, pelo nome: Huffman **com refinamento** (SDREFAGG
+ou SBREFINE sob SDHUFF/SBHUFF), contextos aritméticos **retidos** entre
+segmentos, e um meio-tom sem o seu dicionário de padrões.
 
 
 ## 3g. Chinês, japonês e coreano: milhares de classes sem rede treinada (0.10)
@@ -583,8 +608,8 @@ entra pela mesma eclusa e é medido pela mesma suíte.
   domínio do usuário ajudaria mais; `lm.json` aceita outros corpora.
 - O leitor roda no worker nativo (uma linha por execução, ~50–150 ms); no
   oráculo é exato porém lento.
-- PDF escaneado: CCITT, LZW, RunLength (§3d) e JBIG2 aritmético (§3f)
-  decodificados; JBIG2 Huffman, meio-tom e JPX: aviso.
+- PDF escaneado: CCITT, LZW, RunLength (§3d) e JBIG2 aritmético, Huffman e
+  meio-tom (§3f) decodificados; JBIG2 Huffman com refinamento e JPX: aviso.
 - **Árabe, CJK, cursivo, fórmulas** (pedidos na rodada 0.8): recusados — o
   pipeline (geometria, CTC, feixe com modelo de língua) não é o limite; o
   limite é um leitor treinado nesses sistemas de escrita, com dados que este

@@ -12,6 +12,7 @@
 (() => {  // everything here is local: the page's scripts share one global scope
 /* ================================================================== words */
 Object.assign(I18N.en, {
+  op_f64: "f64", op_f32: "f32",
   g_opus: "Opus",
   rebis: "Rebis", rebis_s: "two circuits, one function?", aludel: "Aludel", aludel_s: "polynomial claims, barriers",
   tabula: "Tabula", tabula_s: "contracts without antinomies", cupel: "Cupel", cupel_s: "silent corruption, caught",
@@ -24,7 +25,7 @@ Object.assign(I18N.en, {
   m_equiv: "Compare", m_anf: "ANF", m_identity: "Identity", m_stab: "Stabilizer", m_decide: "Decide", m_barrier: "Barrier",
   vessel_a: "A", vessel_b: "B", spec: "specification", spec_ph: "m[16] = a[8] * b[8]", qubits: "qubits", seed: "seed",
   same_fn: "the same function", diff_fn: "not the same function", unknown_fn: "not settled", inputs_that_show: "the inputs that show it",
-  outputs_differ: "outputs that differ", by_method: (m) => `by ${m}`, patterns: "patterns", lemmas: "proof lemmas checked", conflicts: "conflicts",
+  outputs_differ: "outputs that differ", by_method: (m) => `by ${m}`, patterns: "patterns", op_lemmas: "proof lemmas checked", conflicts: "conflicts",
   proved: "proved", refuted: "refuted", substitutions: "substitutions", peak: "peak terms",
   degree: "degree", terms: "terms", outcomes: "outcomes", random_k: "random", determ_k: "deterministic", stabilizers: "stabilizers",
   vars: "variables", poly: "polynomial", box: "box", sense_nonneg: "≥ 0", sense_pos: "> 0", certified: "certified", exhausted: "exhausted",
@@ -36,13 +37,14 @@ Object.assign(I18N.en, {
   prevails: (c) => `${c} prevails`, when: "when", no_fact: "no fact holds", show_scenario: "Set these facts", silence: "nothing governs",
   never_clash: (n) => `${n} pair${n === 1 ? "" : "s"} proved never to clash`, holder: (h, a, x) => `${h} may claim from ${a}: ${x}`,
   rows_n: "n (rows of W)", cols_k: "k (columns)", trials: "trials", bit_ex: "example bit", sign: "sign", exponent: "exponent", mantissa: "mantissa",
-  caught: "caught", missed: "below the rounding envelope", int8_exact: (n) => `int8: ${n} of 32 bits caught — the check is exact`,
+  op_caught: "caught", missed: "below the rounding envelope", int8_exact: (n) => `int8: ${n} of 32 bits caught — the check is exact`,
   flip_ex: (b, a, c, v) => `bit ${b}: ${a} → ${c} · ${v}`, cost: "cost",
   numbers: "numbers", format: "format", orders: "left to right, in different orders", amalgam_mark: "the amalgam", exact_sum: "exact sum",
   distinct: (k, n) => `${k} different results from ${n} orders`, run_it: "Run",
   cond_initial: "B ≤ 0 on the initial set", cond_unsafe: "B > 0 on the unsafe set", cond_flow: "λB − ∇B·f ≥ 0 on the domain"
 });
 Object.assign(I18N.pt, {
+  op_f64: "f64", op_f32: "f32",
   g_opus: "Opus",
   rebis: "Rebis", rebis_s: "dois circuitos, uma função?", aludel: "Aludel", aludel_s: "afirmações polinomiais, barreiras",
   tabula: "Tábua", tabula_s: "contratos sem antinomias", cupel: "Copela", cupel_s: "corrupção silenciosa, flagrada",
@@ -55,7 +57,7 @@ Object.assign(I18N.pt, {
   m_equiv: "Comparar", m_anf: "FNA", m_identity: "Identidade", m_stab: "Estabilizador", m_decide: "Decidir", m_barrier: "Barreira",
   vessel_a: "A", vessel_b: "B", spec: "especificação", spec_ph: "m[16] = a[8] * b[8]", qubits: "qubits", seed: "semente",
   same_fn: "a mesma função", diff_fn: "não é a mesma função", unknown_fn: "não decidido", inputs_that_show: "as entradas que mostram",
-  outputs_differ: "saídas que diferem", by_method: (m) => `por ${m}`, patterns: "padrões", lemmas: "lemas da prova conferidos", conflicts: "conflitos",
+  outputs_differ: "saídas que diferem", by_method: (m) => `por ${m}`, patterns: "padrões", op_lemmas: "lemas da prova conferidos", conflicts: "conflitos",
   proved: "provado", refuted: "refutado", substitutions: "substituições", peak: "pico de termos",
   degree: "grau", terms: "termos", outcomes: "resultados", random_k: "aleatórios", determ_k: "determinados", stabilizers: "estabilizadores",
   vars: "variáveis", poly: "polinômio", box: "caixa", sense_nonneg: "≥ 0", sense_pos: "> 0", certified: "certificado", exhausted: "esgotado",
@@ -67,7 +69,7 @@ Object.assign(I18N.pt, {
   prevails: (c) => `${c} prevalece`, when: "quando", no_fact: "nenhum fato vale", show_scenario: "Marcar esses fatos", silence: "nada rege",
   never_clash: (n) => `${n} par${n === 1 ? "" : "es"} provado${n === 1 ? "" : "s"} sem colisão`, holder: (h, a, x) => `${h} pode exigir de ${a}: ${x}`,
   rows_n: "n (linhas de W)", cols_k: "k (colunas)", trials: "tentativas", bit_ex: "bit de exemplo", sign: "sinal", exponent: "expoente", mantissa: "mantissa",
-  caught: "flagrado", missed: "abaixo do envelope de arredondamento", int8_exact: (n) => `int8: ${n} de 32 bits flagrados — a conferência é exata`,
+  op_caught: "flagrado", missed: "abaixo do envelope de arredondamento", int8_exact: (n) => `int8: ${n} de 32 bits flagrados — a conferência é exata`,
   flip_ex: (b, a, c, v) => `bit ${b}: ${a} → ${c} · ${v}`, cost: "custo",
   numbers: "números", format: "formato", orders: "da esquerda para a direita, em ordens diferentes", amalgam_mark: "a amálgama", exact_sum: "soma exata",
   distinct: (k, n) => `${k} resultados diferentes em ${n} ordens`, run_it: "Rodar",
@@ -179,7 +181,7 @@ function rebisView(mode, r) {
     return [el("p", { class: "notice", text: r.why || t("unknown_fn") })];
   }
   if (r.verdict === "equivalent") {
-    const ev = r.evidence, checks = [{ name: t("by_method", ev.method), ok: true, detail: ev.method === "sat" ? `${ev.checked_lemmas} ${t("lemmas")}` : `${ev.patterns} ${t("patterns")}` }];
+    const ev = r.evidence, checks = [{ name: t("by_method", ev.method), ok: true, detail: ev.method === "sat" ? `${ev.checked_lemmas} ${t("op_lemmas")}` : `${ev.patterns} ${t("patterns")}` }];
     if (ev.cnf_sha256) checks.push({ name: "CNF", ok: true, detail: ev.cnf_sha256.slice(0, 16) + "…" });
     return [touchstone(t("same_fn"), checks), stats(stat("A", `${r.a.gates}`, `${r.a.inputs} → ${r.a.outputs}`), stat("B", `${r.b.gates}`, `${r.b.inputs} → ${r.b.outputs}`), stat("ms", String(r.ms)))];
   }
@@ -355,7 +357,7 @@ function cupelView(r) {
     el("div", { class: "fgroup man" }, el("small", { text: t("mantissa") }), el("div", { class: "cells" }, ...prof.slice(9).map(cell))));
   const ex = r.example;
   const caught = prof.filter((p) => p.detected === p.trials).length;
-  return [touchstone(`${caught}/32 ${t("caught")} · ${t("int8_exact", r.int8.bits_detected)}`, [{ name: `bit ${ex.bit}`, ok: ex.verdict === "corrupt", detail: ex.verdict }, { name: "int8", ok: r.int8.bits_detected === 32, detail: `${r.int8.bits_detected}/32` }]),
+  return [touchstone(`${caught}/32 ${t("op_caught")} · ${t("int8_exact", r.int8.bits_detected)}`, [{ name: `bit ${ex.bit}`, ok: ex.verdict === "corrupt", detail: ex.verdict }, { name: "int8", ok: r.int8.bits_detected === 32, detail: `${r.int8.bits_detected}/32` }]),
     strip, el("p", { class: "muted", text: t("flip_ex", ex.bit, wbNum(ex.before, 6), wbNum(ex.after, 6), ex.verdict) }), el("p", { class: "muted", text: `${t("cost")}: ${r.check_cost}` })];
 }
 
@@ -363,7 +365,7 @@ function cupelView(r) {
 function buildAmalgam(root) {
   opusHead(root, "amalgam");
   const ta = editor("op-amalgam", 4), out = el("div", { class: "results" }), S = { fmt: "f64" };
-  const fmt = segmented([["f64", "f64"], ["f32", "f32"]], S.fmt, (v) => { S.fmt = v; run(); });
+  const fmt = segmented([["f64", "op_f64"], ["f32", "op_f32"]], S.fmt, (v) => { S.fmt = v; run(); });
   opusInfo().then((info) => opusShelf(root, info.amalgam, (e) => { ta.value = e.numbers; run(); }))
     .then(() => { root.append(ta, el("div", { class: "op-row" }, labeled(t("format"), fmt), runButton(() => run())), out); if (!ta.value) { ta.value = OPUS.info.amalgam[0].numbers; run(); } });
   const run = async () => {

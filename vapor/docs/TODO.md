@@ -1,10 +1,21 @@
-# Pendências — estado em 2026-10-05 (0.14.0)
+# Pendências — estado em 2026-10-07 (0.15.0)
 
 Só o que está **aberto**. O que foi fechado está no [CHANGELOG](../CHANGELOG.md),
 com o teste que o prova. Cada item diz por que importa e o que o fecha;
 ◐ = feito em parte (o que falta está escrito). Os itens dos anexos das
-rodadas 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13 e 0.14 que ficaram de fora estão aqui com o motivo
-([DIRETRIZ.md §9, §11, §12, §13, §14, §15, §16, §17](DIRETRIZ.md)).
+rodadas 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14 e 0.15 que ficaram de fora estão aqui com o motivo
+([DIRETRIZ.md §9, §11–§18](DIRETRIZ.md)).
+
+## Rodada 0.15 — o que ficou aberto
+
+- ☐ **Amálgama no worker**: a soma exata como programa nativo (um acumulador de Kulisch de ~4 300 bits para f32 em registradores, ou a soma em duas passadas por expoente) — hoje ≈ 6 M adições/s na BEAM, o que basta para gradientes entre micro-lotes e nós, não para dentro de um *kernel*. Também: o *all-reduce* exato entre nós do `Vapor.Cluster` (as células já atravessam a rede por `to_wire/1`), e a divisão **por linhas** no `Vapor.Shard` (hoje recusada) refeita com `partial_dot/3` — a peça existe e está testada; falta ligá-la ao particionador.
+- ☐ **Copela no caminho de treino**: a mesma identidade no *backward* (`∂x = ∂y·W` confere com `r`) e na atualização do otimizador; a sentinela ligada ao `Vapor.Cluster` (quarentena de um nó inteiro, não só de um trabalhador); medir a sobrecarga no worker nativo.
+- ☐ **Rebis**: circuitos sequenciais (indução k sobre o *miter* de vários passos, com IC3/PDR como horizonte); ler Verilog estrutural/BLIF; `PCLMULQDQ`/`vclmul` como operação do compilador (multiplicação sem vai-um nos emissores) para o GHASH e para torres binárias; reescrita algébrica com regras para somadores de prefixo paralelo (hoje `:unknown` acima de 50 000 termos).
+- ☐ **Aludel**: dividir também pelo grau (elevação de grau quando a envoltória é larga), mais variáveis com subdivisão adaptativa por eixo, e barreiras com termos racionais; exportar a testemunha para um verificador em Lean quando o `lake` estiver presente.
+- ☐ **Tábua**: prazos (lógica temporal linear limitada sobre os fatos), quantificação sobre partes, e o rascunho por modelo (`Mind`) de cláusulas a partir de texto, com retrotradução, como o Alembic tem.
+- ☐ **Mecanismos** (VCG, Gale–Shapley) com estabilidade e veracidade conferidas — pequenos, adiados por falta de caso (§18).
+- ☐ **Compilação dupla diversificada** (Wheeler) do worker com dois Zig independentes — a resposta certa ao *trusting trust* (§18).
+- ☐ **JBIG2**: Huffman com refinamento (SDREFAGG/SBREFINE sob SDHUFF/SBHUFF) e contextos aritméticos retidos entre segmentos; JPX.
 
 ## Rodada 0.14 — o que ficou aberto
 
@@ -109,7 +120,7 @@ rodadas 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13 e 0.14 que ficaram de fora estão 
 - ◐ OCR: texto impresso horizontal ✅; ordem de leitura em colunas ✅ e feixe CTC com modelo de língua ✅ (0.7); **tabelas** com réguas ou filetes ✅ (0.8: estrutura exata em 12/12, CER por célula 5,5 %); faltam tabelas sem régua, tabelas entre páginas, tokens curtos de cabeçalho ("T1"), fontes geométricas (URW Gothic: 7,5 %), manuscrito, um corpus do domínio do usuário.
 - ◐ Outros sistemas de escrita: árabe com RTL ✅, CJK ✅, cirílico ✅, fórmulas → LaTeX ✅ (0.10, [OCR.md §3g–§3k](OCR.md)); faltam modelo de língua para árabe e cirílico, Nastaliq, CJK vertical, fórmulas de várias linhas e matrizes, e **letra de mão real** (abaixo).
 - ◐ Fala: dígitos falados ✅; faltam mais vozes, aumento de dados e vocabulário além de dígitos (ou o Whisper com pesos reais).
-- ◐ Imagens de escaneados em PDF: CCITT Group 3/4 ✅, LZW e RunLength ✅ (0.7, = libtiff); **JBIG2 aritmético** ✅ (0.8, = jbig2dec); faltam JBIG2 **Huffman** e **meio-tom** (sem codificador aberto que os emita para conferir) e JPX.
+- ◐ Imagens de escaneados em PDF: CCITT Group 3/4 ✅, LZW e RunLength ✅ (0.7, = libtiff); **JBIG2 aritmético** ✅ (0.8, = jbig2dec); **JBIG2 Huffman e meio-tom** ✅ (0.15, conferidos por um codificador independente e pelo jbig2dec); faltam Huffman com refinamento e JPX.
 - ☐ Índice incremental da biblioteca e sua persistência no servidor.
 
 ## Numérica e verificação

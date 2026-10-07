@@ -161,7 +161,7 @@ defmodule Vapor.Main.OpusCli do
     Enum.each(r.findings, fn f -> out("  #{bad("✗")} #{Enum.join(f.clauses, " × ")} (#{f.party}): #{f.why}\n     when " <> scenario(f.scenario)) end)
     Enum.each(r.resolved, fn f -> out("  #{good("✓")} #{Enum.join(f.clauses, " × ")}: #{f.why} — #{f.prevails} prevails") end)
     Enum.each(r.silences, fn s -> out("  #{warn("…")} nothing governs #{s.party} #{s.action} when " <> scenario(s.scenario)) end)
-    if r.positions, do: out("positions: " <> inspect(r.positions))
+    if r.positions, do: positions(r.positions)
   end
   defp human(:cupel, r) do
     out(bold("bit  detected"))
@@ -189,6 +189,17 @@ defmodule Vapor.Main.OpusCli do
       end)
 
     Enum.join(ws ++ Enum.map(Enum.sort(single), fn {k, v} -> "#{k}=#{v}" end), ", ")
+  end
+
+  defp positions(%{error: why}), do: out(bad("facts: ") <> why)
+
+  defp positions(p) do
+    norm = fn n -> "#{n.id}: #{n.party} #{Vapor.Tabula.modality_text(n.modality)} #{n.action}" <> if(n[:counterparty], do: " (to #{n.counterparty})", else: "") end
+    out(bold("\nin force"))
+    Enum.each(p.active, &out("  " <> norm.(&1)))
+    Enum.each(p.overridden, &out(dim("  #{&1} — overridden")))
+    Enum.each(p.claims, &out("  #{&1.holder} may claim from #{&1.against}: #{&1.action}" <> dim(" (#{&1.from})")))
+    Enum.each(p.clashes, &out("  #{bad("✗")} #{Enum.join(&1.clauses, " × ")}: #{&1.why}"))
   end
 
   defp scenario(sc), do: sc |> Enum.filter(fn {_, v} -> v end) |> Enum.map(&elem(&1, 0)) |> then(&if(&1 == [], do: "no fact holds", else: Enum.join(&1, " and ")))

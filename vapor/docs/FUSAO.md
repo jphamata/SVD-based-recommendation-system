@@ -171,5 +171,26 @@ de entradas.
   `o_proj` e `down_proj` (suas entradas não são ativações nomeadas no programa).
 - *Streaming* do disco para o disco (0.7.0): ver a seção abaixo; o RegMean
   ainda precisa dos modelos em memória (mede ativações).
-- Alinhamento de permutações (Git Re-Basin) para fundir redes sem ancestral
-  comum: o diagnóstico detecta o caso; o alinhamento não foi implementado.
+- Alinhamento de permutações: só nos blocos SwiGLU (§8); cabeças de atenção e
+  a permutação do fluxo residual não são alinhadas.
+
+## 8. Alinhar antes de fundir (0.15)
+
+Uma rede é a mesma função sob qualquer permutação das suas unidades ocultas: num bloco SwiGLU
+`down(silu(gate·x) ⊙ up·x)`, reordenar as linhas de `gate` e `up` e as colunas de `down` pela
+mesma permutação não muda nada. Duas redes treinadas separadas caem em ordens diferentes, então
+a média dos pesos mistura unidades sem relação e destrói as duas — o caso que o `diagnose`
+chamava de "sem relação" e mandava não fundir.
+
+`Merge.merge(models, align: true)` (e `Vapor.Merge.Align`) faz o **casamento de pesos** de
+*Git Re-Basin* (Ainsworth, Hayase & Srinivasa, 2023): por bloco, a permutação do segundo modelo
+que maximiza o produto interno total com o primeiro — um problema de atribuição linear, resolvido
+**exatamente** pelo método húngaro (caminhos de aumento mais curtos, `O(n³)` na largura do bloco;
+conferido contra todas as permutações até n = 7). O recibo da fusão registra os *digests* das
+permutações aplicadas (`params.aligned`).
+
+Medido: uma rede fundida com a sua cópia embaralhada — sem alinhamento, os *logits* mudam em
+2,58; com alinhamento, a fusão **é** a rede (diferença 0,0). Duas redes inicializadas
+independentemente: o alinhamento aumenta a semelhança casada de todos os blocos. Escopo: os
+blocos SwiGLU do formato Llama (onde está a largura); largura acima de 2 048 é recusada — a
+atribuição cúbica pertence a um substrato nativo, não à BEAM.

@@ -28,6 +28,38 @@ bane finalistas, mede objetivos externos e pede ao modelo um rascunho ou propost
 `#14110D`, pergaminho, latão, verdete e cinábrio; títulos em serifa antiga das fontes do
 sistema (nenhuma fonte baixada). Capturas: `docs/img/bancada-*.png`.
 
+## 0.15 — o Opus
+
+Um grupo novo, **Opus**, com cinco mesas — cada uma decide alguma coisa e mostra a decisão na
+forma em que ela se confere:
+
+- **Rebis** — dois vasos lado a lado (A e B) e um **selo** entre eles que se fecha (mesma
+  função), se parte (diferente) ou fica em aberto (desconhecido). O contraexemplo aparece
+  agrupado em palavras (`a = 0xDEADBEEF`), as saídas que diferem nomeadas; os modos ANF,
+  identidade de palavra (`m[16] = a[8] * b[8]`), estabilizador (uma faixa de qubits, os
+  aleatórios hachurados) e AIGER.
+- **Aludel** — o polinômio, a caixa intervalo por intervalo e o sentido (`≥ 0` ou `> 0`); o
+  resultado desenha as **células da subdivisão** sobre a caixa (as folhas certificadas, o
+  ponto refutado marcado, a célula onde o orçamento acabou destacada). No modo barreira, o **retrato de fase** (setas do
+  campo), os conjuntos inicial e inseguro e a curva `B = 0` (por *marching squares*), com as três
+  condições na pedra de toque; "achar uma" pede a síntese ao LP.
+- **Tábua** — as cláusulas como uma tábua (as sobrepostas riscadas, as em vigor marcadas), os
+  fatos como botões que recalculam as posições, e cada achado com **"fixar estes fatos"**, que
+  põe a tábua no cenário que dispara a colisão.
+- **Copela** — o exercício: escolha o bit a inverter num produto correto; uma faixa com os 32
+  bits de um float32 (sinal, expoente, mantissa) mostra o que a copela pega e o que fica abaixo
+  do envelope.
+- **Amálgama** — números numa reta: a soma exata (marcada uma vez) e as somas ingênuas em várias
+  ordens, espalhadas em volta dela.
+
+Cada mesa tem uma **estante** de exemplos (títulos em inglês e português). O estado da mesa —
+o modo, os valores digitados, os fatos ligados — vive fora do DOM: trocar de idioma redesenha a
+mesa no mesmo modo, devolve cada valor ao seu campo e recalcula o resultado que estava à vista.
+Chamadas: `GET /v1/vapor/opus` (as estantes), `POST /v1/vapor/{rebis,aludel,tabula,cupel,amalgam}`.
+Um teste de navegador sem cabeça (`test/js/console_opus.mjs`, `@tag :playwright`) percorre todos
+os exemplos, liga um fato, fixa um cenário, troca para português e para o tema escuro, e falha em
+qualquer erro de página ou resposta HTTP ≥ 400.
+
 ## A ideia
 
 O que falta nas interfaces de modelos locais não é outro chat: é a
@@ -440,6 +472,12 @@ aparece como falha, não como um painel meio traduzido.
 | `POST /v1/vapor/audit/demo` | montar e conferir o dossiê de demonstração; devolve o `.vdossier` e a página HTML |
 | `POST /v1/vapor/draw` `{digit, seed, steps, guidance}` | dígito gerado, trajetória, leitura de volta, distância ao treino |
 | `POST /v1/vapor/listen` `{name, data}` | dígito falado: rótulo, probabilidades, espectro mel |
+| `GET /v1/vapor/opus` | as estantes de exemplos das cinco mesas do Opus (0.15) |
+| `POST /v1/vapor/rebis` `{op: equivalent \| anf \| identity \| stabilizer \| aiger, a, b?, spec?, n?, seed?}` | a mesma função, com a prova DRUP ou o contraexemplo encolhido; a ANF; a identidade de palavra; as medidas; o AIGER |
+| `POST /v1/vapor/aludel` `{op: decide \| enclose \| barrier, vars, poly \| field, box \| domain/init/unsafe, sense?, barrier?, synthesize?}` | certificado (testemunha reproduzida, folhas), refutado (ponto exato) ou esgotado; o intervalo; as três condições da barreira |
+| `POST /v1/vapor/tabula` `{text, facts?}` | antinomias com cenário, pares provados (DRUP), resolvidos, silêncios; as posições sob os fatos |
+| `POST /v1/vapor/cupel` `{n, k, seed, trials, bit}` | o perfil de detecção por bit, o exemplo de um bit invertido, o int8 exato |
+| `POST /v1/vapor/amalgam` `{numbers, format}` | a soma exata arredondada uma vez, e as ingênuas em várias ordens |
 | `POST /v1/vapor/merge` `{pair}` | laboratório de fusão: diagnóstico, candidatos medidos, escolha |
 | `GET /v1/vapor/studio/nodes` | o catálogo de nós do estúdio (portas tipadas, parâmetros com faixa e padrão) e os modelos de partida |
 | `POST /v1/vapor/studio/run` `{graph}` | executar um grafo: por nó, calculado ou em cache, tempo, digest e prévia de cada saída; a raiz de Merkle |
