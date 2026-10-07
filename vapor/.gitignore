@@ -23,3 +23,7 @@ _build118/
 integrations/*/_build/
 integrations/*/deps/
 /tmp/
+
+# profiler output (fprof, eprof)
+*.trace
+fprof.*
