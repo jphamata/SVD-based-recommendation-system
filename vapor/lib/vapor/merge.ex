@@ -60,7 +60,10 @@ defmodule Vapor.Merge do
   `normalize` (linear, true), `grams` (`:regmean`: one `calibrate/3`
   result per model), `alpha` (`:regmean`, 0.9), `ridge` (`:regmean`,
   1.0e-4 of the mean Gram diagonal, toward the weighted mean), `key` (an Ed25519 key to
-  sign the receipt), `allow_config_mismatch`, `concurrency` (schedulers).
+  sign the receipt), `allow_config_mismatch`, `concurrency` (schedulers),
+  `align` (`true`: permute every model's SwiGLU hidden units to match the
+  first before fusing — `Vapor.Merge.Align`; the receipt keeps the inputs'
+  own roots and adds each permutation's digest).
 
   Returns `{:ok, %{spec, weights, receipt}}`.
   """
@@ -85,14 +88,29 @@ defmodule Vapor.Merge do
       conc = Keyword.get(opts, :concurrency, System.schedulers_online())
 
       try do
-        merged = fuse_all(method, names, models, base, params, opts, conc)
+        {fused_in, params} = if Keyword.get(opts, :align, false), do: aligned(models, params), else: {models, params}
+        merged = fuse_all(method, names, fused_in, base, params, opts, conc)
         merged = Map.merge(Map.reject(first, fn {k, _} -> is_binary(k) end), merged)
         {:ok, %{spec: spec, weights: merged, receipt: receipt(method, params, models, base, merged, opts)}}
       catch
         {:nonfinite, name} -> reject({:weight, name}, "finite weights (#{name} holds a NaN or an infinity)")
         {:singular, name} -> reject({:grams, name}, "positive definite Grams (#{name}: raise alpha's diagonal share or calibrate on more tokens)")
+        {:align, why} -> reject(:align, why)
       end
     end
+  end
+
+  # every model after the first permuted onto the first; the digests go to the receipt
+  defp aligned([{s0, w0} | rest], params) do
+    {models, digests} =
+      Enum.map_reduce(rest, [], fn {s, w}, ds ->
+        case Vapor.Merge.Align.align(%{spec: s0, weights: w0}, %{spec: s, weights: w}) do
+          {:ok, %{weights: aw}, rep} -> {{s, aw}, ds ++ [rep.digest]}
+          {:error, why} -> throw({:align, why})
+        end
+      end)
+
+    {[{s0, w0} | models], Map.put(params, :aligned, digests)}
   end
 
   defp pair(%{spec: s, weights: w}), do: {s, w}
@@ -702,7 +720,7 @@ defmodule Vapor.Merge do
         {:unrelated,
          ["the weights are nearly orthogonal (cosine #{Float.round(cosw, 3)}): these networks do not share an ancestor, " <>
             "so their units are not aligned (a network is the same function under any permutation of its hidden units)",
-          "a weight average of misaligned networks destroys both; do not fuse them in weight space (align permutations first — not implemented here)"]}
+          "a weight average of misaligned networks destroys both; align their hidden units first (merge with align: true, Vapor.Merge.Align — SwiGLU blocks), then measure (select/4)"]}
 
       not based? ->
         rel = ps |> Enum.map(& &1.relative_distance) |> Enum.max()
