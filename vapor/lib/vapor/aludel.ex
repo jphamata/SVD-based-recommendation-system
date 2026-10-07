@@ -496,6 +496,61 @@ defmodule Vapor.Aludel do
     if ok?(coeffs, sense), do: replay(bits, rest, p, box, dims, sense), else: {:error, "a leaf of the witness is not certified"}
   end
 
+  @doc """
+  The leaf cells of a witness, as boxes of rationals in the original
+  coordinates (what a picture of the subdivision draws). Does not check.
+  """
+  def cells(witness, box) do
+    with {:ok, bits} <- decode_bits(witness) do
+      unit = List.duplicate({{0, 1}, {1, 1}}, length(box))
+      {:ok, leaves(bits, [unit], []) |> Enum.map(&to_box(&1, box))}
+    else
+      :error -> {:error, "an unreadable witness"}
+    end
+  end
+
+  defp leaves(_bits, [], acc), do: Enum.reverse(acc)
+  defp leaves([], _cells, acc), do: Enum.reverse(acc)
+
+  defp leaves([1 | bits], [cell | rest], acc) do
+    {l, r} = halve(cell, widest(cell))
+    leaves(bits, [l, r | rest], acc)
+  end
+
+  defp leaves([0 | bits], [cell | rest], acc), do: leaves(bits, rest, [cell | acc])
+
+  @doc "The polynomial as text over the named variables (exact coefficients)."
+  def to_text(%P{terms: t}, vars) when map_size(t) == 0 and is_list(vars), do: "0"
+
+  def to_text(%P{terms: t}, vars) do
+    t
+    |> Enum.sort_by(fn {e, _} -> {-Enum.sum(Tuple.to_list(e)), Tuple.to_list(e) |> Enum.map(&(-&1))} end)
+    |> Enum.with_index()
+    |> Enum.map_join("", fn {{e, c}, i} ->
+      mono = e |> Tuple.to_list() |> Enum.zip(vars) |> Enum.flat_map(fn {k, v} -> case k do 0 -> []; 1 -> [v]; _ -> ["#{v}^#{k}"] end end)
+      neg = LP.qsign(c) < 0
+      a = if neg, do: LP.qneg(c), else: c
+      body = cond do
+        mono == [] -> LP.show(a)
+        a == {1, 1} -> Enum.join(mono, "*")
+        true -> LP.show(a) <> "*" <> Enum.join(mono, "*")
+      end
+      cond do
+        i == 0 and neg -> "-" <> body
+        i == 0 -> body
+        neg -> " - " <> body
+        true -> " + " <> body
+      end
+    end)
+  end
+
+  @doc "The value at a point of floats (for pictures; decisions are exact)."
+  def eval_float(%P{terms: t}, xs) do
+    Enum.reduce(t, 0.0, fn {e, {n, d}}, acc ->
+      acc + n / d * (e |> Tuple.to_list() |> Enum.zip(xs) |> Enum.reduce(1.0, fn {k, x}, m -> m * :math.pow(x, k) end))
+    end)
+  end
+
   # ===================================================== ranges
 
   @doc """

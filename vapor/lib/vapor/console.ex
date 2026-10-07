@@ -510,6 +510,30 @@ defmodule Vapor.Console do
     end
   end
 
+  # ---- the 0.15 Opus desks (Vapor.Console.Lab15): Rebis, Aludel, Tabula, Cupel, Amalgam
+  def handle(sock, %{method: :GET, path: "/v1/vapor/opus"}, _ctx), do: json(sock, 200, Vapor.Main.jsonable(Vapor.Console.Lab15.info()))
+
+  def handle(sock, %{method: :POST, path: "/v1/vapor/" <> route, body: body}, _ctx) when route in ~w(rebis aludel tabula cupel amalgam) do
+    alias Vapor.Console.Lab15, as: L
+
+    case JSON.decode(body) do
+      {:ok, req} when is_map(req) ->
+        result =
+          case route do
+            "rebis" -> L.rebis(req)
+            "aludel" -> L.aludel(req)
+            "tabula" -> L.tabula(req)
+            "cupel" -> L.cupel(req)
+            "amalgam" -> L.amalgam(req)
+          end
+
+        respond14(sock, result)
+
+      _ ->
+        bad(sock, "body: a JSON object")
+    end
+  end
+
   def handle(_sock, _req, _ctx), do: :pass
 
   defp respond14(sock, {:ok, r}), do: json(sock, 200, Vapor.Main.jsonable(r))

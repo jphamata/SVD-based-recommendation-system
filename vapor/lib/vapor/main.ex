@@ -18,7 +18,7 @@ defmodule Vapor.Main do
   """
   alias Vapor.Alembic
 
-  @verbs ~w(alembic athanor search game crucible assay mind scene solve verify help version)
+  @verbs ~w(alembic athanor search game crucible assay mind scene solve verify rebis aludel tabula cupel amalgam help version)
 
   @doc "Entry point: run and halt with the exit status."
   def main(argv) do
@@ -49,6 +49,11 @@ defmodule Vapor.Main do
   def run(["mind" | rest]), do: Vapor.Main.MindCli.run(rest)
   def run(["scene" | rest]), do: Vapor.Main.SceneCli.run(rest)
   def run(["solve" | rest]), do: solve(rest)
+  def run(["rebis" | rest]), do: Vapor.Main.OpusCli.rebis(rest)
+  def run(["aludel" | rest]), do: Vapor.Main.OpusCli.aludel(rest)
+  def run(["tabula" | rest]), do: Vapor.Main.OpusCli.tabula(rest)
+  def run(["cupel" | rest]), do: Vapor.Main.OpusCli.cupel(rest)
+  def run(["amalgam" | rest]), do: Vapor.Main.OpusCli.amalgam(rest)
   def run([verb | _]) do
     err("vapor: unknown command #{verb}. Commands: #{Enum.join(@verbs, ", ")} (and serve, tui, ocr, merge, quality, rag, lock, train… through bin/vapor)")
     2
@@ -70,6 +75,10 @@ defmodule Vapor.Main do
       vapor mind ask|formalize|propose …          a language model, always checked (VAPOR_MIND=anthropic:MODEL …)
       vapor scene new|edit|direct|export …        scenes as documents edited by operations
       vapor solve FILE                            the workbench: equations with units, ODEs, PDEs, fits
+      vapor rebis equiv|anf|identity|stabilizer … circuits over GF(2): proved equal or told apart
+      vapor aludel decide POLY --box … | REQ.json polynomial claims and barrier certificates, decided exactly
+      vapor tabula FILE [--facts a,b]             a contract: antinomies, proofs of consistency, positions
+      vapor cupel | vapor amalgam [FILE]          silent-corruption drill · sums that do not depend on order
       vapor serve | tui | ocr | merge | quality … the console and the older tasks (via bin/vapor)
 
     FILE may be - (standard input). Output is JSON when piped or with --json.

@@ -41,6 +41,68 @@ defmodule Vapor.Rebis.Ideal do
   def sub(p, q), do: p ++ Enum.map(q, fn {c, ns} -> {-c, ns} end)
 
   @doc """
+  A specification as text: `LHS = RHS`, each side a sum (`+`, `-`) of
+  products (`*`) of words `name[n]` (`Σ 2ⁱ·nameᵢ`, `i < n`), single ports
+  (`cout`), integers and powers of two (`2^8`). For example
+  `m[16] = a[8] * b[8]` or `s[8] + 2^8*cout = a[8] + b[8]`. Returns
+  `{:ok, terms}` (LHS − RHS) or `{:error, why}`.
+  """
+  def spec(text) when is_binary(text) do
+    case String.split(text, "=") do
+      [l, r] ->
+        with {:ok, a} <- side(l), {:ok, b} <- side(r), do: {:ok, sub(a, b)}
+
+      _ ->
+        {:error, "a specification is one equation: LHS = RHS"}
+    end
+  end
+
+  defp side(text) do
+    text
+    |> String.replace(~r/\s+/, "")
+    |> then(&Regex.scan(~r/([+-]?)([^+-]+)/, &1))
+    |> Enum.reduce_while({:ok, []}, fn [_, sign, term], {:ok, acc} ->
+      factors = String.split(term, "*")
+
+      Enum.reduce_while(factors, {:ok, [{1, []}]}, fn f, {:ok, prod} ->
+        case factor(f) do
+          {:ok, poly} -> {:cont, {:ok, mul(prod, poly)}}
+          e -> {:halt, e}
+        end
+      end)
+      |> case do
+        {:ok, poly} -> {:cont, {:ok, acc ++ if(sign == "-", do: Enum.map(poly, fn {c, ns} -> {-c, ns} end), else: poly)}}
+        e -> {:halt, e}
+      end
+    end)
+    |> case do
+      {:ok, []} -> {:error, "an empty side"}
+      other -> other
+    end
+  end
+
+  defp factor(f) do
+    cond do
+      m = Regex.run(~r/^([A-Za-z_][A-Za-z0-9_]*)\[(\d{1,4})\]$/, f) ->
+        [_, name, n] = m
+        n = String.to_integer(n)
+        if n in 1..4096, do: {:ok, word(name, n)}, else: {:error, "#{f}: a word of 1 to 4096 bits"}
+
+      m = Regex.run(~r/^2\^(\d{1,4})$/, f) ->
+        {:ok, [{1 <<< String.to_integer(Enum.at(m, 1)), []}]}
+
+      Regex.match?(~r/^\d{1,30}$/, f) ->
+        {:ok, [{String.to_integer(f), []}]}
+
+      Regex.match?(~r/^[A-Za-z_][A-Za-z0-9_]*$/, f) ->
+        {:ok, [{1, [f]}]}
+
+      true ->
+        {:error, "cannot read #{inspect(String.slice(f, 0, 24))} (words name[n], ports, integers, 2^k)"}
+    end
+  end
+
+  @doc """
   Prove that the polynomial `spec` (terms over input and output names)
   vanishes on every input of `circuit`. `{:proved, stats}`,
   `{:refuted, %{counterexample, value}}` (the value of `spec` there, ≠ 0,

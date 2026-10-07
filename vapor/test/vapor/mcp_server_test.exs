@@ -30,7 +30,7 @@ defmodule Vapor.MCPServerTest do
     assert r["result"]["serverInfo"]["name"] == "vapor" and r["result"]["capabilities"]["tools"]
     assert {nil, st} = Server.handle(%{"jsonrpc" => "2.0", "method" => "notifications/initialized"}, st)
     {r, st} = Server.handle(%{"jsonrpc" => "2.0", "id" => 2, "method" => "tools/list"}, st)
-    assert length(r["result"]["tools"]) == 20 and Enum.all?(r["result"]["tools"], &match?(%{"inputSchema" => %{"type" => "object"}}, &1))
+    assert length(r["result"]["tools"]) == 25 and Enum.all?(r["result"]["tools"], &match?(%{"inputSchema" => %{"type" => "object"}}, &1))
     {r, st} = Server.handle(%{"jsonrpc" => "2.0", "id" => 3, "method" => "nope"}, st)
     assert r["error"]["code"] == -32601
     {r, st} = Server.handle(%{"jsonrpc" => "2.0", "id" => 4, "method" => "tools/call", "params" => %{"name" => "studio_run", "arguments" => %{"graph" => 7}}}, st)
@@ -46,7 +46,7 @@ defmodule Vapor.MCPServerTest do
     {out, 0} = System.cmd(python(), [Path.expand("../python/mcp_client.py", __DIR__), File.cwd!(), dir], env: [{"MIX_ENV", to_string(Mix.env())}])
     d = Vapor.JSON.decode!(out |> String.split("\n", trim: true) |> List.last())
 
-    assert d["tools"] == ~w(alembic_eval arbitrage_check assay_run athanor_run athanor_verify board_query comfy_import context_search crucible_run engineering_run finance_run game_query logic_check render_scene scene_ops studio_catalogue studio_run studio_validate studio_verify workbench_solve)
+    assert d["tools"] == ~w(alembic_eval aludel_decide amalgam_sum arbitrage_check assay_run athanor_run athanor_verify board_query comfy_import context_search crucible_run cupel_drill engineering_run finance_run game_query logic_check rebis_check render_scene scene_ops studio_catalogue studio_run studio_validate studio_verify tabula_analyze workbench_solve)
     assert d["catalogue"]["structured"]["nodes"] |> Enum.map(& &1["type"]) |> Enum.all?(&String.starts_with?(&1, "diffusion."))
     assert d["invalid"]["isError"] and hd(d["invalid"]["content"])["text"] =~ "audio"
     refute d["valid"]["isError"]
@@ -111,5 +111,25 @@ defmodule Vapor.MCPServerTest do
     # the control: a portfolio that merely pays is not free
     refute call.("arbitrage_check", %{"text" => q, "proposal" => %{"portfolio" => %{"stock" => 1, "call" => -1}}})["structuredContent"]["accepted"]
     assert call.("arbitrage_check", %{"text" => q, "proposal" => %{"portfolio" => %{"gold" => 1}}})["isError"]
+  end
+
+  test "the Opus desks as tools: a trojan found, a polynomial claim certified, a contract's antinomy, a drill, an order-free sum" do
+    st = Server.new([])
+    call = fn name, args ->
+      {r, _} = Server.handle(%{"jsonrpc" => "2.0", "id" => 9, "method" => "tools/call", "params" => %{"name" => name, "arguments" => args}}, st)
+      r["result"]
+    end
+
+    r = call.("rebis_check", %{"op" => "equivalent", "a" => Vapor.Rebis.Gen.ripple(12), "b" => Vapor.Rebis.Gen.ripple(12, trojan: 0x5A5)})
+    assert r["isError"] == false and r["structuredContent"]["verdict"] == "different"
+    r = call.("aludel_decide", %{"op" => "decide", "vars" => "x", "poly" => "x^2 - x + 1/4", "box" => [["0", "1"]]})
+    assert r["structuredContent"]["verdict"] == "certified" and r["structuredContent"]["replayed"] == true
+    r = call.("tabula_analyze", %{"text" => "facts a\nX: if a then p must go\nY: if a then p must not go\n"})
+    assert r["structuredContent"]["verdict"] == "antinomies"
+    r = call.("cupel_drill", %{"n" => 8, "k" => 16, "trials" => 2})
+    assert r["structuredContent"]["int8"]["bits_detected"] == 32
+    r = call.("amalgam_sum", %{"numbers" => "1e16 1 -1e16 1"})
+    assert r["structuredContent"]["amalgam"]["value"] == "2.0"
+    assert call.("aludel_decide", %{"op" => "decide", "vars" => "x", "poly" => "x^"})["isError"] == true
   end
 end
