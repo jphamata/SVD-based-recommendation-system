@@ -576,6 +576,4 @@ defmodule Vapor.Algebra.Term do
     end
   end
 
-  @doc "Whether a term has no free variables."
-  def ground?(t), do: t |> postorder() |> Enum.all?(&(not match?({:input, _, _, _}, &1)))
 end

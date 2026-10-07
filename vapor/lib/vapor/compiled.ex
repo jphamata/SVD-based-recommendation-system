@@ -86,5 +86,4 @@ defmodule Vapor.Compiled do
   def runs_on?(%__MODULE__{} = c, %{kind: :native, isa: isa}), do: Map.has_key?(c.code, isa)
   def runs_on?(_c, %{kind: :oracle}), do: true
 
-  def term_count(%__MODULE__{program: p}), do: p |> Vapor.Program.order() |> length()
 end

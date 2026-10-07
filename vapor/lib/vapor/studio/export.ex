@@ -23,10 +23,4 @@ defmodule Vapor.Studio.Export do
   defp plainable(%Vapor.Tensor{} = t), do: Vapor.Tensor.to_floats(t) |> Enum.take(4096)
   defp plainable(v) when is_number(v), do: v
   defp plainable(v), do: Vapor.Quality.Report.plain(v)
-
-  @doc "A data URI for previews (images, GIFs, WAVs; anything else as JSON)."
-  def data_uri(value, format \\ :auto) do
-    {mime, _, bytes} = encode(value, format)
-    "data:" <> mime <> ";base64," <> Base.encode64(bytes)
-  end
 end

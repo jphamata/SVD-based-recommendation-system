@@ -32,7 +32,6 @@ defmodule Vapor.Export.StableHLO do
   `qgemv` (export dequantized weights instead), the paged forms (export
   the contiguous program), and the exact `gelu` (StableHLO has no `erf`).
   """
-  import Bitwise
   alias Vapor.{Program, Rejection, Tensor}
   alias Vapor.Algebra.Term
 
@@ -488,6 +487,4 @@ defmodule Vapor.Export.StableHLO do
   defp elem_ty(:u8), do: "ui8"
   defp elem_ty(:i1), do: "i1"
 
-  @doc false
-  def mask32(x), do: x &&& 0xFFFF_FFFF
 end

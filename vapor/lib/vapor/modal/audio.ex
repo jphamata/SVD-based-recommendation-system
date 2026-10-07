@@ -170,6 +170,4 @@ defmodule Vapor.Modal.Audio do
     Program.new([rows: T.linear(amps, T.ref(:basis, T.const(b)))], lets: [basis: T.const(b)])
   end
 
-  @doc "The frequency (Hz) of bin `k` of an `n`-sample frame."
-  def bin_hz(k, n, rate), do: k * rate / n
 end

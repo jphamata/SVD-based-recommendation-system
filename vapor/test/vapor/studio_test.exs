@@ -110,4 +110,11 @@ defmodule Vapor.StudioTest do
     assert %{kind: "enum", values: values} = Enum.find(resize.params, &(&1.name == :method))
     assert "lanczos" in values
   end
+
+  test "to_json is the inverse of from_json: a workflow survives the round trip unchanged" do
+    text = ~s|{"nodes": {"a": {"type": "image.noise", "params": {"w": 32, "h": 16, "seed": 7}},
+                         "b": {"type": "image.resize", "params": {"w": 8, "h": 8, "method": "lanczos"}, "inputs": {"image": ["a", "image"]}}}}|
+    {:ok, g} = Vapor.Studio.from_json(text)
+    assert {:ok, ^g} = g |> Vapor.Studio.to_json() |> Vapor.JSON.encode() |> Vapor.Studio.from_json()
+  end
 end

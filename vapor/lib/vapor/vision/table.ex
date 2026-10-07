@@ -532,13 +532,6 @@ defmodule Vapor.Vision.Table do
     finish(%{table | cells: cells}, Keyword.get(opts, :keep_frames, false))
   end
 
-  @doc false
-  # calibration: the typed steps again over a table read with `keep_frames: true`
-  def retype(table, labels, opts) do
-    free = Enum.map(table.cells, fn c -> c |> Map.put(:text, Map.get(c, :free, c.text)) |> Map.put(:type, :text) |> Map.drop([:free, :shape]) end)
-    finish(%{table | cells: typed(free, table, labels, opts)}, true)
-  end
-
   defp finish(table, keep_frames) do
     strip = fn ls -> if keep_frames, do: ls, else: Enum.map(ls, &Map.delete(&1, :lps)) end
     cells = Enum.map(table.cells, &(&1 |> Map.delete(:comps) |> Map.update(:lines, [], strip)))

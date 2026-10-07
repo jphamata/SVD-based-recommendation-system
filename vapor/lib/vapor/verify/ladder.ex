@@ -481,9 +481,6 @@ defmodule Vapor.Verify.Ladder do
 
   defp max_extents(c), do: max_dims(c)
 
-  @doc false
-  def max_dims_of(c), do: max_dims(c)
-
   defp kernel_name({:ew, spec}), do: "ew/" <> Digest.hex64(Digest.fnv1a64(Vapor.Canonical.encode(spec)))
   defp kernel_name(k) when is_atom(k), do: Atom.to_string(k)
   defp kernel_name(t) when is_tuple(t), do: t |> Tuple.to_list() |> Enum.map_join("/", &name_part/1)

@@ -193,20 +193,6 @@ defmodule Vapor.Alembic do
     end
   end
 
-  @doc "Call a function value (a lambda or builtin) inside the program's context."
-  def apply_value(%__MODULE__{globals: g}, f, args, opts \\ []) do
-    case run(g, Keyword.get(opts, :fuel, @default_fuel), fn -> Compiler.apply_fn(f, args, "function", {0, 0}) end) do
-      {:ok, v, _} -> {:ok, v}
-      e -> e
-    end
-  end
-
-  @doc "Like `call/4`, also returning the fuel used."
-  def call_metered(%__MODULE__{globals: g}, name, args, opts \\ []) do
-    {:value, f} = Map.fetch!(g, name)
-    run(g, Keyword.get(opts, :fuel, @default_fuel), fn -> Compiler.apply_fn(f, args, name, {0, 0}) end)
-  end
-
   @doc """
   Evaluate an expression, against a program when given. Options: `fuel:`,
   `bindings:` a map of names to values visible to the expression.

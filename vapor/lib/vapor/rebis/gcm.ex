@@ -19,9 +19,6 @@ defmodule Vapor.Rebis.GCM do
 
   @sbox (for x <- 0..255, do: Field.sbox(x)) |> List.to_tuple()
 
-  @doc "The S-box as a tuple (computed at compile time from the field)."
-  def sbox_table, do: @sbox
-
   # ------------------------------------------------------------ the cipher
 
   @doc "Expand a 16-, 24- or 32-byte key into round keys (list of 16-byte binaries)."

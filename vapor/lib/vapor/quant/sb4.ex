@@ -156,18 +156,4 @@ defmodule Vapor.Quant.Sb4 do
 
     {q, ab}
   end
-
-  @doc "Dequantized weights w̃ of one execution row (binary32 bit patterns)."
-  def dequant_row(row_bin) do
-    for <<blk::binary-@exec_bytes <- row_bin>>, reduce: [] do
-      acc ->
-        {q, ab} = exec_block(blk)
-
-        ws =
-          for {{a, _b}, s} <- Enum.with_index(ab), i <- 0..31,
-              do: F32.mul(a, F32.from_float(elem(q, 32 * s + i)))
-
-        acc ++ ws
-    end
-  end
 end

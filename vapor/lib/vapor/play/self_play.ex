@@ -99,9 +99,6 @@ defmodule Vapor.Play.SelfPlay do
     |> case do {:pick, m} -> m; _ -> pi |> Map.keys() |> hd() end
   end
 
-  @doc false
-  def sgd_public(game, n, buf, lr, seed), do: sgd(game, n, buf, lr, seed)
-
   defp sgd(game, n, buf, lr, seed) do
     data = Vapor.Modal.Rng.permute(buf, seed)
     hidden = length(n.b1)

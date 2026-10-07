@@ -344,9 +344,6 @@ defmodule Vapor.Vision.OCR do
   end
 
   @doc false
-  def line_logprobs_rows(rows, model, worker), do: run(model, rows, worker) |> Enum.map(&log_softmax/1)
-
-  @doc false
   def greedy_labels(lps), do: lps |> Enum.map(fn lp -> lp |> Tuple.to_list() |> Enum.with_index() |> Enum.max_by(&elem(&1, 0)) |> elem(1) end) |> Enum.chunk_by(& &1) |> Enum.map(&hd/1) |> Enum.reject(&(&1 == 0))
 
   defp log_softmax(row) do

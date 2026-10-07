@@ -189,14 +189,6 @@ defmodule Vapor.Vision.Figure do
     end
   end
 
-  @doc false
-  # the tick labels as read (inspection, tests)
-  def read_ticks(%Image{} = img, opts \\ []) do
-    with {:ok, ax} <- axes(img), {:ok, model} <- OCR.default() do
-      tick_labels(img, ax, model, Keyword.get_lazy(opts, :worker, &OCR.worker/0)) |> Map.put(:axes, ax)
-    end
-  end
-
   @numeric MapSet.new(String.graphemes("0123456789.-"))
 
   # tick labels: the text marks just below the bottom spine (x) and just

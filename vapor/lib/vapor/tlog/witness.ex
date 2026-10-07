@@ -48,6 +48,4 @@ defmodule Vapor.Tlog.Witness do
     end
   end
 
-  @doc "The size of the last checkpoint cosigned for `origin` (0 if none)."
-  def seen_size(%__MODULE__{seen: seen}, origin), do: (seen[origin] && seen[origin].size) || 0
 end

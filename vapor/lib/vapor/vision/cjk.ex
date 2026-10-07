@@ -32,7 +32,6 @@ defmodule Vapor.Vision.CJK do
   What is measured — on fonts never used for the templates, with the
   control of random characters — is in `docs/OCR.md §3g`.
   """
-  import Bitwise
   alias Vapor.{Program, Tensor}
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Vision.{CharLM, Segment}
@@ -491,6 +490,4 @@ defmodule Vapor.Vision.CJK do
     end
   end
 
-  @doc false
-  def mask_bits(x), do: x &&& 0xFF
 end
