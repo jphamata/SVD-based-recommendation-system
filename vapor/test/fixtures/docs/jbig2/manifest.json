@@ -170,6 +170,110 @@
   "sha256": "b6af160a37c369e329e572660cd1ebbad81e9c2358eafe67bbb54b5225010c6e",
   "w": 170
  },
+ "huff_alt_rc0": {
+  "files": [
+   "huff_alt_rc0.jb2"
+  ],
+  "h": 100,
+  "sha256": "2c3e3b5414ff424ff2e03bc30d071fa3cc952e11e469855bc30f09710067294c",
+  "w": 150
+ },
+ "huff_alt_rc0_tr": {
+  "files": [
+   "huff_alt_rc0_tr.jb2"
+  ],
+  "h": 100,
+  "sha256": "6d1626af20ab6a028f9a2863d34f788670410c9a594de060b31aea06449d1d64",
+  "w": 150
+ },
+ "huff_alt_rc1": {
+  "files": [
+   "huff_alt_rc1.jb2"
+  ],
+  "h": 100,
+  "sha256": "010709fce03cff2e7aa08b50c606c27465b994791e4f8b8f6fb1db46b07cdc92",
+  "w": 150
+ },
+ "huff_alt_rc1_tr": {
+  "files": [
+   "huff_alt_rc1_tr.jb2"
+  ],
+  "h": 100,
+  "sha256": "a2ca911ff091929e4d4cce4fd457aa9be2226e59c63fcaf6968710424ad870da",
+  "w": 150
+ },
+ "huff_alt_rc2": {
+  "files": [
+   "huff_alt_rc2.jb2"
+  ],
+  "h": 100,
+  "sha256": "999f4a7316177d3c49901ea3d26d6a1078cdc9ad13701bfe8b6a96cbe3a2cd83",
+  "w": 150
+ },
+ "huff_alt_rc2_tr": {
+  "files": [
+   "huff_alt_rc2_tr.jb2"
+  ],
+  "h": 100,
+  "sha256": "08a987de782c96c229a41334932bbb195ccf080f2eac4c83b90a4851990b9fff",
+  "w": 150
+ },
+ "huff_alt_rc3": {
+  "files": [
+   "huff_alt_rc3.jb2"
+  ],
+  "h": 100,
+  "sha256": "20b16bbb09c8a1b8903c86d3d1346221525ac40003fb69a13f64dd522518e57d",
+  "w": 150
+ },
+ "huff_alt_rc3_tr": {
+  "files": [
+   "huff_alt_rc3_tr.jb2"
+  ],
+  "h": 100,
+  "sha256": "2105896afa02d7d6fffd6f39cd28a5ca76d6c2bc9f87cc9a6ec220a07b15bee7",
+  "w": 150
+ },
+ "huff_custom": {
+  "files": [
+   "huff_custom.jb2"
+  ],
+  "h": 80,
+  "sha256": "6309e606a359baa2413c54e0177ec1208f454e45d20e1ec8fb53e7da017c771f",
+  "w": 170
+ },
+ "huff_far": {
+  "files": [
+   "huff_far.jb2"
+  ],
+  "h": 80,
+  "sha256": "51d989ba33653da57a627328c59993cd6e1edd63f2c4c88b6aed4924f901543c",
+  "w": 3200
+ },
+ "huff_ids": {
+  "files": [
+   "huff_ids.jb2"
+  ],
+  "h": 115,
+  "sha256": "02c5e139b69c37550d9975168d4e13284e058804b7826358eef80420d27e9c61",
+  "w": 210
+ },
+ "huff_mmr": {
+  "files": [
+   "huff_mmr.jb2"
+  ],
+  "h": 110,
+  "sha256": "1e3290b40f90b3da76d6465ca8bfe7cb24e5dbce680a318f44aa197ffb18127f",
+  "w": 220
+ },
+ "huff_std": {
+  "files": [
+   "huff_std.jb2"
+  ],
+  "h": 70,
+  "sha256": "41e02f1f3cb15c5ee5e6c472d6ff264bcfef1ff38d814144be5346bc97638187",
+  "w": 160
+ },
  "mmr_xor": {
   "files": [
    "mmr_xor.jb2"

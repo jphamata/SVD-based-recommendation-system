@@ -12,7 +12,12 @@ Two kinds of streams, both judged by the reference decoder, jbig2dec:
    and 1, TPGRON); text regions in all eight reference-corner/transposed
    combinations, with strips, DSOFFSET, XOR composition, a black default
    pixel and refined instances; symbol dictionaries with refinement and
-   aggregation; a striped page of unknown height. The MQ coder is
+   aggregation; a striped page of unknown height; and **Huffman coding**
+   (Annex B, written here from the standard): symbol dictionaries with
+   SDHUFF (B.2–B.5 and custom tables, uncompressed and MMR collective
+   bitmaps), text regions with SBHUFF (B.6–B.13 and custom tables, the
+   run-coded symbol ID table with codes 32–34, values on the lower and
+   upper range lines), custom code table segments. The MQ coder is
    jbig2enc's, transcribed (`jbig2arith.cc`), and checked on the T.88 H.2
    test sequence.
 
@@ -320,8 +325,11 @@ def text_stream(m, cx, syms, insts, p, codelen):
             s = y + (h - 1 if rc in (0, 2) else 0)
         placed.append((t // strips * strips, s, t, sid, ib, ref, x, y))
     placed.sort(key=lambda q: (q[0], q[1]))
-    m.int(cx["dt"], 0)  # initial STRIPT = 0
-    stript, firsts = 0, 0
+    # initial STRIPT = −DT₀·SBSTRIPS: 0 for the arithmetic streams; the Huffman
+    # DT tables (B.11–B.13) start at 1, so those streams pass dt0 = 1
+    dt0 = p.get("dt0", 0)
+    m.int(cx["dt"], dt0)
+    stript, firsts = -dt0 * strips, 0
     i = 0
     while i < len(placed):
         st = placed[i][0]
@@ -437,6 +445,276 @@ def shape_of(e):
     if e[0] == "refine":
         return e[4].shape
     return (e[2], e[3])
+
+
+# ------------------------------------------------- Huffman coding (Annex B) --
+# An encoder written from T.88 Annex B, independent of vapor's decoder; its
+# streams are judged by jbig2dec like every other stream here.
+# Lines: (PREFLEN, RANGELEN, RANGELOW), then lower, upper, [OOB] as in B.5.
+
+STD = {
+    1: ([(1, 4, 0), (2, 8, 16), (3, 16, 272)], (0, -1), (3, 65808), None),
+    2: ([(1, 0, 0), (2, 0, 1), (3, 0, 2), (4, 3, 3), (5, 6, 11)], (0, -1), (6, 75), 6),
+    3: ([(8, 8, -256), (1, 0, 0), (2, 0, 1), (3, 0, 2), (4, 3, 3), (5, 6, 11)], (8, -257), (7, 75), 6),
+    4: ([(1, 0, 1), (2, 0, 2), (3, 0, 3), (4, 3, 4), (5, 6, 12)], (0, -1), (5, 76), None),
+    5: ([(7, 8, -255), (1, 0, 1), (2, 0, 2), (3, 0, 3), (4, 3, 4), (5, 6, 12)], (7, -256), (6, 76), None),
+    6: ([(5, 10, -2048), (4, 9, -1024), (4, 8, -512), (4, 7, -256), (5, 6, -128), (5, 5, -64), (4, 5, -32), (2, 7, 0),
+         (3, 7, 128), (3, 8, 256), (4, 9, 512), (4, 10, 1024)], (6, -2049), (6, 2048), None),
+    7: ([(4, 9, -1024), (3, 8, -512), (4, 7, -256), (5, 6, -128), (5, 5, -64), (4, 5, -32), (4, 5, 0), (5, 5, 32),
+         (5, 6, 64), (4, 7, 128), (3, 8, 256), (3, 9, 512), (3, 10, 1024)], (5, -1025), (5, 2048), None),
+    8: ([(8, 3, -15), (9, 1, -7), (8, 1, -5), (9, 0, -3), (7, 0, -2), (4, 0, -1), (2, 1, 0), (5, 0, 2), (6, 0, 3),
+         (3, 4, 4), (6, 1, 20), (4, 4, 22), (4, 5, 38), (5, 6, 70), (5, 7, 134), (6, 7, 262), (7, 8, 390), (6, 10, 646)],
+        (9, -16), (9, 1670), 2),
+    9: ([(8, 4, -31), (9, 2, -15), (8, 2, -11), (9, 1, -7), (7, 1, -5), (4, 1, -3), (3, 1, -1), (3, 1, 1), (5, 1, 3),
+         (6, 1, 5), (3, 5, 7), (6, 2, 39), (4, 5, 43), (4, 6, 75), (5, 7, 139), (5, 8, 267), (6, 8, 523), (7, 9, 779),
+         (6, 11, 1291)], (9, -32), (9, 3339), 2),
+    10: ([(7, 4, -21), (8, 0, -5), (7, 0, -4), (5, 0, -3), (2, 2, -2), (5, 0, 2), (6, 0, 3), (7, 0, 4), (8, 0, 5),
+          (2, 6, 6), (5, 5, 70), (6, 5, 102), (6, 6, 134), (6, 7, 198), (6, 8, 326), (6, 9, 582), (6, 10, 1094),
+          (7, 11, 2118)], (8, -22), (8, 4166), 2),
+    11: ([(1, 0, 1), (2, 1, 2), (4, 0, 4), (4, 1, 5), (5, 1, 7), (5, 2, 9), (6, 2, 13), (7, 2, 17), (7, 3, 21),
+          (7, 4, 29), (7, 5, 45), (7, 6, 77)], (0, 0), (7, 141), None),
+    12: ([(1, 0, 1), (2, 0, 2), (3, 1, 3), (5, 0, 5), (5, 1, 6), (6, 1, 8), (7, 0, 10), (7, 1, 11), (7, 2, 13),
+          (7, 3, 17), (7, 4, 25), (8, 5, 41)], (0, 0), (8, 73), None),
+    13: ([(1, 0, 1), (3, 0, 2), (4, 0, 3), (5, 0, 4), (4, 1, 5), (3, 3, 7), (6, 1, 15), (6, 2, 17), (6, 3, 21),
+          (6, 4, 29), (6, 5, 45), (7, 6, 77)], (0, 0), (7, 141), None),
+}
+
+
+class HTable:
+    """Prefix codes assigned by B.3 to lines [(kind, preflen, rangelen, rangelow)]."""
+
+    def __init__(self, lines):
+        self.lines = lines
+        maxlen = max([l[1] for l in lines] + [0])
+        count = {}
+        for l in lines:
+            count[l[1]] = count.get(l[1], 0) + 1
+        count[0] = 0
+        self.codes = {}
+        first = 0
+        for length in range(1, maxlen + 1):
+            first = (first + count.get(length - 1, 0)) << 1
+            code = first
+            for i, l in enumerate(lines):
+                if l[1] == length:
+                    self.codes[i] = (code, length)
+                    code += 1
+
+    @staticmethod
+    def standard(n):
+        normal, (lp, llow), (up, ulow), oob = STD[n]
+        lines = [("n", p, r, low) for p, r, low in normal] + [("lo", lp, 32, llow), ("hi", up, 32, ulow)]
+        if oob is not None:
+            lines.append(("oob", oob, 0, 0))
+        return HTable(lines)
+
+    def write(self, w, v):
+        """Write value v (or None for OOB) into the bit writer w."""
+        for i, (kind, p, r, low) in enumerate(self.lines):
+            if p == 0:
+                continue
+            if v is None and kind == "oob" or (v is not None and (
+                    (kind == "n" and low <= v < low + (1 << r)) or (kind == "lo" and v <= low) or (kind == "hi" and v >= low))):
+                code, length = self.codes[i]
+                w.bits(code, length)
+                if kind == "n":
+                    w.bits(v - low, r)
+                elif kind == "lo":
+                    w.bits(low - v, 32)
+                elif kind == "hi":
+                    w.bits(v - low, 32)
+                return
+        raise ValueError(f"value {v} has no line in the table")
+
+
+class BitWriter:
+    def __init__(self):
+        self.out, self.acc, self.n = bytearray(), 0, 0
+
+    def bits(self, v, n):
+        for k in range(n - 1, -1, -1):
+            self.acc = (self.acc << 1) | ((v >> k) & 1)
+            self.n += 1
+            if self.n == 8:
+                self.out.append(self.acc)
+                self.acc, self.n = 0, 0
+
+    def align(self):
+        if self.n:
+            self.bits(0, 8 - self.n)
+
+    def raw(self, data):
+        assert self.n == 0
+        self.out += data
+
+    def final(self):
+        self.align()
+        return bytes(self.out)
+
+
+def custom_table(lines, low, htoob, lower_p, upper_p, oob_p=0):
+    """A code table segment body (B.2) for normal lines [(preflen, rangelen)] from `low` up, and its HTable."""
+    high = low + sum(1 << r for _, r in lines)
+    htps = max([p for p, _ in lines] + [lower_p, upper_p, oob_p]).bit_length()
+    htrs = max([r for _, r in lines] + [1]).bit_length()
+    w = BitWriter()
+    tl, cur = [], low
+    for p, r in lines:
+        w.bits(p, htps)
+        w.bits(r, htrs)
+        tl.append(("n", p, r, cur))
+        cur += 1 << r
+    assert cur == high, (cur, high)
+    w.bits(lower_p, htps)
+    w.bits(upper_p, htps)
+    tl += [("lo", lower_p, 32, low - 1), ("hi", upper_p, 32, high)]
+    if htoob:
+        w.bits(oob_p, htps)
+        tl.append(("oob", oob_p, 0, 0))
+    flags = htoob | ((htps - 1) << 1) | ((htrs - 1) << 4)
+    body = bytes([flags]) + low.to_bytes(4, "big", signed=True) + high.to_bytes(4, "big", signed=True) + w.final()
+    return body, HTable(tl)
+
+
+def huff_dict_seg(num, refs, classes, dh=4, dw=2, mmr=False, custom=None):
+    """classes: [[bitmap, …] of one height, …] in order. dh ∈ {4, 5, 'c'}, dw ∈ {2, 3, 'c'}; custom: {'dh': HTable, 'dw': HTable}."""
+    custom = custom or {}
+    tdh = custom["dh"] if dh == "c" else HTable.standard(dh)
+    tdw = custom["dw"] if dw == "c" else HTable.standard(dw)
+    tbm = HTable.standard(1)
+    w = BitWriter()
+    hc, news = 0, []
+    for cls in classes:
+        h = cls[0].shape[0]
+        tdh.write(w, h - hc)
+        hc, symw = h, 0
+        for bm in cls:
+            tdw.write(w, bm.shape[1] - symw)
+            symw = bm.shape[1]
+            news.append(bm)
+        tdw.write(w, None)
+        coll = np.concatenate(cls, axis=1)
+        if mmr:
+            stream = g4(coll)
+            tbm.write(w, len(stream))
+            w.align()
+            w.raw(stream)
+        else:
+            tbm.write(w, 0)
+            w.align()
+            w.raw(np.packbits(coll, axis=1).tobytes())
+    # export: no input symbol (run 0), every new one
+    tbm.write(w, 0)
+    tbm.write(w, len(news))
+    sel_dh = {4: 0, 5: 1, "c": 3}[dh]
+    sel_dw = {2: 0, 3: 1, "c": 3}[dw]
+    flags = 1 | (sel_dh << 2) | (sel_dw << 4)
+    hdr = flags.to_bytes(2, "big") + len(news).to_bytes(4, "big") + len(news).to_bytes(4, "big")
+    return segment(num, 0, hdr + w.final(), refs), news
+
+
+def g4(bm):
+    h, w = bm.shape
+    tif = Image.fromarray(np.where(bm == 1, 255, 0).astype(np.uint8)).convert("1")
+    b = io.BytesIO()
+    tif.save(b, "TIFF", compression="group4", tiffinfo={278: h})
+    t = Image.open(io.BytesIO(b.getvalue()))
+    return b.getvalue()[t.tag_v2[273][0]:t.tag_v2[273][0] + t.tag_v2[279][0]]
+
+
+class HuffCoder:
+    """text_stream's coder interface over Huffman tables: int(name, v), oob(name), iaid(name, len, id)."""
+
+    def __init__(self, w, tables, idcodes, logstrips):
+        self.w, self.t, self.idcodes, self.logstrips = w, tables, idcodes, logstrips
+
+    def int(self, ctx, v):
+        if ctx == "it":
+            self.w.bits(v, self.logstrips)
+        else:
+            self.t[ctx].write(self.w, v)
+
+    def oob(self, ctx):
+        self.t[ctx].write(self.w, None)
+
+    def iaid(self, ctx, length, sid):
+        code, n = self.idcodes[sid]
+        self.w.bits(code, n)
+
+
+def huffman_lengths(freqs):
+    """Code lengths of a Huffman code for the positive frequencies; 0 for the others."""
+    import heapq
+    items = [(f, i, [i]) for i, f in enumerate(freqs) if f > 0]
+    lens = [0] * len(freqs)
+    if len(items) == 1:
+        lens[items[0][1]] = 1
+        return lens
+    heapq.heapify(items)
+    k = len(freqs)
+    while len(items) > 1:
+        f1, _, a = heapq.heappop(items)
+        f2, _, b = heapq.heappop(items)
+        for i in a + b:
+            lens[i] += 1
+        k += 1
+        heapq.heappush(items, (f1 + f2, k, a + b))
+    return lens
+
+
+def symbol_id_table(w, lens):
+    """Write the run-coded symbol ID table (7.4.3.1.7) for code lengths `lens`; returns {id: (code, length)}."""
+    run = HTable([("n", 6, 0, i) for i in range(35)])  # every run code 6 bits long
+    for _ in range(35):
+        w.bits(6, 4)
+    i = 0
+    while i < len(lens):
+        L = lens[i]
+        j = i
+        while j < len(lens) and lens[j] == L:
+            j += 1
+        n = j - i
+        if L == 0 and n >= 11:
+            k = min(n, 138)
+            run.write(w, 34)
+            w.bits(k - 11, 7)
+            i += k
+        elif L == 0 and n >= 3:
+            k = min(n, 10)
+            run.write(w, 33)
+            w.bits(k - 3, 3)
+            i += k
+        elif i > 0 and lens[i - 1] == L and n >= 3:
+            k = min(n, 6)
+            run.write(w, 32)
+            w.bits(k - 3, 2)
+            i += k
+        else:
+            run.write(w, L)
+            i += 1
+    w.align()
+    t = HTable([("n", L, 0, k) for k, L in enumerate(lens)])
+    return {k: t.codes[k] for k in range(len(lens)) if lens[k] > 0}
+
+
+def huff_text_seg(num, refs, syms, insts, p, fs=6, ds=8, dt=11, custom=None, freqs=None):
+    """A text region with SBHUFF = 1 (no refinement). fs ∈ {6, 7, 'c'}, ds ∈ {8, 9, 10, 'c'}, dt ∈ {11, 12, 13, 'c'}."""
+    custom = custom or {}
+    pick = lambda v, name: custom[name] if v == "c" else HTable.standard(v)
+    w = BitWriter()
+    freqs = freqs or [1] * len(syms)
+    lens = huffman_lengths(freqs)
+    idcodes = symbol_id_table(w, lens)
+    coder = HuffCoder(w, {"fs": pick(fs, "fs"), "ds": pick(ds, "ds"), "dt": pick(dt, "dt")}, idcodes,
+                      {1: 0, 2: 1, 4: 2, 8: 3}[p["strips"]])
+    cx = {k: k for k in ("dt", "fs", "ds", "it", "id")}
+    region = text_stream(coder, cx, syms, insts, dict(p, refine=False, dt0=1), 0)
+    flags = 1 | ({1: 0, 2: 1, 4: 2, 8: 3}[p["strips"]] << 2) | (p["refcorner"] << 4) | (int(p["transposed"]) << 6)
+    flags |= (p["combop"] << 7) | (p["defpixel"] << 9) | ((p["dsoffset"] & 31) << 10)
+    hflags = {6: 0, 7: 1, "c": 3}[fs] | ({8: 0, 9: 1, 10: 2, "c": 3}[ds] << 2) | ({11: 0, 12: 1, 13: 2, "c": 3}[dt] << 4)
+    data = region_info(p["w"], p["h"], p["x"], p["y"], p["op"]) + flags.to_bytes(2, "big") + hflags.to_bytes(2, "big")
+    data += len(insts).to_bytes(4, "big") + w.final()
+    return segment(num, 6, data, refs), region
 
 
 # ------------------------------------------------------------- material --
@@ -592,6 +870,75 @@ def main():
             segment(3, 50, (29).to_bytes(4, "big")), generic_seg(4, b, 0, 30, 0, 0, NOMINAL[0], True), segment(5, 50, (54).to_bytes(4, "big")),
             segment(6, 49, b"")]
     keep("striped", {"striped.jb2": jb2_file(segs)}, page)
+
+    # Huffman coding (Annex B): standard tables, custom tables, MMR collective bitmaps, values on the range lines
+    def huff_case(name, classes, page_w, page_h, insts, p, dict_kw=None, text_kw=None, pre=None, refs_extra=()):
+        segs = [segment(1, 48, page_info(page_w, page_h))] + (pre or [])
+        dseg, news = huff_dict_seg(2, list(refs_extra), classes, **(dict_kw or {}))
+        tseg, region = huff_text_seg(3, [2] + list(refs_extra), news, insts, p, **(text_kw or {}))
+        page = np.zeros((page_h, page_w), dtype=np.uint8)
+        compose(page, region, p["x"], p["y"], 0)
+        keep(name, {name + ".jb2": jb2_file(segs + [dseg, tseg, segment(4, 49, b"")])}, page)
+
+    rr = np.random.default_rng(1234)
+    def classes_of(heights, per, seed, wmin=3, wmax=14):
+        r = np.random.default_rng(seed)
+        # widths non-decreasing within a class: B.2 has no line for a negative width delta
+        return [sorted([glyph(int(r.integers(wmin, wmax)), h, seed * 100 + h * 10 + k) for k in range(per)], key=lambda g: g.shape[1])
+                for h in heights]
+
+    def scatter(n, nsyms, W, H, seed, margin=16):
+        r = np.random.default_rng(seed)
+        return [(int(r.integers(0, nsyms)), int(r.integers(0, W - margin)), int(r.integers(0, H - margin)), None) for _ in range(n)]
+
+    base_p = {"strips": 1, "refcorner": 1, "transposed": False, "dsoffset": 0, "combop": 0, "defpixel": 0, "x": 4, "y": 3, "op": 0}
+    cl = classes_of([6, 9, 13], 4, 1)
+    huff_case("huff_std", cl, 160, 70, scatter(30, 12, 150, 64, 2), dict(base_p, w=150, h=64))
+    # heights that fall (B.5), widths that shrink (B.3), strips, transposition, other corners, DSOFFSET, B.7/B.9/B.12
+    cl2 = [[glyph(12 - k, 15, 500 + k) for k in range(4)], [glyph(9 - k, 8, 600 + k) for k in range(3)], [glyph(5, 4, 700)]]
+    for rc in range(4):
+        for tr in (False, True):
+            p = dict(base_p, strips=4, refcorner=rc, transposed=tr, dsoffset=-3, combop=2, w=140, h=90)
+            huff_case(f"huff_alt_rc{rc}{'_tr' if tr else ''}", cl2, 150, 100, scatter(28, 8, 120, 80, 40 + rc + 4 * tr), p,
+                      dict_kw={"dh": 5, "dw": 3}, text_kw={"fs": 7, "ds": 9, "dt": 12})
+    # MMR collective bitmaps, B.10 and B.13, a black default pixel with XOR
+    huff_case("huff_mmr", classes_of([7, 11, 16, 20], 5, 3, 6, 20), 220, 110, scatter(40, 20, 200, 90, 5),
+              dict(base_p, strips=2, defpixel=1, combop=3, w=210, h=100), dict_kw={"mmr": True}, text_kw={"ds": 10, "dt": 13})
+    # large values: a wide page with sparse instances (S deltas on B.8's upper and lower range lines), a symbol 90 px wide
+    wide = [[glyph(3, 6, 802), glyph(90, 6, 801)], [glyph(4, 10, 803)]]  # 3 then +87: B.2's upper range line
+    far = [(0, 10, 2, None), (1, 2400, 4, None), (2, 3000, 30, None), (1, 15, 33, None), (0, 2900, 50, None), (2, 40, 52, None)]
+    huff_case("huff_far", wide, 3200, 80, far, dict(base_p, w=3150, h=72))
+    # custom code tables (type 53): widths, first-S and S deltas with their own lines and OOB
+    t_dw, H_dw = custom_table([(2, 2), (2, 3), (3, 4), (3, 6)], -2, 1, 4, 4, 3)
+    t_fs, H_fs = custom_table([(3, 6), (2, 8), (2, 9), (3, 10)], -64, 0, 4, 4)
+    t_ds, H_ds = custom_table([(3, 3), (2, 2), (2, 5), (3, 8)], -8, 1, 4, 4, 3)
+    pre = [segment(10, 53, t_dw, page=0), segment(11, 53, t_fs, page=0), segment(12, 53, t_ds, page=0)]
+    def custom_case():
+        segs = [segment(1, 48, page_info(170, 80))] + pre
+        dseg, news = huff_dict_seg(2, [10], classes_of([5, 8, 12], 4, 9), dw="c", custom={"dw": H_dw})
+        insts = scatter(30, 12, 150, 64, 11)
+        tseg, region = huff_text_seg(3, [2, 11, 12], news, insts, dict(base_p, w=160, h=70), fs="c", ds="c", custom={"fs": H_fs, "ds": H_ds})
+        page = np.zeros((80, 170), dtype=np.uint8)
+        compose(page, region, 4, 3, 0)
+        keep("huff_custom", {"huff_custom.jb2": jb2_file(segs + [dseg, tseg, segment(4, 49, b"")])}, page)
+    custom_case()
+    # many symbols with a skewed ID code: repeats and long zero runs in the run-coded table (codes 32, 33, 34)
+    many = classes_of([5, 7, 9, 11, 13, 15], 12, 21, 3, 9)
+    nsym = sum(len(c) for c in many)
+    freqs = [0] * nsym
+    for k in range(nsym):
+        freqs[k] = 0 if (20 <= k < 40 or 50 <= k < 56) else (64 if k < 4 else 1)
+    used = [k for k in range(nsym) if freqs[k] > 0]
+    r = np.random.default_rng(31)
+    insts = [(int(used[int(r.integers(0, len(used)))]), int(r.integers(0, 180)), int(r.integers(0, 90)), None) for _ in range(60)]
+    def ids_case():
+        segs = [segment(1, 48, page_info(210, 115))]
+        dseg, news = huff_dict_seg(2, [], many)
+        tseg, region = huff_text_seg(3, [2], news, insts, dict(base_p, w=200, h=108), freqs=freqs)
+        page = np.zeros((115, 210), dtype=np.uint8)
+        compose(page, region, 4, 3, 0)
+        keep("huff_ids", {"huff_ids.jb2": jb2_file(segs + [dseg, tseg, segment(4, 49, b"")])}, page)
+    ids_case()
 
     # jbig2enc on a real scanned page
     if "--jbig2enc" in sys.argv:

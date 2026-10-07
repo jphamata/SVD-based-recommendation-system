@@ -10,7 +10,8 @@ defmodule Vapor.JBIG2Test do
   without TPGRON, text regions in all eight corner/transposition
   combinations with strips, DSOFFSET, XOR, a black default pixel and refined
   instances, symbol dictionaries with refinement and aggregation, a striped
-  page of unknown height).
+  page of unknown height, and — 0.15 — Huffman-coded dictionaries and text
+  regions with standard and custom code tables).
   """
   use ExUnit.Case, async: true
   import Bitwise
@@ -33,7 +34,8 @@ defmodule Vapor.JBIG2Test do
 
   test "every fixture decodes to jbig2dec's bitmap, bit for bit" do
     m = manifest()
-    assert map_size(m) >= 43
+    assert map_size(m) >= 56
+    assert Enum.count(m, fn {k, _} -> String.starts_with?(k, "huff_") end) == 13
 
     for {name, %{"files" => files, "sha256" => sha, "w" => w, "h" => h}} <- m do
       bins = Enum.map(files, &File.read!(Path.join(@dir, &1)))
@@ -73,17 +75,25 @@ defmodule Vapor.JBIG2Test do
     end
   end
 
-  test "Huffman-coded dictionaries and halftones are refused with a reason, not misread" do
+  test "Huffman coding with refinement, and halftones, are refused with a reason, not misread" do
     seg = fn num, type, data, refs ->
       <<num::32, type, length(refs) <<< 5>> <> for(r <- refs, into: <<>>, do: <<r>>) <> <<1, byte_size(data)::32>> <> data
     end
 
     page = seg.(1, 48, <<20::32, 10::32, 0::32, 0::32, 0, 0::16>>, [])
-    huff_dict = seg.(2, 0, <<1::16, 0::32, 0::32>>, [])
+    # SDHUFF with SDREFAGG (and SDRTEMPLATE 1: no refinement AT bytes)
+    huff_dict = seg.(2, 0, <<(1 ||| 2 ||| 1 <<< 12)::16, 0::32, 0::32>>, [])
     halftone = seg.(3, 22, <<0::size(17 * 8)>>, [])
     {:ok, bm} = JBIG2.decode(page <> huff_dict <> halftone)
     assert {bm.w, bm.h} == {20, 10}
     assert Enum.any?(bm.warnings, &(&1 =~ "Huffman"))
     assert Enum.any?(bm.warnings, &(&1 =~ "halftone"))
+  end
+
+  test "an empty Huffman-coded dictionary is a dictionary, not a warning" do
+    seg = fn num, type, data -> <<num::32, type, 0, 1, byte_size(data)::32>> <> data end
+    page = seg.(1, 48, <<8::32, 8::32, 0::32, 0::32, 0, 0::16>>)
+    {:ok, bm} = JBIG2.decode(page <> seg.(2, 0, <<1::16, 0::32, 0::32>>))
+    assert bm.warnings == []
   end
 end

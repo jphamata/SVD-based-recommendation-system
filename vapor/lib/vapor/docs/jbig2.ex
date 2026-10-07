@@ -26,10 +26,18 @@ defmodule Vapor.Docs.JBIG2 do
       external combination operator, end of stripe, striped pages of
       unknown height.
 
+    * **Huffman coding** (Annex B, 0.15): the fifteen standard tables and the
+      code tables a stream carries (type 53); symbol dictionaries with
+      `SDHUFF` (height classes, widths, collective bitmaps uncompressed or
+      MMR, export runs) and text regions with `SBHUFF` (the run-length-coded
+      symbol ID table, strips, all corners) — checked against jbig2dec on
+      streams written by an independent encoder in the tests.
+
   Refused, with a reason (a warning, the page keeps what was decoded):
-  Huffman-coded symbol dictionaries and text regions (`SDHUFF`/`SBHUFF`,
-  Annex B tables), pattern dictionaries and halftone regions (7.4.4–7.4.5),
-  and the retained-context flags of symbol dictionaries.
+  Huffman coding combined with refinement (`SDHUFF` with `SDREFAGG`,
+  `SBHUFF` with `SBREFINE` — no encoder writes them, so there is nothing to
+  check a decoder against), pattern dictionaries and halftone regions
+  (7.4.4–7.4.5), and the retained-context flags of symbol dictionaries.
 
   Bitmaps are `%{w, h, rows}` — `rows` a tuple of row tuples of 0/1, where
   **1 is black** (JBIG2's convention); `packed/1` gives the rows packed
@@ -404,7 +412,7 @@ defmodule Vapor.Docs.JBIG2 do
 
   # ------------------------------------------------------- symbol dictionary --
 
-  defp symbol_dict(data, insyms, ws) do
+  defp symbol_dict(data, insyms, ws, tables) do
     <<flags::16, rest::binary>> = data
     sdhuff = flags &&& 1
     refagg = flags >>> 1 &&& 1
@@ -413,8 +421,11 @@ defmodule Vapor.Docs.JBIG2 do
     retained = flags >>> 9 &&& 1
 
     cond do
+      sdhuff == 1 and refagg == 1 ->
+        {:error, "a Huffman-coded symbol dictionary with refinement/aggregation (SDHUFF with SDREFAGG: no encoder writes it to check against)"}
+
       sdhuff == 1 ->
-        {:error, "a Huffman-coded symbol dictionary (SDHUFF; Annex B tables are not implemented)"}
+        huffman_dict(flags, rest, insyms, ws, tables)
 
       true ->
         {at, rest} = at_pairs(rest, if(sdtemplate == 0, do: 4, else: 1))
@@ -444,6 +455,97 @@ defmodule Vapor.Docs.JBIG2 do
   end
 
   defp codelen(n), do: Enum.find(0..32, fn l -> 1 <<< l >= n end)
+
+  # 6.5.5 with SDHUFF = 1 and SDREFAGG = 0: per height class the widths, then
+  # one collective bitmap (uncompressed, or MMR), cut into the symbols
+  defp huffman_dict(flags, rest, insyms, ws, tables) do
+    alias Vapor.Docs.JBIG2.Huffman, as: H
+    {sel, _} =
+      [{flags >>> 2 &&& 3, %{0 => 4, 1 => 5}}, {flags >>> 4 &&& 3, %{0 => 2, 1 => 3}}, {flags >>> 6 &&& 1, %{0 => 1}},
+       {flags >>> 7 &&& 1, %{0 => 1}}]
+      |> Enum.map_reduce(tables, fn {v, std}, custom ->
+        cond do
+          Map.has_key?(std, v) -> {H.standard(std[v]), custom}
+          v in [1, 3] and custom != [] -> {hd(custom), tl(custom)}
+          true -> throw({:jbig2, "a symbol dictionary selects a code table it does not refer to"})
+        end
+      end)
+
+    [dh, dw, bms, _agg] = sel
+    <<nex::32, nnew::32, body::binary>> = rest
+    {news, r} = huff_classes(H.reader(body), body, nnew, 0, [], dh, dw, bms)
+    all = insyms ++ news
+    {flags_out, _r} = huff_export(r, H.standard(1), length(all), 0, 0, [])
+    exported = for {s, 1} <- Enum.zip(all, flags_out), do: s
+    {:ok, Enum.take(exported, nex), ws}
+  catch
+    {:jbig2, why} -> {:error, why}
+  end
+
+  defp huff_classes(r, _body, nnew, _hc, acc, _dh, _dw, _bms) when length(acc) >= nnew, do: {Enum.reverse(acc), r}
+
+  defp huff_classes(r, body, nnew, hc, acc, dh, dw, bms) do
+    alias Vapor.Docs.JBIG2.Huffman, as: H
+    {d, r} = H.decode(dh, r)
+    if d == :oob, do: throw({:jbig2, "an out-of-band height class delta"})
+    hc = hc + d
+    {widths, r} = huff_widths(r, dw, 0, [], nnew - length(acc))
+    {size, r} = H.decode(bms, r)
+    r = H.align(r)
+    totw = Enum.sum(widths)
+    at = H.byte_pos(r)
+
+    coll =
+      cond do
+        hc <= 0 or totw <= 0 -> blank(max(totw, 0), max(hc, 0))
+        size == 0 ->
+          stride = div(totw + 7, 8)
+          if at + stride * hc > byte_size(body), do: throw({:jbig2, "a collective bitmap past the end of the dictionary"})
+          unpack_rows(binary_part(body, at, stride * hc), totw, hc, stride)
+
+        true ->
+          if at + size > byte_size(body), do: throw({:jbig2, "an MMR collective bitmap past the end of the dictionary"})
+          case Vapor.Docs.CCITT.decode(binary_part(body, at, size), k: -1, columns: totw, rows: hc, black_is_1: true) do
+            {:ok, %{data: data}} -> unpack(data, totw, hc)
+            {:error, why} -> throw({:jbig2, "an MMR collective bitmap (#{inspect(why)})"})
+          end
+      end
+
+    r = H.skip_bytes(r, if(size == 0, do: div(totw + 7, 8) * max(hc, 0), else: size))
+    {syms, _} = Enum.map_reduce(widths, 0, fn w, x0 -> {crop(coll, x0, w), x0 + w} end)
+    huff_classes(r, body, nnew, hc, Enum.reverse(syms) ++ acc, dh, dw, bms)
+  end
+
+  defp huff_widths(r, dw, symw, acc, left) do
+    alias Vapor.Docs.JBIG2.Huffman, as: H
+
+    case H.decode(dw, r) do
+      {:oob, r} -> {Enum.reverse(acc), r}
+      {_, _} when left <= 0 -> throw({:jbig2, "more symbols than the dictionary declares"})
+      {d, r} -> huff_widths(r, dw, symw + d, [symw + d | acc], left - 1)
+    end
+  end
+
+  defp huff_export(r, _tab, total, i, _flag, acc) when i >= total, do: {Enum.reverse(acc), r}
+
+  defp huff_export(r, tab, total, i, flag, acc) do
+    case Vapor.Docs.JBIG2.Huffman.decode(tab, r) do
+      {:oob, r} -> {Enum.reverse(acc), r}
+      {n, r} ->
+        n = min(max(n, 0), total - i)
+        huff_export(r, tab, total, i + n, 1 - flag, List.duplicate(flag, n) ++ acc)
+    end
+  end
+
+  # rows of `stride` bytes, MSB first, the first `w` bits of each
+  defp unpack_rows(bin, w, h, stride) do
+    rows = for y <- 0..(h - 1), do: (for <<b::1 <- binary_part(bin, y * stride, stride)>>, do: b) |> Enum.take(w) |> List.to_tuple()
+    %{w: w, h: h, rows: List.to_tuple(rows)}
+  end
+
+  defp crop(%{h: h, rows: rows}, x0, w) do
+    %{w: w, h: h, rows: rows |> Tuple.to_list() |> Enum.map(fn row -> row |> Tuple.to_list() |> Enum.slice(x0, w) |> List.to_tuple() end) |> List.to_tuple()}
+  end
 
   defp at_pairs(bin, n) do
     <<raw::binary-size(2 * n), rest::binary>> = bin
@@ -509,13 +611,18 @@ defmodule Vapor.Docs.JBIG2 do
 
   # ------------------------------------------------------------ text region --
 
-  defp text_region(data, syms, ws) do
+  defp text_region(data, syms, ws, tables) do
     <<w::32, h::32, x::32, y::32, eflags, flags::16, rest::binary>> = data
     sbhuff = flags &&& 1
 
-    if sbhuff == 1 do
-      {:error, "a Huffman-coded text region (SBHUFF; Annex B tables are not implemented)"}
-    else
+    cond do
+      sbhuff == 1 and (flags >>> 1 &&& 1) == 1 ->
+        {:error, "a Huffman-coded text region with refined instances (SBHUFF with SBREFINE: no encoder writes it to check against)"}
+
+      sbhuff == 1 ->
+        huffman_text(w, h, x, y, eflags, flags, rest, syms, ws, tables)
+
+      true ->
       refine = (flags >>> 1 &&& 1) == 1
       logstrips = flags >>> 2 &&& 3
       rtemplate = flags >>> 15 &&& 1
@@ -535,6 +642,113 @@ defmodule Vapor.Docs.JBIG2 do
                iardh: stats(512), iardx: stats(512), iardy: stats(512), iaid: stats(1 <<< (len + 1))}
       {bm, _st} = text_decode(st, tctx, stats(8192), w, h, tp, List.to_tuple(syms), len)
       {:ok, {bm, x, y, eflags &&& 7}, ws}
+    end
+  end
+
+  # 6.4 with SBHUFF = 1: the tables chosen by the Huffman flags (custom ones
+  # taken from the referred table segments in the order FS, DS, DT, RDW,
+  # RDH, RDX, RDY, RSIZE), the symbol ID table, then strips as in 6.4.5
+  defp huffman_text(w, h, x, y, eflags, flags, rest, syms, ws, tables) do
+    alias Vapor.Docs.JBIG2.Huffman, as: H
+    <<hflags::16, rest::binary>> = rest
+    logstrips = flags >>> 2 &&& 3
+    ds = flags >>> 10 &&& 31
+    ds = if ds >= 16, do: ds - 32, else: ds
+
+    {[fs, dsx, dt | _], _} =
+      [{hflags &&& 3, %{0 => 6, 1 => 7}}, {hflags >>> 2 &&& 3, %{0 => 8, 1 => 9, 2 => 10}}, {hflags >>> 4 &&& 3, %{0 => 11, 1 => 12, 2 => 13}},
+       {hflags >>> 6 &&& 3, %{0 => 14, 1 => 15}}, {hflags >>> 8 &&& 3, %{0 => 14, 1 => 15}}, {hflags >>> 10 &&& 3, %{0 => 14, 1 => 15}},
+       {hflags >>> 12 &&& 3, %{0 => 14, 1 => 15}}, {hflags >>> 14 &&& 1, %{0 => 1}}]
+      |> Enum.map_reduce(tables, fn {v, std}, custom ->
+        cond do
+          Map.has_key?(std, v) -> {H.standard(std[v]), custom}
+          v == 3 or (v == 1 and map_size(std) == 1) ->
+            if custom == [], do: throw({:jbig2, "a text region selects a code table it does not refer to"}), else: {hd(custom), tl(custom)}
+          true -> throw({:jbig2, "a reserved text-region table selection"})
+        end
+      end)
+
+    <<ninst::32, body::binary>> = rest
+    tp = %{strips: 1 <<< logstrips, logstrips: logstrips, refcorner: flags >>> 4 &&& 3, transposed: (flags >>> 6 &&& 1) == 1,
+           combop: flags >>> 7 &&& 3, defpixel: flags >>> 9 &&& 1, dsoffset: ds, ninst: ninst}
+    {idtab, r} = H.symbol_id_table(H.reader(body), length(syms))
+    page = canvas(w, h, tp.defpixel)
+    {first_dt, r} = H.decode(dt, r)
+    huff_strips(r, %{fs: fs, ds: dsx, dt: dt, id: idtab}, tp, List.to_tuple(syms), page, w, h, -first_dt * tp.strips, 0, 0)
+    {:ok, {freeze(page, w, h), x, y, eflags &&& 7}, ws}
+  catch
+    {:jbig2, why} -> {:error, why}
+  end
+
+  defp huff_strips(_r, _t, %{ninst: n}, _syms, _page, _w, _h, _stript, _firsts, done) when done >= n, do: :ok
+
+  defp huff_strips(r, t, tp, syms, page, w, h, stript, firsts, done) do
+    alias Vapor.Docs.JBIG2.Huffman, as: H
+    {dt, r} = H.decode(t.dt, r)
+    {dfs, r} = H.decode(t.fs, r)
+    if dt == :oob or dfs == :oob, do: throw({:jbig2, "an out-of-band strip or first-symbol delta"})
+    stript = stript + dt * tp.strips
+    firsts = firsts + dfs
+    {r, done} = huff_instances(r, t, tp, syms, page, w, h, stript, firsts, done, true)
+    huff_strips(r, t, tp, syms, page, w, h, stript, firsts, done)
+  end
+
+  defp huff_instances(r, t, tp, syms, page, w, h, stript, curs, done, first) do
+    alias Vapor.Docs.JBIG2.Huffman, as: H
+
+    {curs, r, go} =
+      cond do
+        first -> {curs, r, true}
+        true ->
+          case H.decode(t.ds, r) do
+            {:oob, r} -> {curs, r, false}
+            {ids, r} -> {curs + ids + tp.dsoffset, r, true}
+          end
+      end
+
+    if not go or done >= tp.ninst do
+      {r, done}
+    else
+      {curt, r} = if tp.strips == 1, do: {0, r}, else: H.bits(r, tp.logstrips)
+      {id, r} = H.decode(t.id, r)
+      ib = if is_integer(id) and id < tuple_size(syms), do: elem(syms, id)
+      curs = put_instance(page, w, h, tp, ib, curs, stript + curt)
+      huff_instances(r, t, tp, syms, page, w, h, stript, curs, done + 1, false)
+    end
+  end
+
+  # place one symbol instance at (S = curs, T = t) by the reference corner and
+  # transposition (6.4.5 steps 3 c) v–x); returns CURS after the instance
+  defp put_instance(page, w, h, tp, ib, curs, t) do
+    {iw, ih} = if ib, do: {ib.w, ib.h}, else: {1, 1}
+
+    curs =
+      cond do
+        not tp.transposed and tp.refcorner > 1 -> curs + iw - 1
+        tp.transposed and (tp.refcorner &&& 1) == 0 -> curs + ih - 1
+        true -> curs
+      end
+
+    s = curs
+
+    {x, y} =
+      case {tp.transposed, tp.refcorner} do
+        {false, 1} -> {s, t}
+        {false, 3} -> {s - iw + 1, t}
+        {false, 0} -> {s, t - ih + 1}
+        {false, 2} -> {s - iw + 1, t - ih + 1}
+        {true, 1} -> {t, s}
+        {true, 3} -> {t - iw + 1, s}
+        {true, 0} -> {t, s - ih + 1}
+        {true, 2} -> {t - iw + 1, s - ih + 1}
+      end
+
+    if ib, do: compose(page, w, h, ib, x, y, tp.combop)
+
+    cond do
+      not tp.transposed and tp.refcorner < 2 -> curs + iw - 1
+      tp.transposed and (tp.refcorner &&& 1) == 1 -> curs + ih - 1
+      true -> curs
     end
   end
 
@@ -590,37 +804,7 @@ defmodule Vapor.Docs.JBIG2 do
           {ib, st}
         end
 
-      {iw, ih} = if ib, do: {ib.w, ib.h}, else: {1, 1}
-
-      curs =
-        cond do
-          not tp.transposed and tp.refcorner > 1 -> curs + iw - 1
-          tp.transposed and (tp.refcorner &&& 1) == 0 -> curs + ih - 1
-          true -> curs
-        end
-
-      s = curs
-
-      {x, y} =
-        case {tp.transposed, tp.refcorner} do
-          {false, 1} -> {s, t}
-          {false, 3} -> {s - iw + 1, t}
-          {false, 0} -> {s, t - ih + 1}
-          {false, 2} -> {s - iw + 1, t - ih + 1}
-          {true, 1} -> {t, s}
-          {true, 3} -> {t - iw + 1, s}
-          {true, 0} -> {t, s - ih + 1}
-          {true, 2} -> {t - iw + 1, s - ih + 1}
-        end
-
-      if ib, do: compose(page, w, h, ib, x, y, tp.combop)
-
-      curs =
-        cond do
-          not tp.transposed and tp.refcorner < 2 -> curs + iw - 1
-          tp.transposed and (tp.refcorner &&& 1) == 1 -> curs + ih - 1
-          true -> curs
-        end
+      curs = put_instance(page, w, h, tp, ib, curs, t)
 
       instances(st, c, gr, tp, syms, len, page, w, h, stript, curs, done + 1, false)
     end
@@ -772,7 +956,7 @@ defmodule Vapor.Docs.JBIG2 do
         s.type == 0 ->
           insyms = Enum.flat_map(s.refs, &Map.get(dicts, &1, []))
 
-          case symbol_dict(s.data, insyms, []) do
+          case symbol_dict(s.data, insyms, [], tables_of(dicts, s.refs)) do
             {:ok, syms, w2} -> {Map.put(dicts, s.number, syms), w2 ++ ws}
             {:error, why} -> {dicts, [why | ws]}
           end
@@ -780,7 +964,7 @@ defmodule Vapor.Docs.JBIG2 do
         s.type in [4, 6, 7] ->
           syms = Enum.flat_map(s.refs, &Map.get(dicts, &1, []))
 
-          case text_region(s.data, syms, []) do
+          case text_region(s.data, syms, [], tables_of(dicts, s.refs)) do
             {:ok, {bm, x, y, op}, w2} -> place(page, pw, ph, bm, x, y, op, s.type); {dicts, w2 ++ ws}
             {:error, why} -> {dicts, [why | ws]}
           end
@@ -801,7 +985,10 @@ defmodule Vapor.Docs.JBIG2 do
           {dicts, ["halftone regions and pattern dictionaries (7.4.4–7.4.5) are not decoded here" | ws]}
 
         s.type == 53 ->
-          {dicts, ["custom Huffman tables (7.4.13) are not used here" | ws]}
+          case Vapor.Docs.JBIG2.Huffman.table_segment(s.data) do
+            {:ok, t} -> {Map.put(dicts, {:table, s.number}, t), ws}
+            {:error, why} -> {dicts, [why | ws]}
+          end
 
         true ->
           {dicts, ws}
@@ -809,6 +996,9 @@ defmodule Vapor.Docs.JBIG2 do
 
     run(rest, page_no, page, pw, ph, dicts, ws)
   end
+
+  # the code tables a segment refers to, in the order of its references
+  defp tables_of(dicts, refs), do: for(r <- refs, t = Map.get(dicts, {:table, r}), t != nil, do: t)
 
   # intermediate regions (types 4, 36, 40) are not drawn on the page
   defp place(_page, _pw, _ph, _bm, _x, _y, _op, type) when type in [4, 36, 40], do: :ok
