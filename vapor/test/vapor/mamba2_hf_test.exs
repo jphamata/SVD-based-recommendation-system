@@ -118,7 +118,7 @@ defmodule Vapor.Mamba2HFTest do
       assert inspect(r) =~ field
     end
     # Python's bare Infinity (older configs) is read; strict JSON stays strict
-    assert {:ok, [0.0, :infinity]} = Vapor.JSON.decode("[0.0, Infinity]", nonfinite: true)
+    assert {:ok, [+0.0, :infinity]} = Vapor.JSON.decode("[0.0, Infinity]", nonfinite: true)
     assert {:error, _} = Vapor.JSON.decode("[0.0, Infinity]")
   end
 end

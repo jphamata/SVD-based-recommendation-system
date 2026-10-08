@@ -14,7 +14,7 @@ defmodule Vapor.SlidingWindowTest do
   alias Vapor.{Program, Tensor}
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Compile.Lower
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Dispatch, Native, Oracle, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -86,18 +86,18 @@ defmodule Vapor.SlidingWindowTest do
     run = fn p, e -> {:ok, comp} = Lower.lower(p); {:ok, got} = Native.run(w, comp, e, isa: Substrates.host_isa(), mode: :native); got.outputs end
     base = %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))}
 
-    {:ok, contig} = Llama.program(c, ws, max_seq: 16)
-    ref = run.(contig, Map.merge(Llama.empty_caches(c, 16), base))
+    {:ok, contig} = Decoder.program(c, ws, max_seq: 16)
+    ref = run.(contig, Map.merge(Decoder.empty_caches(c, 16), base))
 
     # paged: 2 sequences of 16 rows in pages of 4, this one in sequence 1
-    {:ok, paged} = Llama.program(c, ws, max_seq: 16, kv: {:paged, 4, 8, 2})
+    {:ok, paged} = Decoder.program(c, ws, max_seq: 16, kv: {:paged, 4, 8, 2})
     pool = Tensor.new(:f32, [32, c.kv_heads * c.head_dim], :binary.copy(<<0::32>>, 32 * c.kv_heads * c.head_dim))
     pe = Map.merge(base, %{table: Tensor.from_list(:s32, [2, 4], [0, 1, 2, 3, 7, 5, 6, 4]), slot: Tensor.from_list(:s32, [n], List.duplicate(1, n))})
     pe = Map.merge(pe, for(l <- 0..(c.layers - 1), name <- [:"k#{l}", :"v#{l}"], into: %{}, do: {name, pool}))
     assert run.(paged, pe).logits == ref.logits
 
     {rows, _} =
-      Enum.map_reduce(Enum.with_index(toks), Llama.empty_caches(c, 16), fn {t, i}, caches ->
+      Enum.map_reduce(Enum.with_index(toks), Decoder.empty_caches(c, 16), fn {t, i}, caches ->
         out = run.(contig, Map.merge(caches, %{tok: Tensor.from_list(:s32, [1], [t]), pos: Tensor.from_list(:s32, [1], [i])}))
         {out.logits.data, Map.new(caches, fn {k, _} -> {k, out[:"#{k}_next"]} end)}
       end)
@@ -105,8 +105,8 @@ defmodule Vapor.SlidingWindowTest do
     assert IO.iodata_to_binary(rows) == ref.logits.data
 
     # control: dropping the window changes the rows past it, not those before
-    {:ok, full} = Llama.program(%{c | sliding_window: nil}, ws, max_seq: 16)
-    other = run.(full, Map.merge(Llama.empty_caches(c, 16), base))
+    {:ok, full} = Decoder.program(%{c | sliding_window: nil}, ws, max_seq: 16)
+    other = run.(full, Map.merge(Decoder.empty_caches(c, 16), base))
     v = c.vocab
     assert binary_part(other.logits.data, 0, 4 * v * 4) == binary_part(ref.logits.data, 0, 4 * v * 4)
     refute binary_part(other.logits.data, 4 * v * 4, (n - 4) * v * 4) == binary_part(ref.logits.data, 4 * v * 4, (n - 4) * v * 4)
@@ -117,7 +117,7 @@ defmodule Vapor.SlidingWindowTest do
   defp paged_prefill(c, ws, toks, n, page, ring) do
     s = 64
     mp = div(s, page)
-    {:ok, p} = Llama.program(c, ws, max_seq: s, max_tokens: n, kv: {:paged, page, mp, 1})
+    {:ok, p} = Decoder.program(c, ws, max_seq: s, max_tokens: n, kv: {:paged, page, mp, 1})
     kvw = c.kv_heads * c.head_dim
     ids = &Tensor.from_list(:s32, [length(&1)], &1)
     table = Tensor.from_list(:s32, [1, mp], Enum.map(0..(mp - 1), ring))

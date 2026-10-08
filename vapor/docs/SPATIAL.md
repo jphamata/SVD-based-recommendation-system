@@ -66,7 +66,7 @@ other stream's projections are the table of keys and values, and the horizon
 of every query is the last row of that table. No new operator;
 ≤ 10⁻⁶ against `torch.nn.MultiheadAttention` (`cross_attention_test.exs`).
 
-## 5. Whisper (`Vapor.Lock.Adapters.Whisper`)
+## 5. Whisper (`Vapor.Lock.Adapters.EncoderDecoder`)
 
 Speech recognition as **two programs** of the same model — the airlock's
 contract gained declared *parts* (`spec.parts`):

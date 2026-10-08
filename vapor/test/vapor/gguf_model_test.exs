@@ -47,10 +47,10 @@ defmodule Vapor.GGUFModelTest do
     for {t, tol} <- [{"f32", 1.0e-5}, {"q8_0", 0.05}] do
       {:ok, m} = Vapor.Model.GGUF.load(Path.join(out, "model-#{t}.gguf"))
       assert m.config.arch == "llama" and m.tokenizer != nil
-      {:ok, p} = Vapor.Model.Llama.program(m.config, m.weights, max_seq: 32)
+      {:ok, p} = Vapor.Model.Decoder.program(m.config, m.weights, max_seq: 32)
       {:ok, c} = Vapor.Compile.Lower.lower(p)
       n = hd(ref["prompt"].shape)
-      env = Map.merge(Vapor.Model.Llama.empty_caches(m.config, 32), %{tok: ref["prompt"], pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
+      env = Map.merge(Vapor.Model.Decoder.empty_caches(m.config, 32), %{tok: ref["prompt"], pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
       {:ok, r} = Vapor.Runtime.Native.run(w, c, env, isa: Vapor.Runtime.Substrates.host_isa(), mode: :native)
       err = Enum.zip_with(Tensor.to_floats(r.outputs.logits), want, &abs(&1 - &2)) |> Enum.max()
       assert err <= tol * scale, "#{t}: max |Δ| #{err}"

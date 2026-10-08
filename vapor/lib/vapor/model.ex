@@ -24,7 +24,7 @@ defmodule Vapor.Model do
   @doc """
   Load and build, through the model airlock (`Vapor.Lock`): the adapter
   that claims the checkpoint builds the program (options are its own; for
-  decoders those of `Vapor.Model.Llama.program/3`).
+  decoders those of `Vapor.Model.Decoder.program/3`).
   """
   def load(path, opts \\ []) do
     keep = if Keyword.get(opts, :storage) == :bf16, do: [bf16: :keep], else: []

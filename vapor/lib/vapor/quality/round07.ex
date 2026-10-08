@@ -114,7 +114,7 @@ defmodule Vapor.Quality.Round07 do
         d = Path.join(tmp, "m#{seed}")
         File.mkdir_p!(d)
         File.write!(Path.join(d, "config.json"), Vapor.JSON.encode(map))
-        ws = for {name, shape, _} <- Vapor.Model.Llama.expected_weights(c), into: %{}, do: {name, Vapor.Tensor.random(:f32, shape, :erlang.phash2({seed, name}), scale: 0.2)}
+        ws = for {name, shape, _} <- Vapor.Model.Decoder.expected_weights(c), into: %{}, do: {name, Vapor.Tensor.random(:f32, shape, :erlang.phash2({seed, name}), scale: 0.2)}
         {:ok, _} = Vapor.Ingest.Safetensors.write_sharded(d, ws, 2_000_000)
         d
       end

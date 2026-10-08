@@ -2,7 +2,7 @@ defmodule Vapor.MergeAlignTest do
   use ExUnit.Case, async: true
   alias Vapor.{Lock, Merge, Tensor}
   alias Vapor.Merge.Align
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.Oracle
   import Vapor.TestHelpers
 
@@ -41,8 +41,8 @@ defmodule Vapor.MergeAlignTest do
   defp logits(c, ws) do
     toks = [3, 50, 7, 81, 12]
     n = length(toks)
-    {:ok, p} = Llama.program(c, ws, max_seq: 16)
-    env = Map.merge(Llama.empty_caches(c, 16), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
+    {:ok, p} = Decoder.program(c, ws, max_seq: 16)
+    env = Map.merge(Decoder.empty_caches(c, 16), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
     Oracle.eval_program(p, env).logits |> Tensor.to_floats()
   end
 

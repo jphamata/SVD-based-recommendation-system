@@ -72,6 +72,40 @@ defmodule Vapor.Ingest.Safetensors do
   end
 
   @doc """
+  The tensor table from the **first bytes** of a file alone (`8 + header
+  length` of them, or more): what a ranged fetch of a remote checkpoint
+  gives before any data is read. The same checks as `index/1`, except that
+  the data section is not present: its length is the one the header
+  implies, and the tensors must tile it with no hole and no overlap.
+  `{:ok, %{entries, metadata, data_start, data_len}}`, or
+  `{:more, bytes_needed}` when `bin` stops inside the header.
+  """
+  def parse_header(bin) when is_binary(bin) do
+    case bin do
+      <<hlen::64-little, _::binary>> when hlen > @max_header ->
+        reject("header", "header length #{hlen} ≤ 100 MiB", "re-export the file")
+
+      <<hlen::64-little, rest::binary>> when byte_size(rest) >= hlen ->
+        with {:ok, header} <- json(binary_part(rest, 0, hlen), "header") do
+          implied = header |> Map.delete("__metadata__") |> Map.values() |> Enum.map(&end_offset/1) |> Enum.max(fn -> 0 end)
+
+          with {:ok, entries} <- entries(header, implied, "header") do
+            {:ok, %{entries: entries, metadata: Map.get(header, "__metadata__", %{}), data_start: 8 + hlen, data_len: implied}}
+          end
+        end
+
+      <<hlen::64-little, _::binary>> ->
+        {:more, 8 + hlen}
+
+      _ ->
+        {:more, 8}
+    end
+  end
+
+  defp end_offset(%{"data_offsets" => [_, e]}) when is_integer(e), do: e
+  defp end_offset(_), do: 0
+
+  @doc """
   Read tensors (all, or those named in `:only`). Returns
   `{:ok, %{name => Vapor.Tensor}}` or the first rejection. With
   `bf16: :keep`, `BF16` tensors stay bfloat16 (vapor's `:bf16`, which

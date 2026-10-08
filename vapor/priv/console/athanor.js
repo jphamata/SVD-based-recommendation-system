@@ -479,6 +479,8 @@ function assayView(r) {
     case "judge": return darkBox(stats(stat("consistent", `${Math.round(r.consistent * 100)} %`), stat("first slot", `${Math.round(r.first_slot_rate * 100)} %`), stat("p", wbNum(r.p_position_bias, 3))));
     case "contamination": return darkBox(stats(stat("contaminated", String(r.contaminated)), stat("clean", String(r.clean))));
     case "dedup": return darkBox(stats(stat("documents", String(r.documents)), stat("removed", String(r.removed)), stat("clusters", String(r.clusters.length))));
+    case "detect": return darkBox(forest([{ label: "cgF1", mean: r.cg_f1, lo: r.cg_f1_ci95[0], hi: r.cg_f1_ci95[1], strong: r.cg_f1_ci95[0] > 0 }], { zero: 0, xlab: "cgF1 = 100 · pmF1 · IL_MCC, 95 % CI" }), stats(stat("pmF1", wbNum(r.pm_f1, 3)), stat("IL_MCC", wbNum(r.il_mcc, 3)), stat("found / missed", `${r.presence.tp} / ${r.presence.fn}`), stat("false alarms", `${r.presence.fp} of ${r.presence.fp + r.presence.tn}`)));
+    case "layers": return darkBox(chartIn({ series: [{ points: r.validation_accuracy.map((a, i) => [i, a]), dots: true }, { points: [[0, r.test.chance], [r.layers - 1, r.test.chance]], cls: 3 }], xlab: "layer (validation accuracy; dashed: chance)", ylab: "accuracy", ymin: 0, ymax: 1 }), stats(stat("chosen layer", String(r.chosen_layer)), stat("test", wbNum(r.test.chosen, 3)), stat("output", wbNum(r.test.last, 3)), stat("p vs output", wbNum(r.chosen_vs_last.p_mcnemar, 2))));
     default: return darkBox(el("p", { text: r.says }));
   }
 }

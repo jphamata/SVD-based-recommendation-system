@@ -11,7 +11,7 @@ defmodule Vapor.StableHLOTest do
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Compile.Lower
   alias Vapor.Export.StableHLO
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.Native
   alias Vapor.Verify.Envelope
   import Vapor.TestHelpers
@@ -87,7 +87,7 @@ defmodule Vapor.StableHLOTest do
   test "a whole decoder step (gather, RMSNorm, RoPE, KV write, GQA attention, SwiGLU) runs on XLA with vapor's answer" do
     for arch <- ["llama", "qwen2"] do
       {:ok, c} = Config.from_map(tiny_config(arch))
-      {:ok, p} = Llama.program(c, tiny_weights(c), max_seq: 16)
+      {:ok, p} = Decoder.program(c, tiny_weights(c), max_seq: 16)
       ids = fn xs -> Tensor.from_list(:s32, [length(xs)], xs) end
       caches = for {:input, n, dt, [s, w]} <- Program.inputs(p), dt == :f32, into: %{}, do: {n, Tensor.random(:f32, [s, w], :erlang.phash2(n), scale: 0.5)}
       env = Map.merge(caches, %{tok: ids.([3, 1, 4, 1]), pos: ids.([5, 6, 7, 8])})

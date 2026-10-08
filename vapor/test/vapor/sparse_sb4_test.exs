@@ -11,7 +11,7 @@ defmodule Vapor.SparseSb4Test do
   alias Vapor.{Program, Tensor}
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Compile.Lower
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Quant.Sb4
   alias Vapor.Runtime.{Dispatch, Native, Oracle, Substrates, Worker}
   import Vapor.TestHelpers
@@ -28,14 +28,14 @@ defmodule Vapor.SparseSb4Test do
 
   defp env(c, toks) do
     n = length(toks)
-    Map.merge(Llama.empty_caches(c, @s), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
+    Map.merge(Decoder.empty_caches(c, @s), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
   end
 
   defp programs(arch, over) do
     {:ok, c} = Config.from_map(tiny_config(arch, over))
     ws = tiny_weights(c, 3)
-    {:ok, dense} = Llama.program(c, ws, max_seq: @s, moe: :dense, quantize: :sb4)
-    {:ok, sparse} = Llama.program(c, ws, max_seq: @s, moe: :sparse, quantize: :sb4)
+    {:ok, dense} = Decoder.program(c, ws, max_seq: @s, moe: :dense, quantize: :sb4)
+    {:ok, sparse} = Decoder.program(c, ws, max_seq: @s, moe: :sparse, quantize: :sb4)
     {c, dense, sparse}
   end
 
@@ -115,7 +115,7 @@ defmodule Vapor.SparseSb4Test do
     {:ok, wk} = Worker.start_link(exec: worker_exec(:host))
     {:ok, c} = Config.from_map(tiny_config("mixtral", @mixtral))
     ws = tiny_weights(c, 3)
-    {:ok, p} = Llama.program(c, ws, max_seq: @s, quantize: :sb4)
+    {:ok, p} = Decoder.program(c, ws, max_seq: @s, quantize: :sb4)
     {:ok, ref} = Native.run(wk, lower!(p), env(c, [42]), isa: Substrates.host_isa(), mode: :native)
 
     ranks = for e <- 0..3, do: :"layers.0.rank#{e}"

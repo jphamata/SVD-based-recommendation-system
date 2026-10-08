@@ -5,7 +5,7 @@
 ## 1. The problem
 
 Up to the previous round, the engine, the embedder and the loader called
-`Vapor.Model.Llama.program/3` directly, and `Vapor.Model.Config` enumerated
+`Vapor.Model.Decoder.program/3` directly, and `Vapor.Model.Config` enumerated
 eight families with their details. Each new model required editing the core. This is
 the industry pattern — transformers' per-family `modeling_*.py`, llama.cpp's
 `llm_build_*`, vLLM's `*_model.py` — and it is the real pain:
@@ -56,9 +56,9 @@ checkpoint ─► manifest ─► claim (all adapters) ─► admit ─► Spec 
 2. **Contract at the airlock.** A defective adapter is stopped at the boundary
    (`Rejection` with `{:contract, name}`), not inside the engine.
 3. **No family in the core — tested.** `lock_test.exs` reads the atom table
-   of the compiled BEAM of 27 core modules (engine, embedder, server,
+   of the compiled BEAM of the core modules (engine, embedder, server,
    speculation, RAG, merging, hub, quality, compiler, runtime, ladder,
-   emitters) and fails if any of them references `Vapor.Model.Llama`,
+   emitters) and fails if any of them references `Vapor.Model.Decoder`,
    `Vapor.Model.Config`, `Vapor.Model.GGUF` or any adapter. The rule is
    a test, not a convention.
 
@@ -104,7 +104,7 @@ error < 2·10⁻⁶ (`test/python/np_reference.py`).
 
 For families that are an existing topology **with extra knobs**. The
 adapter only translates the configuration into the knobs. The built-in example is
-**IBM Granite 3.x** (`Vapor.Lock.Adapters.Granite`): `embedding_multiplier`,
+**IBM Granite 3.x** (`Vapor.Lock.Adapters.Multipliers`): `embedding_multiplier`,
 `attention_multiplier`, `residual_multiplier` and `logits_scaling` become the
 decoder's `embed_scale`, `attn_scale`, `residual_scale` and `logit_divisor` (the
 last two are new knobs in this round, in `Vapor.Model.Config`). The
@@ -231,5 +231,54 @@ inside the mixer), `jamba`/`zamba`/`bamba`/`nemotron_h`/`falcon_h1`
   have not been measured with trained weights (they are not in this environment).
 - `Vapor.Train` still speaks the decoder's language (LoRA over `%Config{}`): it is
   an adapter capability that should become an airlock *callback*.
-- The manifest of an HF directory is assembled after reading the weights; for
-  huge checkpoints, claiming from the index before reading would be better.
+- The manifest of an HF directory is assembled after reading the weights. For
+  huge checkpoints there is now `Vapor.Lock.preflight/2` (0.17): admission
+  from the configuration and the safetensors headers alone, fetched by
+  ranged reads through the siphon (docs/SIPHON.md). `Lock.open` itself
+  still reads the weights it builds from.
+
+## 11. Where names live (0.17)
+
+The question, asked of this airlock: are files like `llama.ex`, or an
+adapter for Kimi K3, inevitable and correct, or should models (open or
+proprietary, named by family or not) live only in the airlocks, with a
+core that is pure mathematics?
+
+Both, once two things are told apart. A checkpoint **computes a
+function**, and someone has to write that function once in the algebra.
+That code is inevitable, and it is mathematics. A checkpoint is also
+**spelled** a certain way: a `model_type`, configuration keys, tensor
+names, fused matrices, multipliers. A spelling is not mathematics, it is
+data about a family, and it belongs to the airlock alone.
+
+| tier | holds | names it may use | enforced by |
+|---|---|---|---|
+| **core** (algebra, compiler, emitters, runtime, engine, sampler, merge, quality, deciders) | mathematics and machinery | none: no family, no layout, no tensor name | `lock_test.exs`: the atom tables of the core's compiled modules reference no airlock module |
+| **topologies** (`lib/vapor/model`, `lib/vapor/lock/adapters`) | the function, written once per *kind* of network, reading one canonical layout | named for what they compute: decoder, delta-rule hybrid, encoder–decoder, Mamba, ViT, DiT | `lock_test.exs`: no module name contains a product or family name |
+| **spellings** (claims, aliases, blueprints) | how each family writes that function | product and family names: here, and only here | aliases and refusals are data (`Vapor.Lock.Alias`) |
+| **agent protocols** (`Vapor.Agent.Backend.*`) | the wire format of a closed model's API | the vendor's protocol name | the one allowance in that test |
+
+Applied in this round:
+
+- `Vapor.Model.Llama` was correct code under the wrong name: eight
+  families read it. It is now `Vapor.Model.Decoder`.
+- The Kimi K3 adapter is now the **delta-rule hybrid** topology
+  (`Vapor.Lock.Adapters.DeltaHybrid`, claiming only vapor's spelling
+  `vapor_delta_hybrid`). K3 itself is a built-in alias (`kimi_k3`), and
+  Kimi Linear is a refusal written as data (`"refuse": "why"`, new in
+  0.17) instead of a near miss hard-coded in a topology.
+- Whisper's topology is `Vapor.Lock.Adapters.EncoderDecoder`, and
+  Granite's blueprint is `Vapor.Lock.Adapters.Multipliers`. Each still
+  claims its one family, in its own claim clause.
+
+What remains, named so it is not forgotten: `Vapor.Model.Config` still
+keys the decoder's knob readers by `model_type` (`family(%{arch:
+"deepseek_v3"})`), so the decoder's eight spellings are code, not data.
+The next step is blueprints as descriptors: each family's mapping from
+its `config.json` onto the decoder's knobs, as an alias is today, with
+`Config.families/0` becoming the registry of those descriptors.
+
+Closed models (the K3 report's Claude Fable 5 and GPT-5.6 Sol, Google's
+Astra) have no weights, so they have no topology and no spelling. They
+appear only as a protocol at the agent boundary, and what they answer is
+a proposal, checked like anyone's.

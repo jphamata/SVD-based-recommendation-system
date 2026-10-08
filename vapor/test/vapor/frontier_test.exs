@@ -3,7 +3,7 @@ defmodule Vapor.FrontierTest do
   Frontier families — Qwen3, Qwen3-MoE, Mixtral, Gemma 3, DeepSeek-V3 —
   built from the algebra's existing operators (selector contractions,
   rank-and-select mixtures, latent attention by layout; see
-  `Vapor.Model.Llama`), hence bit-identical on every substrate with no new
+  `Vapor.Model.Decoder`), hence bit-identical on every substrate with no new
   machine code; and, against Hugging Face transformers, within the same
   declared tolerance as the Llama family (`hf_parity_test`).
   """
@@ -11,7 +11,7 @@ defmodule Vapor.FrontierTest do
   alias Vapor.{Rejection, Tensor}
   alias Vapor.Compile.Lower
   alias Vapor.Ingest.Safetensors
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Dispatch, Native, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -38,13 +38,13 @@ defmodule Vapor.FrontierTest do
   defp model(arch, over, opts \\ []) do
     {:ok, c} = Config.from_map(tiny_config(arch, over))
     ws = Keyword.get_lazy(opts, :weights, fn -> tiny_weights(c, 3) end)
-    {:ok, p} = Llama.program(c, ws, [max_seq: @s] ++ Keyword.delete(opts, :weights))
+    {:ok, p} = Decoder.program(c, ws, [max_seq: @s] ++ Keyword.delete(opts, :weights))
     {c, p}
   end
 
   defp env(c, toks, p0 \\ 0, caches \\ nil) do
     n = length(toks)
-    Map.merge(caches || Llama.empty_caches(c, @s),
+    Map.merge(caches || Decoder.empty_caches(c, @s),
               %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(p0..(p0 + n - 1)))})
   end
 
@@ -82,7 +82,7 @@ defmodule Vapor.FrontierTest do
 
   test "the MLA head layout: rotate-half pairs are both rotary or both pass-through, every slot used once" do
     {:ok, c} = Config.from_map(tiny_config("deepseek_v3", elem(List.last(@families), 1)))
-    {nope, rope} = Llama.mla_layout(c)
+    {nope, rope} = Decoder.mla_layout(c)
     %{nope: dn, rope: dr} = c.mla
     half = div(c.head_dim, 2)
     slots = Enum.map(0..(dn - 1), nope) ++ Enum.map(0..(dr - 1), rope)
@@ -160,7 +160,7 @@ defmodule Vapor.FrontierTest do
       {rows, _} =
         Enum.map_reduce(Enum.with_index(@toks), nil, fn {t, i}, caches ->
           {:ok, got} = Native.run(w, comp, env(c, [t], i, caches), isa: Substrates.host_isa(), mode: :native)
-          next = for l <- 0..(c.layers - 1), name <- Llama.cache_names(c, l), into: %{}, do: {name, got.outputs[:"#{name}_next"]}
+          next = for l <- 0..(c.layers - 1), name <- Decoder.cache_names(c, l), into: %{}, do: {name, got.outputs[:"#{name}_next"]}
           {got.outputs.logits.data, next}
         end)
 
@@ -217,7 +217,7 @@ defmodule Vapor.FrontierHFTest do
   alias Vapor.Tensor
   alias Vapor.Compile.Lower
   alias Vapor.Ingest.Safetensors
-  alias Vapor.Model.Llama
+  alias Vapor.Model.Decoder
   alias Vapor.Runtime.{Native, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -254,7 +254,7 @@ defmodule Vapor.FrontierHFTest do
       {:ok, ref} = Safetensors.read(Path.join(dir, "reference.safetensors"))
       {:ok, m} = Vapor.Model.open(dir)
       # nothing in the checkpoint is silently ignored
-      expected = m.config |> Llama.expected_weights() |> Enum.map(&elem(&1, 0)) |> Enum.sort()
+      expected = m.config |> Decoder.expected_weights() |> Enum.map(&elem(&1, 0)) |> Enum.sort()
       assert expected == m.weights |> Map.keys() |> Enum.filter(&is_binary/1) |> Enum.sort()
 
       {:ok, %{config: c, program: p}} = Vapor.Model.load(dir, max_seq: 32)
@@ -267,7 +267,7 @@ defmodule Vapor.FrontierHFTest do
         {got.outputs.logits, Map.new(caches, fn {k, _} -> {k, got.outputs[:"#{k}_next"]} end)}
       end
 
-      {logits, caches} = step.(Llama.empty_caches(c, 32), prompt, 0)
+      {logits, caches} = step.(Decoder.empty_caches(c, 32), prompt, 0)
       want = Tensor.to_floats(ref["logits"])
       scale = want |> Enum.map(&abs/1) |> Enum.max()
       err = Enum.zip_with(Tensor.to_floats(logits), want, &abs(&1 - &2)) |> Enum.max()

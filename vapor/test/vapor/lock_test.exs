@@ -10,7 +10,7 @@ defmodule Vapor.LockTest do
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Lock.{Alias, Spec}
   alias Vapor.Lock.Adapters.Encoder
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Native, Oracle, Worker}
   import Vapor.TestHelpers
 
@@ -23,7 +23,7 @@ defmodule Vapor.LockTest do
 
   defp env(c, toks) do
     n = length(toks)
-    Map.merge(Llama.empty_caches(c, 16), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
+    Map.merge(Decoder.empty_caches(c, 16), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
   end
 
   # ------------------------------------------------------------ the decoder --
@@ -36,7 +36,7 @@ defmodule Vapor.LockTest do
       {:ok, spec, ws2} = Lock.from_map(map, ws)
       assert %Spec{interface: :causal_lm, family: ^arch, vocab: 96, width: 64} = spec
       assert {:ok, p} = Lock.build(spec, ws2, max_seq: 16)
-      assert {:ok, ^p} = Llama.program(c, ws, max_seq: 16)
+      assert {:ok, ^p} = Decoder.program(c, ws, max_seq: 16)
       # an admitted configuration is as good as its spec
       assert {:ok, ^p} = Lock.build(c, ws, max_seq: 16)
     end
@@ -45,7 +45,7 @@ defmodule Vapor.LockTest do
   test "zero state comes from the program, not the model" do
     {:ok, c} = Config.from_map(tiny_config("qwen2"))
     {:ok, p} = Lock.build(c, tiny_weights(c), max_seq: 16)
-    assert Lock.zero_state(p) == Llama.empty_caches(c, 16)
+    assert Lock.zero_state(p) == Decoder.empty_caches(c, 16)
   end
 
   test "a checkpoint nobody claims is refused with its near misses and the repair" do
@@ -139,7 +139,7 @@ defmodule Vapor.LockTest do
     assert spec.family == "phi3" and spec.lineage == ["phi3", "llama"]
     assert split == ws
     {:ok, p} = Lock.build(spec, split, max_seq: 16)
-    {:ok, ref} = Llama.program(c, ws, max_seq: 16)
+    {:ok, ref} = Decoder.program(c, ws, max_seq: 16)
     e = env(c, [3, 9, 27, 81, 50])
     assert Oracle.eval_program(p, e).logits == Oracle.eval_program(ref, e).logits
   end
@@ -410,10 +410,24 @@ defmodule Vapor.LockTest do
          Vapor.Emit.X86, Vapor.Emit.ARM, Vapor.Emit.RVV, Vapor.Emit.SpirV, Vapor.Recurrent, Vapor.Speculative.Tree,
          Vapor.Shard, Vapor.Spatial, Vapor.Tlog, Vapor.Runtime.Plan]
 
-  @families [Vapor.Model.Llama, Vapor.Model.Config, Vapor.Model.GGUF, Vapor.Lock.Adapters.Decoder, Vapor.Lock.Adapters.Granite,
+  # every topology and spelling of the airlock: the core may name none of them
+  @families [Vapor.Model.Decoder, Vapor.Model.Config, Vapor.Model.GGUF, Vapor.Lock.Adapters.Decoder, Vapor.Lock.Adapters.Multipliers,
              Vapor.Lock.Adapters.Encoder, Vapor.Lock.Adapters.Codec, Vapor.Lock.Adapters.Linear, Vapor.Lock.Alias,
-             Vapor.Lock.Adapters.Mamba, Vapor.Lock.Adapters.Whisper, Vapor.Lock.Adapters.VAE, Vapor.Lock.Adapters.DiT,
-             Vapor.Lock.Adapters.MLP]
+             Vapor.Lock.Adapters.Mamba, Vapor.Lock.Adapters.Mamba2, Vapor.Lock.Adapters.EncoderDecoder, Vapor.Lock.Adapters.VAE,
+             Vapor.Lock.Adapters.DiT, Vapor.Lock.Adapters.UNet, Vapor.Lock.Adapters.MLP, Vapor.Lock.Adapters.DeltaHybrid, Vapor.Quant.MXFP4]
+
+  test "modules are named for what they compute: no product or family name, except the agents' wire protocols" do
+    products = ~w(llama qwen mistral mixtral gemma deepseek phi kimi whisper granite gpt claude gemini grok flux sam3 clip siglip openai anthropic)
+    {:ok, mods} = :application.get_key(:vapor, :modules)
+    # Vapor.Agent.Backend.OpenAI / .Anthropic speak those vendors' HTTP protocols: the agent boundary
+    allowed = [Vapor.Agent.Backend.OpenAI, Vapor.Agent.Backend.Anthropic]
+
+    named =
+      for m <- mods, m not in allowed, part <- m |> Module.split() |> Enum.map(&String.downcase/1),
+          Enum.any?(products, &String.starts_with?(part, &1)), uniq: true, do: m
+
+    assert named == []
+  end
 
   test "the core's compiled modules reference no model family and no adapter (only Vapor.Lock)" do
     for mod <- @core do

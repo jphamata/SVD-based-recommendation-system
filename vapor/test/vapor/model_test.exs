@@ -9,19 +9,19 @@ defmodule Vapor.ModelTest do
   alias Vapor.{Program, Rejection, Tensor}
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Compile.Lower
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Native, Oracle, Substrates, Worker}
   import Vapor.TestHelpers
 
   defp model(arch, over \\ %{}, opts \\ []) do
     {:ok, c} = Config.from_map(tiny_config(arch, over))
-    {:ok, p} = Llama.program(c, tiny_weights(c), [max_seq: 16] ++ opts)
+    {:ok, p} = Decoder.program(c, tiny_weights(c), [max_seq: 16] ++ opts)
     {c, p}
   end
 
   defp env(c, toks, s \\ 16) do
     n = length(toks)
-    Map.merge(Llama.empty_caches(c, s), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
+    Map.merge(Decoder.empty_caches(c, s), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
   end
 
   defp lower!(p) do
@@ -91,9 +91,9 @@ defmodule Vapor.ModelTest do
     ws = tiny_weights(c)
     name = "model.layers.1.self_attn.k_proj.bias"
 
-    assert {:error, %Rejection{node: {:weight, ^name}}} = Llama.program(c, Map.delete(ws, name))
+    assert {:error, %Rejection{node: {:weight, ^name}}} = Decoder.program(c, Map.delete(ws, name))
     bad = Map.put(ws, name, Tensor.random(:f32, [3], 1))
-    assert {:error, %Rejection{node: {:weight, ^name}, bound: "f32[32], got f32[3]"}} = Llama.program(c, bad)
+    assert {:error, %Rejection{node: {:weight, ^name}, bound: "f32[32], got f32[3]"}} = Decoder.program(c, bad)
   end
 
   # a window that binds is executed (it used to be refused): the program's
@@ -102,8 +102,8 @@ defmodule Vapor.ModelTest do
     {:ok, c} = Config.from_map(tiny_config("mistral"))
     ws = tiny_weights(c)
     windows = fn p -> for {:attention, _, _, _, _, h} <- Vapor.Algebra.Term.postorder(Enum.map(p.outputs, &elem(&1, 1)) ++ Enum.map(p.lets, &elem(&1, 1))), uniq: true, do: Vapor.Algebra.Term.attention_window(h) end
-    {:ok, p8} = Llama.program(%{c | sliding_window: 8}, ws, max_seq: 16)
-    {:ok, p32} = Llama.program(%{c | sliding_window: 32}, ws, max_seq: 16)
+    {:ok, p8} = Decoder.program(%{c | sliding_window: 8}, ws, max_seq: 16)
+    {:ok, p32} = Decoder.program(%{c | sliding_window: 32}, ws, max_seq: 16)
     assert windows.(p8) == [8]
     assert windows.(p32) == [nil]
   end
@@ -235,10 +235,10 @@ defmodule Vapor.ModelTest do
     for arch <- ["llama", "qwen2"] do
       {:ok, c} = Config.from_map(tiny_config(arch, %{"attention_bias" => true}))
       ws = tiny_weights(c)
-      {:ok, pb} = Llama.program(c, ws, max_seq: 16, storage: :bf16)
+      {:ok, pb} = Decoder.program(c, ws, max_seq: 16, storage: :bf16)
       # the same values, rounded and widened back, in an f32 program
       rounded = Map.new(ws, fn {k, t} -> {k, if(length(t.shape) == 2, do: Tensor.widen(Tensor.to_bf16(t)), else: t)} end)
-      {:ok, pf} = Llama.program(c, rounded, max_seq: 16)
+      {:ok, pf} = Decoder.program(c, rounded, max_seq: 16)
       {cb, cf} = {lower!(pb), lower!(pf)}
 
       bytes = fn comp -> for({_, %{role: {:const, t}}} <- comp.slots, do: byte_size(t.data)) |> Enum.sum() end
@@ -263,7 +263,7 @@ defmodule Vapor.ModelTest do
 
   test "quantize: :sb4 needs contraction widths ≡ 0 mod 256" do
     {:ok, c} = Config.from_map(tiny_config("llama"))
-    assert {:error, %Rejection{node: {:quantize, :sb4}}} = Llama.program(c, tiny_weights(c), quantize: :sb4)
+    assert {:error, %Rejection{node: {:quantize, :sb4}}} = Decoder.program(c, tiny_weights(c), quantize: :sb4)
   end
 
   @tag :native

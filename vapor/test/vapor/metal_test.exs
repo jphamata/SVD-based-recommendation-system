@@ -11,7 +11,7 @@ defmodule Vapor.MetalTest do
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Compile.Lower
   alias Vapor.Emit.MSL
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Fabric, Native, Session, Substrates, Worker}
   alias Vapor.Verify.Envelope
   import Vapor.TestHelpers
@@ -79,7 +79,7 @@ defmodule Vapor.MetalTest do
   test "a Metal session = the CPU session; the engine serves on Metal with the CPU's tokens", %{metal: f} do
     {:ok, w} = Worker.start_link(exec: worker_exec(:host))
     {:ok, cfg} = Config.from_map(tiny_config("qwen2"))
-    {:ok, p} = Llama.program(cfg, tiny_weights(cfg), max_seq: 16)
+    {:ok, p} = Decoder.program(cfg, tiny_weights(cfg), max_seq: 16)
     {:ok, comp} = Lower.lower(p)
     Vapor.MSLShim.ensure(comp, :conforming)
     ids = fn xs -> Tensor.from_list(:s32, [length(xs)], xs) end

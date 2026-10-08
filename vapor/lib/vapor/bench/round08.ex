@@ -17,7 +17,7 @@ defmodule Vapor.Bench.Round08 do
   """
   alias Vapor.Tensor
   alias Vapor.Compile.Lower
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Fabric, Native, Session, Substrates, Worker}
 
   @reps 5
@@ -73,7 +73,7 @@ defmodule Vapor.Bench.Round08 do
                                   "rms_norm_eps" => 1.0e-5, "rope_theta" => 10_000.0, "hidden_act" => "silu"}, over))
 
     ws =
-      for {name, shape, kind} <- Llama.expected_weights(c), into: %{} do
+      for {name, shape, kind} <- Decoder.expected_weights(c), into: %{} do
         t = Tensor.random(:f32, shape, :erlang.phash2(name), scale: if(kind == :norm, do: 0.05, else: 0.2))
         {name, if(kind == :norm, do: Tensor.from_list(:f32, shape, Enum.map(Tensor.to_floats(t), &(&1 + 1.0))), else: t)}
       end
@@ -89,7 +89,7 @@ defmodule Vapor.Bench.Round08 do
     {c, ws} = tiny("llama", %{"hidden_size" => 256, "intermediate_size" => 512, "num_hidden_layers" => 4,
                               "num_attention_heads" => 8, "num_key_value_heads" => 2})
     s = 256
-    {:ok, p} = Llama.program(c, ws, max_seq: s)
+    {:ok, p} = Decoder.program(c, ws, max_seq: s)
     {:ok, comp} = Lower.lower(p)
     prompt = Enum.map(1..32, &rem(&1 * 37, 2000))
     steps = 32
@@ -120,9 +120,9 @@ defmodule Vapor.Bench.Round08 do
     staged = session_run.(f, isa: :spirv, staging: true)
 
     # the same loop as one-shot RUNs: caches cross both ways every token
-    caches0 = Llama.empty_caches(c, s)
+    caches0 = Decoder.empty_caches(c, s)
     {:ok, r0} = Fabric.run(f, comp, Map.merge(caches0, %{tok: ids(prompt), pos: ids(Enum.to_list(0..31))}))
-    names = for l <- 0..(c.layers - 1), n <- Llama.cache_names(c, l), do: n
+    names = for l <- 0..(c.layers - 1), n <- Decoder.cache_names(c, l), do: n
     next = fn r -> Map.new(names, &{&1, r.outputs[:"#{&1}_next"]}) end
 
     {run_rows, run_times} =
@@ -207,11 +207,11 @@ defmodule Vapor.Bench.Round08 do
     rows =
       for t <- [1, 8] do
         toks = Enum.map(1..t, &rem(&1 * 37, 500))
-        e = Map.merge(Llama.empty_caches(c, 64), %{tok: ids(toks), pos: ids(Enum.to_list(0..(t - 1)))})
+        e = Map.merge(Decoder.empty_caches(c, 64), %{tok: ids(toks), pos: ids(Enum.to_list(0..(t - 1)))})
 
         [{dm, d, dr}, {sm, s, sr}] =
           for mode <- [:dense, :sparse] do
-            {:ok, p} = Llama.program(c, ws, max_seq: 64, moe: mode, quantize: :sb4)
+            {:ok, p} = Decoder.program(c, ws, max_seq: 64, moe: mode, quantize: :sb4)
             comp = elem(Lower.lower(p), 1)
             runs = for _ <- 1..@reps, do: elem(Native.run(w, comp, e, isa: isa, mode: :native), 1)
             {:ok, emu} = Native.run(w, comp, e, isa: :riscv64, mode: :emulate, vlen: 256)

@@ -18,7 +18,7 @@ defmodule Vapor.Quality.Round06 do
   """
   alias Vapor.{Canon, F32, Program, Spatial, Tensor, Tlog}
   alias Vapor.Algebra.Term, as: T
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.Oracle
   import Bitwise
 
@@ -35,7 +35,7 @@ defmodule Vapor.Quality.Round06 do
                                            "num_hidden_layers" => 2, "num_attention_heads" => 4, "num_key_value_heads" => 2,
                                            "max_position_embeddings" => 64, "rms_norm_eps" => 1.0e-5, "rope_theta" => 10_000.0,
                                            "hidden_act" => "silu"}, over))
-    ws = for {name, shape, kind} <- Llama.expected_weights(c), into: %{} do
+    ws = for {name, shape, kind} <- Decoder.expected_weights(c), into: %{} do
       t = Tensor.random(:f32, shape, :erlang.phash2(name), scale: 0.2)
       {name, if(kind == :norm, do: Tensor.from_list(:f32, shape, Enum.map(Tensor.to_floats(t), &(&1 + 1.0))), else: t)}
     end
@@ -45,7 +45,7 @@ defmodule Vapor.Quality.Round06 do
 
   defp env(c, toks, opts \\ []) do
     n = length(toks)
-    Map.merge(Llama.empty_caches(c, 16, opts), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
+    Map.merge(Decoder.empty_caches(c, 16, opts), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
   end
 
   defp diff(a, b), do: Enum.count(Enum.zip(F32.decode(a.data), F32.decode(b.data)), fn {x, y} -> x != y end)
@@ -53,7 +53,7 @@ defmodule Vapor.Quality.Round06 do
   defp experts do
     {c, ws} = cfg("mixtral", %{"num_local_experts" => 4, "num_experts_per_tok" => 2})
     toks = [3, 50, 7, 81, 12]
-    run = fn ws, mode -> {:ok, p} = Llama.program(c, ws, max_seq: 16, moe: mode); Oracle.eval_program(p, env(c, toks)).logits end
+    run = fn ws, mode -> {:ok, p} = Decoder.program(c, ws, max_seq: 16, moe: mode); Oracle.eval_program(p, env(c, toks)).logits end
     dense = run.(ws, :dense)
     sparse = run.(ws, :sparse)
     # perturb an expert every token routes through: expert 0 of layer 0 is
@@ -73,7 +73,7 @@ defmodule Vapor.Quality.Round06 do
     {c, ws} = cfg("deepseek_v3", over)
     toks = [1, 95, 7, 7, 42, 0, 33, 64]
     am = fn l -> l |> Tensor.to_floats() |> Enum.chunk_every(c.vocab) |> Enum.map(fn r -> r |> Enum.with_index() |> Enum.max_by(&elem(&1, 0)) |> elem(1) end) end
-    run = fn ws, mode -> {:ok, p} = Llama.program(c, ws, max_seq: 16, mla: mode); am.(Oracle.eval_program(p, env(c, toks, mla: mode)).logits) end
+    run = fn ws, mode -> {:ok, p} = Decoder.program(c, ws, max_seq: 16, mla: mode); am.(Oracle.eval_program(p, env(c, toks, mla: mode)).logits) end
     exp = run.(ws, :expanded)
     lat = run.(ws, :latent)
     kv = "model.layers.0.self_attn.kv_b_proj.weight"

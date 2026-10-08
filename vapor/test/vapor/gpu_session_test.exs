@@ -7,7 +7,7 @@ defmodule Vapor.GpuSessionTest do
   """
   use ExUnit.Case, async: false
   alias Vapor.Tensor
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Fabric, Session, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -22,7 +22,7 @@ defmodule Vapor.GpuSessionTest do
 
   defp model(arch \\ "qwen2", over \\ %{}, opts \\ []) do
     {:ok, c} = Config.from_map(tiny_config(arch, over))
-    {:ok, p} = Llama.program(c, tiny_weights(c), Keyword.merge([max_seq: 16], opts))
+    {:ok, p} = Decoder.program(c, tiny_weights(c), Keyword.merge([max_seq: 16], opts))
     {:ok, comp} = Vapor.Compile.Lower.lower(p)
     {c, comp}
   end

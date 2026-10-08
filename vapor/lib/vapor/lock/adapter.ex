@@ -21,7 +21,7 @@ defmodule Vapor.Lock.Adapter do
        existing topology under other names, fused tensors or extra config
        keys. Written as a map or a JSON file, registered at run time.
     2. **blueprint** — a few lines of code that map a configuration onto
-       the knobs of an existing topology (`Vapor.Lock.Adapters.Granite`).
+       the knobs of an existing topology (`Vapor.Lock.Adapters.Multipliers`).
     3. **topology** — a new program shape built from the algebra
        (`Vapor.Lock.Adapters.Encoder`, `Vapor.Lock.Adapters.Codec`).
 

@@ -28,7 +28,7 @@ defmodule Vapor.Bench.Frontier do
   alias Vapor.{Program, Spatial, Tensor, Tlog}
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Compile.Lower
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Native, Substrates, Worker}
 
   @reps 7
@@ -78,7 +78,7 @@ defmodule Vapor.Bench.Frontier do
   defp tiny(arch, over) do
     {:ok, c} = Config.from_map(Map.merge(%{"model_type" => arch, "vocab_size" => 256, "max_position_embeddings" => 512,
                                            "rms_norm_eps" => 1.0e-5, "rope_theta" => 10_000.0, "hidden_act" => "silu"}, over))
-    ws = for {name, shape, kind} <- Llama.expected_weights(c), into: %{} do
+    ws = for {name, shape, kind} <- Decoder.expected_weights(c), into: %{} do
       t = Tensor.random(:f32, shape, :erlang.phash2(name), scale: if(kind == :norm, do: 0.05, else: 0.2))
       {name, if(kind == :norm, do: Tensor.from_list(:f32, shape, Enum.map(Tensor.to_floats(t), &(&1 + 1.0))), else: t)}
     end
@@ -88,7 +88,7 @@ defmodule Vapor.Bench.Frontier do
 
   defp env(c, toks, s, opts \\ []) do
     n = length(toks)
-    Map.merge(Llama.empty_caches(c, s, opts), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
+    Map.merge(Decoder.empty_caches(c, s, opts), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
   end
 
   defp moe(w, isa) do
@@ -99,7 +99,7 @@ defmodule Vapor.Bench.Frontier do
       toks = Enum.map(1..t, &rem(&1 * 37, 250))
       [{dm, d}, {sm, s}] =
         for mode <- [:dense, :sparse] do
-          {:ok, p} = Llama.program(c, ws, max_seq: 64, moe: mode)
+          {:ok, p} = Decoder.program(c, ws, max_seq: 64, moe: mode)
           timed(w, lower!(p), env(c, toks, 64), isa)
         end
 
@@ -116,12 +116,12 @@ defmodule Vapor.Bench.Frontier do
     s = 256
 
     for mode <- [:expanded, :latent] do
-      {:ok, p} = Llama.program(c, ws, max_seq: s, mla: mode)
+      {:ok, p} = Decoder.program(c, ws, max_seq: s, mla: mode)
       comp = lower!(p)
       # decode one token at position s − 1 against a full cache
-      e = Map.merge(Llama.empty_caches(c, s, mla: mode), %{tok: Tensor.from_list(:s32, [1], [7]), pos: Tensor.from_list(:s32, [1], [s - 1])})
+      e = Map.merge(Decoder.empty_caches(c, s, mla: mode), %{tok: Tensor.from_list(:s32, [1], [7]), pos: Tensor.from_list(:s32, [1], [s - 1])})
       {ms, _} = timed(w, comp, e, isa)
-      %{mode: mode, floats: Llama.cache_floats(c, mla: mode), ms: ms, cache_mb: Llama.cache_floats(c, mla: mode) * 4 * s * c.layers / 1.0e6}
+      %{mode: mode, floats: Decoder.cache_floats(c, mla: mode), ms: ms, cache_mb: Decoder.cache_floats(c, mla: mode) * 4 * s * c.layers / 1.0e6}
     end
   end
 
@@ -225,11 +225,11 @@ defmodule Vapor.Bench.Frontier do
 
     attn =
       for s <- [64, 1024, 8192] do
-        {:ok, p} = Llama.program(c, lws, max_seq: s, max_tokens: 1)
+        {:ok, p} = Decoder.program(c, lws, max_seq: s, max_tokens: 1)
         {:ok, sess} = Session.open(w, lower!(p), isa: isa)
         ms = step_ms(sess, %{tok: Tensor.from_list(:s32, [1], [7]), pos: Tensor.from_list(:s32, [1], [s - 1])}, [:logits])
         Session.close(sess)
-        %{context: s, ms: ms, kv_floats: Llama.cache_floats(c) * c.layers * s}
+        %{context: s, ms: ms, kv_floats: Decoder.cache_floats(c) * c.layers * s}
       end
 
     %{early_ms: early, late_ms: late, state_floats: state_floats, attn: attn}
@@ -241,7 +241,7 @@ defmodule Vapor.Bench.Frontier do
                                  "num_hidden_layers" => 2, "num_attention_heads" => 4, "num_key_value_heads" => 2,
                                  "max_position_embeddings" => 512, "rms_norm_eps" => 1.0e-5, "rope_theta" => 10_000.0,
                                  "sliding_window" => 32})
-    ws = for {name, shape, _} <- Llama.expected_weights(c), into: %{}, do: {name, Tensor.random(:f32, shape, :erlang.phash2(name), scale: 0.1)}
+    ws = for {name, shape, _} <- Decoder.expected_weights(c), into: %{}, do: {name, Tensor.random(:f32, shape, :erlang.phash2(name), scale: 0.1)}
     {:ok, e} = Vapor.Engine.start_link(config: c, weights: ws, max_seq: 512, page: 16, sequences: 4, step_tokens: 32)
     info = Vapor.Engine.info(e)
     GenServer.stop(e)
@@ -251,21 +251,21 @@ defmodule Vapor.Bench.Frontier do
   end
 
   defp whisper(w, isa) do
-    alias Vapor.Lock.Adapters.Whisper
+    alias Vapor.Lock.Adapters.EncoderDecoder
     raw = %{"model_type" => "whisper", "d_model" => 384, "encoder_layers" => 4, "decoder_layers" => 4, "encoder_attention_heads" => 6,
             "decoder_attention_heads" => 6, "encoder_ffn_dim" => 1536, "decoder_ffn_dim" => 1536, "num_mel_bins" => 80,
             "max_source_positions" => 1500, "max_target_positions" => 448, "vocab_size" => 4096, "decoder_start_token_id" => 1, "eos_token_id" => 2}
-    spec0 = Whisper.spec(struct(Whisper.Config, vocab: 4096, d: 384, mels: 80, src: 1500, tgt: 448, enc_layers: 4, dec_layers: 4, enc_heads: 6,
+    spec0 = EncoderDecoder.spec(struct(Whisper.Config, vocab: 4096, d: 384, mels: 80, src: 1500, tgt: 448, enc_layers: 4, dec_layers: 4, enc_heads: 6,
                                                 dec_heads: 6, enc_ffn: 1536, dec_ffn: 1536, eps: 1.0e-5, start: 1, eos: 2, tie: true, raw: raw))
     ws = for {name, shape, kind} <- Vapor.Lock.expected(spec0), into: %{} do
       t = Tensor.random(:f32, shape, :erlang.phash2(name), scale: 0.05)
       {name, if(kind == :norm, do: Tensor.from_list(:f32, shape, Enum.map(Tensor.to_floats(t), &(&1 + 1.0))), else: t)}
     end
 
-    {:ok, spec, _} = Whisper.admit(%{config: raw}, ws, [])
+    {:ok, spec, _} = EncoderDecoder.admit(%{config: raw}, ws, [])
     {:ok, ep} = Vapor.Lock.build(spec, ws, part: :encoder)
     {t_lower, comp} = :timer.tc(fn -> lower!(ep) end)
-    env = Whisper.encoder_input(spec, Tensor.random(:f32, [80, 3000], 3))
+    env = EncoderDecoder.encoder_input(spec, Tensor.random(:f32, [80, 3000], 3))
     {enc_ms, out} = timed(w, comp, env, isa)
 
     {:ok, dp} = Vapor.Lock.build(spec, ws, max_seq: 448, max_tokens: 1)

@@ -155,6 +155,8 @@ defmodule Vapor.MCP.Server do
                                                                  "style" => %{"type" => "string", "enum" => ~w(cells nand)}}, "required" => ["op", "spec"]}},
       %{"name" => "recommend_run", "description" => "Recommendations by matrix factorisation with the evidence that decides whether they work (docs/RECOMMEND.md): `csv` with items in the first row, users in the first column, empty cells missing. Rank and λ chosen on a validation split, test RMSE against the global mean and the biases, a paired sign-flip test with a minimum gain, a shuffled control; verdict signal or not, and the top items per user.",
         "inputSchema" => %{"type" => "object", "properties" => %{"csv" => %{"type" => "string"}, "top" => %{"type" => "integer"}, "seed" => %{"type" => "integer"}}, "required" => ["csv"]}},
+      %{"name" => "siphon_propose", "description" => "Ask the person to fetch something from outside (docs/SIPHON.md): a declared fetcher (`fetcher`), what to fetch (`ref`) and why (`why`). This only queues the request: nothing is fetched, and no tool here fetches; the person approves it with `vapor siphon approve ID` or drops it. Returns the request's id.",
+        "inputSchema" => %{"type" => "object", "properties" => %{"fetcher" => %{"type" => "string"}, "ref" => %{"type" => "string"}, "why" => %{"type" => "string"}}, "required" => ["fetcher", "ref", "why"]}},
       %{"name" => "assay_run", "description" => "AI-research statistics (docs/ASSAY.md): tool compare (columns a, b), leaderboard (one column per system), contamination (JSON train/test/scores), dedup (one document per line), scaling (N, D, L), calibration (p, correct), agreement (one column per annotator), judge (ab, ba). Every answer says whether it is signal or noise.",
         "inputSchema" => %{"type" => "object", "properties" => %{"tool" => %{"type" => "string"}, "text" => %{"type" => "string"}}, "required" => ["tool", "text"]}},
       %{"name" => "scene_ops", "description" => "Parse scene operations (docs/SCENE.md §9) into the operations a living scene applies; problems name each line not understood.\n" <> Vapor.Scene.Ops.card(),
@@ -326,6 +328,14 @@ defmodule Vapor.MCP.Server do
     end
   end
 
+  # an agent can only ask: the request waits for the person (Vapor.Siphon.approve/2 is not a tool)
+  defp call("siphon_propose", %{"fetcher" => f, "ref" => r, "why" => w}, _st) when is_binary(f) and is_binary(r) and is_binary(w) do
+    case Vapor.Siphon.propose(f, r, w, by: "an agent over MCP") do
+      {:ok, p} -> ok(json(p), "queued #{p["id"]}: #{f} #{r} — waiting for the person (vapor siphon approve #{p["id"]})")
+      {:error, rej} -> err("#{rej.bound} — #{rej.repair}")
+    end
+  end
+
   defp call("assay_run", %{"tool" => _, "text" => _} = args, _st), do: lab(Vapor.Console.Lab14.assay(args) |> then(fn {:ok, v} -> {:ok, Vapor.Main.jsonable(v)}; e -> e end))
   defp call("scene_ops", %{"text" => _} = args, _st), do: lab(Vapor.Console.Lab14.scene_ops(args) |> then(fn {:ok, v} -> {:ok, Vapor.Main.jsonable(v)}; e -> e end))
 
@@ -367,7 +377,7 @@ defmodule Vapor.MCP.Server do
     end
   end
 
-  defp call(name, _args, _st) when name in ["studio_validate", "studio_run", "studio_verify", "comfy_import", "context_search", "workbench_solve", "engineering_run", "logic_check", "board_query", "render_scene", "finance_run", "arbitrage_check", "qalib_check", "recommend_run"],
+  defp call(name, _args, _st) when name in ["studio_validate", "studio_run", "studio_verify", "comfy_import", "context_search", "workbench_solve", "engineering_run", "logic_check", "board_query", "render_scene", "finance_run", "arbitrage_check", "qalib_check", "recommend_run", "siphon_propose"],
     do: err("missing required arguments for #{name}")
 
   defp call(name, _, _), do: err("unknown tool #{inspect(name)}")

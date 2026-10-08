@@ -323,8 +323,8 @@ defmodule Vapor.Quality.Round15 do
   defp logits(c, ws) do
     toks = [3, 50, 7, 81, 12]
     n = length(toks)
-    {:ok, p} = Vapor.Model.Llama.program(c, ws, max_seq: 16)
-    env = Map.merge(Vapor.Model.Llama.empty_caches(c, 16), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
+    {:ok, p} = Vapor.Model.Decoder.program(c, ws, max_seq: 16)
+    env = Map.merge(Vapor.Model.Decoder.empty_caches(c, 16), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
     Vapor.Runtime.Oracle.eval_program(p, env).logits |> Tensor.to_floats()
   end
 

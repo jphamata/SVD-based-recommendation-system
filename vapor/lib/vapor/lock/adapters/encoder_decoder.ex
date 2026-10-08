@@ -1,8 +1,10 @@
-defmodule Vapor.Lock.Adapters.Whisper do
+defmodule Vapor.Lock.Adapters.EncoderDecoder do
   @moduledoc """
-  Tier 3 of the model airlock: **Whisper** (`WhisperForConditionalGeneration`,
-  `model_type: "whisper"`: tiny … large-v3, distil-whisper's layout) —
-  speech recognition as two programs of the same algebra, no new operator:
+  Tier 3 of the model airlock: the **encoder–decoder with cross-attention**
+  over audio frames, read in Whisper's spelling (`WhisperForConditionalGeneration`,
+  `model_type: "whisper"`: tiny … large-v3, distil-whisper's layout — the
+  one family it claims) — speech recognition as two programs of the same
+  algebra, no new operator:
 
     * **encoder** (`part: :encoder`, contract `:encoder`): log-mel frames
       as rows `f32[2S, mels]` (time-major: the transpose of transformers'
@@ -25,7 +27,7 @@ defmodule Vapor.Lock.Adapters.Whisper do
   part of the program (`features` are what transformers' feature extractor
   produces); `Vapor.Modal.Speech` is vapor's own front end.
 
-  `Vapor.Lock.Adapters.Whisper.transcribe/4` runs encoder + greedy decoding;
+  `Vapor.Lock.Adapters.EncoderDecoder.transcribe/4` runs encoder + greedy decoding;
   the test suite compares hidden states, logits and greedy tokens with
   transformers (`Vapor.WhisperHFTest`).
   """
@@ -42,7 +44,7 @@ defmodule Vapor.Lock.Adapters.Whisper do
   end
 
   @impl true
-  def id, do: "whisper"
+  def id, do: "encoder_decoder"
 
   @impl true
   def claim(%{config: %{"model_type" => "whisper"}}), do: {:claim, 100}

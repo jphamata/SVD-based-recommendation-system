@@ -19,15 +19,24 @@ sentence that says whether it is signal.
 | `contamination` | train / test | 13-gram overlap per item, the clean subset | — |
 | `dedup` | documents | MinHash LSH (128 hashes, 16 × 8 bands) **verified by exact Jaccard** | error of the estimate |
 | `scaling` | N, D, L | L = E + A/N^α + B/D^β (Hoffmann, approach 3: Huber in log, grid + Nelder–Mead), *bootstrap* CI, **prediction of the largest without them**, optimal N\*(C) | shuffled losses: the prediction misses by 33 % and the certificate says so |
+| `layers` (0.17) | labels, features per layer | which layer a linear probe should read: chosen on validation, reported on test against the output (exact McNemar) and chance — the Perception Encoder's finding as a protocol | a planted network folded at its output is read in the middle (31 of 32 discordant items, p = 1.5·10⁻⁸); shuffled labels find nothing |
+| `detect` (0.17) | truth and predicted boxes per image | SAM 3's **cgF1** = 100 · pmF1 · IL_MCC: localisation by an **optimal matching, exact and certified** (rational simplex on a totally unimodular program), presence on images with and without the object, a bootstrap CI | a greedy matching loses a true positive the optimal one keeps; predictions shuffled across images fall to chance |
 | `geometry` (0.16) | model, item, p₁…p_k | mean Fisher–Rao distance between each pair of models with a *bootstrap* CI; each one's distance to the geometric consensus (Fréchet mean) — [GEOMETRY.md](GEOMETRY.md) | the same models with the items shuffled; the triangle inequality on every triple |
 
 The scaling-law control found a real defect in this round: on a fit with no structure the
 log parameters climbed until `exp` overflowed. Now everything stays finite and the *holdout* says
 the law predicts nothing — which is the right answer.
 
+`detect` makes two choices SAM 3 leaves open, and reports them with every answer: a truth matched
+below τ counts as a false negative (otherwise F1 is inflated), and IL_MCC is 0 when its
+denominator is 0. Its matching maximises total IoU exactly. COCO-style greedy matching, best pair
+first, can lose a true positive that the optimal matching keeps, and the test shows such a case.
+
 ```
-vapor assay compare resultados.csv          # exits 0 if the difference is real, 1 if it is noise
-vapor assay scaling corridas.csv --json | jq .holdout
-vapor assay dedup corpus.jsonl --keep > limpo.jsonl
-vapor assay contamination treino.txt teste.txt
+vapor assay compare results.csv             # exits 0 if the difference is real, 1 if it is noise
+vapor assay scaling runs.csv --json | jq .holdout
+vapor assay dedup corpus.jsonl --keep > clean.jsonl
+vapor assay contamination train.txt test.txt
+vapor assay layers features.json            # which layer to probe, and whether it beats the output
+vapor assay detect detections.jsonl         # cgF1 with its interval
 ```

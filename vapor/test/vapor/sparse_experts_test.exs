@@ -17,7 +17,7 @@ defmodule Vapor.SparseExpertsTest do
   alias Vapor.{Program, Tensor}
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Compile.Lower
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Dispatch, Native, Oracle, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -35,14 +35,14 @@ defmodule Vapor.SparseExpertsTest do
 
   defp env(c, toks) do
     n = length(toks)
-    Map.merge(Llama.empty_caches(c, @s), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
+    Map.merge(Decoder.empty_caches(c, @s), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
   end
 
   defp programs(arch, over) do
     {:ok, c} = Config.from_map(tiny_config(arch, over))
     ws = tiny_weights(c, 3)
-    {:ok, dense} = Llama.program(c, ws, max_seq: @s, moe: :dense)
-    {:ok, sparse} = Llama.program(c, ws, max_seq: @s, moe: :sparse)
+    {:ok, dense} = Decoder.program(c, ws, max_seq: @s, moe: :dense)
+    {:ok, sparse} = Decoder.program(c, ws, max_seq: @s, moe: :sparse)
     {c, dense, sparse}
   end
 
@@ -152,7 +152,7 @@ defmodule Vapor.SparseExpertsTest do
     {"mixtral", over} = Enum.at(@moe, 1)
     {:ok, c} = Config.from_map(tiny_config("mixtral", over))
     ws = tiny_weights(c, 3)
-    {:ok, p} = Llama.program(c, ws, max_seq: @s)
+    {:ok, p} = Decoder.program(c, ws, max_seq: @s)
     {:ok, ref} = Native.run(wk, lower!(p), env(c, [42]), isa: Substrates.host_isa(), mode: :native)
 
     # poison every expert of layer 0 except the two the token selects
@@ -169,7 +169,7 @@ defmodule Vapor.SparseExpertsTest do
           else: {k, t}
       end)
 
-    {:ok, pp} = Llama.program(c, poisoned, max_seq: @s)
+    {:ok, pp} = Decoder.program(c, poisoned, max_seq: @s)
     {:ok, got} = Native.run(wk, lower!(pp), env(c, [42]), isa: Substrates.host_isa(), mode: :native)
     assert got.outputs == ref.outputs
   end

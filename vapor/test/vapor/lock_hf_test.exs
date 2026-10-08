@@ -79,7 +79,7 @@ defmodule Vapor.LockHFTest do
         {out.logits, Map.new(caches, fn {k, _} -> {k, out[:"#{k}_next"]} end)}
       end
 
-      {logits, caches} = step.(Vapor.Model.Llama.empty_caches(c, 32), prompt, 0)
+      {logits, caches} = step.(Vapor.Model.Decoder.empty_caches(c, 32), prompt, 0)
       err = rel(Tensor.to_floats(logits), Tensor.to_floats(ref["logits"]))
       IO.puts("\n  #{unquote(v)}: prefill max |Δ|/max|ref| = #{Float.round(err, 9)}")
       assert err <= @tol

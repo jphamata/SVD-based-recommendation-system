@@ -1,6 +1,6 @@
 defmodule Vapor.Lock do
   @moduledoc """
-  **A eclusa de modelos** — the model airlock.
+  **The model airlock.**
 
   The format airlocks (`Vapor.JSON`, `Vapor.Ingest.Safetensors`,
   `Vapor.Ingest.GGUF`) make sure bytes are well formed. This airlock makes
@@ -42,10 +42,10 @@ defmodule Vapor.Lock do
 
   @doc "The built-in adapters, in priority order."
   def builtin do
-    [Vapor.Lock.Adapters.Granite, Vapor.Lock.Adapters.Decoder, Vapor.Lock.Adapters.Encoder,
+    [Vapor.Lock.Adapters.Multipliers, Vapor.Lock.Adapters.Decoder, Vapor.Lock.Adapters.Encoder,
      Vapor.Lock.Adapters.Codec, Vapor.Lock.Adapters.Linear, Vapor.Lock.Adapters.MLP, Vapor.Lock.Adapters.VAE,
      Vapor.Lock.Adapters.DiT, Vapor.Lock.Adapters.UNet, Vapor.Lock.Adapters.Mamba, Vapor.Lock.Adapters.Mamba2,
-     Vapor.Lock.Adapters.Whisper] ++
+     Vapor.Lock.Adapters.EncoderDecoder, Vapor.Lock.Adapters.DeltaHybrid] ++
       Enum.map(Alias.builtin(), &{Alias, &1})
   end
 
@@ -171,6 +171,57 @@ defmodule Vapor.Lock do
     with {:ok, a} <- select(manifest) do
       call(a, :admit, [manifest, weights, opts])
     end
+  end
+
+  @doc """
+  Admission from **shapes alone**: a configuration and the tensor table of
+  a checkpoint (`%{name => {dtype, shape}}`, as safetensors headers give
+  it), without one byte of tensor data — for a checkpoint too large to
+  fetch before knowing whether vapor can run it (docs/SIPHON.md). Returns
+  `{:ok, %{spec, expected, missing, unread}}` (`missing`: expected tensors
+  absent or misshapen, as `{name, want, got}`) or the adapter's rejection.
+
+  MXFP4 pairs (`X_blocks : U8[r, k/32, 16]`, `X_scales : U8[r, k/32]`)
+  stand for the matrix `X : [r, k]` they decode to. An adapter that needs
+  tensor data to admit (none of the built-in text families do) is a
+  rejection that says so.
+  """
+  def preflight(config, table) when is_map(config) and is_map(table) do
+    ws = shapes_only(table)
+    manifest = %{source: :headers, config: config, tensors: index(ws)}
+
+    with {:ok, a} <- select(manifest) do
+      try do
+        case call(a, :admit, [manifest, ws, []]) do
+          {:ok, spec, ws} ->
+            exp = expected(spec)
+            have = index(ws)
+            names = MapSet.new(exp, &elem(&1, 0))
+            {:ok, %{spec: spec, expected: length(exp), missing: for({n, s, _} <- exp, have[n] != s, do: {n, s, have[n]}),
+                    unread: have |> Map.keys() |> Enum.reject(&MapSet.member?(names, &1)) |> Enum.sort()}}
+
+          err ->
+            err
+        end
+      rescue
+        e -> {:error, Rejection.new({:preflight, id(a)}, "an adapter that admits from shapes alone", "#{id(a)} reads tensor data at admission (#{Exception.message(e)}): fetch the weights")}
+      end
+    end
+  end
+
+  # tensors with a dtype and a shape and no data; MXFP4 pairs folded into the matrix they decode to
+  defp shapes_only(table) do
+    dt = %{"F32" => :f32, "BF16" => :bf16, "F16" => :f16, "U8" => :u8, "I8" => :s8, "I32" => :s32}
+    t = Map.new(table, fn {n, {d, shape}} -> {n, %Tensor{dtype: Map.get(dt, d, :other), shape: shape, data: nil}} end)
+
+    Enum.reduce(t, t, fn {n, blk}, acc ->
+      base = String.replace_suffix(n, "_blocks", "")
+
+      case {n != base, blk.shape, acc[base <> "_scales"]} do
+        {true, [r, nb, 16], %Tensor{shape: [r, nb]}} -> acc |> Map.drop([n, base <> "_scales"]) |> Map.put(base, %Tensor{dtype: :f32, shape: [r, nb * 32], data: nil})
+        _ -> acc
+      end
+    end)
   end
 
   @doc "Admit an in-memory checkpoint: a configuration map and weights."

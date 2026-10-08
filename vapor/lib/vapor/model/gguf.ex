@@ -6,7 +6,7 @@ defmodule Vapor.Model.GGUF do
 
   Architectures `llama` (Llama, Mistral) and `qwen2`. Two conventions of
   llama.cpp's converter are undone so the weights mean what the
-  `rotate-half` RoPE of `Vapor.Model.Llama` expects:
+  `rotate-half` RoPE of `Vapor.Model.Decoder` expects:
 
     * for `llama`, the rows of `attn_q`/`attn_k` (weights and biases) are
       permuted within each head from `(pair, half)` to `(half, pair)` order

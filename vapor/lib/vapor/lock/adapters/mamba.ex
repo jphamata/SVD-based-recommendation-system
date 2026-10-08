@@ -224,7 +224,7 @@ defmodule Vapor.Lock.Adapters.Mamba do
     {:ok, Program.new(outputs, state: state, lets: Enum.reverse(lets))}
   end
 
-  # x · rsqrt(Σx²·(1/d) + ε), then the weight (as `Vapor.Model.Llama`)
+  # x · rsqrt(Σx²·(1/d) + ε), then the weight (as `Vapor.Model.Decoder`)
   defp norm(x, w, eps) do
     {:ok, {:f32, shape}} = T.infer(x)
     ms = T.mul(T.reduce(:sum, T.mul(x, x)), T.splat(1.0 / List.last(shape)))

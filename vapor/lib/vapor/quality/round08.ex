@@ -346,7 +346,7 @@ defmodule Vapor.Quality.Round08 do
          %{ready: true} = dev <- Fabric.info(f) do
       {c, ws} = Vapor.Bench.Round08.tiny("llama", %{"vocab_size" => 256, "hidden_size" => 64, "intermediate_size" => 128, "num_hidden_layers" => 2,
                                                      "num_attention_heads" => 4, "num_key_value_heads" => 2})
-      {:ok, prog} = Vapor.Model.Llama.program(c, ws, max_seq: 64)
+      {:ok, prog} = Vapor.Model.Decoder.program(c, ws, max_seq: 64)
       {:ok, comp} = Vapor.Compile.Lower.lower(prog)
       ids = &Vapor.Tensor.from_list(:s32, [length(&1)], &1)
       loop = fn server, opts, reset ->
@@ -384,9 +384,9 @@ defmodule Vapor.Quality.Round08 do
                                                      "num_attention_heads" => 4, "num_key_value_heads" => 2, "num_local_experts" => 4,
                                                      "num_experts_per_tok" => 2})
     toks = [3, 17, 99, 200]
-    env = Map.merge(Vapor.Model.Llama.empty_caches(c, 16), %{tok: Vapor.Tensor.from_list(:s32, [4], toks), pos: Vapor.Tensor.from_list(:s32, [4], [0, 1, 2, 3])})
+    env = Map.merge(Vapor.Model.Decoder.empty_caches(c, 16), %{tok: Vapor.Tensor.from_list(:s32, [4], toks), pos: Vapor.Tensor.from_list(:s32, [4], [0, 1, 2, 3])})
     run = fn ws, mode ->
-      {:ok, p} = Vapor.Model.Llama.program(c, ws, max_seq: 16, moe: mode, quantize: :sb4)
+      {:ok, p} = Vapor.Model.Decoder.program(c, ws, max_seq: 16, moe: mode, quantize: :sb4)
       {:ok, comp} = Vapor.Compile.Lower.lower(p)
       {:ok, r} = Native.run(w, comp, env, isa: Substrates.host_isa(), mode: :native)
       r.outputs.logits.data

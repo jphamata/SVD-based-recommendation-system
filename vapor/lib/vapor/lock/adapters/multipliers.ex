@@ -1,8 +1,9 @@
-defmodule Vapor.Lock.Adapters.Granite do
+defmodule Vapor.Lock.Adapters.Multipliers do
   @moduledoc """
-  Tier 2 of the model airlock, a **blueprint**: IBM Granite 3.x is the
-  Llama topology plus four multipliers, so the whole adapter is the map
-  from its configuration onto the decoder's knobs.
+  Tier 2 of the model airlock, a **blueprint**: the decoder topology with
+  four multipliers, read in IBM Granite 3.x's spelling (the one family it
+  claims), so the whole adapter is the map from that configuration onto
+  the decoder's knobs.
 
   | `config.json` | Hugging Face (`modeling_granite.py`) | decoder knob |
   |---|---|---|
@@ -12,8 +13,8 @@ defmodule Vapor.Lock.Adapters.Granite do
   | `logits_scaling` | `logits / s` | `logit_divisor` |
 
   Everything else (attention biases, RoPE scaling, tied embeddings, the
-  checks on activations and MLP biases) is the Llama family's own
-  admission, unchanged. The original map is kept, so `Config.to_map/1`
+  checks on activations and MLP biases) is the decoder's own admission,
+  unchanged. The original map is kept, so `Config.to_map/1`
   writes the checkpoint back as Granite.
   """
   @behaviour Vapor.Lock.Adapter
@@ -23,7 +24,7 @@ defmodule Vapor.Lock.Adapters.Granite do
   alias Vapor.Rejection
 
   @impl true
-  def id, do: "granite"
+  def id, do: "multipliers"
 
   @impl true
   def claim(%{config: %{"model_type" => "granite"}}), do: {:claim, 100}

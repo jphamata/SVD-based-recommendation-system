@@ -181,7 +181,7 @@ defmodule Vapor.TestHelpers do
   @doc "Random f32 weights with Hugging Face names for a `Vapor.Model.Config` (any family)."
   def tiny_weights(%Vapor.Model.Config{} = c, seed \\ 1) do
     c
-    |> Vapor.Model.Llama.expected_weights()
+    |> Vapor.Model.Decoder.expected_weights()
     |> Enum.with_index(seed * 1000)
     |> Map.new(fn
       {{name, shape, :norm}, i} ->

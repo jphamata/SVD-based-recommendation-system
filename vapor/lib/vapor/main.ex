@@ -18,7 +18,7 @@ defmodule Vapor.Main do
   """
   alias Vapor.Alembic
 
-  @verbs ~w(alembic athanor search game crucible assay mind scene solve verify logic rebis aludel tabula cupel amalgam qalib recommend palingenesis chat wzn lsp help version)
+  @verbs ~w(alembic athanor search game crucible assay mind scene solve verify logic rebis aludel tabula cupel amalgam qalib recommend palingenesis siphon chat wzn lsp help version)
 
   @doc "The verbs (what `help` lists and the console's terminal completes)."
   def verbs, do: @verbs
@@ -56,6 +56,7 @@ defmodule Vapor.Main do
   def run(["qalib" | rest]), do: Vapor.Main.ForgeCli.qalib(rest)
   def run(["recommend" | rest]), do: Vapor.Main.ForgeCli.recommend(rest)
   def run(["palingenesis" | rest]), do: Vapor.Main.ForgeCli.palingenesis(rest)
+  def run(["siphon" | rest]), do: Vapor.Main.SiphonCli.run(rest)
   def run(["rebis" | rest]), do: Vapor.Main.OpusCli.rebis(rest)
   def run(["aludel" | rest]), do: Vapor.Main.OpusCli.aludel(rest)
   def run(["tabula" | rest]), do: Vapor.Main.OpusCli.tabula(rest)
@@ -91,6 +92,7 @@ defmodule Vapor.Main do
       vapor qalib map|check …                     sky130 netlists: mapped, read back, proved equal (or a counterexample)
       vapor recommend RATINGS.csv                 matrix factorisation against baselines, a paired test, a shuffled control
       vapor palingenesis planks|try MODEL …       renew a model plank by plank, through the drift brake and the target test
+      vapor siphon run|queue|approve|headers …    the network airlock: fetchers you declare, run only when you say so
       vapor aludel decide POLY --box … | REQ.json polynomial claims and barrier certificates, decided exactly
       vapor tabula FILE [--facts a,b]             a contract: antinomies, proofs of consistency, positions
       vapor cupel | vapor amalgam [FILE]          silent-corruption drill · sums that do not depend on order

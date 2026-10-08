@@ -7,7 +7,7 @@ defmodule Vapor.EngineTest do
   """
   use ExUnit.Case, async: false
   alias Vapor.{Engine, Sampler, Tensor}
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Session, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -29,7 +29,7 @@ defmodule Vapor.EngineTest do
   # the same greedy/sampled continuation by the plain contiguous program,
   # one sequence at a time, token by token
   defp reference(c, ws, prompt, n, params) do
-    {:ok, p} = Llama.program(c, ws, max_seq: 64)
+    {:ok, p} = Decoder.program(c, ws, max_seq: 64)
     {:ok, comp} = Vapor.Compile.Lower.lower(p)
     {:ok, w} = Worker.start_link(exec: worker_exec(:host))
     {:ok, s} = Session.open(w, comp, isa: Substrates.host_isa())

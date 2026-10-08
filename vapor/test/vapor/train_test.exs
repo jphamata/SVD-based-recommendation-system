@@ -9,7 +9,7 @@ defmodule Vapor.TrainTest do
   use ExUnit.Case, async: false
   alias Vapor.{Program, Tensor, Train}
   alias Vapor.Algebra.Term, as: T
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Native, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -27,7 +27,7 @@ defmodule Vapor.TrainTest do
                norm: ws["model.norm.weight"], head: ws["lm_head.weight"]}
 
     # features: the base model's input to its last MLP block, for 4 batches
-    {:ok, p} = Llama.program(c, ws, max_seq: 16)
+    {:ok, p} = Decoder.program(c, ws, max_seq: 16)
     name = :"layers.#{l}.attn_out"
     {:input, _, _, shape} = T.ref(name, Program.bound(p)[name])
     feat = Program.new([h: T.input(name, :f32, shape)], lets: p.lets)
@@ -38,7 +38,7 @@ defmodule Vapor.TrainTest do
       for b <- 1..4 do
         toks = Tensor.random(:s32, [@t], 100 + b, max: 128)
         env = %{tok: toks, pos: Tensor.from_list(:s32, [@t], Enum.to_list(0..(@t - 1)))}
-        {:ok, r} = Native.run(w, fc, Map.merge(env, Llama.empty_caches(c, 16)), isa: Substrates.host_isa(), mode: :native)
+        {:ok, r} = Native.run(w, fc, Map.merge(env, Decoder.empty_caches(c, 16)), isa: Substrates.host_isa(), mode: :native)
         r.outputs.h
       end
 

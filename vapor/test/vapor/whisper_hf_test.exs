@@ -1,6 +1,6 @@
 defmodule Vapor.WhisperHFTest do
   @moduledoc """
-  Whisper (`Vapor.Lock.Adapters.Whisper`) against transformers itself: a
+  Whisper (`Vapor.Lock.Adapters.EncoderDecoder`) against transformers itself: a
   `WhisperForConditionalGeneration` written by it (`test/python/hf_whisper.py`)
   is admitted with no tensor left unread; the encoder's hidden states, the
   decoder's logits and the greedy continuation are compared with
@@ -16,7 +16,7 @@ defmodule Vapor.WhisperHFTest do
   alias Vapor.{Lock, Tensor}
   alias Vapor.Compile.Lower
   alias Vapor.Ingest.Safetensors
-  alias Vapor.Lock.Adapters.Whisper
+  alias Vapor.Lock.Adapters.EncoderDecoder
   alias Vapor.Runtime.{Native, Oracle, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -63,7 +63,7 @@ defmodule Vapor.WhisperHFTest do
 
     results =
       for wk <- Enum.uniq([nil, w]) do
-        {:ok, ids, enc} = Whisper.transcribe(m.spec, m.weights, ref["features"], prompt: prompt, max_tokens: 10, run: runner(wk))
+        {:ok, ids, enc} = EncoderDecoder.transcribe(m.spec, m.weights, ref["features"], prompt: prompt, max_tokens: 10, run: runner(wk))
         assert rel(Tensor.to_floats(enc.hidden), Tensor.to_floats(ref["hidden"])) < 1.0e-5
         assert prompt ++ ids == Tensor.to_list(ref["greedy"])
         {ids, enc.hidden}
@@ -83,14 +83,14 @@ defmodule Vapor.WhisperHFTest do
     v = Tensor.to_list(ref["features"])
     reversed = Tensor.new(:f32, [mels, frames], Vapor.F32.encode(for(r <- 0..(mels - 1), t <- (frames - 1)..0//-1, do: Enum.at(v, r * frames + t))))
     {:ok, ep} = Lock.build(m.spec, m.weights, part: :encoder)
-    hid = Oracle.eval_program(ep, Whisper.encoder_input(m.spec, reversed)).hidden
+    hid = Oracle.eval_program(ep, EncoderDecoder.encoder_input(m.spec, reversed)).hidden
     assert rel(Tensor.to_floats(hid), Tensor.to_floats(ref["hidden"])) > 0.01
   end
 
   defp prompt_logits(m, ref, features) do
     c = m.spec.config
     {:ok, ep} = Lock.build(m.spec, m.weights, part: :encoder)
-    enc = Oracle.eval_program(ep, Whisper.encoder_input(m.spec, features))
+    enc = Oracle.eval_program(ep, EncoderDecoder.encoder_input(m.spec, features))
     {:ok, dp} = Lock.build(m.spec, m.weights, max_seq: c.tgt)
     prompt = Tensor.to_list(ref["prompt"])
     k = length(prompt)

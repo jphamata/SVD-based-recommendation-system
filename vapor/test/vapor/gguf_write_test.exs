@@ -92,8 +92,8 @@ defmodule Vapor.GGUFWriteTest do
     :ok = Vapor.Model.GGUF.write(path, c, tiny_weights(c))
     {:ok, m} = Vapor.Model.GGUF.load(path)
     assert m.config.rope_scaling == :freq_factors
-    {cos0, sin0} = Vapor.Model.Llama.rope_tables(c, 64)
-    {cos1, sin1} = Vapor.Model.Llama.rope_tables(m.config, 64, m.weights[:rope_freqs])
+    {cos0, sin0} = Vapor.Model.Decoder.rope_tables(c, 64)
+    {cos1, sin1} = Vapor.Model.Decoder.rope_tables(m.config, 64, m.weights[:rope_freqs])
 
     for {a, b} <- [{cos0, cos1}, {sin0, sin1}] do
       err = Enum.zip_with(Tensor.to_floats(a), Tensor.to_floats(b), &abs(&1 - &2)) |> Enum.max()
@@ -142,9 +142,9 @@ defmodule Vapor.GGUFWriteTest do
 
       ids = Vapor.Tokenizer.encode(m.tokenizer, text, add_bos: arch == "llama")
       n = length(ids)
-      {:ok, p} = Vapor.Model.Llama.program(m.config, m.weights, max_seq: 64, logits: :all)
+      {:ok, p} = Vapor.Model.Decoder.program(m.config, m.weights, max_seq: 64, logits: :all)
       {:ok, comp} = Vapor.Compile.Lower.lower(p)
-      env = Map.merge(Vapor.Model.Llama.empty_caches(m.config, 64), %{tok: Tensor.from_list(:s32, [n], ids), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
+      env = Map.merge(Vapor.Model.Decoder.empty_caches(m.config, 64), %{tok: Tensor.from_list(:s32, [n], ids), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
       {:ok, r} = Vapor.Runtime.Native.run(w, comp, env, isa: Vapor.Runtime.Substrates.best_isa(), mode: :native)
       ours = Tensor.to_floats(r.outputs.logits)
 

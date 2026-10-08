@@ -10,7 +10,7 @@ defmodule Vapor.SpeculativeTreeTest do
   """
   use ExUnit.Case, async: false
   alias Vapor.{Sampler, Tensor}
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Session, Substrates, Worker}
   alias Vapor.Speculative.Tree
   import Vapor.TestHelpers
@@ -27,7 +27,7 @@ defmodule Vapor.SpeculativeTreeTest do
 
   # the plain definition: a contiguous cache, one token per step
   defp greedy(c, ws, w, prompt, n) do
-    {:ok, p} = Llama.program(c, ws, max_seq: 128, max_tokens: 64)
+    {:ok, p} = Decoder.program(c, ws, max_seq: 128, max_tokens: 64)
     {:ok, comp} = Vapor.Compile.Lower.lower(p)
     {:ok, s} = Session.open(w, comp, isa: Substrates.host_isa())
     v = c.vocab

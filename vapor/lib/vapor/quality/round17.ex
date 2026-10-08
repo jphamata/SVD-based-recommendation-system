@@ -284,7 +284,7 @@ defmodule Vapor.Quality.Round17 do
 
     def weights(c) do
       c
-      |> Vapor.Model.Llama.expected_weights()
+      |> Vapor.Model.Decoder.expected_weights()
       |> Enum.with_index(1000)
       |> Map.new(fn
         {{name, shape, :norm}, i} ->

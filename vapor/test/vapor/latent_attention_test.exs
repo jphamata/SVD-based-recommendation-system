@@ -17,7 +17,7 @@ defmodule Vapor.LatentAttentionTest do
   use ExUnit.Case, async: false
   alias Vapor.Tensor
   alias Vapor.Compile.Lower
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Dispatch, Native, Oracle, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -37,7 +37,7 @@ defmodule Vapor.LatentAttentionTest do
 
   defp env(c, mode, toks, p0 \\ 0, caches \\ nil) do
     n = length(toks)
-    Map.merge(caches || Llama.empty_caches(c, @s, mla: mode),
+    Map.merge(caches || Decoder.empty_caches(c, @s, mla: mode),
               %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(p0..(p0 + n - 1)))})
   end
 
@@ -47,19 +47,19 @@ defmodule Vapor.LatentAttentionTest do
   end
 
   test "the cache: one row of kv_lora + rope floats per token and layer, no values cache", %{c: c, ws: ws} do
-    {:ok, p} = Llama.program(c, ws, max_seq: @s)
+    {:ok, p} = Decoder.program(c, ws, max_seq: @s)
     assert Keyword.keys(p.state) == [:k0, :k1]
-    assert Llama.cache_floats(c) == 32 + 16
-    assert Llama.cache_floats(c, mla: :expanded) == 2 * c.heads * c.head_dim
+    assert Decoder.cache_floats(c) == 32 + 16
+    assert Decoder.cache_floats(c, mla: :expanded) == 2 * c.heads * c.head_dim
     # DeepSeek-V3's shapes: 576 floats against 128 heads × 192 × 2
     v3 = %{c | heads: 128, head_dim: 192, kv_heads: 128, mla: %{c.mla | kv_lora: 512, rope: 64}}
-    assert {Llama.cache_floats(v3), Llama.cache_floats(v3, mla: :expanded)} == {576, 49_152}
+    assert {Decoder.cache_floats(v3), Decoder.cache_floats(v3, mla: :expanded)} == {576, 49_152}
   end
 
   test "latent and expanded forms agree within tolerance and on every argmax (oracle)", %{c: c, ws: ws} do
     outs =
       for mode <- [:expanded, :latent] do
-        {:ok, p} = Llama.program(c, ws, max_seq: @s, mla: mode)
+        {:ok, p} = Decoder.program(c, ws, max_seq: @s, mla: mode)
         Oracle.eval_program(p, env(c, mode, @toks)).logits |> Tensor.to_floats()
       end
 
@@ -74,7 +74,7 @@ defmodule Vapor.LatentAttentionTest do
   @tag timeout: 900_000
   test "latent MLA: host ISAs, RVV interpreter and fabric bit-identical; prefill = cached decoding", %{c: c, ws: ws} do
     {:ok, w} = Worker.start_link(exec: worker_exec(:host))
-    {:ok, p} = Llama.program(c, ws, max_seq: @s)
+    {:ok, p} = Decoder.program(c, ws, max_seq: @s)
     comp = lower!(p)
     e = env(c, :latent, @toks)
     {:ok, ref} = Native.run_oracle(comp, e)
@@ -89,7 +89,7 @@ defmodule Vapor.LatentAttentionTest do
     end
 
     {rows, _} =
-      Enum.map_reduce(Enum.with_index(@toks), Llama.empty_caches(c, @s), fn {t, i}, caches ->
+      Enum.map_reduce(Enum.with_index(@toks), Decoder.empty_caches(c, @s), fn {t, i}, caches ->
         {:ok, got} = Native.run(w, comp, env(c, :latent, [t], i, caches), isa: Substrates.host_isa(), mode: :native)
         {got.outputs.logits.data, Map.new(caches, fn {k, _} -> {k, got.outputs[:"#{k}_next"]} end)}
       end)
@@ -104,10 +104,10 @@ defmodule Vapor.LatentAttentionTest do
     assert length(ids) == 6
 
     # the same greedy tokens as the contiguous latent program
-    {:ok, p} = Llama.program(c, ws, max_seq: 32)
+    {:ok, p} = Decoder.program(c, ws, max_seq: 32)
 
     {want, _} =
-      Enum.map_reduce(1..6, {[1, 95, 7], Llama.empty_caches(c, 32), 0}, fn _, {toks, caches, p0} ->
+      Enum.map_reduce(1..6, {[1, 95, 7], Decoder.empty_caches(c, 32), 0}, fn _, {toks, caches, p0} ->
         out = Oracle.eval_program(p, Map.merge(caches, %{tok: Tensor.from_list(:s32, [length(toks)], toks),
                                                          pos: Tensor.from_list(:s32, [length(toks)], Enum.to_list(p0..(p0 + length(toks) - 1)))}))
         row = out.logits |> Tensor.to_floats() |> Enum.take(-c.vocab)

@@ -6,7 +6,7 @@ defmodule Vapor.SessionTest do
   """
   use ExUnit.Case, async: false
   alias Vapor.{Rejection, Tensor}
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Native, Session, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -14,7 +14,7 @@ defmodule Vapor.SessionTest do
 
   defp model do
     {:ok, c} = Config.from_map(tiny_config("qwen2"))
-    {:ok, p} = Llama.program(c, tiny_weights(c), max_seq: 16)
+    {:ok, p} = Decoder.program(c, tiny_weights(c), max_seq: 16)
     {:ok, comp} = Vapor.Compile.Lower.lower(p)
     {c, comp}
   end
@@ -26,7 +26,7 @@ defmodule Vapor.SessionTest do
     {:ok, w} = Worker.start_link(exec: worker_exec(:host))
     toks = [3, 1, 4, 1, 5, 9, 2]
     n = length(toks)
-    env = Map.merge(Llama.empty_caches(c, 16), %{tok: ids(toks), pos: ids(Enum.to_list(0..(n - 1)))})
+    env = Map.merge(Decoder.empty_caches(c, 16), %{tok: ids(toks), pos: ids(Enum.to_list(0..(n - 1)))})
     {:ok, ref} = Native.run(w, comp, env, isa: Substrates.host_isa(), mode: :native)
 
     {:ok, s} = Session.open(w, comp, isa: Substrates.host_isa())

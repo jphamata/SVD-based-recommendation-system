@@ -6,7 +6,7 @@ defmodule Vapor.CRTest do
   """
   use ExUnit.Case, async: true
   alias Vapor.{CR, F32}
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   import Vapor.TestHelpers
 
   defp f32(x), do: F32.to_float(F32.from_float(x))
@@ -47,10 +47,10 @@ defmodule Vapor.CRTest do
     c = %Config{arch: "llama", vocab: 16, hidden: 64, intermediate: 16, layers: 1, heads: 1, kv_heads: 1, head_dim: 64,
                 eps: 1.0e-5, rope_theta: 10_000.0, max_pos: 512, tie: true}
 
-    assert digest.(Llama.rope_tables(c, 512)) == "dfcd0bc0381604390ce99887809f290d7526b6a9b6ceb7c9205ff06b2db188a7"
+    assert digest.(Decoder.rope_tables(c, 512)) == "dfcd0bc0381604390ce99887809f290d7526b6a9b6ceb7c9205ff06b2db188a7"
 
     c3 = %{c | rope_theta: 500_000.0, rope_scaling: {:llama3, 8.0, 1.0, 4.0, 128}}
-    assert digest.(Llama.rope_tables(c3, 512)) == "ce7c404fcad7d06ba887dc7748ac726021712cca02a79179f2b5907c5979bed5"
+    assert digest.(Decoder.rope_tables(c3, 512)) == "ce7c404fcad7d06ba887dc7748ac726021712cca02a79179f2b5907c5979bed5"
 
     {:ok, cy} =
       Config.from_map(%{"model_type" => "qwen3", "vocab_size" => 16, "hidden_size" => 64, "intermediate_size" => 16,
@@ -58,7 +58,7 @@ defmodule Vapor.CRTest do
                         "rope_parameters" => %{"rope_type" => "yarn", "factor" => 4.0, "original_max_position_embeddings" => 512,
                                                "rope_theta" => 1.0e6}})
 
-    assert digest.(Llama.rope_tables(cy, 2048)) == "4f7eb44370260b986e67da202f3090fb36ffc7b0c0b2a33fb0016a17bde94f5b"
+    assert digest.(Decoder.rope_tables(cy, 2048)) == "4f7eb44370260b986e67da202f3090fb36ffc7b0c0b2a33fb0016a17bde94f5b"
   end
 
   @tag :mpmath
@@ -111,7 +111,7 @@ defmodule Vapor.CRTest do
               "rope_parameters" => rope}
 
       {:ok, c} = Config.from_map(cfg)
-      {cos, sin} = Llama.rope_tables(c, 512)
+      {cos, sin} = Decoder.rope_tables(c, 512)
 
       out =
         py!("""

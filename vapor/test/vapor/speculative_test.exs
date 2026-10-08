@@ -7,7 +7,7 @@ defmodule Vapor.SpeculativeTest do
   """
   use ExUnit.Case, async: false
   alias Vapor.{Sampler, Speculative, Tensor}
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Session, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -15,7 +15,7 @@ defmodule Vapor.SpeculativeTest do
   @moduletag timeout: 900_000
 
   defp session(c, ws) do
-    {:ok, p} = Llama.program(c, ws, max_seq: 64, max_tokens: 8)
+    {:ok, p} = Decoder.program(c, ws, max_seq: 64, max_tokens: 8)
     {:ok, comp} = Vapor.Compile.Lower.lower(p)
     {:ok, w} = Worker.start_link(exec: worker_exec(:host))
     {:ok, s} = Session.open(w, comp, isa: Substrates.host_isa())

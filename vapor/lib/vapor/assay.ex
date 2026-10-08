@@ -16,6 +16,8 @@ defmodule Vapor.Assay do
   | `agreement` | annotations nobody checked | Cohen's κ, Fleiss' κ, Krippendorff's α with bootstrap CIs |
   | `geometry` | "model A is closer to B than to C" measured with KL, which is not a distance | Fisher–Rao distances between models' predictive distributions with bootstrap CIs, the geometric consensus (Fréchet mean) and each model's distance to it, the triangle inequality checked, a shuffled-item control |
   | `judge` | LLM-as-a-judge position bias | consistency under order swap, first-slot preference with an exact binomial test |
+  | `layers` | probing a network's output when the best features are inside it (the Perception Encoder's finding) | a linear probe per layer, the layer chosen on validation and reported on test against the output and chance, a shuffled-label control (`Vapor.Assay.Layers`) |
+  | `detect` | detectors scored by AP, which hides both calibration and false alarms on images without the object | SAM 3's cgF1 = pmF1 (optimal matching, exact and certified) × IL_MCC (presence), with a bootstrap interval (`Vapor.Assay.Detect`) |
 
   Inputs are CSV/TSV with a header or JSON lines — from a file or a pipe.
   """
@@ -45,6 +47,9 @@ defmodule Vapor.Assay do
      "p,correct\n" <> Enum.map_join(1..300, "\n", fn i -> (p = 0.5 + 0.49 * Vapor.Alembic.Builtins.hash01([:p, i]); "#{Float.round(p, 3)},#{if Vapor.Alembic.Builtins.hash01([:y, i]) < p - 0.1, do: 1, else: 0}") end)},
     {"agreement", "labels by several annotators (one column per annotator)",
      "item,ann1,ann2,ann3\n" <> Enum.map_join(1..50, "\n", fn i -> (l = Enum.at(~w(pos neg neu), rem(i, 3)); flip = fn k -> if Vapor.Alembic.Builtins.hash01([:ag, i, k]) < 0.15, do: "neu", else: l end; "#{i},#{l},#{flip.(1)},#{flip.(2)}") end)},
+    {"layers", "features per layer and labels (JSON: {\"labels\": [...], \"layers\": [[[...] per item] per layer]})", Vapor.Assay.Layers.example()},
+    {"detect", "detections against the truth, one JSON object per image: {\"truth\": [[x0,y0,x1,y1],…], \"pred\": [[x0,y0,x1,y1,score],…]}",
+     Vapor.Assay.Detect.example()},
     {"judge", "an LLM judge's verdicts with both orders (columns ab, ba: A, B or tie)",
      "ab,ba\n" <> Enum.map_join(1..60, "\n", fn i -> (h = Vapor.Alembic.Builtins.hash01([:j, i]); if(h < 0.5, do: "A,B", else: if(h < 0.75, do: "A,A", else: "B,A"))) end)}
   ]
@@ -86,6 +91,8 @@ defmodule Vapor.Assay do
   defp dispatch("leaderboard", text, o), do: with({:ok, h, rows} <- Stats.table(text), do: leaderboard(h, rows, o))
   defp dispatch("calibration", text, o), do: with({:ok, h, rows} <- Stats.table(text), do: calibration(h, rows, o))
   defp dispatch("agreement", text, o), do: with({:ok, h, rows} <- Stats.table(text), do: agreement(h, rows, o))
+  defp dispatch("detect", text, o), do: Vapor.Assay.Detect.run(text, o)
+  defp dispatch("layers", text, o), do: Vapor.Assay.Layers.run(text, o)
   defp dispatch("judge", text, o), do: with({:ok, h, rows} <- Stats.table(text), do: judge(h, rows, o))
   defp dispatch("contamination", text, o), do: Data.contamination(text, o)
   defp dispatch("dedup", text, o), do: Data.dedup(text, o)

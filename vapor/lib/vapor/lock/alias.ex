@@ -38,13 +38,18 @@ defmodule Vapor.Lock.Alias do
 
   The spec keeps the alias as its family and the base in its lineage;
   programs are built by the base adapter.
+
+  A descriptor may instead **refuse**, by data: `%{"id" => …, "model_type"
+  => …, "refuse" => "why"}` claims nothing and answers the near miss with
+  its reason (a family vapor knows it cannot run, said where families are
+  said — not in a topology's code).
   """
   alias Vapor.{Rejection, Tensor}
 
   @doc "The aliases that ship with vapor."
   def builtin do
     [
-      # Phi-3 / Phi-4: the Llama topology with q/k/v fused into qkv_proj and
+      # Phi-3 / Phi-4: the decoder topology with q/k/v fused into qkv_proj and
       # gate/up fused into gate_up_proj ([gate; up] rows, HF `chunk(2)`).
       # LongRoPE and partial rotary embeddings are refused (by the base's
       # rope check and by `require`).
@@ -58,7 +63,13 @@ defmodule Vapor.Lock.Alias do
                        ["model.layers.{l}.self_attn.v_proj.weight", "kv_heads*head_dim"]]},
           %{"from" => "model.layers.{l}.mlp.gate_up_proj.weight",
             "into" => [["model.layers.{l}.mlp.gate_proj.weight", "intermediate"],
-                       ["model.layers.{l}.mlp.up_proj.weight", "intermediate"]]}]}}
+                       ["model.layers.{l}.mlp.up_proj.weight", "intermediate"]]}]}},
+      # Kimi K3: the delta-rule hybrid topology under vapor's own spelling (its
+      # config.json and tensor names are not readable from here: docs/KIMI.md)
+      %{"id" => "kimi_k3", "model_type" => "kimi_k3", "like" => "vapor_delta_hybrid"},
+      %{"id" => "kimi_linear", "model_type" => "kimi_linear",
+        "refuse" => "Kimi Linear differs from Kimi K3 where the K3 report says it does (an unbounded softplus decay, " <>
+                      "a low-rank output gate) and vapor has no checked reading of the rest"}
     ]
     |> Enum.map(fn d -> {:ok, d} = validate(d); d end)
   end
@@ -72,6 +83,7 @@ defmodule Vapor.Lock.Alias do
 
     with :ok <- need(is_binary(d["id"]) and d["id"] != "", "id", "a non-empty string"),
          :ok <- need(types != [] and Enum.all?(types, &is_binary/1), "model_type", "a string or a list of strings"),
+         :cont <- refusal(d, types),
          :ok <- need(is_binary(d["like"]), "like", "the model_type of the base family"),
          :ok <- need(d["like"] not in types, "like", "a model_type other than the alias's own"),
          cfg = Map.get(d, "config", %{}),
@@ -91,6 +103,16 @@ defmodule Vapor.Lock.Alias do
 
   def validate(other), do: need(false, inspect(other), "an alias map")
 
+  # a refusing descriptor needs only its reason (and nothing an alias would do)
+  defp refusal(%{"refuse" => why} = d, types) when is_binary(why) and why != "" do
+    if Enum.any?(~w(like config tensors), &Map.has_key?(d, &1)),
+      do: need(false, "refuse", "a refusal without like, config or tensors"),
+      else: {:ok, %{d | "model_type" => types}}
+  end
+
+  defp refusal(%{"refuse" => _}, _), do: need(false, "refuse", "a non-empty reason")
+  defp refusal(_, _), do: :cont
+
   defp split?(%{"from" => f, "into" => parts}) when is_binary(f) and is_list(parts) and parts != [],
     do: Enum.all?(parts, &match?([n, s] when is_binary(n) and (is_binary(s) or (is_integer(s) and s > 0)), &1))
 
@@ -109,6 +131,10 @@ defmodule Vapor.Lock.Alias do
   # ------------------------------------------------------------ adapter --
 
   def id(d), do: d["id"]
+
+  def claim(%{"refuse" => why} = d, %{config: %{"model_type" => t}}) when is_binary(t) do
+    if t in d["model_type"], do: {:near, why}, else: :no
+  end
 
   def claim(d, %{config: %{"model_type" => t}}) when is_binary(t) do
     if t in d["model_type"], do: {:claim, 100}, else: :no

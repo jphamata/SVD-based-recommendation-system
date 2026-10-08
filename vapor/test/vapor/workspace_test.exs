@@ -24,7 +24,7 @@ defmodule Vapor.WorkspaceTest do
   describe "the console's workspace" do
     test "the bench lists its starting points and detects what a text is", %{base: b} do
       {200, info} = req(b, :get, "/v1/vapor/workspace")
-      assert length(info["athanor"]) >= 15 and length(info["crucible"]) == 10 and length(info["assay"]) == 9
+      assert length(info["athanor"]) >= 15 and length(info["crucible"]) == 10 and length(info["assay"]) == 11
       assert info["card"] =~ "ATHANOR"
       for {text, kind} <- [{Examples.get("golomb").text, "athanor"}, {Examples.get("tictactoe").text, "game"}, {"H = p^2/2 + q^2/2", "crucible"}, {"f(x) = x + 1", "alembic"}] do
         assert {200, %{"kind" => ^kind}} = req(b, :post, "/v1/vapor/detect", %{text: text})

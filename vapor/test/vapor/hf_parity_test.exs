@@ -26,7 +26,7 @@ defmodule Vapor.HFParityTest do
   use ExUnit.Case, async: false
   alias Vapor.Tensor
   alias Vapor.Ingest.Safetensors
-  alias Vapor.Model.Llama
+  alias Vapor.Model.Decoder
   alias Vapor.Runtime.{Native, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -77,7 +77,7 @@ defmodule Vapor.HFParityTest do
   for v <- @variants do
     test "#{v}: prefill logits within tolerance of transformers", %{root: root, worker: w} do
       {c, comp, ref} = load(root, unquote(v))
-      {logits, _} = step(w, comp, Llama.empty_caches(c, @s), Tensor.to_list(ref["prompt"]), 0)
+      {logits, _} = step(w, comp, Decoder.empty_caches(c, @s), Tensor.to_list(ref["prompt"]), 0)
 
       got = Tensor.to_floats(logits)
       want = Tensor.to_floats(ref["logits"])
@@ -92,7 +92,7 @@ defmodule Vapor.HFParityTest do
       prompt = Tensor.to_list(ref["prompt"])
       want = ref["greedy"] |> Tensor.to_list() |> Enum.drop(length(prompt))
 
-      {logits, caches} = step(w, comp, Llama.empty_caches(c, @s), prompt, 0)
+      {logits, caches} = step(w, comp, Decoder.empty_caches(c, @s), prompt, 0)
 
       {got, _} =
         Enum.map_reduce(0..(length(want) - 1), {logits, caches}, fn i, {logits, caches} ->
@@ -144,7 +144,7 @@ defmodule Vapor.HFParityTest do
         else
           {:ok, %{config: c, program: p}} = Vapor.Model.load(dir, max_seq: @s)
           {:ok, comp} = Vapor.Compile.Lower.lower(p)
-          {logits, _} = step(w, comp, Llama.empty_caches(c, @s), prompt, 0)
+          {logits, _} = step(w, comp, Decoder.empty_caches(c, @s), prompt, 0)
           want = for <<x::float-32-little <- theirs>>, do: x
           scale = want |> Enum.map(&abs/1) |> Enum.max()
           assert Enum.zip_with(Tensor.to_floats(logits), want, &abs(&1 - &2)) |> Enum.max() <= @tol * scale
@@ -178,12 +178,12 @@ defmodule Vapor.HFParityTest do
   test "llama (width 256): f32 within tolerance; 4-bit :sb4 no worse than 1.25× the Q4_1 baseline", %{root: root, worker: w} do
     {c, comp, ref} = load(root, "llama-q")
     prompt = Tensor.to_list(ref["prompt"])
-    {f32, _} = step(w, comp, Llama.empty_caches(c, @s), prompt, 0)
+    {f32, _} = step(w, comp, Decoder.empty_caches(c, @s), prompt, 0)
     {rmse32, _} = quality(f32, ref["logits"])
     assert rmse32 < @tol
 
     {_, qcomp, _} = load(root, "llama-q", quantize: :sb4)
-    {q, _} = step(w, qcomp, Llama.empty_caches(c, @s), prompt, 0)
+    {q, _} = step(w, qcomp, Decoder.empty_caches(c, @s), prompt, 0)
     {rmse, kl} = quality(q, ref["logits"])
     {rmse41, kl41} = quality(ref["logits_q4_1"], ref["logits"])
     {rmse40, kl40} = quality(ref["logits_q4_0"], ref["logits"])

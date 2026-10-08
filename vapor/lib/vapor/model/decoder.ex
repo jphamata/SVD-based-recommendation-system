@@ -1,6 +1,9 @@
-defmodule Vapor.Model.Llama do
+defmodule Vapor.Model.Decoder do
   @moduledoc """
-  The pre-norm decoder family as a vapor program — every operation a term
+  The **pre-norm decoder** topology as a vapor program (eight families
+  read it: `Vapor.Model.Config`, `Vapor.Lock.Adapters.Decoder`; the module
+  is named for what it computes, not for the first family that used
+  it) — every operation a term
   of the certified algebra (`Vapor.Algebra.Term`), so the whole model
   inherits the canonical semantics, the ladder and the substrates:
 

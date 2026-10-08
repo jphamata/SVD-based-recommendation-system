@@ -11,7 +11,7 @@ defmodule Vapor.ThreadsTest do
   alias Vapor.{Program, Tensor}
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Compile.Lower
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
   alias Vapor.Runtime.{Native, Session, Substrates, Worker}
   import Vapor.TestHelpers
 
@@ -25,9 +25,9 @@ defmodule Vapor.ThreadsTest do
     ws = tiny_weights(c)
     toks = [5, 3, 127, 0, 64, 9, 9, 1, 2, 3, 77]
     n = length(toks)
-    menv = Map.merge(Llama.empty_caches(c, 16), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
-    {:ok, f32} = Llama.program(c, ws, max_seq: 16)
-    {:ok, q4} = Llama.program(c, ws, max_seq: 16, quantize: :sb4)
+    menv = Map.merge(Decoder.empty_caches(c, 16), %{tok: Tensor.from_list(:s32, [n], toks), pos: Tensor.from_list(:s32, [n], Enum.to_list(0..(n - 1)))})
+    {:ok, f32} = Decoder.program(c, ws, max_seq: 16)
+    {:ok, q4} = Decoder.program(c, ws, max_seq: 16, quantize: :sb4)
 
     canon =
       for {name, prog, env} <- canon_programs(), do: {name, lower!(prog), env}
@@ -62,7 +62,7 @@ defmodule Vapor.ThreadsTest do
 
   test "sessions on a threaded worker: decode steps identical to a single-threaded run" do
     {:ok, c} = Config.from_map(tiny_config("llama"))
-    {:ok, p} = Llama.program(c, tiny_weights(c), max_seq: 16)
+    {:ok, p} = Decoder.program(c, tiny_weights(c), max_seq: 16)
     comp = lower!(p)
     ids = &Tensor.from_list(:s32, [length(&1)], &1)
 

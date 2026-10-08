@@ -1,6 +1,6 @@
 defmodule Vapor.Lock.Adapters.Decoder do
   @moduledoc """
-  The pre-norm decoder topology (`Vapor.Model.Llama` over
+  The pre-norm decoder topology (`Vapor.Model.Decoder` over
   `Vapor.Model.Config`): Llama, Mistral, Qwen2, Qwen3, Qwen3-MoE, Mixtral,
   Gemma 3, DeepSeek-V3 — and, through aliases and blueprints, every family
   that is one of these under other names or knobs.
@@ -10,11 +10,11 @@ defmodule Vapor.Lock.Adapters.Decoder do
   tensors follow the decoder layout but whose `model_type` is unknown is a
   near miss, with the repair spelled out.
 
-  Build options: those of `Vapor.Model.Llama.program/3`.
+  Build options: those of `Vapor.Model.Decoder.program/3`.
   """
   @behaviour Vapor.Lock.Adapter
   alias Vapor.Lock.Spec
-  alias Vapor.Model.{Config, Llama}
+  alias Vapor.Model.{Config, Decoder}
 
   @impl true
   def id, do: "decoder"
@@ -46,7 +46,7 @@ defmodule Vapor.Lock.Adapters.Decoder do
   end
 
   @impl true
-  def build(%Spec{config: c}, ws, opts), do: Llama.program(c, ws, opts)
+  def build(%Spec{config: c}, ws, opts), do: Decoder.program(c, ws, opts)
 
   @impl true
   def ring_window(%Spec{config: %Config{} = c}, s), do: Config.ring_window(c, s)
@@ -65,7 +65,7 @@ defmodule Vapor.Lock.Adapters.Decoder do
   end
 
   @impl true
-  def expected(%Spec{config: c}), do: Llama.expected_weights(c)
+  def expected(%Spec{config: c}), do: Decoder.expected_weights(c)
 
   @doc """
   Measurable inputs of the decoder's matrices: each layer's normalised
