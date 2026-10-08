@@ -42,7 +42,7 @@ defmodule Vapor.Console do
   def handle(sock, %{method: :GET, path: "/logo.svg"}, _ctx), do: asset(sock, "logo.svg", "image/svg+xml")
   def handle(sock, %{method: :GET, path: "/manifest.webmanifest"}, _ctx), do: asset(sock, "manifest.webmanifest", "application/manifest+json")
   def handle(sock, %{method: :GET, path: "/icon-" <> n}, _ctx) when n in ["192.png", "512.png"], do: asset(sock, "icon-" <> n, "image/png")
-  def handle(sock, %{method: :GET, path: "/" <> js}, _ctx) when js in ["bancada.js", "gpu_tracer.js", "mercado.js", "athanor.js", "opus.js"], do: asset(sock, js, "text/javascript; charset=utf-8")
+  def handle(sock, %{method: :GET, path: "/" <> js}, _ctx) when js in ["workbench.js", "gpu_tracer.js", "market.js", "athanor.js", "opus.js"], do: asset(sock, js, "text/javascript; charset=utf-8")
 
   def handle(sock, %{method: :GET, path: "/v1/vapor/info"}, ctx) do
     {spec, context} =
@@ -657,7 +657,7 @@ defmodule Vapor.Console do
 
   @doc """
   The console page as served: `index.html` with its sibling scripts
-  (`<script src="/bancada.js">`, `/gpu_tracer.js`) inlined, so the page
+  (`<script src="/workbench.js">`, `/gpu_tracer.js`) inlined, so the page
   stays one self-contained document — it can be saved and opened offline.
   """
   def page_html do

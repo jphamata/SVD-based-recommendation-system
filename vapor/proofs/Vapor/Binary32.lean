@@ -88,14 +88,14 @@ theorem two_pow_pos (n : Nat) : 0 < 2 ^ n := Nat.two_pow_pos n
 
 theorem mag_normal_ge (b : Nat) (h : ex b ≠ 0) : 8388608 ≤ mag b := by
   unfold mag
-  rw [if_neg h]
+  rw [ite_eq_right h]
   have := two_pow_pos (ex b - 1)
   calc 8388608 = 8388608 * 1 := by omega
     _ ≤ (man b + 8388608) * 2 ^ (ex b - 1) := Nat.mul_le_mul (by omega) this
 
 theorem mag_zero (b : Nat) (h : mag b = 0) : ex b = 0 ∧ man b = 0 := by
   by_cases e : ex b = 0
-  · unfold mag at h; rw [if_pos e] at h; exact ⟨e, h⟩
+  · unfold mag at h; rw [ite_eq_left e] at h; exact ⟨e, h⟩
   · have := mag_normal_ge b e; omega
 
 /-- A finite value has one encoding (up to the sign of zero): exponent and
@@ -104,15 +104,15 @@ theorem mag_inj (a b : Nat) (h : mag a = mag b) : ex a = ex b ∧ man a = man b 
   have ma := man_lt a
   have mb := man_lt b
   by_cases ea : ex a = 0 <;> by_cases eb : ex b = 0
-  · unfold mag at h; rw [if_pos ea, if_pos eb] at h; omega
+  · unfold mag at h; rw [ite_eq_left ea, ite_eq_left eb] at h; omega
   · have := mag_normal_ge b eb
-    have e1 : mag a = man a := by unfold mag; rw [if_pos ea]
+    have e1 : mag a = man a := by unfold mag; rw [ite_eq_left ea]
     omega
   · have := mag_normal_ge a ea
-    have e1 : mag b = man b := by unfold mag; rw [if_pos eb]
+    have e1 : mag b = man b := by unfold mag; rw [ite_eq_left eb]
     omega
   · unfold mag at h
-    rw [if_neg ea, if_neg eb] at h
+    rw [ite_eq_right ea, ite_eq_right eb] at h
     -- a larger exponent puts the magnitude in a higher binade: [2²³·2ᵉ⁻¹, 2²⁴·2ᵉ⁻¹)
     have binade : ∀ p q m n : Nat, m < 8388608 → n < 8388608 → p < q →
         (m + 8388608) * 2 ^ p ≠ (n + 8388608) * 2 ^ q := by
@@ -152,7 +152,8 @@ theorem units_zero (b : Nat) (h : units b = 0) : b = sgn b * 2147483648 := by
   have hm : mag b = 0 := by unfold units at h; split at h <;> omega
   have ⟨e, m⟩ := mag_zero b hm
   have := bits_eq b
-  omega
+  rw [e, m] at this
+  simpa using this
 
 theorem units_one : units one = 2 ^ 149 := by simp [units, sgn, mag, ex, man, one]
 
@@ -187,7 +188,7 @@ theorem mul_one_admissible (x : Nat) (fx : Finite x) : MulRN x one x := by
   unfold MulRN
   rw [units_one]
   by_cases z : units x * 2 ^ 149 = 0
-  · rw [if_pos z]
+  · rw [ite_eq_left z]
     have : units x = 0 := by
       rcases Int.mul_eq_zero.mp z with h | h
       · exact h
@@ -195,14 +196,14 @@ theorem mul_one_admissible (x : Nat) (fx : Finite x) : MulRN x one x := by
     have := units_zero x this
     have s1 : sgn one = 0 := by decide
     rcases sgn_le x fx.1 with s | s <;> rw [s1] <;> simp [s] at this ⊢ <;> omega
-  · rw [if_neg z]; exact nearest_self x 149 fx
+  · rw [ite_eq_right z]; exact nearest_self x 149 fx
 
 /-- `x · 1 → x` is exact: `x` is the only correctly rounded product. -/
 theorem mul_one_unique (x f : Nat) (fx : Finite x) (h : MulRN x one f) : f = x := by
   unfold MulRN at h
   rw [units_one] at h
   by_cases z : units x * 2 ^ 149 = 0
-  · rw [if_pos z] at h
+  · rw [ite_eq_left z] at h
     have ux : units x = 0 := by
       rcases Int.mul_eq_zero.mp z with h | h
       · exact h
@@ -211,7 +212,7 @@ theorem mul_one_unique (x f : Nat) (fx : Finite x) (h : MulRN x one f) : f = x :
     have s1 : sgn one = 0 := by decide
     rw [s1] at h
     rcases sgn_le x fx.1 with s | s <;> simp [s] at h this ⊢ <;> omega
-  · rw [if_neg z] at h
+  · rw [ite_eq_right z] at h
     have nz : units x ≠ 0 := fun e => z (by rw [e]; simp)
     exact nearest_exact x f 149 fx nz h
 
@@ -230,10 +231,10 @@ theorem add_negZero_unique (x f : Nat) (fx : Finite x) (h : AddRN x negZero f) :
   have sn : sgn negZero = 1 := by decide
   rw [sn] at h
   by_cases z : units x = 0
-  · rw [if_pos z] at h
+  · rw [ite_eq_left z] at h
     have := units_zero x z
     rcases sgn_le x fx.1 with s | s <;> simp [s] at h this ⊢ <;> omega
-  · rw [if_neg z] at h
+  · rw [ite_eq_right z] at h
     have h' : Nearest (units x * 2 ^ 0) 0 f := by simpa using h
     exact nearest_exact x f 0 fx z h'
 
@@ -243,10 +244,10 @@ theorem add_negZero_admissible (x : Nat) (fx : Finite x) : AddRN x negZero x := 
   have sn : sgn negZero = 1 := by decide
   rw [sn]
   by_cases z : units x = 0
-  · rw [if_pos z]
+  · rw [ite_eq_left z]
     have := units_zero x z
     rcases sgn_le x fx.1 with s | s <;> simp [s] at this ⊢ <;> omega
-  · rw [if_neg z]
+  · rw [ite_eq_right z]
     have := nearest_self x 0 fx
     simpa using this
 
@@ -254,11 +255,11 @@ theorem add_comm_rn (x y f : Nat) : AddRN x y f ↔ AddRN y x f := by
   unfold AddRN
   rw [Int.add_comm (units x)]
   by_cases z : units y + units x = 0
-  · rw [if_pos z, if_pos z]
+  · rw [ite_eq_left z, ite_eq_left z]
     by_cases s : sgn x = sgn y
-    · rw [if_pos s, if_pos s.symm, s]
-    · rw [if_neg s, if_neg (Ne.symm s)]
-  · rw [if_neg z, if_neg z]
+    · rw [ite_eq_left s, ite_eq_left s.symm, s]
+    · rw [ite_eq_right s, ite_eq_right (Ne.symm s)]
+  · rw [ite_eq_right z, ite_eq_right z]
 
 /-- `(−0) + x → x`. -/
 theorem negZero_add_unique (x f : Nat) (fx : Finite x) (h : AddRN negZero x f) : f = x :=
@@ -284,7 +285,7 @@ theorem add_posZero_refuted : ∀ f, AddRN negZero posZero f → f = posZero ∧
 theorem neg_neg (x : Nat) (h : x < 4294967296) : neg (neg x) = x := by
   unfold neg
   by_cases a : x < 2147483648
-  · rw [if_pos a, if_neg (by omega)]; omega
-  · rw [if_neg a, if_pos (by omega)]; omega
+  · rw [ite_eq_left a, ite_eq_right (by omega)]; omega
+  · rw [ite_eq_right a, ite_eq_left (by omega)]; omega
 
 end Vapor.Binary32

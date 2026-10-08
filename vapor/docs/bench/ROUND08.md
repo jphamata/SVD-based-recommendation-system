@@ -1,48 +1,48 @@
-# Medições da rodada 0.8
+# Round 0.8 measurements
 
-Regeneráveis com `mix vapor.bench --round08`. Máquina: Intel(R) Xeon(R) Processor @ 2.80GHz, 2 vCPUs, OTP 25.
-A GPU é o **lavapipe** (Vulkan da Mesa nos mesmos núcleos da CPU): os
-tempos de GPU medem a maquinaria — o que a sessão residente tira de
-cada passo —, não o que uma GPU discreta entregaria. Pesos aleatórios:
-medidas da máquina, não da qualidade (essa é `mix vapor.quality`).
+Regenerable with `mix vapor.bench --round08`. Machine: Intel(R) Xeon(R) Processor @ 2.80GHz, 2 vCPUs, OTP 25.
+The GPU is **lavapipe** (Mesa's Vulkan on the same CPU cores): the
+GPU times measure the machinery — what the resident session takes out of
+each step — not what a discrete GPU would deliver. Random weights:
+measurements of the machine, not of the quality (that is `mix vapor.quality`).
 
-## 1. Sessões residentes na GPU (P0 da 0.7)
+## 1. Resident sessions on the GPU (P0 of 0.7)
 
-Llama, largura 256, 4 camadas, 8 cabeças (2 KV), vocabulário 2048, contexto 256; um *prompt* de 32 tokens, depois 32 passos de um token.
-Tempo de parede por passo, medido na BEAM (inclui o protocolo), mediana:
+Llama, width 256, 4 layers, 8 heads (2 KV), vocabulary 2048, context 256; a *prompt* of 32 tokens, then 32 one-token steps.
+Wall-clock time per step, measured on the BEAM (includes the protocol), median:
 
-| caminho | ms/token | bytes host↔dispositivo por token | gravações reaproveitadas |
+| path | ms/token | host↔device bytes per token | recordings reused |
 |---|---:|---:|---:|
-| GPU, um `RUN` por token (sem sessão: pipelines e cache KV a cada passo) | 72.36 | 1056776 | — |
-| GPU, sessão residente, memória direta | 12.36 | 8200 | 31/32 |
-| GPU, sessão residente, *staging* (caminho de GPU discreta) | 10.54 | 8200 | 31/32 |
-| CPU, sessão no worker nativo | 1.29 | — | — |
+| GPU, one `RUN` per token (no session: pipelines and KV cache at every step) | 72.36 | 1056776 | — |
+| GPU, resident session, direct memory | 12.36 | 8200 | 31/32 |
+| GPU, resident session, *staging* (the discrete-GPU path) | 10.54 | 8200 | 31/32 |
+| CPU, session in the native worker | 1.29 | — | — |
 
-Mesmos bits nos quatro caminhos (logits de cada passo): **sim**.
-A sessão corta 5.86× o tempo por token e
-129× o tráfego: o passo move os ids e uma linha de logits,
-não o cache.
+Same bits on the four paths (logits of every step): **yes**.
+The session cuts the time per token 5.86× and
+the traffic 129×: the step moves the ids and one row of logits,
+not the cache.
 
-**Motor** (4 pedidos simultâneos, 24 tokens de *prompt*, 32 gerados, guloso):
+**Engine** (4 concurrent requests, 24 *prompt* tokens, 32 generated, greedy):
 
-| substrato | tokens | tokens/s |
+| substrate | tokens | tokens/s |
 |---|---:|---:|
-| CPU (worker nativo) | 128 | 1384.04 |
-| GPU (sessão residente) | 128 | 83.38 |
+| CPU (native worker) | 128 | 1384.04 |
+| GPU (resident session) | 128 | 83.38 |
 
-Mesmos tokens nos dois: **sim**. No lavapipe a GPU
-é a própria CPU, então a comparação de vazão diz pouco sobre GPU real; o que
-ela prova é que o motor serve inteiro no Vulkan, com os bits da CPU.
+Same tokens on both: **yes**. On lavapipe the GPU
+is the CPU itself, so the throughput comparison says little about a real GPU; what
+it proves is that the engine serves entirely on Vulkan, with the CPU's bits.
 
-## 2. Especialistas esparsos em 4 bits (`qgemv_masked`)
+## 2. Sparse 4-bit experts (`qgemv_masked`)
 
-Mixtral, largura 512, 8 especialistas (top-2), 2 camadas, pesos sb4 (4,75 bits/peso); ISA `x86_64_avx512`. Tempo no worker (mediana de 5) e instruções
-retiradas contadas exatamente pelo interpretador RVV (VLEN 256):
+Mixtral, width 512, 8 experts (top-2), 2 layers, sb4 weights (4.75 bits/weight); ISA `x86_64_avx512`. Time in the worker (median of 5) and instructions
+retired, counted exactly by the RVV interpreter (VLEN 256):
 
-| tokens | denso ms | esparso ms | × | instruções denso | instruções esparso | mesmos bits |
+| tokens | dense ms | sparse ms | × | dense instructions | sparse instructions | same bits |
 |---:|---:|---:|---:|---:|---:|:---:|
-| 1 | 2.94 | 1.84 | 1.60 | 15033088 | 5273888 | sim |
-| 8 | 14.26 | 5.59 | 2.55 | 119430325 | 41309909 | sim |
+| 1 | 2.94 | 1.84 | 1.60 | 15033088 | 5273888 | yes |
+| 8 | 14.26 | 5.59 | 2.55 | 119430325 | 41309909 | yes |
 
-Com top-2 de 8, cada token lê 1/4 dos especialistas; o resto do modelo
-(atenção, roteador, cabeça) não muda — o ganho total é menor que 4×.
+With top-2 of 8, each token reads 1/4 of the experts; the rest of the model
+(attention, router, head) does not change — the total gain is less than 4×.

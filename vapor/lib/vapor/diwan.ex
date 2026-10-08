@@ -10,7 +10,7 @@ defmodule Vapor.Diwan do
   A line is a small shell — no shell is run: `vapor` verbs (the word
   `vapor` is optional), pipes, redirection, quoting, and a few builtins:
 
-      athanor run golomb.alb | verify golomb.alb -
+      athanor run golomb.nbq | verify golomb.nbq -
       rebis equiv a.net b.net > verdict.json
       echo "x^2 - x + 1/4" > p.txt ; cat p.txt
       chat new --title notes ; chat search kulisch | head 5
@@ -192,50 +192,34 @@ defmodule Vapor.Diwan do
   defp run_stage([b | args], input, tty, st) when b in @builtins, do: builtin(b, args, input, tty, st)
   defp run_stage(argv, input, tty, st), do: verb(argv, input, tty, st)
 
-  # a vapor verb, in its own process: heap ceiling, deadline, captured streams
+  # a vapor verb, in its own sealed process (heap and binaries capped, deadline); the
+  # streams belong to the caller, so a killed verb leaves nothing behind
   defp verb(argv, input, tty, st) do
-    parent = self()
-    tag = make_ref()
-    words = div(st.heap_mb * 1024 * 1024, :erlang.system_info(:wordsize))
+    {:ok, io} = StringIO.open(input)
+    {:ok, eio} = StringIO.open("")
 
-    {pid, mon} =
-      spawn_monitor(fn ->
-        Process.flag(:max_heap_size, %{size: words, kill: true, error_logger: false})
-        {:ok, io} = StringIO.open(input)
-        {:ok, eio} = StringIO.open("")
-        Process.group_leader(self(), io)
-        Process.put(:vapor_stderr, eio)
-        Process.put(:vapor_tty, tty)
-        if st.jail, do: Process.put(:vapor_jail, st.files)
-        if st.majlis, do: Process.put(:vapor_majlis, st.majlis)
+    run = fn ->
+      Process.group_leader(self(), io)
+      Process.put(:vapor_stderr, eio)
+      Process.put(:vapor_tty, tty)
+      if st.jail, do: Process.put(:vapor_jail, st.files)
+      if st.majlis, do: Process.put(:vapor_majlis, st.majlis)
 
-        code =
-          try do
-            Vapor.Main.run(Enum.map(argv, &Vapor.CLI.utf8_arg/1))
-          rescue
-            e -> IO.puts(eio, "vapor: internal error: " <> Exception.message(e)); 4
-          end
+      try do
+        Vapor.Main.run(Enum.map(argv, &Vapor.CLI.utf8_arg/1))
+      rescue
+        e -> IO.puts(eio, "vapor: internal error: " <> Exception.message(e)); 4
+      end
+    end
 
-        {_, out} = StringIO.contents(io)
-        {_, err} = StringIO.contents(eio)
-        send(parent, {tag, code, out, err})
-      end)
+    limits = [heap_mb: st.heap_mb, timeout: st.timeout]
+    result = Vapor.Hermetic.seal(run, limits)
+    {:ok, {_, out}} = StringIO.close(io)
+    {:ok, {_, err}} = StringIO.close(eio)
 
-    receive do
-      {^tag, code, out, err} ->
-        Process.demonitor(mon, [:flush])
-        {out, err, code, st}
-
-      {:DOWN, ^mon, :process, _, :killed} ->
-        {"", "diwan: #{hd(argv)} used more than #{st.heap_mb} MB and was stopped\n", 4, st}
-
-      {:DOWN, ^mon, :process, _, why} ->
-        {"", "diwan: #{hd(argv)} stopped: #{inspect(why) |> String.slice(0, 200)}\n", 4, st}
-    after
-      st.timeout ->
-        Process.exit(pid, :kill)
-        Process.demonitor(mon, [:flush])
-        {"", "diwan: #{hd(argv)} took longer than #{div(st.timeout, 1000)} s and was stopped\n", 4, st}
+    case result do
+      {:ok, code} -> {out, err, code, st}
+      {:error, f} -> {"", "diwan: #{hd(argv)} #{Vapor.Hermetic.describe(f, limits)}\n", 4, st}
     end
   end
 

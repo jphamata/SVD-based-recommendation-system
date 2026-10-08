@@ -1,80 +1,80 @@
-# O Majlis — conversas como árvore endereçada por conteúdo
+# The Majlis — conversations as a content-addressed tree
 
-> مجلس, raiz ج-ل-س *j-l-s*, "sentar": o conselho onde se conversa. `Vapor.Majlis`. Portas: o
-> console (*Conversar → Conversas*), `vapor chat` (terminal), a API `/v1/vapor/threads…`
-> ([CONSOLE.md](CONSOLE.md)). Testes: `majlis_test.exs`, `hall_test.exs`,
-> `console_majlis_test.exs` (Chromium). Escrutínio: [DIRETRIZ §19](DIRETRIZ.md).
+> مجلس, root ج-ل-س *j-l-s*, "to sit": the council where people converse. `Vapor.Majlis`. Doors: the
+> console (*Converse → Conversations*), `vapor chat` (terminal), the API `/v1/vapor/threads…`
+> ([CONSOLE.md](CONSOLE.md)). Tests: `majlis_test.exs`, `hall_test.exs`,
+> `console_majlis_test.exs` (Chromium). Scrutiny: [DIRECTIVE §19](DIRECTIVE.md).
 
-## A ideia
+## The idea
 
-Os produtos de conversa tratam a conversa como uma lista mutável com remendos (ramos de edição,
-"ramificar em nova conversa", compactação invisível). Aqui ela é o que de fato é: uma **árvore**.
+Chat products treat the conversation as a mutable list with patches (edit branches,
+"branch into a new conversation", invisible compaction). Here it is what it actually is: a **tree**.
 
-- Uma **mensagem** é um nó imutável `M1 ‖ CBOR{role, content, parent, t, meta, o}`, endereçado
-  pelo SHA-256 dos seus bytes. Como o pai está dentro do hash, **uma mensagem compromete-se com
-  toda a sua história** — como um *commit* do git.
-- Uma **conversa** é um ponteiro (`head`) mais ajustes: instruções, modelo, ferramentas,
-  orçamento de contexto, mensagens fixadas, resumo. Cada conversa tem um nó-âncora próprio e cada
-  mensagem o seu dono (`o`), para que a coleta de lixo de uma nunca apague as de outra.
-- **Editar** escreve um irmão; **outra resposta** escreve um irmão da resposta; **‹ ›** troca de
-  irmão e segue o ramo mais recente abaixo dele; **continuar daqui** move o ponteiro para trás;
-  **bifurcar** cria uma conversa nova apontando para uma mensagem existente — **O(1)**, nenhuma
-  mensagem copiada (§5l: 0 mensagens, 964 bytes de raiz contra 120 mensagens de uma cópia).
-- Tudo mora numa [Khazāna](KHAZANA.md): cada ação é um *commit* atômico.
+- A **message** is an immutable node `M1 ‖ CBOR{role, content, parent, t, meta, o}`, addressed
+  by the SHA-256 of its bytes. Since the parent is inside the hash, **a message commits to
+  its whole history** — like a git *commit*.
+- A **conversation** is a pointer (`head`) plus settings: instructions, model, tools,
+  context budget, pinned messages, summary. Each conversation has its own anchor node and each
+  message its owner (`o`), so that garbage collection of one never erases another's.
+- **Edit** writes a sibling; **another answer** writes a sibling of the answer; **‹ ›** switches
+  sibling and follows the most recent branch below it; **continue from here** moves the pointer back;
+  **fork** creates a new conversation pointing at an existing message — **O(1)**, no
+  message copied (§5l: 0 messages, 964 bytes of root against 120 messages for a copy).
+- Everything lives in a [Khazāna](KHAZANA.md): each action is an atomic *commit*.
 
-## O contexto, calculado e mostrado
+## The context, computed and shown
 
-`context/2` devolve **exatamente** o que o modelo vai ler: as instruções (com o resumo, se houver),
-depois as mensagens fixadas e o último turno — sempre —, depois as mais recentes que couberem no
-orçamento. Cada mensagem do caminho sai marcada `sent`, `pinned`, `summarized` ou `dropped`, com
-os seus tokens (exatos quando o servidor serve o tokenizador do modelo; estimados, e ditos
-estimados, quando não). O controle de §5l: o truncamento pela cauda, com o mesmo orçamento,
-derruba a instrução fixada.
+`context/2` returns **exactly** what the model will read: the instructions (with the summary, if there is one),
+then the pinned messages and the last turn — always — then the most recent ones that fit in the
+budget. Each message on the path comes out marked `sent`, `pinned`, `summarized` or `dropped`, with
+its tokens (exact when the server serves the model's tokenizer; estimated, and said to be
+estimated, when not). The control in §5l: truncation from the tail, with the same budget,
+drops the pinned instruction.
 
-**Compactar** pede ao modelo (ou aceita do usuário) um resumo do caminho até uma mensagem; o resumo
-**nomeia o hash que cobre**, e por isso compromete-se com tudo antes dele. Desfazer devolve o
-histórico inteiro ao contexto; o resumo nunca apaga nada.
+**Compact** asks the model (or accepts from the user) for a summary of the path up to a message; the summary
+**names the hash it covers**, and therefore commits to everything before it. Undoing returns the
+whole history to the context; the summary never erases anything.
 
-## Agente
+## Agent
 
-Uma conversa pode habilitar ferramentas do vapor por lista de permissão (`Vapor.Majlis.Tools`, as
-mesmas do servidor MCP): puras (`alembic_eval`, `athanor_verify`, `rebis_check`, `aludel_decide`,
-`tabula_analyze`, `amalgam_sum`, `cupel_drill`, `logic_check`, `workbench_solve`, …) e de
-observação (`athanor_run`, `crucible_run`, `assay_run`, `finance_run`, …). Uma resposta com
-ferramentas roda o laço de agente do vapor e guarda o **diário** da execução (Merkle,
-verificável: `GET /v1/vapor/journal/:id`); a mensagem leva o diário no `meta`.
+A conversation can enable vapor tools by allow-list (`Vapor.Majlis.Tools`, the
+same as the MCP server's): pure ones (`alembic_eval`, `athanor_verify`, `rebis_check`, `aludel_decide`,
+`tabula_analyze`, `amalgam_sum`, `cupel_drill`, `logic_check`, `workbench_solve`, …) and
+observation ones (`athanor_run`, `crucible_run`, `assay_run`, `finance_run`, …). An answer with
+tools runs vapor's agent loop and keeps the run's **journal** (Merkle,
+verifiable: `GET /v1/vapor/journal/:id`); the message carries the journal in `meta`.
 
-## Trocar, compartilhar
+## Exchange, share
 
-- **Exportar**: JSON `vapor-majlis/1` (cada mensagem com o seu hash; na importação, **todos são
-  recalculados**, e um caractere trocado é recusado — §5l) ou Markdown (para ler; o controle: a
-  mesma troca no Markdown é indetectável).
-- **Importar**: o JSON do vapor, a exportação do ChatGPT (`conversations.json`, a árvore
-  `mapping` preservada com os ramos) ou a do Claude (`chat_messages`).
-- **Buscar**: BM25 sobre todas as mensagens, de todos os ramos.
-- **Compartilhar**: um link só de leitura `/shared/ID?cap=…`, onde `cap` = HMAC(conversa,
-  geração). Não pede o token do console — a capacidade é a autoridade. A página não tem *script* e
-  escapa todo texto. **Revogar** incrementa a geração e mata todos os links já dados.
+- **Export**: JSON `vapor-majlis/1` (each message with its hash; on import, **all are
+  recomputed**, and a changed character is rejected — §5l) or Markdown (for reading; the control: the
+  same change in the Markdown is undetectable).
+- **Import**: vapor's JSON, the ChatGPT export (`conversations.json`, the `mapping`
+  tree preserved with its branches) or Claude's (`chat_messages`).
+- **Search**: BM25 over all messages, from all branches.
+- **Share**: a read-only link `/shared/ID?cap=…`, where `cap` = HMAC(conversation,
+  generation). It does not ask for the console token — the capability is the authority. The page has no *script* and
+  escapes all text. **Revoke** increments the generation and kills every link already given out.
 
-## Modelos
+## Models
 
-O Majlis não tem modelo próprio: usa os *backends* do servidor — o modelo servido localmente (as
-respostas são re-deriváveis: semente, recibo) e o de `VAPOR_MIND` (`anthropic:…`, `openai:…@URL`,
-`script:ARQUIVO`). Sem nenhum, as mensagens ficam guardadas e a resposta diz por quê.
+The Majlis has no model of its own: it uses the server's *backends* — the locally served model (the
+answers are re-derivable: seed, receipt) and the one from `VAPOR_MIND` (`anthropic:…`, `openai:…@URL`,
+`script:FILE`). With neither, the messages are kept and the answer says why.
 
-## O que não faz (ainda)
+## What it does not do (yet)
 
-*Streaming* token a token; anexos de imagem na conversa; memória entre conversas. Estão no
+Token-by-token *streaming*; image attachments in the conversation; memory across conversations. They are in the
 [TODO](TODO.md).
 
 ## Terminal
 
 ```sh
-T=$(vapor chat new --title "rascunho" --system "responda em português")
-vapor chat say $T "o que é uma base de Gröbner?"
-vapor chat show $T --tree          # todos os ramos
-vapor chat edit $T 3fa2c1 "e um exemplo?"   # 6+ dígitos hex bastam
-vapor chat context $T              # o que vai, o que fica de fora
-vapor chat fork $T 3fa2c1 --title "outra linha"
+T=$(vapor chat new --title "draft" --system "answer in Portuguese")
+vapor chat say $T "what is a Gröbner basis?"
+vapor chat show $T --tree          # all branches
+vapor chat edit $T 3fa2c1 "and an example?"   # 6+ hex digits are enough
+vapor chat context $T              # what goes, what is left out
+vapor chat fork $T 3fa2c1 --title "another line"
 vapor chat export $T --md > rascunho.md
 ```

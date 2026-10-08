@@ -2,25 +2,27 @@ defmodule Vapor.LSP do
   @moduledoc """
   `vapor lsp` — a Language Server (LSP 3.17, JSON-RPC over stdio) for
   vapor's languages, so any editor that speaks LSP — VS Code, Neovim,
-  Emacs (eglot), Helix, Zed, Kakoune — gets the same help (docs/EDITORES.md):
+  Emacs (eglot), Helix, Zed, Kakoune — gets the same help (docs/EDITORS.md):
 
-  | | Al-Mizān (`.wzn`) | Alembic (`.alb`) |
+  | | Almizan (`.wzn`) | Alembic (`.nbq`) |
   |---|---|---|
   | diagnostics | syntax and the morphological rules as you type; on open and save, every obligation **decided** — a refuted claim is an error at its line, with the point that refutes it | parse errors with line and column |
   | hover | a claim's verdict and decider; a root's meaning and abjad value; a keyword in both scripts | a builtin's signature |
   | completion | keywords in the file's script, roots, claims defined above | builtins and constants |
   | symbols, go to definition | claims | definitions |
   | formatting | the canonical printing, in the file's script | — |
-  | commands | `vapor.mizan.toArabic` / `vapor.mizan.toLatin`: the same program in the other script (the manifesto's projection, as an edit the person chooses) | — |
+  | inlay hints | each proved claim's verdict and decider at the end of its first line (`✓ proved · SAT + DRUP`) | — |
+  | commands | `vapor.almizan.toArabic` / `vapor.almizan.toLatin`: the same program in the other script (the manifesto's projection, as an edit the person chooses) | — |
 
   `handle/2` is the whole server — a message and the state in, messages out
   — so it is tested without an editor; `serve/0` frames it on stdio
   (`Content-Length` headers, bytes).
   """
-  alias Vapor.{Alembic, Mizan}
-  alias Vapor.Mizan.{Abjad, Syntax}
+  alias Vapor.{Alembic, Almizan}
+  alias Vapor.Almizan.{Abjad, Syntax}
 
-  @kw_latin ~w(claim root wazn inputs field box step init invariant proof body import as fail maful burhan conserved nonneg pos identity bounded q int f64 f32 bool and or not if true false)
+  @kw_latin ~w(claim root wazn inputs field box step init invariant proof body import as fail maful burhan conserved nonneg pos identity bounded q int f64 f32 bool and or not if true false
+               graph do independent identifiable adjustment separated)
 
   # ------------------------------------------------------------------ stdio
 
@@ -94,7 +96,8 @@ defmodule Vapor.LSP do
       "documentSymbolProvider" => true,
       "definitionProvider" => true,
       "documentFormattingProvider" => true,
-      "executeCommandProvider" => %{"commands" => ["vapor.mizan.toArabic", "vapor.mizan.toLatin"]}
+      "inlayHintProvider" => true,
+      "executeCommandProvider" => %{"commands" => ["vapor.almizan.toArabic", "vapor.almizan.toLatin"]}
     }
 
     {[reply(id, %{"capabilities" => caps, "serverInfo" => %{"name" => "vapor", "version" => to_string(Application.spec(:vapor, :vsn) || "dev")}})], st}
@@ -136,6 +139,11 @@ defmodule Vapor.LSP do
     {[reply(id, with_doc(st, p, &completion/3) || [])], st}
   end
 
+  # the verdict of every proved claim, at the end of its first line: the evidence beside the code
+  def handle(%{"method" => "textDocument/inlayHint", "id" => id, "params" => p}, st) do
+    {[reply(id, with_doc(st, p, fn doc, _pos, _uri -> hints(doc) end) || [])], st}
+  end
+
   def handle(%{"method" => "textDocument/documentSymbol", "id" => id, "params" => p}, st) do
     {[reply(id, with_doc(st, p, fn doc, _pos, _uri -> symbols(doc) end) || [])], st}
   end
@@ -147,9 +155,9 @@ defmodule Vapor.LSP do
   def handle(%{"method" => "textDocument/formatting", "id" => id, "params" => %{"textDocument" => %{"uri" => uri}}}, st) do
     edits =
       case st.docs[uri] do
-        %{lang: :mizan, text: text} ->
-          case Mizan.parse(text) do
-            {:ok, m} -> [%{"range" => whole(text), "newText" => Mizan.print(m, Syntax.projection(text))}]
+        %{lang: :almizan, text: text} ->
+          case Almizan.parse(text) do
+            {:ok, m} -> [%{"range" => whole(text), "newText" => Almizan.print(m, Syntax.projection(text))}]
             _ -> []
           end
 
@@ -160,14 +168,14 @@ defmodule Vapor.LSP do
   end
 
   def handle(%{"method" => "workspace/executeCommand", "id" => id, "params" => %{"command" => cmd, "arguments" => [uri | _]}}, st)
-      when cmd in ["vapor.mizan.toArabic", "vapor.mizan.toLatin"] do
+      when cmd in ["vapor.almizan.toArabic", "vapor.almizan.toLatin"] do
     case st.docs[uri] do
       %{text: text} ->
-        case Mizan.parse(text) do
+        case Almizan.parse(text) do
           {:ok, m} ->
-            proj = if cmd == "vapor.mizan.toArabic", do: :arabic, else: :latin
-            edit = %{"changes" => %{uri => [%{"range" => whole(text), "newText" => Mizan.print(m, proj)}]}}
-            {[reply(id, nil), request("workspace/applyEdit", %{"label" => "Al-Mizān: #{proj}", "edit" => edit})], st}
+            proj = if cmd == "vapor.almizan.toArabic", do: :arabic, else: :latin
+            edit = %{"changes" => %{uri => [%{"range" => whole(text), "newText" => Almizan.print(m, proj)}]}}
+            {[reply(id, nil), request("workspace/applyEdit", %{"label" => "Almizan: #{proj}", "edit" => edit})], st}
 
           {:error, why} ->
             {[error(id, -32602, why)], st}
@@ -186,8 +194,8 @@ defmodule Vapor.LSP do
 
   defp lang(uri, lid) do
     cond do
-      lid in ["mizan", "wzn"] or String.ends_with?(uri, ".wzn") -> :mizan
-      lid == "alembic" or String.ends_with?(uri, ".alb") -> :alembic
+      lid in ["almizan", "wzn"] or String.ends_with?(uri, ".wzn") -> :almizan
+      lid == "alembic" or String.ends_with?(uri, ".nbq") -> :alembic
       true -> :other
     end
   end
@@ -205,15 +213,15 @@ defmodule Vapor.LSP do
     notify("textDocument/publishDiagnostics", %{"uri" => uri, "diagnostics" => diags(doc, decide)})
   end
 
-  defp diags(%{lang: :mizan, text: text}, decide) do
-    case Mizan.parse(text) do
+  defp diags(%{lang: :almizan, text: text}, decide) do
+    case Almizan.parse(text) do
       {:ok, m} ->
         if decide do
           lines = claim_lines(text)
 
-          for r <- Mizan.check(m, depth: 14), r.verdict in ["refuted", "unknown"] do
+          for r <- Almizan.check(m, depth: 14), r.verdict in ["refuted", "unknown"] do
             line = Map.get(lines, r.claim, 1)
-            cex = if r[:counterexample], do: " — at " <> Enum.map_join(r.counterexample, ", ", fn {k, v} -> "#{k} = #{Mizan.show(v)}" end), else: ""
+            cex = if r[:counterexample], do: " — at " <> Enum.map_join(r.counterexample, ", ", fn {k, v} -> "#{k} = #{Almizan.show(v)}" end), else: ""
             diag(line, if(r.verdict == "refuted", do: 1, else: 2), "#{r.claim}: #{r.verdict} (#{r.decider}) #{r.detail}#{cex}", text)
           end
         else
@@ -263,7 +271,7 @@ defmodule Vapor.LSP do
     left <> right
   end
 
-  defp hover(%{lang: :mizan, text: text}, pos, _uri) do
+  defp hover(%{lang: :almizan, text: text}, pos, _uri) do
     w = word_at(text, pos)
 
     info =
@@ -277,9 +285,9 @@ defmodule Vapor.LSP do
           "**#{k}** · `#{Syntax.arabic(k)}`"
 
         true ->
-          case Mizan.parse(text) do
+          case Almizan.parse(text) do
             {:ok, m} ->
-              case Enum.find(Mizan.check(m, depth: 12), &(&1.claim == w)) do
+              case Enum.find(Almizan.check(m, depth: 12), &(&1.claim == w)) do
                 nil -> nil
                 r -> "**#{r.claim}** (#{r.root}, #{r.wazn}) — **#{r.verdict}**#{if r.decider, do: " by #{r.decider}", else: ""}\n\n#{r.detail}"
               end
@@ -298,7 +306,7 @@ defmodule Vapor.LSP do
 
   defp hover(_, _, _), do: nil
 
-  defp completion(%{lang: :mizan, text: text}, _pos, _uri) do
+  defp completion(%{lang: :almizan, text: text}, _pos, _uri) do
     arabic = Syntax.projection(text) == :arabic
     kws = Enum.map(@kw_latin, &if(arabic, do: Syntax.arabic(&1), else: &1))
     roots = Enum.map(Syntax.roots(), fn {_, {l, a}} -> if arabic, do: a, else: l end)
@@ -311,7 +319,7 @@ defmodule Vapor.LSP do
 
   defp item(label, kind), do: %{"label" => label, "kind" => kind}
 
-  defp symbols(%{lang: :mizan, text: text}) do
+  defp symbols(%{lang: :almizan, text: text}) do
     for {name, line} <- claim_lines(text) do
       r = %{"start" => %{"line" => line - 1, "character" => 0}, "end" => %{"line" => line - 1, "character" => 0}}
       %{"name" => name, "kind" => 12, "range" => r, "selectionRange" => r}
@@ -332,7 +340,7 @@ defmodule Vapor.LSP do
 
   defp symbols(_), do: []
 
-  defp definition(%{lang: :mizan, text: text}, pos, uri) do
+  defp definition(%{lang: :almizan, text: text}, pos, uri) do
     w = word_at(text, pos)
     name = case Syntax.ident(w) do {:ok, n} -> n; _ -> w end
 
@@ -345,6 +353,23 @@ defmodule Vapor.LSP do
   defp definition(_, _, _), do: nil
 
   # claim name → line, from the reader (positions survive even when the checker refuses)
+  defp hints(%{lang: :almizan, text: text}) do
+    with {:ok, m} <- Almizan.parse(text) do
+      lines = claim_lines(text)
+      rows = String.split(text, "\n")
+
+      for r <- Almizan.check(m, depth: 12), r.verdict != "none", line = lines[r.claim], line != nil do
+        width = rows |> Enum.at(line - 1, "") |> :unicode.characters_to_binary(:utf8, {:utf16, :little}) |> byte_size() |> div(2)
+        mark = case r.verdict do "proved" -> "✓ proved"; "refuted" -> "✗ refuted"; v -> "? " <> v end
+        %{"position" => %{"line" => line - 1, "character" => width}, "label" => "#{mark} · #{r.decider}", "paddingLeft" => true, "tooltip" => r.detail}
+      end
+    else
+      _ -> []
+    end
+  end
+
+  defp hints(_), do: []
+
   defp claim_lines(text) do
     case Syntax.read(text) do
       {:ok, forms} ->

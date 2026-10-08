@@ -1,7 +1,7 @@
 defmodule Vapor.Engineering.FEM do
   @moduledoc """
   Two-dimensional linear elasticity by finite elements
-  (docs/ENGENHARIA.md §4): plane stress or plane strain, bilinear
+  (docs/ENGINEERING.md §4): plane stress or plane strain, bilinear
   isoparametric quadrilaterals (Q4) with 2×2 Gauss quadrature — the
   element of every introductory FEM course and of many production
   codes' first pass on a plate, a bracket, a wall.

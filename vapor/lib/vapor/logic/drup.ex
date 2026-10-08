@@ -1,6 +1,6 @@
 defmodule Vapor.Logic.DRUP do
   @moduledoc """
-  An independent checker of DRUP proofs (docs/LOGICA.md §1): a refutation
+  An independent checker of DRUP proofs (docs/LOGIC.md §1): a refutation
   of a CNF is a sequence of clauses, each of which must follow from the
   formula and the clauses before it by **reverse unit propagation** —
   assume the clause false, propagate units, reach a conflict — ending in

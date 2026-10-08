@@ -1,7 +1,7 @@
 defmodule Vapor.Finance.MonteCarlo do
   @moduledoc """
   Monte Carlo under geometric Brownian motion, **compiled into a vapor
-  program** and run on the native worker (docs/FINANCAS.md §5).
+  program** and run on the native worker (docs/FINANCE.md §5).
 
   The pain this addresses is not speed alone: a risk number that changes
   when the job moves to another machine, another thread count or a GPU is
@@ -326,11 +326,7 @@ defmodule Vapor.Finance.MonteCarlo do
 
   @doc false
   def host_targets do
-    case Substrates.host_isa() do
-      :aarch64 -> [Vapor.Emit.ARM]
-      :riscv64 -> [Vapor.Emit.RVV]
-      _ -> [Vapor.Emit.X86]
-    end
+    Map.get(%{aarch64: [Vapor.Emit.ARM], riscv64: [Vapor.Emit.RVV]}, Substrates.host_isa(), [Vapor.Emit.X86])
   end
 
   defp summary(xs, closed) do

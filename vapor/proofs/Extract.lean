@@ -49,7 +49,7 @@ def fresh (base : String) : M String := do
   let s ← get
   set { s with counter := s.counter + 1 }
   let clean := (snake base).map (fun c => if c.isAlphanum then c else '_')
-  let clean := if clean.isEmpty || !(clean.get 0).isLower then "v" ++ clean else clean
+  let clean := if clean.isEmpty || !clean.front.isLower then "v" ++ clean else clean
   return s!"{clean}_{s.counter}"
 
 def helper (h : Name) : M Unit := modify fun s => { s with helpers := s.helpers.insert h }

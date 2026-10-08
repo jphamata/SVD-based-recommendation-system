@@ -49,7 +49,7 @@ defmodule Vapor.Athanor.Session do
 
   @impl true
   def init({id, spec, opts}) do
-    Process.flag(:max_heap_size, %{size: div(Keyword.get(opts, :heap_mb, 1024) * 1_048_576, :erlang.system_info(:wordsize)), kill: true, error_logger: false})
+    Vapor.Hermetic.cap_self(Keyword.get(opts, :heap_mb, 1024))
     run = Athanor.init(spec, Keyword.drop(opts, [:measure]))
     send(self(), :tick)
     {:ok, %{id: id, run: run, opts: opts, last: System.monotonic_time(:millisecond)}, @idle}

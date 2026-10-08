@@ -7,6 +7,6 @@ npm install                 # vscode-languageclient
 npx @vscode/vsce package    # → vapor-0.16.0.vsix ; Extensions → Install from VSIX…
 ```
 
-Settings: `vapor.path` (default `vapor`). Commands: *Al-Mizān: show in Arabic/Latin
+Settings: `vapor.path` (default `vapor`). Commands: *Almizan: show in Arabic/Latin
 script*. Everything else — diagnostics that decide every obligation, hover, completion,
 symbols, go to definition, formatting — comes from `vapor lsp`.

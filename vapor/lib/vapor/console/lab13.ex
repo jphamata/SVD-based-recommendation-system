@@ -1,6 +1,6 @@
 defmodule Vapor.Console.Lab13 do
   @moduledoc """
-  The console's desks for the 0.13 round (docs/CONSOLE.md, docs/FINANCAS.md):
+  The console's desks for the 0.13 round (docs/CONSOLE.md, docs/FINANCE.md):
   finance (calendars and money, curves, options, Monte Carlo on the native
   worker, risk, portfolios, backtests with noise gates, arbitrage) and the
   trading desk (an order book with its journal, an exchange session,

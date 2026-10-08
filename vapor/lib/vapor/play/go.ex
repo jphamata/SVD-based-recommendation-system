@@ -1,6 +1,6 @@
 defmodule Vapor.Play.Go do
   @moduledoc """
-  Go (docs/TABULEIROS.md §3) on any board up to 19×19: captures, no
+  Go (docs/BOARDS.md §3) on any board up to 19×19: captures, no
   suicide (or Tromp–Taylor's suicide allowed, by option), **positional
   superko**, passes, area scoring with komi — Tromp & Taylor's
   formalisation of the rules, the one the computer-Go literature counts

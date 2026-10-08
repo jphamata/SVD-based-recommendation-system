@@ -1,7 +1,7 @@
 defmodule Vapor.Finance.Risk do
   @moduledoc """
   Market risk with the tests that say whether the model deserves trust
-  (docs/FINANCAS.md §6).
+  (docs/FINANCE.md §6).
 
   * `var_es/3` — Value at Risk and Expected Shortfall by historical
     simulation, normal, Cornish–Fisher and EWMA (RiskMetrics λ = 0.94).
@@ -18,7 +18,7 @@ defmodule Vapor.Finance.Risk do
   * `hrp/1` — hierarchical risk parity (López de Prado 2016).
 
   A risk model that never fails its backtest is as suspicious as one that
-  always does: `financas_test.exs` and §5i measure the **size** of the
+  always does: `finance_test.exs` and §5i measure the **size** of the
   Kupiec test (it rejects a correct model ≈ 5 % of the time) and its
   **power** (it rejects a normal VaR on fat-tailed returns).
   """

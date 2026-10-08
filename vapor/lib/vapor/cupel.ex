@@ -1,7 +1,7 @@
 defmodule Vapor.Cupel do
   @moduledoc """
   The **cupel** — the porous dish of the assayer, where base metal soaks
-  away and noble metal stays — for silent data corruption (docs/COPELA.md).
+  away and noble metal stays — for silent data corruption (docs/CUPEL.md).
 
   The pain: at fleet scale, a defective core returns *wrong numbers without
   an error* (Meta's and Google's "silent data corruption at scale"

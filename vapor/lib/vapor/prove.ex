@@ -2,7 +2,7 @@ defmodule Vapor.Prove do
   @moduledoc """
   Machine proof and discovery in geometry and topology, every claim with
   a certificate a reader can check without trusting the search
-  (docs/MATEMATICA.md).
+  (docs/MATHEMATICS.md).
 
   **Geometry, by the algebraic method** (the family of Wu 1978 and of
   Gröbner-basis provers): a figure is a construction — free parameters,

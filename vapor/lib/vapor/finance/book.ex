@@ -1,7 +1,7 @@
 defmodule Vapor.Finance.Book do
   @moduledoc """
   A limit order book with price–time priority, whose every session is a
-  **verifiable object** (docs/FINANCAS.md §9).
+  **verifiable object** (docs/FINANCE.md §9).
 
   The pain: when an exchange, a broker's internaliser or a backtester
   says "your order was filled at 101.25 behind three others", nobody

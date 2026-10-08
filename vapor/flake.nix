@@ -67,12 +67,13 @@
       devShells = forAll (system: pkgs: {
         default = pkgs.mkShell {
           packages = with pkgs; [
-            elixir erlang gnumake zip (zigOf pkgs)       # core + native
+            beamPackages.elixir beamPackages.erlang      # core (top-level elixir/erlang are deprecated)
+            gnumake zip (zigOf pkgs)                     # native
             qemu                                         # qemu-aarch64 / qemu-riscv64
             vulkan-loader vulkan-tools mesa              # fabric on lavapipe
             spirv-tools                                  # spirv-val
             elan                                         # Lean 4, version from proofs/lean-toolchain
-            poppler_utils qpdf ghostscript               # document airlock: pdftotext oracle, fixture producers
+            poppler-utils qpdf ghostscript               # document airlock: pdftotext oracle, fixture producers
             (python3.withPackages (ps: with ps; [numpy pillow]))   # NumPy references, Pillow PNG oracle
           ] ++ lib.optionals (system == "x86_64-linux") [
             binutils                                     # objdump -m i386:x86-64
@@ -93,7 +94,7 @@
         slides = pkgs.mkShell {
           packages = [
             pkgs.gnumake
-            (pkgs.texlive.combine { inherit (pkgs.texlive) scheme-medium beamer pgf pgfplots; })
+            (pkgs.texliveMedium.withPackages (ps: with ps; [ beamer pgf pgfplots abntex2 ]))   # slides/ and thesis/
           ];
         };
       });
@@ -102,7 +103,7 @@
         default = pkgs.stdenv.mkDerivation {
           name = "vapor-check";
           src = ./.;
-          nativeBuildInputs = [ pkgs.elixir pkgs.erlang ];
+          nativeBuildInputs = [ pkgs.beamPackages.elixir pkgs.beamPackages.erlang ];
           dontConfigure = true;
           buildPhase = ''
             export HOME=$TMPDIR MIX_HOME=$TMPDIR/mix HEX_HOME=$TMPDIR/hex
@@ -113,6 +114,6 @@
         };
       });
 
-      formatter = forAll (system: pkgs: pkgs.nixpkgs-fmt);
+      formatter = forAll (system: pkgs: pkgs.nixfmt);
     };
 }

@@ -180,7 +180,7 @@ defmodule Vapor.Quality.Round12 do
     bad = Structure.fold(l, local ++ Enum.take(dcs, k), helices: ss, restarts: 2)
     {tg, tb} = {Structure.tm_score(good.ca, nat.ca).tm, Structure.tm_score(bad.ca, nat.ca).tm}
 
-    [check("proteins: TM-score between NMR models 1 and 2 of 1LCD", f(tm12), "—", "> 0.8 (the same fold); equals TM-align in proteinas_test", tm12 > 0.8),
+    [check("proteins: TM-score between NMR models 1 and 2 of 1LCD", f(tm12), "—", "> 0.8 (the same fold); equals TM-align in proteins_test", tm12 > 0.8),
      check("proteins: contacts from a planted co-evolution alignment (DCA, top-k)", f(pd), f(ps), "> 0.9; shuffled alignment < 3× chance (#{Float.round(chance, 3)})", pd > 0.9 and ps < 3 * chance),
      check("proteins: the pipeline alignment → DCA → distance geometry on 1A8O", f(tg), f(tb), "TM > 0.6; from the shuffled alignment's contacts < 0.3", tg > 0.6 and tb < 0.3)]
   end

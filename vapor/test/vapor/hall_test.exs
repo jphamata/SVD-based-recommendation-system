@@ -68,8 +68,8 @@ defmodule Vapor.HallTest do
     {200, %{"session" => s, "code" => 0}} = post(b, "/v1/vapor/diwan", %{"line" => "echo 1e16 1 -1e16 > n.txt"})
     {200, %{"out" => out, "files" => ["n.txt"]}} = post(b, "/v1/vapor/diwan", %{"session" => s, "line" => "amalgam n.txt | cat"})
     assert {:ok, %{"amalgam" => %{"value" => "1.0"}}} = JSON.decode(out)
-    {200, _} = post(b, "/v1/vapor/diwan/file", %{"session" => s, "name" => "p.alb", "text" => "2^64"})
-    {200, %{"text" => "2^64"}} = get(b, "/v1/vapor/diwan/file?session=#{s}&name=p.alb")
+    {200, _} = post(b, "/v1/vapor/diwan/file", %{"session" => s, "name" => "p.nbq", "text" => "2^64"})
+    {200, %{"text" => "2^64"}} = get(b, "/v1/vapor/diwan/file?session=#{s}&name=p.nbq")
     {200, %{"completions" => cs}} = post(b, "/v1/vapor/diwan/complete", %{"session" => s, "line" => "amalgam n"})
     assert "n.txt" in cs
     {200, %{"completions" => vs}} = post(b, "/v1/vapor/diwan/complete", %{"line" => "reb"})

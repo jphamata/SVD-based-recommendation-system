@@ -1,6 +1,6 @@
 defmodule Vapor.Play.MNK do
   @moduledoc """
-  The m,n,k family (docs/TABULEIROS.md §4): k in a row on an m×n board,
+  The m,n,k family (docs/BOARDS.md §4): k in a row on an m×n board,
   with or without gravity — tic-tac-toe is (3, 3, 3), Connect Four is
   (7, 6, 4) with gravity, gomoku (15, 15, 5). Any member is one line:
   `new(4, 4, 3, gravity: true)`. Small members are **solved** exactly by

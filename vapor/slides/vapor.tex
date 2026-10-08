@@ -4,7 +4,7 @@
 %   pdflatex vapor.tex && pdflatex vapor.tex        (ou: make slides)
 % Todo número neste arquivo foi medido no repositório (testes, exemplo SSM,
 % bench/bench.exs, docs/bench/BENCH.md de 2026-10-01; a seção 7, das rodadas
-% 0.8–0.14, de docs/bench/QUALITY.md, docs/FINANCAS.md e de
+% 0.8–0.14, de docs/bench/QUALITY.md, docs/FINANCE.md e de
 % `mix vapor.quality --only round14` de 2026-10-05) ou
 % consultado na fonte citada no próprio slide.
 \documentclass[aspectratio=169,10pt]{beamer}
@@ -1008,7 +1008,7 @@ log de transparência & RFC 9162 + C2SP, testemunhas, verificação no navegador
 \bottomrule
 \end{tabular}\\[3pt]
 \begin{tikzpicture}
-  \node[badb,text width=13.4cm,align=left,font=\tiny] {\textbf{limites}: pesos aleatórios --- \textbf{nenhuma} afirmação de qualidade de imagem, vídeo ou transcrição; sessões residentes na GPU (P0), worker macOS, FlashAttention, ControlNet: não feitos, com motivo (\texttt{docs/DIRETRIZ.md} §9).};
+  \node[badb,text width=13.4cm,align=left,font=\tiny] {\textbf{limites}: pesos aleatórios --- \textbf{nenhuma} afirmação de qualidade de imagem, vídeo ou transcrição; sessões residentes na GPU (P0), worker macOS, FlashAttention, ControlNet: não feitos, com motivo (\texttt{docs/DIRECTIVE.md} §9).};
 \end{tikzpicture}
 \tese{Cada truque de serviço que costuma \hl{trocar reprodutibilidade por velocidade} entrou aqui sem essa troca --- e com o seu custo medido ao lado.}
 \end{frame}
@@ -1030,7 +1030,7 @@ fusão em disco & um tensor por vez, mesmos kernels, cabeçalho antes dos dados 
 \bottomrule
 \end{tabular}\\[3pt]
 \begin{tikzpicture}
-  \node[badb,text width=13.4cm,align=left,font=\tiny] {\textbf{achado no caminho}: máscaras \texttt{ImageMask} lidas invertidas; acentos descartados em linhas sem letras altas (``não'' lido ``rão''); um LM contado sobre Markdown inventava crases em páginas impressas. \textbf{limites}: JBIG2, tabelas, manuscrito (\texttt{docs/DIRETRIZ.md} §10).};
+  \node[badb,text width=13.4cm,align=left,font=\tiny] {\textbf{achado no caminho}: máscaras \texttt{ImageMask} lidas invertidas; acentos descartados em linhas sem letras altas (``não'' lido ``rão''); um LM contado sobre Markdown inventava crases em páginas impressas. \textbf{limites}: JBIG2, tabelas, manuscrito (\texttt{docs/DIRECTIVE.md} §10).};
 \end{tikzpicture}
 \tese{Um modelo de língua é o exemplo clássico de \hl{ruído plausível}: aqui ele só entra com o controle que mostra onde ele \emph{não} deve falar.}
 \end{frame}

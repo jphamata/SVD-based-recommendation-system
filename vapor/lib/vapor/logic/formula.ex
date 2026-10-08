@@ -1,6 +1,6 @@
 defmodule Vapor.Logic.Formula do
   @moduledoc """
-  Propositional formulas typed in as text (docs/LOGICA.md §3): `!a`,
+  Propositional formulas typed in as text (docs/LOGIC.md §3): `!a`,
   `a & b`, `a | b`, `a -> b`, `a <-> b`, `a ^ b` (xor), `true`, `false`
   (and ¬ ∧ ∨ → ↔ ⊕). A formula becomes CNF by Tseitin's transformation
   (linear size, equisatisfiable), so any claim of propositional logic is

@@ -1,6 +1,6 @@
 defmodule Vapor.Play.SelfPlay do
   @moduledoc """
-  Learning a game by playing it against itself (docs/TABULEIROS.md §6):
+  Learning a game by playing it against itself (docs/BOARDS.md §6):
   the 0.11 tic-tac-toe learner generalised to **any** game that gives
   `features/1`, `actions/1` and `index/2` beside the four rule functions
   — a policy-and-value network (features → tanh hidden layer → move

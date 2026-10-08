@@ -1,6 +1,6 @@
 defmodule Vapor.Finance.Book.Check do
   @moduledoc """
-  The independent judge of an order-book session (docs/FINANCAS.md §9).
+  The independent judge of an order-book session (docs/FINANCE.md §9).
 
   It shares nothing with `Vapor.Finance.Book` but the specification: the
   book is a plain list of resting orders, priority is a sort by (price,
@@ -17,7 +17,7 @@ defmodule Vapor.Finance.Book.Check do
      taking, no fill between orders of the same owner under self-trade
      prevention.
 
-  Differential fuzzing (`financas_test.exs`) runs both on thousands of
+  Differential fuzzing (`finance_test.exs`) runs both on thousands of
   random event streams.
   """
   alias Vapor.Canonical

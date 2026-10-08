@@ -1,6 +1,6 @@
 defmodule Vapor.Play.Shogi do
   @moduledoc """
-  Shogi (docs/TABULEIROS.md §2): the full rules — eight piece kinds and
+  Shogi (docs/BOARDS.md §2): the full rules — eight piece kinds and
   their six promotions, captured pieces changing sides and **dropped**
   back (no two unpromoted pawns on a file, no piece dropped where it
   could never move, no pawn drop that mates), compulsory promotion, the

@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Vapor.Quality do
     mod =
       case Regex.run(~r/^round(\d\d)$/, round) do
         [_, n] -> Module.concat(Vapor.Quality, "Round" <> n)
-        _ -> Mix.raise("--only roundNN (round06 … round16)")
+        _ -> Mix.raise("--only roundNN (round06 … round17)")
       end
     unless Code.ensure_loaded?(mod), do: Mix.raise("no #{inspect(mod)}")
     w = Vapor.Modal.Runner.worker()

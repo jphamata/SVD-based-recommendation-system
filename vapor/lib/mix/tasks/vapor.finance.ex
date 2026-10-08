@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Vapor.Finance do
-  @shortdoc "Run a finance or trading-desk task from a text file (docs/FINANCAS.md)"
+  @shortdoc "Run a finance or trading-desk task from a text file (docs/FINANCE.md)"
   @moduledoc """
       mix vapor.finance KIND FILE [--json OUT]
 

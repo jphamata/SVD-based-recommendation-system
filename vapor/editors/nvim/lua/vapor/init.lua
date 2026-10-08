@@ -5,11 +5,11 @@ local M = {}
 function M.setup(opts)
   opts = opts or {}
   local cmd = opts.cmd or { "vapor", "lsp" }
-  vim.filetype.add({ extension = { wzn = "mizan", alb = "alembic" } })
+  vim.filetype.add({ extension = { wzn = "almizan", alb = "alembic" } })
   vim.api.nvim_create_autocmd("FileType", {
-    pattern = { "mizan", "alembic" },
+    pattern = { "almizan", "alembic" },
     callback = function(args)
-      vim.bo[args.buf].commentstring = (vim.bo[args.buf].filetype == "mizan") and "; %s" or "# %s"
+      vim.bo[args.buf].commentstring = (vim.bo[args.buf].filetype == "almizan") and "; %s" or "# %s"
       vim.lsp.start({
         name = "vapor",
         cmd = cmd,
@@ -19,8 +19,8 @@ function M.setup(opts)
   })
   -- the projection, as a command: the same program in the other script
   for _, which in ipairs({ "Arabic", "Latin" }) do
-    vim.api.nvim_create_user_command("Mizan" .. which, function()
-      vim.lsp.buf.execute_command({ command = "vapor.mizan.to" .. which, arguments = { vim.uri_from_bufnr(0) } })
+    vim.api.nvim_create_user_command("Almizan" .. which, function()
+      vim.lsp.buf.execute_command({ command = "vapor.almizan.to" .. which, arguments = { vim.uri_from_bufnr(0) } })
     end, {})
   end
 end

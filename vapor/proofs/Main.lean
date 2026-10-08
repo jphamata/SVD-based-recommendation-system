@@ -21,7 +21,7 @@ def fnv1a64 (bytes : ByteArray) (h : UInt64 := 0xcbf29ce484222325) : UInt64 :=
   bytes.foldl (fun h b => (h ^^^ b.toUInt64) * 0x100000001b3) h
 
 def hex16 (x : UInt64) : String :=
-  let s := (Nat.toDigits 16 x.toNat).asString
+  let s := String.ofList (Nat.toDigits 16 x.toNat)
   "".pushn '0' (16 - s.length) ++ s
 
 /-- Roots of extraction and the theorems that justify them. -/

@@ -1,7 +1,7 @@
 defmodule Vapor.Merge.Align do
   @moduledoc """
   **Permutation alignment** before fusion — what `Vapor.Merge.diagnose/2`
-  asked for when it called two networks "unrelated" (docs/FUSAO.md §8).
+  asked for when it called two networks "unrelated" (docs/MERGING.md §8).
 
   A network is the same function under any permutation of its hidden
   units: in a SwiGLU block `down(silu(gate·x) ⊙ up·x)`, reordering the rows

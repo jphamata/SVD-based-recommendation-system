@@ -41,8 +41,8 @@ defmodule Vapor.ConsoleMarketsTest do
 
   test "the page inlines the markets script and declares both desks", %{base: b} do
     {:ok, {{_, 200, _}, _, html}} = :httpc.request(:get, {String.to_charlist(b <> "/"), []}, [], body_format: :binary)
-    refute html =~ ~s(<script src="/mercado.js">)
-    assert html =~ "mercado.js — the console's 0.13 desks"
+    refute html =~ ~s(<script src="/market.js">)
+    assert html =~ "market.js — the console's 0.13 desks"
     assert html =~ ~s(id="p-fin") and html =~ ~s(id="p-hft")
   end
 

@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Vapor.Assurance do
-  @shortdoc "Write docs/GARANTIAS.md from the assurance ledger (Vapor.Assurance)"
+  @shortdoc "Write docs/ASSURANCE.md from the assurance ledger (Vapor.Assurance)"
   @moduledoc """
-      mix vapor.assurance            # writes docs/GARANTIAS.md; fails if cited evidence is missing
+      mix vapor.assurance            # writes docs/ASSURANCE.md; fails if cited evidence is missing
       mix vapor.assurance --check    # writes nothing; fails if evidence is missing or the document drifted
   """
   use Mix.Task
@@ -16,12 +16,12 @@ defmodule Mix.Tasks.Vapor.Assurance do
     end
 
     if "--check" in argv do
-      if File.read("docs/GARANTIAS.md") == {:ok, Vapor.Assurance.markdown()},
-        do: Mix.shell().info("docs/GARANTIAS.md agrees with the ledger"),
-        else: Mix.raise("docs/GARANTIAS.md differs from the ledger: run mix vapor.assurance")
+      if File.read("docs/ASSURANCE.md") == {:ok, Vapor.Assurance.markdown()},
+        do: Mix.shell().info("docs/ASSURANCE.md agrees with the ledger"),
+        else: Mix.raise("docs/ASSURANCE.md differs from the ledger: run mix vapor.assurance")
     else
-      File.write!("docs/GARANTIAS.md", Vapor.Assurance.markdown())
-      Mix.shell().info("docs/GARANTIAS.md")
+      File.write!("docs/ASSURANCE.md", Vapor.Assurance.markdown())
+      Mix.shell().info("docs/ASSURANCE.md")
     end
   end
 end

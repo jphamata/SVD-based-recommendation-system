@@ -68,7 +68,7 @@ defmodule Vapor.Athanor.Space do
   def build("seq", [n, s]) when is_binary(s), do: build("seq", [n, String.graphemes(s)])
   def build("graph", [n]) when is_integer(n) and n in 2..200,
     do: ok(%__MODULE__{kind: :graph, n: n, items: for(i <- 0..(n - 2), j <- (i + 1)..(n - 1), do: {i, j}), size: Integer.pow(2, div(n * (n - 1), 2))}, "graph(#{n})")
-  def build("partition", [n, k]) when is_integer(n) and n in 1..4096 and is_integer(k) and k in 1..n,
+  def build("partition", [n, k]) when is_integer(n) and n in 1..4096 and is_integer(k) and k in 1..n//1,
     do: ok(%__MODULE__{kind: :partition, n: n, k: k, size: Enum.reduce(1..k, 0, &(&2 + stirling2(n, &1)))}, "partition(#{n}, #{k})")
   def build("program", [vars, ops, leaves, max_size]) when is_list(vars) and is_list(ops) and is_list(leaves) and is_integer(max_size) and max_size in 1..60 do
     bad = Enum.reject(ops, &(&1 in @unary or &1 in @binary))

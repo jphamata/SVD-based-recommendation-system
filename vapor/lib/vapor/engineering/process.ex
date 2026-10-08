@@ -1,6 +1,6 @@
 defmodule Vapor.Engineering.Process do
   @moduledoc """
-  Chemical process calculations (docs/ENGENHARIA.md §6).
+  Chemical process calculations (docs/ENGINEERING.md §6).
 
   **Reaction networks** written as chemists write them —
 

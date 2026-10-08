@@ -1,21 +1,21 @@
-# Alembic — a linguagem dos problemas
+# Alembic — the language of problems
 
-> Desde 0.14.0. Código: `lib/vapor/alembic/` (`lexer.ex`, `parser.ex`, `compiler.ex`,
-> `builtins.ex`, `tree.ex`) e `lib/vapor/alembic.ex`. Testes: `test/vapor/alembic_test.exs`.
-> Cartão de referência: `vapor alembic --card`.
+> Since 0.14.0. Code: `lib/vapor/alembic/` (`lexer.ex`, `parser.ex`, `compiler.ex`,
+> `builtins.ex`, `tree.ex`) and `lib/vapor/alembic.ex`. Tests: `test/vapor/alembic_test.exs`.
+> Reference card: `vapor alembic --card`.
 
-Alembic é a linguagem em que se escreve **qualquer** problema para a bancada: um espaço e um
-objetivo (o Athanor busca), uma afirmação (o Athanor procura o contraexemplo ou prova pela
-enumeração), um jogo (o Athanor resolve, busca ou aprende), uma cena (o subconjunto numérico
-roda no navegador). Ela substitui as categorias pré-definidas das rodadas anteriores: em vez de
-escolher entre problemas prontos, a pessoa — ou um modelo de linguagem — escreve o seu.
+Alembic is the language in which **any** problem is written for the workbench: a space and an
+objective (Athanor searches), a claim (Athanor looks for the counterexample or proves by
+enumeration), a game (Athanor solves, searches or learns), a scene (the numeric subset
+runs in the browser). It replaces the predefined categories of the earlier rounds: instead of
+choosing among ready-made problems, the person — or a language model — writes their own.
 
-O nome é o do aparelho: a alambique recebe o que se põe nela e devolve o que se destila.
+The name is the apparatus's: the alembic receives what is put into it and gives back what is distilled.
 
-## 1. A linguagem em uma página
+## 1. The language on one page
 
 ```
-# um programa é uma lista de definições, uma por linha, em qualquer ordem
+# a program is a list of definitions, one per line, in any order
 n = 7
 ruler(r) = [0] ++ r
 dist(r) = [b - a for (a, b) in pairs(ruler(r))]
@@ -24,66 +24,66 @@ primes = [p for p in 2..50 if is_prime(p)]
 total = fold(primes, 0, (acc, p) => acc + p)
 ```
 
-- **Valores**: inteiros de tamanho arbitrário, floats, strings, `true`/`false`/`nil`, listas,
-  tuplas, mapas. Tudo imutável.
-- **Expressões**: `if … then … else …`, `let a = …, b = … in …`, lambdas `x => …` e
-  `(a, b) => …`, compreensões com vários `for` e `if`, *pipes* `xs |> map(f) |> sum`,
-  fatias `xs[a:b]`, índices negativos, campos `m.chave`, comparações encadeadas `0 <= i < n`.
-- **Quebras de linha** continuam a expressão depois de um operador ou antes de `|>`; fora disso
-  terminam a definição.
-- **Erros** dizem linha, coluna e, para nomes, sugerem o mais próximo (`lenn` → *did you mean len*).
-- ~120 funções embutidas (`vapor alembic --card` lista todas); `noise(...)` e `hash(...)` são
-  determinísticos — o mesmo programa dá o mesmo número em qualquer máquina.
+- **Values**: arbitrary-size integers, floats, strings, `true`/`false`/`nil`, lists,
+  tuples, maps. Everything immutable.
+- **Expressions**: `if … then … else …`, `let a = …, b = … in …`, lambdas `x => …` and
+  `(a, b) => …`, comprehensions with several `for` and `if`, *pipes* `xs |> map(f) |> sum`,
+  slices `xs[a:b]`, negative indices, fields `m.key`, chained comparisons `0 <= i < n`.
+- **Line breaks** continue the expression after an operator or before `|>`; otherwise
+  they end the definition.
+- **Errors** state line, column and, for names, suggest the nearest one (`lenn` → *did you mean len*).
+- ~120 built-in functions (`vapor alembic --card` lists them all); `noise(...)` and `hash(...)` are
+  deterministic — the same program gives the same number on any machine.
 
-## 2. Saneada: entrada aberta não machuca o hospedeiro
+## 2. Sanitised: open input does not hurt the host
 
-A entrada é livre, então os limites são da máquina e não da pessoa:
+The input is free, so the limits belong to the machine and not to the person:
 
-| risco | defesa | teste |
+| risk | defence | test |
 |---|---|---|
-| laço infinito | **combustível** cobrado em toda chamada e iteração (`fuel:`) | `spin(x) = spin(x + 1)` → *recursion*; `fold` grande → *fuel* |
-| recursão profunda | profundidade máxima 5 000 | idem |
-| números enormes | inteiros até 65 536 bits | `2 ^ 100000000` → *bits* |
-| listas enormes | 2 milhões de elementos; `range` limitado | `range(10^9)` → *range* |
-| memória | `Alembic.sandbox/2`: processo próprio com `max_heap_size`; a VM o mata | bomba de memória → `{:error, :memory}`, o chamador vive |
-| tempo | `sandbox(…, timeout:)` | `{:error, :timeout}` |
-| tabela de átomos | identificadores ficam binários, nunca átomos | 2 000 nomes novos → < 50 átomos |
-| código no lugar de dados | `Alembic.literal/1` lê só dados (e aritmética constante) | `f(1)` e compreensões recusadas |
+| infinite loop | **fuel** charged on every call and iteration (`fuel:`) | `spin(x) = spin(x + 1)` → *recursion*; large `fold` → *fuel* |
+| deep recursion | maximum depth 5,000 | same |
+| huge numbers | integers up to 65,536 bits | `2 ^ 100000000` → *bits* |
+| huge lists | 2 million elements; `range` bounded | `range(10^9)` → *range* |
+| memory | `Alembic.sandbox/2`: its own process with `max_heap_size`; the VM kills it | memory bomb → `{:error, :memory}`, the caller lives |
+| time | `sandbox(…, timeout:)` | `{:error, :timeout}` |
+| atom table | identifiers stay binaries, never atoms | 2,000 new names → < 50 atoms |
+| code in place of data | `Alembic.literal/1` reads only data (and constant arithmetic) | `f(1)` and comprehensions rejected |
 
-Não há E/S, nem relógio, nem aleatoriedade fora de `noise`/`hash`: um programa é uma função
-pura do seu texto. Isso é o que torna o diário do Athanor reprodutível.
+There is no I/O, no clock, no randomness outside `noise`/`hash`: a program is a pure
+function of its text. That is what makes Athanor's journal reproducible.
 
-A mesma disciplina vale para as expressões numéricas compiladas pela bancada de equações
-(`Vapor.Expr.compile/2`): cada expressão nova vira um módulo BEAM, então, além de um teto
-(`config :vapor, expr_jit_cap: 4096`), as novas são **interpretadas** com os mesmos valores e
-nenhum átomo é criado (teste em `alembic_test.exs`).
+The same discipline holds for the numeric expressions compiled by the equation workbench
+(`Vapor.Expr.compile/2`): each new expression becomes a BEAM module, so, beyond a ceiling
+(`config :vapor, expr_jit_cap: 4096`), new ones are **interpreted** with the same values and
+no atom is created (test in `alembic_test.exs`).
 
-## 3. A árvore portátil (cenas)
+## 3. The portable tree (scenes)
 
-`Vapor.Alembic.Tree` é o subconjunto numérico (aritmética, comparações, `if`, funções
-matemáticas, `noise`) convertido em uma árvore JSON que o navegador **interpreta** — nunca
-compila nem avalia como JavaScript. É assim que uma cena aceita `x: 0.5 + 0.2*sin(t)` digitado
-pela pessoa sem abrir uma porta de injeção. `noise()` é bit a bit idêntico em Elixir e em JS
-(valores de ouro em `test/js/scene_noise.mjs` e `alembic_test.exs`).
+`Vapor.Alembic.Tree` is the numeric subset (arithmetic, comparisons, `if`, mathematical
+functions, `noise`) converted into a JSON tree that the browser **interprets** — it never
+compiles or evaluates it as JavaScript. That is how a scene accepts `x: 0.5 + 0.2*sin(t)` typed
+by the person without opening an injection door. `noise()` is bit-for-bit identical in Elixir and in JS
+(golden values in `test/js/scene_noise.mjs` and `alembic_test.exs`).
 
 ## 4. API
 
 ```elixir
 {:ok, prog} = Vapor.Alembic.load(text, consts: %{"n" => 8}, skip: ["space"], fuel: 10_000_000)
-Vapor.Alembic.call(prog, "f", [10])               # {:ok, valor} | {:error, mensagem}
+Vapor.Alembic.call(prog, "f", [10])               # {:ok, value} | {:error, message}
 Vapor.Alembic.eval("sum([x^2 for x in 1..10])")    # {:ok, 385}
-Vapor.Alembic.literal(~S|[1, (2, 3), {"k": 4}]|)   # dados, nunca código
-Vapor.Alembic.show(valor)                           # texto que literal/1 lê de volta
+Vapor.Alembic.literal(~S|[1, (2, 3), {"k": 4}]|)   # data, never code
+Vapor.Alembic.show(value)                           # text that literal/1 reads back
 Vapor.Alembic.sandbox(fn -> … end, heap_mb: 64, timeout: 5_000)
 ```
 
-`show` e `literal` são inversos (teste com 300 valores aleatórios aninhados).
+`show` and `literal` are inverses (tested with 300 random nested values).
 
 ## 5. Terminal
 
 ```
-vapor alembic programa.alb            # avalia as constantes e mostra
-vapor alembic -e "factorial(30)"      # uma expressão
+vapor alembic programa.nbq            # evaluates the constants and shows them
+vapor alembic -e "factorial(30)"      # one expression
 echo "f(n) = n*n" | vapor alembic - --json
-vapor alembic --card                  # o cartão de referência (também no console e no MCP)
+vapor alembic --card                  # the reference card (also in the console and in MCP)
 ```

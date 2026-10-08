@@ -1,6 +1,6 @@
 defmodule Vapor.Logic.Problems do
   @moduledoc """
-  Finite combinatorics as CNF (docs/LOGICA.md §2): the encodings behind
+  Finite combinatorics as CNF (docs/LOGIC.md §2): the encodings behind
   the computer-assisted theorems of Ramsey theory — each a function from
   the parameters to `%{vars, clauses, decode}` for `Vapor.Logic.SAT`.
 

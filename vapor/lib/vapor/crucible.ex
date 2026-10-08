@@ -139,7 +139,7 @@ defmodule Vapor.Crucible do
           {:error, "input larger than 2 MB"}
         else
           t0 = System.monotonic_time(:millisecond)
-          case Vapor.Alembic.sandbox(fn -> safe(fn -> mod.run(text) end) end, heap_mb: Keyword.get(opts, :heap_mb, 1024), timeout: Keyword.get(opts, :timeout, 240_000)) do
+          case Vapor.Hermetic.seal(fn -> safe(fn -> mod.run(text) end) end, heap_mb: Keyword.get(opts, :heap_mb, 1024), timeout: Keyword.get(opts, :timeout, 240_000)) do
             {:ok, {:ok, r}} -> {:ok, Map.put(r, :ms, System.monotonic_time(:millisecond) - t0)}
             {:ok, {:error, e}} -> {:error, to_string(e)}
             {:error, :memory} -> {:error, "the computation needed more memory than allowed — make the problem smaller"}

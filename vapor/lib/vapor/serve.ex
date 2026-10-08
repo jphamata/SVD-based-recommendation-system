@@ -39,7 +39,7 @@ defmodule Vapor.Serve do
   is cut only at UTF-8 character boundaries.
 
   TLS and HTTP/2-3 belong in a reverse proxy in front (see
-  docs/ECOSSISTEMA.md); this server speaks plain HTTP/1.1 with keep-alive.
+  docs/ECOSYSTEM.md); this server speaks plain HTTP/1.1 with keep-alive.
   """
   use GenServer
   require Logger

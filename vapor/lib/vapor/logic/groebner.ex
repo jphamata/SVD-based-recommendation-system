@@ -1,6 +1,6 @@
 defmodule Vapor.Logic.Groebner do
   @moduledoc """
-  Polynomial algebra over the rationals, exactly (docs/LOGICA.md §5):
+  Polynomial algebra over the rationals, exactly (docs/LOGIC.md §5):
   Buchberger's algorithm with his two criteria, reduced Gröbner bases in
   lex or graded reverse-lex order, ideal membership with the cofactors
   that prove it, and **implication between polynomial statements** by
@@ -231,8 +231,8 @@ defmodule Vapor.Logic.Groebner do
   # H ⇒ g = 0 wherever every d ≠ 0: 1 ∈ ⟨H, 1 − t·g·Πd⟩ over vars + t
   defp implies(p) do
     n = length(p.vars)
-    lift = fn poly -> Map.new(poly, fn {e, c} -> {Tuple.append(e, 0), c} end) end
-    t = %{Tuple.append(zero_exp(n), 1) => {1, 1}}
+    lift = fn poly -> Map.new(poly, fn {e, c} -> {:erlang.append_element(e, 0), c} end) end
+    t = %{:erlang.append_element(zero_exp(n), 1) => {1, 1}}
     gd = Enum.reduce(p.unless, lift.(p.claim), fn d, acc -> pmul(acc, lift.(d)) end)
     rab = padd(const({1, 1}, n + 1), pneg(pmul(t, gd)))
     {g, st} = basis(Enum.map(p.hyps, lift) ++ [rab], :grevlex)

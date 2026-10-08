@@ -2,7 +2,7 @@ defmodule Vapor.Console.Lab do
   @moduledoc """
   The substrate airlock's verdicts for the console (the 0.10 round's other
   laboratories — chaos, digital twin, networks, the training receipt — were
-  fixed demonstrations and left the product in 0.16; DIRETRIZ §19).
+  fixed demonstrations and left the product in 0.16; DIRECTIVE §19).
   """
   alias Vapor.Runtime.Substrates
 

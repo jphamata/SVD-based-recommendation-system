@@ -1,6 +1,6 @@
 defmodule Vapor.Solve do
   @moduledoc """
-  The workbench's solvers for problems typed in as text (docs/BANCADA.md):
+  The workbench's solvers for problems typed in as text (docs/WORKBENCH.md):
   ordinary differential equations (adaptive Dormand–Prince 5(4) with its
   dense output, a Rosenbrock 2(3) method for stiff systems with the
   Jacobian derived symbolically, classical RK4), and — in the submodules —

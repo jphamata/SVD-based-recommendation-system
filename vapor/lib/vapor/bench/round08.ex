@@ -40,13 +40,13 @@ defmodule Vapor.Bench.Round08 do
 
   defp header do
     """
-    # Medições da rodada 0.8
+    # Round 0.8 measurements
 
-    Regeneráveis com `mix vapor.bench --round08`. Máquina: #{machine()}.
-    A GPU é o **lavapipe** (Vulkan da Mesa nos mesmos núcleos da CPU): os
-    tempos de GPU medem a maquinaria — o que a sessão residente tira de
-    cada passo —, não o que uma GPU discreta entregaria. Pesos aleatórios:
-    medidas da máquina, não da qualidade (essa é `mix vapor.quality`).
+    Regenerable with `mix vapor.bench --round08`. Machine: #{machine()}.
+    The GPU is **lavapipe** (Mesa's Vulkan on the same CPU cores): the
+    GPU times measure the machinery — what the resident session takes out of
+    each step — not what a discrete GPU would deliver. Random weights:
+    measurements of the machine, not of the quality (that is `mix vapor.quality`).
 
     """
   end
@@ -142,14 +142,14 @@ defmodule Vapor.Bench.Round08 do
 
     %{cpu: cpu, direct: direct, staged: staged, run: run, steps: steps,
       same_bits: cpu.rows == direct.rows and direct.rows == staged.rows and staged.rows == run.rows, engine: engine,
-      shape: "Llama, largura 256, 4 camadas, 8 cabeças (2 KV), vocabulário 2048, contexto 256"}
+      shape: "Llama, width 256, 4 layers, 8 heads (2 KV), vocabulary 2048, context 256"}
   end
 
   defp engine_bench(c, ws, f) do
     reqs = for i <- 1..4, do: {Enum.map(1..24, &rem(&1 * (7 + i), 2000)), [max_tokens: 32, temperature: 0.0]}
     base = [config: c, weights: ws, max_seq: 128, page: 16, sequences: 4, step_tokens: 64]
 
-    for {label, extra} <- [{"CPU (worker nativo)", [threads: System.schedulers_online()]}, {"GPU (sessão residente)", [isa: :spirv, fabric: f]}] do
+    for {label, extra} <- [{"CPU (native worker)", [threads: System.schedulers_online()]}, {"GPU (resident session)", [isa: :spirv, fabric: f]}] do
       {:ok, e} = Vapor.Engine.start_link(base ++ extra)
       t0 = System.monotonic_time(:microsecond)
       refs = for {pr, o} <- reqs, do: elem(Vapor.Engine.generate(e, pr, o), 1)
@@ -165,33 +165,33 @@ defmodule Vapor.Bench.Round08 do
     [e_cpu, e_gpu] = g.engine
 
     """
-    ## 1. Sessões residentes na GPU (P0 da 0.7)
+    ## 1. Resident sessions on the GPU (P0 of 0.7)
 
-    #{g.shape}; um *prompt* de 32 tokens, depois #{g.steps} passos de um token.
-    Tempo de parede por passo, medido na BEAM (inclui o protocolo), mediana:
+    #{g.shape}; a *prompt* of 32 tokens, then #{g.steps} one-token steps.
+    Wall-clock time per step, measured on the BEAM (includes the protocol), median:
 
-    | caminho | ms/token | bytes host↔dispositivo por token | gravações reaproveitadas |
+    | path | ms/token | host↔device bytes per token | recordings reused |
     |---|---:|---:|---:|
-    | GPU, um `RUN` por token (sem sessão: pipelines e cache KV a cada passo) | #{fmt(g.run.ms)} | #{g.run.bytes} | — |
-    | GPU, sessão residente, memória direta | #{fmt(g.direct.ms)} | #{g.direct.bytes} | #{g.direct.reused}/#{g.steps} |
-    | GPU, sessão residente, *staging* (caminho de GPU discreta) | #{fmt(g.staged.ms)} | #{g.staged.bytes} | #{g.staged.reused}/#{g.steps} |
-    | CPU, sessão no worker nativo | #{fmt(g.cpu.ms)} | — | — |
+    | GPU, one `RUN` per token (no session: pipelines and KV cache at every step) | #{fmt(g.run.ms)} | #{g.run.bytes} | — |
+    | GPU, resident session, direct memory | #{fmt(g.direct.ms)} | #{g.direct.bytes} | #{g.direct.reused}/#{g.steps} |
+    | GPU, resident session, *staging* (the discrete-GPU path) | #{fmt(g.staged.ms)} | #{g.staged.bytes} | #{g.staged.reused}/#{g.steps} |
+    | CPU, session in the native worker | #{fmt(g.cpu.ms)} | — | — |
 
-    Mesmos bits nos quatro caminhos (logits de cada passo): **#{if g.same_bits, do: "sim", else: "NÃO"}**.
-    A sessão corta #{fmt(g.run.ms / max(g.direct.ms, 0.001))}× o tempo por token e
-    #{round(g.run.bytes / max(g.direct.bytes, 1))}× o tráfego: o passo move os ids e uma linha de logits,
-    não o cache.
+    Same bits on the four paths (logits of every step): **#{if g.same_bits, do: "yes", else: "NO"}**.
+    The session cuts the time per token #{fmt(g.run.ms / max(g.direct.ms, 0.001))}× and
+    the traffic #{round(g.run.bytes / max(g.direct.bytes, 1))}×: the step moves the ids and one row of logits,
+    not the cache.
 
-    **Motor** (4 pedidos simultâneos, 24 tokens de *prompt*, 32 gerados, guloso):
+    **Engine** (4 concurrent requests, 24 *prompt* tokens, 32 generated, greedy):
 
-    | substrato | tokens | tokens/s |
+    | substrate | tokens | tokens/s |
     |---|---:|---:|
     | #{e_cpu.label} | #{e_cpu.tokens} | #{fmt(e_cpu.tps)} |
     | #{e_gpu.label} | #{e_gpu.tokens} | #{fmt(e_gpu.tps)} |
 
-    Mesmos tokens nos dois: **#{if e_cpu.outs == e_gpu.outs, do: "sim", else: "NÃO"}**. No lavapipe a GPU
-    é a própria CPU, então a comparação de vazão diz pouco sobre GPU real; o que
-    ela prova é que o motor serve inteiro no Vulkan, com os bits da CPU.
+    Same tokens on both: **#{if e_cpu.outs == e_gpu.outs, do: "yes", else: "NO"}**. On lavapipe the GPU
+    is the CPU itself, so the throughput comparison says little about a real GPU; what
+    it proves is that the engine serves entirely on Vulkan, with the CPU's bits.
     """
   end
 
@@ -221,22 +221,22 @@ defmodule Vapor.Bench.Round08 do
         %{tokens: t, dense_ms: dm, sparse_ms: sm, dense_retired: dr, sparse_retired: sr, same_bits: d == s}
       end
 
-    %{rows: rows, isa: isa, shape: "Mixtral, largura 512, 8 especialistas (top-2), 2 camadas, pesos sb4 (4,75 bits/peso)"}
+    %{rows: rows, isa: isa, shape: "Mixtral, width 512, 8 experts (top-2), 2 layers, sb4 weights (4.75 bits/weight)"}
   end
 
   defp sb4_report(r) do
     """
-    ## 2. Especialistas esparsos em 4 bits (`qgemv_masked`)
+    ## 2. Sparse 4-bit experts (`qgemv_masked`)
 
-    #{r.shape}; ISA `#{r.isa}`. Tempo no worker (mediana de #{@reps}) e instruções
-    retiradas contadas exatamente pelo interpretador RVV (VLEN 256):
+    #{r.shape}; ISA `#{r.isa}`. Time in the worker (median of #{@reps}) and instructions
+    retired, counted exactly by the RVV interpreter (VLEN 256):
 
-    | tokens | denso ms | esparso ms | × | instruções denso | instruções esparso | mesmos bits |
+    | tokens | dense ms | sparse ms | × | dense instructions | sparse instructions | same bits |
     |---:|---:|---:|---:|---:|---:|:---:|
-    #{Enum.map_join(r.rows, "\n", fn x -> "| #{x.tokens} | #{fmt(x.dense_ms)} | #{fmt(x.sparse_ms)} | #{fmt(x.dense_ms / x.sparse_ms)} | #{x.dense_retired} | #{x.sparse_retired} | #{if x.same_bits, do: "sim", else: "NÃO"} |" end)}
+    #{Enum.map_join(r.rows, "\n", fn x -> "| #{x.tokens} | #{fmt(x.dense_ms)} | #{fmt(x.sparse_ms)} | #{fmt(x.dense_ms / x.sparse_ms)} | #{x.dense_retired} | #{x.sparse_retired} | #{if x.same_bits, do: "yes", else: "NO"} |" end)}
 
-    Com top-2 de 8, cada token lê 1/4 dos especialistas; o resto do modelo
-    (atenção, roteador, cabeça) não muda — o ganho total é menor que 4×.
+    With top-2 of 8, each token reads 1/4 of the experts; the rest of the model
+    (attention, router, head) does not change — the total gain is less than 4×.
     """
   end
 

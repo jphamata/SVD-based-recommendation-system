@@ -1,0 +1,19 @@
+{
+  "scopeName": "source.almizan",
+  "name": "Almizan",
+  "patterns": [
+    { "name": "comment.line.semicolon.almizan", "match": ";.*$" },
+    { "name": "keyword.declaration.almizan", "match": "(?<=\\()\\s*(claim|import|دعوى|استيراد)(?=[\\s)])" },
+    { "name": "keyword.other.clause.almizan", "match": "(?<=\\()\\s*(root|wazn|inputs|field|box|step|init|invariant|proof|body|graph|جذر|وزن|مدخلات|حقل|صندوق|خطوة|بداية|ثابت|برهان|تنفيذ|مخطط)(?=[\\s)])" },
+    { "name": "entity.name.tag.root.almizan", "match": "(?<=[\\s(])(H-s-b|H-f-Z|n-q-l|k-t-b|s-b-b|ح-س-ب|ح-ف-ظ|ن-ق-ل|ك-ت-ب|س-ب-ب)(?=[\\s)])" },
+    { "name": "storage.modifier.wazn.almizan", "match": "(?<=[\\s(])(fail|maful|burhan|فاعل|مفعول)(?=[\\s)])" },
+    { "name": "support.type.almizan", "match": "(?<=[\\s(])(q|int|f64|f32|bool|نسبي|صحيح|عائم٦٤|عائم٣٢|منطقي)(?=[\\s)])" },
+    { "name": "keyword.other.proof.almizan", "match": "(?<=[\\s(])(conserved|nonneg|pos|identity|bounded|identifiable|adjustment|separated|محفوظ|غير-سالب|موجب|متطابقة|محدود|معرف|تعديل|منفصل)(?=[\\s)])" },
+    { "name": "keyword.operator.logical.almizan", "match": "(?<=\\()(and|or|not|if|do|independent|و|أو|ليس|إذا|افعل|مستقل)(?=[\\s)])" },
+    { "name": "constant.language.almizan", "match": "(?<=[\\s(])(true|false|صواب|خطأ)(?=[\\s)])" },
+    { "name": "constant.numeric.almizan", "match": "(?<=[\\s(])-?[0-9٠-٩]+(?:[./][0-9٠-٩]+)?(?=[\\s)])" },
+    { "name": "keyword.operator.arithmetic.almizan", "match": "(?<=\\()(\\+|-|\\*|/|\\^|<=|>=|<|>|=|جمع|طرح|ضرب|قسمة|أس)(?=[\\s)])" },
+    { "name": "keyword.operator.edge.almizan", "match": "(?<=\\()(->|<->)(?=[\\s)])" },
+    { "name": "variable.other.arabic.almizan", "match": "@[A-Za-z'|><&}*$`{~_-]+" }
+  ]
+}

@@ -1,7 +1,7 @@
 defmodule Vapor.Finance.Options do
   @moduledoc """
   Option pricing with the numbers that let a desk judge each price
-  (docs/FINANCAS.md §4).
+  (docs/FINANCE.md §4).
 
   | function | model | certificate |
   |---|---|---|
@@ -13,7 +13,7 @@ defmodule Vapor.Finance.Options do
   | `svi_fit/2`, `svi_arbitrage/2` | raw SVI smile | Durrleman's g(k) ≥ 0 on a fine grid (butterfly), total variance non-decreasing in T (calendar); the risk-neutral density |
   | `static_arbitrage/3` | model-free, call quotes across strikes | monotonicity, slope bounds, convexity — each violation returned as the portfolio that exploits it, its payoff checked at every kink |
 
-  Every price is pinned against QuantLib in `financas_test.exs`.
+  Every price is pinned against QuantLib in `finance_test.exs`.
   """
   alias Vapor.Finance.Num
 

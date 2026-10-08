@@ -1,6 +1,6 @@
 defmodule Vapor.Scene do
   @moduledoc """
-  Giving a picture life (docs/CENA.md): any image — a photograph, a
+  Giving a picture life (docs/SCENE.md): any image — a photograph, a
   painting, an AI render, a drawing — becomes a **living scene** the
   console plays forever: layers at depths with the hidden background
   reconstructed, so the camera can move and the picture opens up; a
@@ -755,10 +755,9 @@ defmodule Vapor.Scene do
     %{ops: finish(plain, []).ops ++ special, unknown: Enum.uniq(unknown)}
   end
 
-  @time_re ~r/^\s*(?:after|depois\s+de|em|at|aos?|no\s+segundo|in)\s+(\d+(?:[.,]\d+)?)\s*(?:s|seg|segs|segundos?|seconds?|sec)?\b[:,]?\s*/iu
 
   defp timing(clause) do
-    case Regex.run(@time_re, clause) do
+    case Regex.run(~r/^\s*(?:after|depois\s+de|em|at|aos?|no\s+segundo|in)\s+(\d+(?:[.,]\d+)?)\s*(?:s|seg|segs|segundos?|seconds?|sec)?\b[:,]?\s*/iu, clause) do
       [whole, n] -> {elem(Float.parse(String.replace(n, ",", ".")), 0), String.replace_prefix(clause, whole, "")}
       nil -> {nil, clause}
     end

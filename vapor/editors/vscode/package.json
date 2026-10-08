@@ -1,26 +1,26 @@
 {
   "name": "vapor",
-  "displayName": "vapor — Al-Mizān and Alembic",
-  "description": "Al-Mizān (claims decided, in Latin or Arabic script) and Alembic (the problem language): highlighting, diagnostics that decide every obligation, hover, completion, symbols, formatting, and the Latin ⇄ Arabic projection — all from `vapor lsp`.",
+  "displayName": "vapor — Almizan and Alembic",
+  "description": "Almizan (claims decided, in Latin or Arabic script) and Alembic (the problem language): highlighting, diagnostics that decide every obligation, hover, completion, symbols, formatting, and the Latin ⇄ Arabic projection — all from `vapor lsp`.",
   "version": "0.16.0",
   "publisher": "vapor",
   "license": "SEE LICENSE IN ../../LICENSE.md",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Programming Languages", "Formatters", "Linters"],
   "main": "./extension.js",
-  "activationEvents": ["onLanguage:mizan", "onLanguage:alembic"],
+  "activationEvents": ["onLanguage:almizan", "onLanguage:alembic"],
   "contributes": {
     "languages": [
-      { "id": "mizan", "aliases": ["Al-Mizān", "الميزان", "mizan"], "extensions": [".wzn"], "configuration": "./language-configuration.json" },
-      { "id": "alembic", "aliases": ["Alembic", "alembic"], "extensions": [".alb"], "configuration": "./alembic-configuration.json" }
+      { "id": "almizan", "aliases": ["Almizan", "الميزان", "almizan"], "extensions": [".wzn"], "configuration": "./language-configuration.json" },
+      { "id": "alembic", "aliases": ["Alembic", "alembic"], "extensions": [".nbq"], "configuration": "./alembic-configuration.json" }
     ],
     "grammars": [
-      { "language": "mizan", "scopeName": "source.mizan", "path": "./syntaxes/mizan.tmLanguage.json" },
+      { "language": "almizan", "scopeName": "source.almizan", "path": "./syntaxes/almizan.tmLanguage.json" },
       { "language": "alembic", "scopeName": "source.alembic", "path": "./syntaxes/alembic.tmLanguage.json" }
     ],
     "commands": [
-      { "command": "vapor.mizan.toArabic", "title": "Al-Mizān: show in Arabic script (same program, same hash)" },
-      { "command": "vapor.mizan.toLatin", "title": "Al-Mizān: show in Latin script (same program, same hash)" }
+      { "command": "vapor.almizan.toArabic", "title": "Almizan: show in Arabic script (same program, same hash)" },
+      { "command": "vapor.almizan.toLatin", "title": "Almizan: show in Latin script (same program, same hash)" }
     ],
     "configuration": {
       "title": "vapor",

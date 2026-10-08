@@ -15,7 +15,7 @@ defmodule Vapor.Merge do
   | `:regmean` | for every matrix whose inputs were measured (`calibrate/3`): the **least-squares** fusion `W = (Σ Wᵢ G̃ᵢ)(Σ G̃ᵢ)⁻¹`, `G̃ = α·G + (1 − α)·diag G`, `G = XᵀX` of the matrix's input activations on each model's own data; every other tensor `:linear` |
 
   `:regmean` is the answer to "TIES and DARE made it worse" (measured,
-  `docs/FUSAO.md`): they assume small, sparse fine-tune deltas; fusing
+  `docs/MERGING.md`): they assume small, sparse fine-tune deltas; fusing
   models that differ densely needs to know *which inputs each model is
   responsible for*, and the Gram matrix of its activations is exactly
   that. `diagnose/2` measures which regime a set of models is in before

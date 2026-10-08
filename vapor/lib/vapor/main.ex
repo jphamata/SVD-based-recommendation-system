@@ -9,7 +9,7 @@ defmodule Vapor.Main do
       `ocr`, `merge`, `quality`, …) through `bin/vapor`;
     * input from a file or from standard input (`-`, or a pipe);
     * output for people on a terminal, **JSON when piped** (or with
-      `--json`), so `vapor athanor run p.alb | vapor verify p.alb -` works;
+      `--json`), so `vapor athanor run p.nbq | vapor verify p.nbq -` works;
     * exit status: 0 — done, the answer is positive; 1 — done, the answer
       is negative (refuted, not found, verification failed); 2 — usage;
       3 — the input is not valid (a parse error, a bad file); 4 — failure.
@@ -18,7 +18,10 @@ defmodule Vapor.Main do
   """
   alias Vapor.Alembic
 
-  @verbs ~w(alembic athanor search game crucible assay mind scene solve verify rebis aludel tabula cupel amalgam chat wzn lsp help version)
+  @verbs ~w(alembic athanor search game crucible assay mind scene solve verify logic rebis aludel tabula cupel amalgam qalib recommend palingenesis chat wzn lsp help version)
+
+  @doc "The verbs (what `help` lists and the console's terminal completes)."
+  def verbs, do: @verbs
 
   @doc "Entry point: run and halt with the exit status."
   def main(argv) do
@@ -49,14 +52,18 @@ defmodule Vapor.Main do
   def run(["mind" | rest]), do: Vapor.Main.MindCli.run(rest)
   def run(["scene" | rest]), do: Vapor.Main.SceneCli.run(rest)
   def run(["solve" | rest]), do: solve(rest)
+  def run(["logic" | rest]), do: Vapor.Main.ForgeCli.logic(rest)
+  def run(["qalib" | rest]), do: Vapor.Main.ForgeCli.qalib(rest)
+  def run(["recommend" | rest]), do: Vapor.Main.ForgeCli.recommend(rest)
+  def run(["palingenesis" | rest]), do: Vapor.Main.ForgeCli.palingenesis(rest)
   def run(["rebis" | rest]), do: Vapor.Main.OpusCli.rebis(rest)
   def run(["aludel" | rest]), do: Vapor.Main.OpusCli.aludel(rest)
   def run(["tabula" | rest]), do: Vapor.Main.OpusCli.tabula(rest)
   def run(["cupel" | rest]), do: Vapor.Main.OpusCli.cupel(rest)
   def run(["amalgam" | rest]), do: Vapor.Main.OpusCli.amalgam(rest)
   def run(["chat" | rest]), do: Vapor.Main.ChatCli.run(rest)
-  def run(["wzn" | rest]), do: Vapor.Main.MizanCli.run(rest)
-  def run(["mizan" | rest]), do: Vapor.Main.MizanCli.run(rest)
+  def run(["wzn" | rest]), do: Vapor.Main.AlmizanCli.run(rest)
+  def run(["almizan" | rest]), do: Vapor.Main.AlmizanCli.run(rest)
   def run(["lsp" | _]), do: (Vapor.LSP.serve(); 0)
   def run([verb | _]) do
     err("vapor: unknown command #{verb}. Commands: #{Enum.join(@verbs, ", ")} (and serve, tui, ocr, merge, quality, rag, lock, train… through bin/vapor)")
@@ -79,14 +86,18 @@ defmodule Vapor.Main do
       vapor mind ask|formalize|propose …          a language model, always checked (VAPOR_MIND=anthropic:MODEL …)
       vapor scene new|edit|direct|export …        scenes as documents edited by operations
       vapor solve FILE                            the workbench: equations with units, ODEs, PDEs, fits
+      vapor logic FILE | check FILE PROPOSAL      SAT, LP, integer LP, causal diagrams, Gröbner…: decided, with certificates
       vapor rebis equiv|anf|identity|stabilizer … circuits over GF(2): proved equal or told apart
+      vapor qalib map|check …                     sky130 netlists: mapped, read back, proved equal (or a counterexample)
+      vapor recommend RATINGS.csv                 matrix factorisation against baselines, a paired test, a shuffled control
+      vapor palingenesis planks|try MODEL …       renew a model plank by plank, through the drift brake and the target test
       vapor aludel decide POLY --box … | REQ.json polynomial claims and barrier certificates, decided exactly
       vapor tabula FILE [--facts a,b]             a contract: antinomies, proofs of consistency, positions
       vapor cupel | vapor amalgam [FILE]          silent-corruption drill · sums that do not depend on order
       vapor chat [new|say|show|edit|regen|fork|context|search|export|import|share …]
                                                   conversations as a tree: branches, forks, context, compaction
-      vapor wzn check|show|run|transmute|assay FILE  Al-Mizān: claims decided (Latin or Arabic script), lowered by vapor's compiler
-      vapor lsp                                   the language server for editors (Mizān, Alembic)
+      vapor wzn check|show|run|transmute|assay FILE  Almizan: claims decided (Latin or Arabic script), lowered by vapor's compiler
+      vapor lsp                                   the language server for editors (Almizan, Alembic)
       vapor serve | tui | ocr | merge | quality … the console and the older tasks (via bin/vapor)
 
     FILE may be - (standard input). Output is JSON when piped or with --json.

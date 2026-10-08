@@ -113,7 +113,6 @@ defmodule Vapor.Crucible.Molecule do
     %{points: pts, minimum: refined}
   end
 
-  defp norm_vec({0.0, 0.0, 0.0}, d), do: d
   defp norm_vec({x, y, z} = v, _), do: (n = :math.sqrt(x * x + y * y + z * z); if(n == 0, do: {0.0, 0.0, 1.0}, else: scale(v, 1 / n)))
   defp sub({a, b, c}, {d, e, f}), do: {a - d, b - e, c - f}
   defp add({a, b, c}, {d, e, f}), do: {a + d, b + e, c + f}

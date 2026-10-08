@@ -169,7 +169,6 @@ defmodule Vapor.Diffusion.Scheduler do
     {out, %{prev_x0: x0, prev_lambda: lam_s}}
   end
 
-  defp alpha_sigma(0.0), do: {1.0, 0.0}
   defp alpha_sigma(sig), do: (fn a -> {a, sig * a} end).(1.0 / :math.sqrt(sig * sig + 1.0))
 
   @doc "Noise added to clean latents at step index `i` (img2img, inpainting): √ᾱ·x₀ + √(1−ᾱ)·ε, or x₀ + σ·ε for Euler."

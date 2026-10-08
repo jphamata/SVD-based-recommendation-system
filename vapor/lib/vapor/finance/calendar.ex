@@ -1,12 +1,12 @@
 defmodule Vapor.Finance.Calendar do
   @moduledoc """
-  Business-day calendars and day-count conventions (docs/FINANCAS.md §2).
+  Business-day calendars and day-count conventions (docs/FINANCE.md §2).
 
   Every holiday is a **rule**, not a downloaded list: fixed dates, nth
   weekday of a month, and the moveable feasts from the Gregorian computus
   (Easter by the anonymous algorithm of 1876). The rules are pinned
   against QuantLib's calendars day by day over a century
-  (`financas_test.exs`), and the special closings that no rule produces
+  (`finance_test.exs`), and the special closings that no rule produces
   (a day of mourning, a hurricane) are data, listed with their reason.
 
   | calendar | what it is |

@@ -1,6 +1,6 @@
 defmodule Vapor.Finance.Money do
   @moduledoc """
-  Exact decimal money (docs/FINANCAS.md §1).
+  Exact decimal money (docs/FINANCE.md §1).
 
   A ledger cannot round in binary: `0.1 + 0.2` is not `0.3` in IEEE-754,
   and a sum of a million cents drifts. Here an amount is an integer

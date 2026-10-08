@@ -1,7 +1,7 @@
 defmodule Vapor.Solve.Ensemble do
   @moduledoc """
   Ensembles of a typed-in ODE system on the native worker
-  (docs/BANCADA.md §3): the HPC path of the workbench.
+  (docs/WORKBENCH.md §3): the HPC path of the workbench.
 
   Uncertainty quantification and parameter sweeps integrate the same
   system thousands of times with different parameters. Here the system's

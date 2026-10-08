@@ -28,7 +28,7 @@ defmodule Vapor.Agent.Store do
       resumer arriving then retries it, with the same idempotency key
       (closing that needs a lease). (A relational
       adapter gets this from `UNIQUE (run_id, seq)`; see
-      docs/ECOSSISTEMA_ELIXIR.md.)
+      docs/ELIXIR_ECOSYSTEM.md.)
     * `load(store, run_id)` returns the journal — `{:ok, journal}`, or
       `{:error, :not_found}` — and only events that verify; a torn last
       write is not an event.

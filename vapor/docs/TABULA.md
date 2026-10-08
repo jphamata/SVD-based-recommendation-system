@@ -1,16 +1,16 @@
-# Tábua — contratos sem antinomias
+# Tabula — contracts without antinomies
 
-> Desde 0.15.0. Código: `lib/vapor/tabula.ex`. Testes: `test/vapor/tabula_test.exs`.
-> Console: *Opus → Tábua*. Terminal: `vapor tabula FILE [--facts a,b]`. MCP: `tabula_analyze`.
+> Since 0.15.0. Code: `lib/vapor/tabula.ex`. Tests: `test/vapor/tabula_test.exs`.
+> Console: *Opus → Tabula*. Terminal: `vapor tabula FILE [--facts a,b]`. MCP: `tabula_analyze`.
 
-A tábua de esmeralda é o texto de lei dos alquimistas.
+The emerald tablet (*tabula smaragdina*) is the alchemists' text of law.
 
-## A dor
+## The pain
 
-Um contrato cujas cláusulas, sob alguma combinação de eventos, obrigam uma parte a fazer o que
-outra cláusula proíbe — ou a fazer duas coisas que não podem ser feitas juntas — é descoberto por
-um tribunal, anos depois. Se essa combinação **existe** é uma pergunta de lógica proposicional, e
-pode ser respondida antes da assinatura.
+A contract whose clauses, under some combination of events, oblige one party to do what
+another clause forbids — or to do two things that cannot be done together — is found out by
+a court, years later. Whether that combination **exists** is a question of propositional logic, and
+it can be answered before signing.
 
 ```
 parties buyer seller
@@ -26,42 +26,42 @@ C6: if late and delivered then buyer must withhold
 C4 overrides C5
 ```
 
-Modalidades deônticas (as posições de Hohfeld entre parênteses): `must` (dever — a pretensão da
-contraparte), `must not` (proibição), `may` (privilégio), `is exempt from` / `need not` (sem
-dever). Em português também: `deve`, `não deve`, `pode`, `está isento de`; `se … então`;
+Deontic modalities (Hohfeld's positions in parentheses): `must` (duty — the counterparty's
+claim), `must not` (prohibition), `may` (privilege), `is exempt from` / `need not` (no
+duty). In Portuguese as well: `deve`, `não deve`, `pode`, `está isento de`; `se … então`;
 `prevalece sobre`.
 
-## A decisão
+## The decision
 
-Para cada par de cláusulas sobre a mesma parte e a mesma ação cujas modalidades colidem — dever ×
-proibição, proibição × privilégio, dever × isenção, ou dois deveres sobre ações declaradas
-`exclusive` — a pergunta "as duas condições podem valer juntas, dadas as premissas `assume`?" vai
-ao resolvedor SAT (`Vapor.Logic.Formula`, Tseitin):
+For each pair of clauses about the same party and the same action whose modalities collide — duty ×
+prohibition, prohibition × privilege, duty × exemption, or two duties over actions declared
+`exclusive` — the question "can both conditions hold together, given the `assume` premises?" goes
+to the SAT solver (`Vapor.Logic.Formula`, Tseitin):
 
-- **satisfazível** é uma antinomia **com o cenário que a dispara** (conferido avaliando as
-  cláusulas);
-- **insatisfazível** é uma prova, conferida pelo `Vapor.Logic.DRUP`, de que a colisão nunca
-  acontece.
+- **satisfiable** is an antinomy **with the scenario that triggers it** (checked by evaluating the
+  clauses);
+- **unsatisfiable** is a proof, checked by `Vapor.Logic.DRUP`, that the collision never
+  happens.
 
-Também relatados: **silêncios** (um cenário em que nenhuma cláusula diz nada sobre uma ação que
-outras cláusulas regem — uma lacuna, não um erro). Uma colisão entre cláusulas uma das quais
-`overrides` a outra (*lex specialis*, *lex posterior*: a pessoa diz qual) é **resolvida**,
-relatada com o seu cenário, não contada como antinomia; um ciclo de precedências é recusado.
-`positions/2` dá, para um conjunto de fatos, as posições em vigor, as sobrepostas, as pretensões
-(todo dever devido a alguém é a pretensão desse alguém) e as colisões.
+Also reported: **silences** (a scenario in which no clause says anything about an action that
+other clauses govern — a gap, not an error). A collision between clauses one of which
+`overrides` the other (*lex specialis*, *lex posterior*: the person says which) is **resolved**,
+reported with its scenario, not counted as an antinomy; a cycle of precedences is refused.
+`positions/2` gives, for a set of facts, the positions in force, the overridden ones, the claims
+(every duty owed to someone is that someone's claim) and the collisions.
 
-No exemplo: C1 × C6 é uma antinomia quando `delivered ∧ late ∧ ¬defective`; C1 × C3 nunca colide
-(prova DRUP); C4 × C5 é resolvida por C4. Com `C6 overrides C1` também, nenhuma antinomia sobra.
-Estresse: 120 cláusulas sobre 30 fatos — cada achado reavaliado, cada prova conferida.
+In the example: C1 × C6 is an antinomy when `delivered ∧ late ∧ ¬defective`; C1 × C3 never collides
+(DRUP proof); C4 × C5 is resolved by C4. With `C6 overrides C1` as well, no antinomy remains.
+Stress: 120 clauses over 30 facts — each finding re-evaluated, each proof checked.
 
-## No console
+## In the console
 
-As cláusulas como uma tábua (as sobrepostas riscadas), os fatos como botões que ligam e
-desligam e recalculam as posições, e cada achado com um botão "fixar estes fatos" que põe a
-tábua no cenário que dispara a colisão.
+The clauses as a tablet (the overridden ones struck through), the facts as buttons that switch on and
+off and recompute the positions, and each finding with a "pin these facts" button that puts the
+tablet into the scenario that triggers the collision.
 
-## O que não é
+## What it is not
 
-Não interpreta linguagem natural nem direito. A pessoa (ou um modelo, como rascunho que a pessoa
-revisa) escreve as cláusulas nesta forma; a tábua decide só o que segue delas. Prazos, valores e
-quantificação sobre partes ficam fora (lógica proposicional, por escolha: decidível, com prova).
+It does not interpret natural language or law. The person (or a model, as a draft the person
+reviews) writes the clauses in this form; Tabula decides only what follows from them. Deadlines, amounts and
+quantification over parties stay out (propositional logic, by choice: decidable, with a proof).

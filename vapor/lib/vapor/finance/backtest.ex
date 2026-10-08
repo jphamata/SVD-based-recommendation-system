@@ -1,6 +1,6 @@
 defmodule Vapor.Finance.Backtest do
   @moduledoc """
-  Backtests with **noise gates** (docs/FINANCAS.md §7).
+  Backtests with **noise gates** (docs/FINANCE.md §7).
 
   A backtest is a machine for producing Sharpe ratios; try enough
   variants and one will look good on pure noise. The industry's two
@@ -384,7 +384,6 @@ defmodule Vapor.Finance.Backtest do
     end
   end
 
-  defp f3(nil), do: "—"
   defp f3(x), do: :erlang.float_to_binary(x * 1.0, decimals: 3)
 
   defp thin(xs, m) do

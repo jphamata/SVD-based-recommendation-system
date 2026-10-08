@@ -34,14 +34,14 @@ defmodule Vapor.LSPTest do
   test "capabilities; diagnostics decide the obligations: the refuted claim is an error at its own line, with its point" do
     {init, st} = start()
     assert init["result"]["capabilities"]["hoverProvider"]
-    {[%{"params" => %{"diagnostics" => [d]}}], _} = open(st, "file:///a.wzn", @osc, "mizan")
+    {[%{"params" => %{"diagnostics" => [d]}}], _} = open(st, "file:///a.wzn", @osc, "almizan")
     assert d["severity"] == 1 and d["range"]["start"]["line"] == 10
     assert d["message"] =~ "damped: refuted" and d["message"] =~ "at "
   end
 
   test "as you type only syntax is checked; a syntax error points at its line" do
     {_, st} = start()
-    {_, st} = open(st, "file:///b.wzn", "(claim f (root H-s-b) (wazn fail) (body 1))", "mizan")
+    {_, st} = open(st, "file:///b.wzn", "(claim f (root H-s-b) (wazn fail) (body 1))", "almizan")
     {[%{"params" => %{"diagnostics" => [d]}}], _} =
       LSP.handle(%{"method" => "textDocument/didChange", "params" => %{"textDocument" => %{"uri" => "file:///b.wzn"}, "contentChanges" => [%{"text" => "\n\n(claim f (root H-s-b) (wazn fail) (body (+ 1)))"}]}}, st)
     assert d["range"]["start"]["line"] == 2 and d["message"] =~ "argument"
@@ -49,7 +49,7 @@ defmodule Vapor.LSPTest do
 
   test "hover: a root, a keyword in both scripts, a claim's verdict; completion in the file's script; symbols; definition" do
     {_, st} = start()
-    {_, st} = open(st, "file:///a.wzn", @osc, "mizan")
+    {_, st} = open(st, "file:///a.wzn", @osc, "almizan")
     {[h1], st} = req(st, 2, "textDocument/hover", %{"textDocument" => %{"uri" => "file:///a.wzn"}, "position" => %{"line" => 4, "character" => 22}})
     assert h1["result"]["contents"]["value"] =~ "conservation" and h1["result"]["contents"]["value"] =~ "abjad"
     {[h2], st} = req(st, 3, "textDocument/hover", %{"textDocument" => %{"uri" => "file:///a.wzn"}, "position" => %{"line" => 4, "character" => 9}})
@@ -57,7 +57,7 @@ defmodule Vapor.LSPTest do
     {[c], st} = req(st, 4, "textDocument/completion", %{"textDocument" => %{"uri" => "file:///a.wzn"}, "position" => %{"line" => 0, "character" => 0}})
     labels = Enum.map(c["result"], & &1["label"])
     assert "claim" in labels and "H-f-Z" in labels and "energy" in labels
-    {_, st} = open(st, "file:///ar.wzn", "(دعوى طاقة (جذر ح-س-ب) (وزن فاعل) (تنفيذ ١))", "mizan")
+    {_, st} = open(st, "file:///ar.wzn", "(دعوى طاقة (جذر ح-س-ب) (وزن فاعل) (تنفيذ ١))", "almizan")
     {[c2], st} = req(st, 5, "textDocument/completion", %{"textDocument" => %{"uri" => "file:///ar.wzn"}, "position" => %{"line" => 0, "character" => 0}})
     assert "دعوى" in Enum.map(c2["result"], & &1["label"])
     {[s], st} = req(st, 6, "textDocument/documentSymbol", %{"textDocument" => %{"uri" => "file:///a.wzn"}})
@@ -68,10 +68,10 @@ defmodule Vapor.LSPTest do
 
   test "formatting keeps the script; the projection command offers the other one as an edit" do
     {_, st} = start()
-    {_, st} = open(st, "file:///a.wzn", "(claim   f (root H-s-b)  (wazn fail) (body 1))", "mizan")
+    {_, st} = open(st, "file:///a.wzn", "(claim   f (root H-s-b)  (wazn fail) (body 1))", "almizan")
     {[f], st} = req(st, 8, "textDocument/formatting", %{"textDocument" => %{"uri" => "file:///a.wzn"}})
     assert [%{"newText" => "(claim f (root H-s-b) (wazn fail)\n  (body 1))\n"}] = f["result"]
-    {[ok, edit], _} = req(st, 9, "workspace/executeCommand", %{"command" => "vapor.mizan.toArabic", "arguments" => ["file:///a.wzn"]})
+    {[ok, edit], _} = req(st, 9, "workspace/executeCommand", %{"command" => "vapor.almizan.toArabic", "arguments" => ["file:///a.wzn"]})
     assert ok["result"] == nil
     assert edit["method"] == "workspace/applyEdit"
     assert edit["params"]["edit"]["changes"]["file:///a.wzn"] |> hd() |> Map.get("newText") =~ "دعوى f"
@@ -79,12 +79,12 @@ defmodule Vapor.LSPTest do
 
   test "Alembic: parse errors with line and column; definitions as symbols; builtins completed" do
     {_, st} = start()
-    {[%{"params" => %{"diagnostics" => [d]}}], st} = open(st, "file:///p.alb", "f(x) = x * 2\ny = = 3\n", "alembic")
+    {[%{"params" => %{"diagnostics" => [d]}}], st} = open(st, "file:///p.nbq", "f(x) = x * 2\ny = = 3\n", "alembic")
     assert d["range"]["start"]["line"] == 1
-    {_, st} = open(st, "file:///q.alb", "f(x) = x * 2\ng = f(3)\n", "alembic")
-    {[s], st} = req(st, 10, "textDocument/documentSymbol", %{"textDocument" => %{"uri" => "file:///q.alb"}})
+    {_, st} = open(st, "file:///q.nbq", "f(x) = x * 2\ng = f(3)\n", "alembic")
+    {[s], st} = req(st, 10, "textDocument/documentSymbol", %{"textDocument" => %{"uri" => "file:///q.nbq"}})
     assert Enum.map(s["result"], & &1["name"]) == ["f", "g"]
-    {[c], _} = req(st, 11, "textDocument/completion", %{"textDocument" => %{"uri" => "file:///q.alb"}, "position" => %{"line" => 0, "character" => 0}})
+    {[c], _} = req(st, 11, "textDocument/completion", %{"textDocument" => %{"uri" => "file:///q.nbq"}, "position" => %{"line" => 0, "character" => 0}})
     assert length(c["result"]) > 20
   end
 
@@ -95,6 +95,15 @@ defmodule Vapor.LSPTest do
     {[], st} = LSP.handle(%{"method" => "$/cancelRequest", "params" => %{}}, st)
     {[r], st} = req(st, 13, "shutdown", nil)
     assert Map.has_key?(r, "result") and st.shutdown
+  end
+
+  test "inlay hints: each decided claim's verdict beside it, at the end of its first line" do
+    st = LSP.handle(%{"jsonrpc" => "2.0", "id" => 1, "method" => "initialize", "params" => %{}}, %{docs: %{}, shutdown: false}) |> elem(1)
+    {_, st} = open(st, "file:///a.wzn", @osc, "almizan")
+    {[r], _} = req(st, 20, "textDocument/inlayHint", %{"textDocument" => %{"uri" => "file:///a.wzn"}, "range" => %{}})
+    labels = Enum.map(r["result"], & &1["label"])
+    assert Enum.any?(labels, &String.starts_with?(&1, "✗ refuted"))
+    assert Enum.all?(r["result"], &(&1["position"]["character"] > 0))
   end
 
   @tag :node

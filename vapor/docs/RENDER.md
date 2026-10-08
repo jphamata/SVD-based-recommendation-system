@@ -1,28 +1,28 @@
-# Render — luz fisicamente baseada, na GPU de quem olha, com uma referência que se confere
+# Render — physically based light, on the viewer's GPU, with a reference that checks itself
 
-> Pedido (0.12): "a cena e criação e edição no estúdio muito mais
-> flexível e personalizável e mirando a possibilidade do foto-realismo".
-> Escrutínio: [DIRETRIZ.md §15](DIRETRIZ.md).
+> Request (0.12), translated: "the scene and creation and editing in the studio much more
+> flexible and customisable and aiming at the possibility of photo-realism".
+> Scrutiny: [DIRECTIVE.md §15](DIRECTIVE.md).
 
-O foto-realismo dos renderizadores de cinema vem de uma única equação —
-a do transporte de luz — resolvida por amostragem de Monte Carlo
-(traçado de caminhos). Aqui há dois traçadores do **mesmo formato de
-cena e dos mesmos materiais**:
+The photo-realism of film renderers comes from a single equation —
+light transport — solved by Monte Carlo sampling
+(path tracing). Here there are two tracers of the **same scene
+format and the same materials**:
 
-- `Vapor.Render` (Elixir): a **referência** — determinística por
-  (semente, pixel, amostra), linhas espalhadas por todos os
-  escalonadores, PNG com mapeamento ACES e sRGB;
-- `priv/console/gpu_tracer.js` (WebGL2): **progressivo na GPU** do
-  navegador — uma amostra por pixel por quadro acumulada em textura
-  float, a imagem convergindo enquanto se olha.
+- `Vapor.Render` (Elixir): the **reference** — deterministic per
+  (seed, pixel, sample), rows spread across all the
+  schedulers, PNG with ACES mapping and sRGB;
+- `priv/console/gpu_tracer.js` (WebGL2): **progressive on the browser's
+  GPU** — one sample per pixel per frame accumulated in a float
+  texture, the image converging as you watch.
 
-Console *Fazer → Render* · MCP `render_scene`.
+Console *Make → Render* · MCP `render_scene`.
 
-## 1. A cena
+## 1. The scene
 
 ```
 camera pos=0,1.2,4.5 look=0,0.8,0 fov=45 [aperture=… focus=…]
-sky top=0.55,0.7,1.0 bottom=1,1,1          # ou color=
+sky top=0.55,0.7,1.0 bottom=1,1,1          # or color=
 sun dir=0.4,1,0.3 color=1,0.95,0.85 power=2.5
 plane y=0 mat=diffuse albedo=0.75,0.75,0.75 checker=0.5
 sphere c=0,0.8,0 r=0.8 mat=glass ior=1.5
@@ -32,47 +32,47 @@ sphere c=0,4,0 r=0.5 mat=emit color=1,0.9,0.8 power=12
 exposure value=1.2
 ```
 
-Materiais: difuso de Lambert (amostragem por cosseno), metal (espelho
-com rugosidade), vidro (Fresnel–Schlick, Snell, reflexão interna total),
-emissivo (luzes de área). Luzes: objetos emissivos, céu (uniforme ou
-gradiente vertical) e sol direcional **amostrado explicitamente**
-(estimativa de evento seguinte). Roleta russa termina caminhos sem viés.
+Materials: Lambertian diffuse (cosine sampling), metal (mirror
+with roughness), glass (Fresnel–Schlick, Snell, total internal reflection),
+emissive (area lights). Lights: emissive objects, sky (uniform or
+vertical gradient) and a directional sun **sampled explicitly**
+(next-event estimation). Russian roulette terminates paths without bias.
 
-No console, o texto é a fonte da verdade e a edição é ao vivo: cada
-tecla reconstrói a cena e recomeça a convergência; **arrastar a imagem
-orbita a câmera e a roda aproxima — e a linha `camera` do texto é
-reescrita**, de modo que o que se vê é sempre reprodutível pelo texto.
+In the console, the text is the source of truth and editing is live: each
+keystroke rebuilds the scene and restarts convergence; **dragging the image
+orbits the camera and the wheel zooms — and the text's `camera` line is
+rewritten**, so that what you see is always reproducible from the text.
 
-## 2. Conferido como
+## 2. How it is checked
 
-Do jeito que autores de renderizadores conferem os seus
+The way renderer authors check theirs
 (`render_test.exs`, §5h):
 
-- **Fornalha branca**: uma esfera de albedo a num ambiente uniforme de
-  radiância 1 tem de mostrar exatamente a em todo pixel — conservação de
-  energia. Erro máximo 0 (a amostragem por cosseno torna cada amostra
-  exata).
-- **Fornalha em gradiente**: sob o céu L(ω) = (1 + ω_y)/2 uma superfície
-  convexa de Lambert mostra a·(½ + n_y/3). Isso confere a *distribuição*
-  do estimador, que a fornalha uniforme não vê: erro médio 6·10⁻⁴; o
-  estimador viciado (direções uniformes tratadas como cosseno — o
-  controle) dá a·(½ + n_y/4) e é pego (−0,04).
-- **Convergência N^−½**: o erro RMS contra uma referência de 4096
-  amostras cai com inclinação −0,5 ± 0,12 entre 8 e 512 amostras.
-- **Determinismo**: mesma semente, mesma imagem, bit a bit.
-- **A GPU contra a referência** (Chromium sem cabeça, WebGL2 sobre
-  SwiftShader): a fornalha em gradiente passa na GPU e a radiância média
-  de uma cena com vidro, metal e sol concorda com a do Elixir a 3 %
-  (duas estimativas Monte Carlo independentes); no console, a fornalha
-  branca dá concordância de 0,00 %.
+- **White furnace**: a sphere of albedo a in a uniform environment of
+  radiance 1 has to show exactly a at every pixel — energy
+  conservation. Maximum error 0 (cosine sampling makes each sample
+  exact).
+- **Gradient furnace**: under the sky L(ω) = (1 + ω_y)/2 a convex
+  Lambertian surface shows a·(½ + n_y/3). This checks the *distribution*
+  of the estimator, which the uniform furnace does not see: mean error 6·10⁻⁴; the
+  biased estimator (uniform directions treated as cosine — the
+  control) gives a·(½ + n_y/4) and is caught (−0.04).
+- **N^−½ convergence**: the RMS error against a 4096-sample reference
+  falls with slope −0.5 ± 0.12 between 8 and 512 samples.
+- **Determinism**: same seed, same image, bit for bit.
+- **The GPU against the reference** (headless Chromium, WebGL2 on
+  SwiftShader): the gradient furnace passes on the GPU and the mean radiance
+  of a scene with glass, metal and sun agrees with Elixir's within 3%
+  (two independent Monte Carlo estimates); in the console, the white
+  furnace agrees within 0.00%.
 
-## 3. Limites honestos
+## 3. Honest limits
 
-- Sem amostragem por importância múltipla (MIS): luzes pequenas
-  alcançadas só pela BRDF — o sol visto através do vidro (cáusticas),
-  emissores pequenos — têm variância de cauda pesada ("vaga-lumes").
-  Por isso a conferência N^−½ usa uma cena difusa.
-- Sem estrutura de aceleração: até 48 objetos na GPU e 200 no servidor;
-  sem malhas de triângulos, texturas de imagem, volumes ou subsuperfície.
-- O servidor limita largura × altura × amostras a 6 milhões por pedido;
-  a GPU do navegador não tem esse limite.
+- No multiple importance sampling (MIS): small lights
+  reached only through the BRDF — the sun seen through glass (caustics),
+  small emitters — have heavy-tailed variance ("fireflies").
+  That is why the N^−½ check uses a diffuse scene.
+- No acceleration structure: up to 48 objects on the GPU and 200 on the server;
+  no triangle meshes, image textures, volumes or subsurface.
+- The server limits width × height × samples to 6 million per request;
+  the browser's GPU has no such limit.

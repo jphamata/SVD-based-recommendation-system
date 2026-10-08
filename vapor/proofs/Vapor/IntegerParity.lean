@@ -101,7 +101,7 @@ theorem sum_append : ∀ (a b : List Int), (a ++ b).sum = a.sum + b.sum
 
 theorem exact_eq_sum : ∀ t : RTree, exact t = (leaves t).sum
   | leaf v => by simp [exact, leaves]
-  | node l r => by simp [exact, leaves, sum_append, exact_eq_sum l, exact_eq_sum r]
+  | node l r => by simp [exact, leaves, exact_eq_sum l, exact_eq_sum r]
 
 end RTree
 

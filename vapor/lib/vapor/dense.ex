@@ -1,9 +1,10 @@
 defmodule Vapor.Dense do
   @moduledoc """
   Dense linear algebra in binary64 for the workbench's solvers
-  (docs/BANCADA.md §6): LU with partial pivoting (real and complex), the
+  (docs/WORKBENCH.md §6): LU with partial pivoting (real and complex), the
   symmetric eigenproblem by cyclic Jacobi (and the generalized one,
-  K φ = λ M φ, by Cholesky reduction), conjugate gradients for sparse
+  K φ = λ M φ, by Cholesky reduction), the singular value decomposition by
+  one-sided Jacobi (Hestenes), conjugate gradients for sparse
   symmetric positive systems, the tridiagonal (Thomas) solve, and least
   squares by Householder QR.
 
@@ -189,6 +190,77 @@ defmodule Vapor.Dense do
     pairs = for i <- 0..(n - 1), do: {elem(elem(m, i), i), for(k <- 0..(n - 1), do: elem(elem(v, k), i))}
     pairs = Enum.sort_by(pairs, &elem(&1, 0))
     {Enum.map(pairs, &elem(&1, 0)), Enum.map(pairs, &elem(&1, 1))}
+  end
+
+  @doc """
+  The singular value decomposition `A = U Σ Vᵀ` of an m × n matrix by
+  one-sided Jacobi (Hestenes, 1958): plane rotations orthogonalise the
+  columns until every pair is orthogonal to 10⁻¹⁵ of its norms; the
+  column norms are the singular values. Deterministic (cyclic order) and
+  accurate to the relative precision of the small singular values, which
+  Golub–Kahan bidiagonalisation is not. Returns `%{u, s, v}` with `u`
+  m × r and `v` n × r as lists of rows, `s` descending, r = min(m, n).
+  `svd_residual/2` is its certificate.
+  """
+  def svd(a) do
+    {m, n} = {length(a), length(hd(a))}
+
+    if m < n do
+      %{u: u, s: sv, v: v} = svd(transpose(a))
+      %{u: v, s: sv, v: u}
+    else
+      cols = a |> transpose() |> Enum.map(&List.to_tuple/1) |> List.to_tuple()
+      vcols = identity(n) |> Enum.map(&List.to_tuple/1) |> List.to_tuple()
+      {cols, vcols} = hestenes(cols, vcols, n, 0)
+
+      trip =
+        for j <- 0..(n - 1) do
+          c = Tuple.to_list(elem(cols, j))
+          sigma = :math.sqrt(dot(c, c))
+          {sigma, if(sigma > 0.0, do: Enum.map(c, &(&1 / sigma)), else: c), Tuple.to_list(elem(vcols, j))}
+        end
+        |> Enum.sort_by(&elem(&1, 0), :desc)
+
+      %{u: trip |> Enum.map(&elem(&1, 1)) |> transpose(), s: Enum.map(trip, &elem(&1, 0)), v: trip |> Enum.map(&elem(&1, 2)) |> transpose()}
+    end
+  end
+
+  defp hestenes(cols, vcols, n, sweep) do
+    {cols, vcols, rotated} =
+      Enum.reduce(for(p <- 0..(n - 2)//1, q <- (p + 1)..(n - 1)//1, do: {p, q}), {cols, vcols, false}, fn {p, q}, {cs, vs, r} ->
+        ap = Tuple.to_list(elem(cs, p))
+        aq = Tuple.to_list(elem(cs, q))
+        {al, be, ga} = {dot(ap, ap), dot(aq, aq), dot(ap, aq)}
+
+        if abs(ga) <= 1.0e-15 * :math.sqrt(al * be) or ga == 0.0 do
+          {cs, vs, r}
+        else
+          zeta = (be - al) / (2 * ga)
+          t = (if zeta >= 0, do: 1.0, else: -1.0) / (abs(zeta) + :math.sqrt(1 + zeta * zeta))
+          c = 1 / :math.sqrt(1 + t * t)
+          s = c * t
+          rot = fn x, y -> {Enum.zip_with(x, y, &(c * &1 - s * &2)), Enum.zip_with(x, y, &(s * &1 + c * &2))} end
+          {np, nq} = rot.(ap, aq)
+          {vp, vq} = rot.(Tuple.to_list(elem(vs, p)), Tuple.to_list(elem(vs, q)))
+          {cs |> put_elem(p, List.to_tuple(np)) |> put_elem(q, List.to_tuple(nq)),
+           vs |> put_elem(p, List.to_tuple(vp)) |> put_elem(q, List.to_tuple(vq)), true}
+        end
+      end)
+
+    if rotated and sweep < 60, do: hestenes(cols, vcols, n, sweep + 1), else: {cols, vcols}
+  end
+
+  @doc """
+  The certificate of an SVD, computed from the factors and `a` alone:
+  `%{residual: ‖A − UΣVᵀ‖_F / ‖A‖_F, u_orth: max|UᵀU − I|, v_orth: max|VᵀV − I|}`.
+  """
+  def svd_residual(a, %{u: u, s: sv, v: v}) do
+    us = Enum.map(u, fn row -> Enum.zip_with(row, sv, &(&1 * &2)) end)
+    rec = matmul(us, transpose(v))
+    num = Enum.zip_with(a, rec, fn x, y -> Enum.zip_with(x, y, &((&1 - &2) * (&1 - &2))) |> Enum.sum() end) |> Enum.sum()
+    den = a |> List.flatten() |> Enum.map(&(&1 * &1)) |> Enum.sum()
+    orth = fn m -> g = matmul(transpose(m), m); n = length(g); for(i <- 0..(n - 1), j <- 0..(n - 1), do: abs(Enum.at(Enum.at(g, i), j) - if(i == j, do: 1.0, else: 0.0))) |> Enum.max() end
+    %{residual: :math.sqrt(num / max(den, 1.0e-300)), u_orth: orth.(u), v_orth: orth.(v)}
   end
 
   defp g(m, i, j), do: elem(elem(m, i), j)

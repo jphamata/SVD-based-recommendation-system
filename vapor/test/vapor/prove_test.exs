@@ -1,7 +1,7 @@
 defmodule Vapor.ProveTest do
   @moduledoc """
   Geometry by the algebraic method and topology by exact homology
-  (docs/MATEMATICA.md). Each true theorem is proved symbolically (the
+  (docs/MATHEMATICS.md). Each true theorem is proved symbolically (the
   claim's numerator is the zero polynomial) and checked independently in
   exact rationals at random points; each false statement of the same
   shape — the control — is refuted by both.

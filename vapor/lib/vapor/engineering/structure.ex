@@ -1,7 +1,7 @@
 defmodule Vapor.Engineering.Structure do
   @moduledoc """
   Plane frames and trusses by the direct stiffness method, with natural
-  frequencies (docs/ENGENHARIA.md §3) — the analysis behind every beam,
+  frequencies (docs/ENGINEERING.md §3) — the analysis behind every beam,
   portal frame, bridge truss and building storey a structural engineer
   checks.
 

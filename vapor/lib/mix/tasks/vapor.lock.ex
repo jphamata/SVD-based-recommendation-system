@@ -18,11 +18,11 @@ defmodule Mix.Tasks.Vapor.Lock do
     {o, args, _} = OptionParser.parse(argv, strict: [alias: :keep, list: :boolean])
     for f <- Keyword.get_values(o, :alias), do: {:ok, _} = Vapor.Lock.register_json(f)
 
-    cond do
-      o[:list] ->
+    case {o[:list], args} do
+      {true, _} ->
         for a <- Vapor.Lock.adapters(), do: Mix.shell().info("  #{Vapor.Lock.id(a)}  (#{inspect(if is_tuple(a), do: elem(a, 0), else: a)})")
 
-      [path | _] = args ->
+      {_, [path | _]} ->
         r = Vapor.Lock.explain(path)
         Mix.shell().info("claims:")
         for c <- r.claims, do: Mix.shell().info("  #{String.pad_trailing(c.adapter, 14)} #{answer(c.answer)}")
@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Vapor.Lock do
             exit({:shutdown, 1})
         end
 
-      true ->
+      _ ->
         Mix.raise("usage: mix vapor.lock PATH | --list")
     end
   end

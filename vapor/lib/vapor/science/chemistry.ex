@@ -6,7 +6,7 @@ defmodule Vapor.Science.Chemistry do
   self-consistent field by symmetric orthogonalisation — the algorithm of
   Szabo & Ostlund, *Modern Quantum Chemistry* (1982), §3.5.
 
-  Measured against the book's published energies (docs/CIENCIA.md): H₂ at
+  Measured against the book's published energies (docs/SCIENCE.md): H₂ at
   R = 1.4 bohr (−1.1167 hartree) and HeH⁺ at R = 1.4632 bohr
   (−2.86066). And the method's known failure, shown, not hidden: the RHF
   energy of H₂ pulled apart stays far above two hydrogen atoms (a single

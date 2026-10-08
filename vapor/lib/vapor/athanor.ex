@@ -51,7 +51,7 @@ defmodule Vapor.Athanor do
   """
   def run(text, opts \\ []) do
     timeout = trunc((Keyword.get(opts, :seconds, 300) + 60) * 1000)
-    case Alembic.sandbox(fn -> do_run(text, opts) end, heap_mb: Keyword.get(opts, :heap_mb, 1024), timeout: timeout) do
+    case Vapor.Hermetic.seal(fn -> do_run(text, opts) end, heap_mb: Keyword.get(opts, :heap_mb, 1024), timeout: timeout) do
       {:ok, r} -> r
       {:error, :memory} -> {:error, "the search used more memory than allowed (heap_mb) — make candidates or the verifier smaller"}
       {:error, :timeout} -> {:error, "the search took longer than its time limit"}
@@ -469,7 +469,7 @@ defmodule Vapor.Athanor do
       outside_proposals: r.injected,
       notes: spec.notes,
       ms: System.monotonic_time(:millisecond) - r.t0,
-      replay: "vapor athanor run PROBLEM.alb --seed #{spec.seed} --budget #{r.evals}" <> if(r.injected != [], do: " (with the recorded outside proposals)", else: "")
+      replay: "vapor athanor run PROBLEM.nbq --seed #{spec.seed} --budget #{r.evals}" <> if(r.injected != [], do: " (with the recorded outside proposals)", else: "")
     }
   end
 

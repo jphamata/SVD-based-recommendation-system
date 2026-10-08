@@ -18,10 +18,10 @@ defmodule Vapor.DiwanTest do
 
   test "a jailed session: files are its own; vapor verbs read them; the server's files do not exist" do
     st = D.new()
-    {r, st} = run(st, ~s(echo "2^100 + 1" > big.alb))
+    {r, st} = run(st, ~s(echo "2^100 + 1" > big.nbq))
     assert r.code == 0 and r.out == ""
     {out, st} = out!(st, "ls")
-    assert out =~ "big.alb"
+    assert out =~ "big.nbq"
     {r, st} = run(st, ~s(alembic -e "2^100"))
     assert r.out =~ "1267650600228229401496703205376" and r.code == 0
     {r, _} = run(st, "alembic -e x /etc/passwd")
@@ -60,8 +60,8 @@ defmodule Vapor.DiwanTest do
   end
 
   test "--measure (a program on the server) is refused in a jail" do
-    {:ok, st} = D.write_file(D.new(), "p.alb", Vapor.Athanor.Examples.get("golomb").text, :write)
-    {r, _} = run(st, ~s{athanor run p.alb --measure "echo 1"})
+    {:ok, st} = D.write_file(D.new(), "p.nbq", Vapor.Athanor.Examples.get("golomb").text, :write)
+    {r, _} = run(st, ~s{athanor run p.nbq --measure "echo 1"})
     assert r.code == 3 and r.err =~ "--measure"
   end
 

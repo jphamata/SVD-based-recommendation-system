@@ -1,7 +1,7 @@
 defmodule Vapor.Logic.SAT do
   @moduledoc """
   A conflict-driven clause-learning SAT solver that **writes its proof**
-  (docs/LOGICA.md §1), and the problems it settles.
+  (docs/LOGIC.md §1), and the problems it settles.
 
   The solver: two watched literals per clause, first-UIP learning with
   clause minimisation by self-subsumption, activity-ordered decisions

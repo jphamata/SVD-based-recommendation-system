@@ -1,11 +1,11 @@
 defmodule Vapor.Finance.Fix do
   @moduledoc """
-  FIX 4.4 tag=value messages (docs/FINANCAS.md §10): parse with
+  FIX 4.4 tag=value messages (docs/FINANCE.md §10): parse with
   BodyLength (9) and CheckSum (10) verified, encode with both computed,
   and a gateway that turns NewOrderSingle (D), OrderCancelRequest (F)
   and OrderCancelReplaceRequest (G) into book events and the book's
   reports into ExecutionReports (8). The byte rules are checked against
-  `simplefix` in `financas_test.exs`.
+  `simplefix` in `finance_test.exs`.
 
   The separator is SOH (0x01); `|` is accepted on input for readability.
   """

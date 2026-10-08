@@ -15,8 +15,8 @@ defmodule Vapor.Alembic do
       processes, no `apply/3` on user names;
     * **everything halts** — calls and loop iterations pay fuel; recursion
       depth, list length and integer size are capped;
-    * **memory is bounded** — `sandbox/2` runs in a process whose heap is
-      capped by the VM (`max_heap_size` kills it), with a wall-clock limit;
+    * **memory is bounded** — callers run it under `Vapor.Hermetic.seal/2`:
+      a process whose heap and binaries the VM caps, with a wall-clock limit;
     * **deterministic** — no clock, no randomness except `noise(…)`, a hash
       of its arguments; the same program and input give the same value on
       every machine.
@@ -290,49 +290,6 @@ defmodule Vapor.Alembic do
   def from_data(v) when is_list(v), do: Enum.map(v, &from_data/1)
   def from_data(v) when is_map(v), do: Map.new(v, fn {k, x} -> {k, from_data(x)} end)
   def from_data(v), do: v
-
-  # ============================================================ sandbox
-
-  @doc """
-  Run `fun` in a fresh process whose heap the VM caps (`heap_mb:`, default
-  256) and that is killed after `timeout:` ms (default 30 000). Returns
-  `{:ok, result}`, `{:error, :memory}`, `{:error, :timeout}` or
-  `{:error, {:crash, reason}}` — the caller survives any of them.
-  """
-  def sandbox(fun, opts \\ []) do
-    words = div(Keyword.get(opts, :heap_mb, 256) * 1_048_576, :erlang.system_info(:wordsize))
-    timeout = Keyword.get(opts, :timeout, 30_000)
-    parent = self()
-    ref = make_ref()
-
-    {pid, mon} =
-      spawn_monitor(fn ->
-        Process.flag(:max_heap_size, %{size: words, kill: true, error_logger: false})
-        send(parent, {ref, fun.()})
-      end)
-
-    receive do
-      {^ref, result} ->
-        Process.demonitor(mon, [:flush])
-        {:ok, result}
-
-      {:DOWN, ^mon, :process, ^pid, :killed} ->
-        {:error, :memory}
-
-      {:DOWN, ^mon, :process, ^pid, reason} ->
-        {:error, {:crash, reason}}
-    after
-      timeout ->
-        Process.exit(pid, :kill)
-        Process.demonitor(mon, [:flush])
-        receive do
-          {^ref, _} -> :ok
-        after
-          0 -> :ok
-        end
-        {:error, :timeout}
-    end
-  end
 end
 
 defmodule Vapor.Alembic.Error do

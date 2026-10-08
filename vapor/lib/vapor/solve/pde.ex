@@ -1,7 +1,7 @@
 defmodule Vapor.Solve.PDE do
   @moduledoc """
   Partial differential equations typed in as text, with **code
-  verification by manufactured solutions** (docs/BANCADA.md §5).
+  verification by manufactured solutions** (docs/WORKBENCH.md §5).
 
   Three families, each the workhorse of a field:
 

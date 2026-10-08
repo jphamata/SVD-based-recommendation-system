@@ -3,7 +3,7 @@ defmodule Vapor.Quality.Round11 do
   Quality checks for the 0.11 round, in the suite's discipline: a value, a
   **control** that a broken or naive implementation would produce, and a
   threshold that separates them. (Algorithm discovery and self-play left
-  with their demonstrations in 0.16 — DIRETRIZ §19.)
+  with their demonstrations in 0.16 — DIRECTIVE §19.)
 
   | check | value | control (must fail) |
   |---|---|---|

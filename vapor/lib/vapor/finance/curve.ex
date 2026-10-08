@@ -1,7 +1,7 @@
 defmodule Vapor.Finance.Curve do
   @moduledoc """
   Discount curves bootstrapped from the instruments a desk actually quotes
-  (docs/FINANCAS.md §3) — typed as text:
+  (docs/FINANCE.md §3) — typed as text:
 
       date = 2025-01-02
       calendar = anbima

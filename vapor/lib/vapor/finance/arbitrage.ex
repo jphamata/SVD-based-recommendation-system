@@ -1,6 +1,6 @@
 defmodule Vapor.Finance.Arbitrage do
   @moduledoc """
-  Arbitrage decided exactly (docs/FINANCAS.md §8).
+  Arbitrage decided exactly (docs/FINANCE.md §8).
 
   The fundamental theorem of asset pricing is a theorem of the
   alternative — Farkas' lemma: **either** a portfolio costs nothing (or

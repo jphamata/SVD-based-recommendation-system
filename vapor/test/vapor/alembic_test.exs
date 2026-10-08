@@ -73,8 +73,8 @@ defmodule Vapor.AlembicTest do
     end
 
     test "a memory bomb is killed by the VM and reported; the caller lives" do
-      assert {:error, :memory} = Alembic.sandbox(fn -> Alembic.eval("[repeat(1, 1000000) for k in 1..200]", fuel: 10_000_000_000) end, heap_mb: 16)
-      assert {:error, :timeout} = Alembic.sandbox(fn -> Process.sleep(5_000) end, timeout: 100)
+      assert {:error, :memory} = Vapor.Hermetic.seal(fn -> Alembic.eval("[repeat(1, 1000000) for k in 1..200]", fuel: 10_000_000_000) end, heap_mb: 16)
+      assert {:error, :timeout} = Vapor.Hermetic.seal(fn -> Process.sleep(5_000) end, timeout: 100)
     end
 
     test "identifiers never become atoms" do

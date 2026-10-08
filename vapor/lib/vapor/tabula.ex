@@ -109,10 +109,12 @@ defmodule Vapor.Tabula do
 
   defp name?(n), do: Regex.match?(~r/^[\p{L}_][\p{L}\p{N}_]*$/u, n) and String.length(n) <= 64 and String.downcase(n) not in ~w(and or not e ou não nao true false)
 
-  @modal [{~r/^(.+?)\s+(?:must not|shall not|não deve|nao deve)\s+(.+)$/iu, :must_not},
-          {~r/^(.+?)\s+(?:is exempt from|need not|está isento de|esta isento de|não precisa|nao precisa)\s+(.+)$/iu, :exempt},
-          {~r/^(.+?)\s+(?:must|shall|deve)\s+(.+)$/iu, :must},
-          {~r/^(.+?)\s+(?:may|pode)\s+(.+)$/iu, :may}]
+  # A compiled regex is a reference on OTP 28, so it cannot be stored in a module attribute.
+  defp modal_rules,
+    do: [{~r/^(.+?)\s+(?:must not|shall not|não deve|nao deve)\s+(.+)$/iu, :must_not},
+         {~r/^(.+?)\s+(?:is exempt from|need not|está isento de|esta isento de|não precisa|nao precisa)\s+(.+)$/iu, :exempt},
+         {~r/^(.+?)\s+(?:must|shall|deve)\s+(.+)$/iu, :must},
+         {~r/^(.+?)\s+(?:may|pode)\s+(.+)$/iu, :may}]
 
   defp clause(line, t) do
     with [_, id, body] <- Regex.run(~r/^([\p{L}\p{N}_.\-]{1,32})\s*:\s*(.+)$/u, line) || {:error, "not a clause (ID: [if … then] party must|must not|may|is exempt from action [counterparty])"},
@@ -131,7 +133,7 @@ defmodule Vapor.Tabula do
   end
 
   defp norm(text) do
-    Enum.find_value(@modal, {:error, "no modality: use must, must not, may or is exempt from"}, fn {re, m} ->
+    Enum.find_value(modal_rules(), {:error, "no modality: use must, must not, may or is exempt from"}, fn {re, m} ->
       case Regex.run(re, text) do
         [_, party, rest] ->
           case String.split(rest, ~r/\s+/u, trim: true) do

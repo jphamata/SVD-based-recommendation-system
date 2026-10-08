@@ -1,6 +1,6 @@
 defmodule Vapor.Bio.Coevolution do
   @moduledoc """
-  Contacts read from evolution (docs/PROTEINAS.md §3): residues in
+  Contacts read from evolution (docs/PROTEINS.md §3): residues in
   contact mutate together, so their columns in a multiple sequence
   alignment co-vary. Two estimators:
 

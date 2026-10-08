@@ -931,7 +931,7 @@ defmodule Vapor.Vision.Figure do
   # ------------------------------------------------------------- detection --
 
   # numbered (arabic, roman, Arabic-Indic digits) or lettered ("Figure A:", in an appendix)
-  @caption ~r/^\s*(?i:fig(ure|ura)?\.?|figs?\.|gr[aá]fico|chart|plate|imagem|image|图|圖|図|그림|شكل)\s*([0-9IVX٠-٩]+|[A-Z](?=[.:\s—–-]))/u
+  defp caption_re, do: ~r/^\s*(?i:fig(ure|ura)?\.?|figs?\.|gr[aá]fico|chart|plate|imagem|image|图|圖|図|그림|شكل)\s*([0-9IVX٠-٩]+|[A-Z](?=[.:\s—–-]))/u
 
   @doc """
   Figures of a page: `[%{box, kind: :chart | :picture, caption: %{box,
@@ -1084,7 +1084,7 @@ defmodule Vapor.Vision.Figure do
     cap =
       Enum.find_value(Enum.take(ordered, 4), fn line ->
         r = read_text_line(line, model, w, opts[:picture])
-        if Regex.match?(@caption, r.text), do: %{box: line.box, text: r.text, position: if(elem(line.box, 1) > y1, do: :below, else: :above)}
+        if Regex.match?(caption_re(), r.text), do: %{box: line.box, text: r.text, position: if(elem(line.box, 1) > y1, do: :below, else: :above)}
       end)
 
     Map.put(f, :caption, cap)

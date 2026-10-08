@@ -1,6 +1,6 @@
 defmodule Vapor.ScienceTest do
   @moduledoc """
-  The science laboratory (docs/CIENCIA.md): every experiment against its
+  The science laboratory (docs/SCIENCE.md): every experiment against its
   closed-form or published reference, with the control that must fail —
   quantum (coherent state, tunneling), relativity (gyration with γ, E×B),
   a tokamak equilibrium (Solov'ev), Hartree–Fock (H₂, HeH⁺), a

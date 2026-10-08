@@ -1,5 +1,5 @@
 // A minimal LSP client: spawns `bin/vapor lsp`, speaks Content-Length-framed
-// JSON-RPC over its stdio, opens an Al-Mizān file with a refuted claim, and
+// JSON-RPC over its stdio, opens an Almizan file with a refuted claim, and
 // prints what came back as one JSON object. usage: node lsp_client.mjs VAPOR_BIN
 import { spawn } from "node:child_process";
 
@@ -40,14 +40,14 @@ const out = {};
 const init = await call("initialize", { processId: null, rootUri: null, capabilities: {} });
 out.capabilities = Object.keys(init.result.capabilities).sort();
 send({ jsonrpc: "2.0", method: "initialized", params: {} });
-send({ jsonrpc: "2.0", method: "textDocument/didOpen", params: { textDocument: { uri, languageId: "mizan", version: 1, text } } });
+send({ jsonrpc: "2.0", method: "textDocument/didOpen", params: { textDocument: { uri, languageId: "almizan", version: 1, text } } });
 const diag = await until((m) => m.method === "textDocument/publishDiagnostics");
 out.diagnostics = diag ? diag.params.diagnostics.map((d) => ({ line: d.range.start.line, severity: d.severity, message: d.message })) : null;
 const hover = await call("textDocument/hover", { textDocument: { uri }, position: { line: 0, character: 22 } });
 out.hover = hover.result && hover.result.contents.value;
 const fmt = await call("textDocument/formatting", { textDocument: { uri }, options: { tabSize: 2, insertSpaces: true } });
 out.formatted = fmt.result.length;
-const conv = await call("workspace/executeCommand", { command: "vapor.mizan.toArabic", arguments: [uri] });
+const conv = await call("workspace/executeCommand", { command: "vapor.almizan.toArabic", arguments: [uri] });
 const edit = await until((m) => m.method === "workspace/applyEdit");
 out.arabic = edit ? edit.params.edit.changes[uri][0].newText : null;
 await call("shutdown", null);

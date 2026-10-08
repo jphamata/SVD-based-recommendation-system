@@ -22,7 +22,7 @@ defmodule Vapor.Tlog do
 
   A blockchain adds nothing to these properties but cost and latency: what
   anchoring needs is an append-only commitment plus independent observers,
-  which is exactly a log with witnesses. (`docs/TRANSPARENCIA.md`.)
+  which is exactly a log with witnesses. (`docs/TRANSPARENCY.md`.)
 
   The log is a value (`%Vapor.Tlog{}`); with `path:` every append is also
   written to an append-only file (length-prefixed entries, `fsync`ed) from
@@ -117,7 +117,7 @@ defmodule Vapor.Tlog do
   end
 
   defp carry(levels, l, h) do
-    levels = if tuple_size(levels) <= l, do: Tuple.append(levels, :array.new()), else: levels
+    levels = if tuple_size(levels) <= l, do: :erlang.append_element(levels, :array.new()), else: levels
     lvl = elem(levels, l)
     c = :array.size(lvl)
     lvl = :array.set(c, h, lvl)

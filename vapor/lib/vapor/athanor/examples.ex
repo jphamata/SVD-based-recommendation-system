@@ -127,7 +127,7 @@ defmodule Vapor.Athanor.Examples do
     %{id: "lab", field: "science", title: "An experiment you run", about: "vapor proposes settings, you measure (Bayesian optimisation)",
       text: """
       # temperature (°C) and time (min) for a yield you measure in the lab:
-      # run `vapor athanor ask lab.alb` and type each measurement
+      # run `vapor athanor ask lab.nbq` and type each measurement
       space = reals(2, 0, 1)
       measured = true
       show(x) = "temperature " ++ str(round(150 + 100*x[0])) ++ " °C, time " ++ str(round(5 + 55*x[1])) ++ " min"

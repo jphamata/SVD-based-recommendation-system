@@ -1,7 +1,7 @@
 defmodule Vapor.Expr do
   @moduledoc """
   The expression language every typed-in problem shares
-  (docs/BANCADA.md §1): ordinary infix arithmetic with functions,
+  (docs/WORKBENCH.md §1): ordinary infix arithmetic with functions,
   comparisons and `if`, numbers carrying **units in brackets**
   (`9.81[m/s^2]`, `3[kN]`), symbolic differentiation and simplification,
   and compilation to native BEAM code.

@@ -1,6 +1,6 @@
 defmodule Vapor.Logic.Rewrite do
   @moduledoc """
-  Equational reasoning by Knuth–Bendix completion (docs/LOGICA.md §4):
+  Equational reasoning by Knuth–Bendix completion (docs/LOGIC.md §4):
   from the axioms of an algebraic theory (groups, rings, monoids, any
   equations typed in), orient each equation by the lexicographic path
   order, compute critical pairs, and repeat until every pair joins — a

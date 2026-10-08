@@ -1,7 +1,7 @@
 defmodule Vapor.Engineering.Power do
   @moduledoc """
   AC power flow of a transmission or distribution network
-  (docs/ENGENHARIA.md §2): Newton–Raphson in polar coordinates with the
+  (docs/ENGINEERING.md §2): Newton–Raphson in polar coordinates with the
   full Jacobian, the classic of every utility's planning study; and
   Gauss–Seidel, the textbook method, as the control that must reach the
   same voltages in many more iterations.

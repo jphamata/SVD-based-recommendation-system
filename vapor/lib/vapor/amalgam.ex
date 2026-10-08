@@ -2,7 +2,7 @@ defmodule Vapor.Amalgam do
   @moduledoc """
   Exact, order-independent reduction: the **amalgam** of many partial sums
   is the same whatever the order, the grouping, the number of workers or
-  the topology that produced them (docs/AMALGAMA.md).
+  the topology that produced them (docs/AMALGAM.md).
 
   The pain: floating-point addition is commutative but not associative, so
   a distributed sum (an all-reduce of gradients, a merge of partial

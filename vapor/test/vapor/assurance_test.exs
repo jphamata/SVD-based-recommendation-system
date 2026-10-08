@@ -3,7 +3,7 @@ defmodule Vapor.AssuranceTest do
 
   test "every piece of evidence the ledger cites exists, and the document is the ledger's rendering" do
     assert Vapor.Assurance.missing() == []
-    assert File.read!("docs/GARANTIAS.md") == Vapor.Assurance.markdown(), "run mix vapor.assurance"
+    assert File.read!("docs/ASSURANCE.md") == Vapor.Assurance.markdown(), "run mix vapor.assurance"
   end
 
   test "every proved claim cites a Lean file; every owed claim says what is missing" do

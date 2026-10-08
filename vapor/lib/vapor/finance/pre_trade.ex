@@ -1,6 +1,6 @@
 defmodule Vapor.Finance.PreTrade do
   @moduledoc """
-  Pre-trade risk controls in front of the book (docs/FINANCAS.md §11) —
+  Pre-trade risk controls in front of the book (docs/FINANCE.md §11) —
   what SEC Rule 15c3-5 and MiFID II RTS 6 ask a firm with market access
   to have, and to be able to show it had.
 

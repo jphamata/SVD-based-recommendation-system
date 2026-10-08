@@ -10,7 +10,7 @@ defmodule Vapor.Science.Plasma do
   c₃(R⁴ − 4R²Z²) solves Δ*ψ = A·R² + B.
 
   Solved by second-order finite differences on (R, Z) with successive
-  over-relaxation, the boundary from the exact solution (docs/CIENCIA.md).
+  over-relaxation, the boundary from the exact solution (docs/SCIENCE.md).
   The conservative scheme has **no truncation error on these polynomials**
   (checked by hand: its R-flux differences are exact on R², R⁴ and R²Z²),
   so the flux matches to the SOR tolerance — this tests the solver and the

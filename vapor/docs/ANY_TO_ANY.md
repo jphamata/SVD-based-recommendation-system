@@ -1,160 +1,160 @@
-# Any-to-any sem kernels novos
+# Any-to-any without new kernels
 
-> Desde 0.9: as rotas de mídia se compõem num **estúdio** de nós tipados (imagem, som, vídeo, 3D, difusão, RL), com cache exato e raiz de Merkle por execução, e o Stable Diffusion entra igual ao diffusers. Ver [ESTUDIO.md](ESTUDIO.md).
+> Since 0.9: the media routes compose into a **studio** of typed nodes (image, sound, video, 3D, diffusion, RL), with an exact cache and a Merkle root per run, and Stable Diffusion comes in identical to diffusers. See [STUDIO.md](STUDIO.md).
 
-> Toda modalidade é uma sequência de linhas. Um modelo só precisa saber
-> combinar linhas.
+> Every modality is a sequence of rows. A model only needs to know how to
+> combine rows.
 
-## 1. A pergunta certa
+## 1. The right question
 
-"Any-to-any" costuma ser respondido com mais um runtime por modalidade:
-ComfyUI para imagem, whisper.cpp para áudio, llama.cpp para texto — cada um
-com seus operadores, seus formatos, sua numérica e nenhuma garantia comum. A
-pergunta de primeiros princípios é outra: **o que, minimamente, um modelo de
-outra modalidade exige da álgebra?** Para o vapor isso importa em dobro,
-porque cada operador novo custa cinco emissores (x86, AVX-512, NEON, RVV,
-SPIR-V), uma semântica no oráculo e um degrau na escada de verificação.
+"Any-to-any" is usually answered with one more runtime per modality:
+ComfyUI for images, whisper.cpp for audio, llama.cpp for text — each
+with its own operators, its own formats, its own numerics and no common guarantee. The
+first-principles question is a different one: **what, minimally, does a model of
+another modality require from the algebra?** For vapor this matters twice over,
+because each new operator costs five emitters (x86, AVX-512, NEON, RVV,
+SPIR-V), a semantics in the oracle and a rung on the verification ladder.
 
-A resposta desta rodada: **nada novo**. Cada peça abaixo é um termo da álgebra
-existente, então herda paridade bit a bit em todo substrato e o certificado.
+This round's answer: **nothing new**. Each piece below is a term of the existing
+algebra, so it inherits bit-for-bit parity on every substrate and the certificate.
 
-| peça | o que parece exigir | o que de fato é |
+| piece | what it seems to require | what it actually is |
 |---|---|---|
-| *patch embedding* (ViT, CLIP, SigLIP) | `Conv2d` | uma convolução com *stride* = *kernel* é `linear` sobre as linhas que o codec corta; o peso `[d, C, p, p]` vira `[d, C·p·p]` (`Vapor.Modal.Image.patches/3` produz a ordem `(c, i, j)` do produto escalar da convolução) |
-| atenção bidirecional (encoders) | uma máscara nova | a atenção causal do vapor deixa a linha `t` ver `0 … pos[t]`; com `horizon[t] = n − 1` para toda linha, cada uma vê as `n` reais e nenhuma de *padding* — **bidirecional é causal com horizonte no fim** |
-| [CLS] | concatenação | `sel(máscara, ½, x, cls)` com a linha 0 do codec zerada |
-| atenção cruzada | um operador novo | atenção sobre as K/V de outro fluxo como "cache", com horizonte no fim (expressável; não exercitada aqui) |
-| espectrograma (Whisper) | FFT | `P = (X·Cᵀ)² + (X·Sᵀ)²`, tabelas de Hann com `cos`/`sin` corretamente arredondados (`Vapor.CR`) — duas contrações e três operações elemento a elemento; banco mel = mais um `linear` |
-| quantização vetorial (tokenizadores de imagem/áudio) | argmin | `argmin‖x − c‖² = argmax(2x·c − ‖c‖²)`: `linear`, uma linha constante e o operador `sample` no modo guloso (empates para o menor índice) |
-| decodificar códigos | — | `gather_row(codebook, codes)` — exato |
-| injetar outra modalidade num decoder (LLaVA) | concatenar embeddings | opção `inject: true` do decoder: `x = sel(soft_mask, ½, embed[tok], soft)` — **seleção**, então uma linha substituída não carrega nada do token, nem um NaN |
-| síntese de áudio | vocoder | síntese aditiva: amplitudes por quadro → quadros por um `linear` contra uma base de senos |
-| GELU exata (ViT, BERT, Whisper) | `erf` | microprograma canônico novo `:gelu` sobre `+ − ×` (Chebyshev do `erfcc`, ordem do PyTorch), erro absoluto ≤ 4,4·10⁻⁷; como todo microprograma, é expandido por todos os emissores sem código novo — e fecha o item 4.1 do TODO |
+| *patch embedding* (ViT, CLIP, SigLIP) | `Conv2d` | a convolution with *stride* = *kernel* is `linear` over the rows the codec cuts; the weight `[d, C, p, p]` becomes `[d, C·p·p]` (`Vapor.Modal.Image.patches/3` produces the `(c, i, j)` order of the convolution's dot product) |
+| bidirectional attention (encoders) | a new mask | vapor's causal attention lets row `t` see `0 … pos[t]`; with `horizon[t] = n − 1` for every row, each one sees the `n` real rows and none of the *padding* — **bidirectional is causal with the horizon at the end** |
+| [CLS] | concatenation | `sel(mask, ½, x, cls)` with row 0 of the codec zeroed |
+| cross-attention | a new operator | attention over another stream's K/V as a "cache", with the horizon at the end (expressible; not exercised here) |
+| spectrogram (Whisper) | FFT | `P = (X·Cᵀ)² + (X·Sᵀ)²`, Hann tables with correctly rounded `cos`/`sin` (`Vapor.CR`) — two contractions and three elementwise operations; mel bank = one more `linear` |
+| vector quantization (image/audio tokenizers) | argmin | `argmin‖x − c‖² = argmax(2x·c − ‖c‖²)`: `linear`, a constant row and the `sample` operator in greedy mode (ties go to the lowest index) |
+| decoding codes | — | `gather_row(codebook, codes)` — exact |
+| injecting another modality into a decoder (LLaVA) | concatenating embeddings | the decoder's `inject: true` option: `x = sel(soft_mask, ½, embed[tok], soft)` — **selection**, so a replaced row carries nothing from the token, not even a NaN |
+| audio synthesis | vocoder | additive synthesis: amplitudes per frame → frames by a `linear` against a sine basis |
+| exact GELU (ViT, BERT, Whisper) | `erf` | new canonical microprogram `:gelu` over `+ − ×` (Chebyshev of `erfcc`, PyTorch's order), absolute error ≤ 4.4·10⁻⁷; like every microprogram, it is expanded by all emitters with no new code — and it closes item 4.1 of the TODO |
 
-## 2. Hub, não matriz
+## 2. Hub, not matrix
 
-Com `N` modalidades, conversores par a par são `N·(N − 1)`. Com um **pivô**,
-são `N` codecs: cada modalidade diz como chegar ao pivô e como voltar
-(`Vapor.Modal.Hub.register/3`), e a rota `a → b` é
-`from_pivot_b ∘ traduzir ∘ to_pivot_a`. Rotas diretas (a ida e volta de um codec,
-a injeção de *soft tokens*) são registradas ao lado e preferidas. Acrescentar
-uma modalidade é **um** codec, e ela passa a conversar com todas as outras.
+With `N` modalities, pairwise converters number `N·(N − 1)`. With a **pivot**,
+they are `N` codecs: each modality says how to reach the pivot and how to come back
+(`Vapor.Modal.Hub.register/3`), and the route `a → b` is
+`from_pivot_b ∘ translate ∘ to_pivot_a`. Direct routes (a codec's round trip,
+the injection of *soft tokens*) are registered alongside and preferred. Adding
+a modality is **one** codec, and it can then talk to all the others.
 
-O pivô aqui é **texto** — palavras que um decoder lê e escreve — porque é onde
-estão os modelos mais capazes. Cada passo é um programa construído pela eclusa
-e executado num substrato (`Vapor.Modal.Runner`).
+The pivot here is **text** — words that a decoder reads and writes — because that is where
+the most capable models are. Each step is a program built by the airlock
+and run on a substrate (`Vapor.Modal.Runner`).
 
-## 3. Medido, não demonstrado
+## 3. Measured, not demonstrated
 
-Uma demonstração escolhe o exemplo que funciona. Uma medição tem verdade de
-referência, controle e dados retidos. `Vapor.Modal.World` é um mundo pequeno
-e **totalmente especificado** em três modalidades: quatro cores ↔ quatro notas
-(bijeção), cenas 16×16 com um disco à esquerda e um à direita, tons de 1024
-amostras a 8 kHz. Quatro dos dezesseis pares de cores **nunca entram em nenhum
-ajuste**; toda imagem de treino é uma variante com *jitter* de posição e raio,
-iluminação ±8 % e ruído de sensor, de modo que nenhum *patch* se repete e
-nenhum ajuste acerta por memorização (a primeira versão do mundo não tinha
-isso e dava PSNR de 155 dB — medindo recordação, não generalização; foi
-endurecida antes de qualquer número ser publicado).
+A demonstration picks the example that works. A measurement has reference
+truth, a control and held-out data. `Vapor.Modal.World` is a small,
+**fully specified** world in three modalities: four colours ↔ four notes
+(a bijection), 16×16 scenes with one disc on the left and one on the right, tones of 1024
+samples at 8 kHz. Four of the sixteen colour pairs **never enter any
+fit**; every training image is a variant with *jitter* in position and radius,
+±8% lighting and sensor noise, so that no *patch* repeats and
+no fit gets it right by memorization (the first version of the world did not have
+this and gave a PSNR of 155 dB — measuring recall, not generalization; it was
+hardened before any number was published).
 
-Todos os codecs são ajustados **em forma fechada**: pontes lineares por ridge
-(equações normais, forma primal ou dual, Cholesky em binary64), codebooks por
-k-means determinístico (inicialização por travessia do ponto mais distante),
-tradutores por contagem (`Vapor.Quality.Planted`).
+All codecs are fitted **in closed form**: linear bridges by ridge
+(normal equations, primal or dual form, Cholesky in binary64), codebooks by
+deterministic k-means (farthest-point traversal initialization),
+translators by counting (`Vapor.Quality.Planted`).
 
-Resultados em entradas retidas (ver [bench/QUALITY.md](bench/QUALITY.md),
-regenerado por `mix vapor.quality`; a galeria PNG/WAV está em `bench/modal/`):
+Results on held-out inputs (see [bench/QUALITY.md](bench/QUALITY.md),
+regenerated by `mix vapor.quality`; the PNG/WAV gallery is in `bench/modal/`):
 
-| rota | medida | valor | controle |
+| route | measure | value | control |
 |---|---|---|---|
-| imagem → texto | acurácia da legenda (pares inéditos, variantes, ruído σ = 0,05) | 1,00 | acaso 0,25 |
-| texto → imagem | PSNR contra a cena canônica | 23,7 dB | 12,8 dB (legenda trocada) |
-| imagem → imagem | ida e volta VQ | 23,0 dB | 11,3 dB (codebook aleatório) |
-| áudio → texto | acurácia da nota (fase/amplitude inéditas, 10 dB SNR) | 1,00 | 0,25 |
-| texto → áudio | erro de altura | ≤ 1,5 % | — |
-| áudio → áudio | ida e volta VQ | 17,3 dB SNR | 0 dB |
-| imagem → áudio, áudio → imagem | via pivô (com tradução cor ↔ nota) | 1,00 / 23,8 dB | — |
-| imagem → *soft token* → decoder | projetor injetado como linha do decoder | 1,00 | 0,25 |
+| image → text | caption accuracy (unseen pairs, variants, noise σ = 0.05) | 1.00 | chance 0.25 |
+| text → image | PSNR against the canonical scene | 23.7 dB | 12.8 dB (swapped caption) |
+| image → image | VQ round trip | 23.0 dB | 11.3 dB (random codebook) |
+| audio → text | note accuracy (unseen phase/amplitude, 10 dB SNR) | 1.00 | 0.25 |
+| text → audio | pitch error | ≤ 1.5% | — |
+| audio → audio | VQ round trip | 17.3 dB SNR | 0 dB |
+| image → audio, audio → image | via the pivot (with colour ↔ note translation) | 1.00 / 23.8 dB | — |
+| image → *soft token* → decoder | projector injected as a decoder row | 1.00 | 0.25 |
 
-Todos os programas modais (codificar/decodificar VQ, ponte, espectro,
-síntese) dão **os mesmos bits** no worker nativo e no oráculo.
+All modal programs (VQ encode/decode, bridge, spectrum,
+synthesis) give **the same bits** on the native worker and in the oracle.
 
-## 4. O que isto é, e o que não é
+## 4. What this is, and what it is not
 
-**É**: a prova, executável e medida, de que a álgebra certificada do vapor
-carrega imagem e áudio de ponta a ponta sem operador novo; de que a eclusa
-recebe topologias novas (encoder, codec, projetor, perceptron) sem tocar o
-núcleo; de que ViT e CLIP-vision do Hugging Face são admitidos e computados
-como o `transformers` os computa (desde 0.5.0, contra ele mesmo); e de um
-*harness* que mede qualquer rota contra verdade e controle — agora também em
-**dados reais** (§6).
+**It is**: the proof, executable and measured, that vapor's certified algebra
+carries image and audio end to end with no new operator; that the airlock
+accepts new topologies (encoder, codec, projector, perceptron) without touching the
+core; that Hugging Face's ViT and CLIP-vision are admitted and computed
+as `transformers` computes them (since 0.5.0, against `transformers` itself); and a
+*harness* that measures any route against truth and control — now also on
+**real data** (§6).
 
-**Não é**:
+**It is not**:
 
-- **difusão fotográfica**. A difusão existe desde 0.5.0 (§6) e é verificada;
-  desde 0.6.0 o VAE (`AutoencoderKL`) e o DiT do diffusers também
-  ([ESPACIAL.md](ESPACIAL.md)) — mas conferidos com pesos aleatórios:
-  qualidade fotográfica exige pesos treinados, que não estão aqui;
-- **todos os modelos multimodais pré-treinados**. ViT, as duas torres do
-  CLIP e o Whisper são conferidos contra o `transformers` (0.6.0); SigLIP e
-  LLaVA têm o caminho desenhado mas não adaptadores;
-- ~~convoluções sobrepostas no meio da rede~~ — desde 0.6.0,
-  `Vapor.Spatial` (gather + sel + reshape + GEMV, sem kernel de convolução);
-  o *stem* do Whisper é feito assim;
-- **jogos, renderização, upscaling**: fora do escopo, pelas razões do §5.
+- **photographic diffusion**. Diffusion has existed since 0.5.0 (§6) and is verified;
+  since 0.6.0 so have the VAE (`AutoencoderKL`) and diffusers' DiT
+  ([SPATIAL.md](SPATIAL.md)) — but checked with random weights:
+  photographic quality requires trained weights, which are not here;
+- **all pretrained multimodal models**. ViT, both towers of
+  CLIP and Whisper are checked against `transformers` (0.6.0); SigLIP and
+  LLaVA have the path designed but no adapters;
+- ~~overlapping convolutions in the middle of the network~~ — since 0.6.0,
+  `Vapor.Spatial` (gather + sel + reshape + GEMV, no convolution kernel);
+  Whisper's *stem* is done this way;
+- **games, rendering, upscaling**: out of scope, for the reasons in §5.
 
-## 5. Fora do escopo, por princípio
+## 5. Out of scope, by principle
 
-- **Renderização gráfica de jogos**: o `vapor-fabric` é Vulkan *compute*
-  headless; rasterização não é um problema de tensores certificados.
-- **ComfyUI como produto**: um editor de grafos de difusão é uma interface; o
-  que o vapor oferece é o *motor* — programas verificados — que uma interface
-  dessas poderia chamar.
-- **Upscaling** (Real-ESRGAN, SwinIR): convoluções densas sobrepostas em
-  resolução cheia; expressáveis, mas sem um caso que justifique o custo antes
-  de existirem kernels de convolução com memória de *workgroup* (TODO 2.3).
+- **Game graphics rendering**: `vapor-fabric` is headless Vulkan *compute*;
+  rasterization is not a certified-tensor problem.
+- **ComfyUI as a product**: a diffusion graph editor is an interface; what
+  vapor offers is the *engine* — verified programs — that such an interface
+  could call.
+- **Upscaling** (Real-ESRGAN, SwinIR): dense overlapping convolutions at
+  full resolution; expressible, but with no case that justifies the cost before
+  convolution kernels with *workgroup* memory exist (TODO 2.3).
 
-## 6. Em dados reais (0.5.0)
+## 6. On real data (0.5.0)
 
-O mundo de teste prova que a pilha carrega sinal; não diz nada sobre sinais
-de verdade. Esta seção mede rotas sobre dados reais **retidos**, com modelos
-pequenos treinados pelo PyTorch e admitidos pela eclusa como qualquer
-checkpoint (`priv/digits`, `priv/speech`, `priv/ocr`; scripts em
-`test/python/train_*.py`). Números regeneráveis por `mix vapor.quality`
+The test world proves that the stack carries signal; it says nothing about real
+signals. This section measures routes over **held-out** real data, with small
+models trained by PyTorch and admitted by the airlock like any
+checkpoint (`priv/digits`, `priv/speech`, `priv/ocr`; scripts in
+`test/python/train_*.py`). Numbers regenerable by `mix vapor.quality`
 ([bench/QUALITY.md §4c](bench/QUALITY.md)).
 
-| rota | dados | modelo | medida | controle |
+| route | data | model | measure | control |
 |---|---|---|---|---|
-| caligrafia → dígito | UCI/scikit-learn, 497 dígitos retidos | `vapor_mlp` 64→128→128→10 | acerto **0,980** | acaso 0,10 |
-| dígito → caligrafia | — | `vapor_mlp` denoiser + DDIM (25 passos, guia 2) | 50 gerados, lidos de volta: **1,000** | acaso 0,10 |
-| novidade do gerado | distância à imagem de treino mais próxima (mediana) | — | **18,6** níveis de cinza | reais retidos 16,7; memorização 0,0 |
-| fala → dígito | FSDD, 100 gravações de uma voz nunca ouvida | `vapor_encoder` sobre o espectro mel certificado | acerto **0,900** | acaso 0,10; invertida no tempo 0,84¹ |
-| voz → texto → desenho → leitura | 10 gravações retidas | os três acima em cadeia | **0,900** | acaso 0,10 |
-| imagem de texto → texto | 5 fontes fora do treino; foto real de página | `vapor_encoder` + CTC ([OCR.md](OCR.md)) | CER **0,068** (Tesseract 0,052); página **0,117** (Tesseract 0,364) | texto fluente errado 1,06 |
+| handwriting → digit | UCI/scikit-learn, 497 held-out digits | `vapor_mlp` 64→128→128→10 | accuracy **0.980** | chance 0.10 |
+| digit → handwriting | — | `vapor_mlp` denoiser + DDIM (25 steps, guidance 2) | 50 generated, read back: **1.000** | chance 0.10 |
+| novelty of what is generated | distance to the nearest training image (median) | — | **18.6** grey levels | held-out real ones 16.7; memorization 0.0 |
+| speech → digit | FSDD, 100 recordings of a voice never heard | `vapor_encoder` over the certified mel spectrum | accuracy **0.900** | chance 0.10; time-reversed 0.84¹ |
+| voice → text → drawing → reading | 10 held-out recordings | the three above, chained | **0.900** | chance 0.10 |
+| image of text → text | 5 fonts outside training; real photo of a page | `vapor_encoder` + CTC ([OCR.md](OCR.md)) | CER **0.068** (Tesseract 0.052); page **0.117** (Tesseract 0.364) | fluent wrong text 1.06 |
 
-A distância mediana do gerado ao treino (18,6) é a de um dígito real retido
-(16,7), não a de uma cópia (0): o gerador produz dígitos novos e legíveis.
-¹ A fala invertida no tempo ainda é lida em 84 % dos casos: um dígito falado
-se reconhece sobretudo pelo timbre das suas vogais, não pela ordem dos sons.
-Fica registrado como achado sobre o problema, não como controle — o controle
-é o acaso.
+The median distance from the generated digits to the training set (18.6) is that of a held-out real digit
+(16.7), not that of a copy (0): the generator produces new, legible digits.
+¹ Time-reversed speech is still read correctly in 84% of cases: a spoken digit
+is recognized mostly by the timbre of its vowels, not by the order of its sounds.
+It is recorded as a finding about the problem, not as a control — the control
+is chance.
 
-**Difusão, verificável.** O amostrador DDIM é testado antes de qualquer rede
-contra o denoiser **ótimo em forma fechada** de uma mistura gaussiana: os modos
-caem nos seus pesos e nas suas variâncias. Para um conjunto finito de pontos,
-esse denoiser é **atenção** (consulta = imagem ruidosa, chaves e valores = as
-imagens de treino) — e reproduz cópias do treino: a memorização dos livros,
-que vira o controle da métrica de novidade. Foi assim que um bug real do
-DDIM com *clamp* apareceu: sem recalcular ε̂ a partir de x̂₀ já limitado, o par
-fica inconsistente nos primeiros passos (ᾱ ≈ 0) e só 17 % dos dígitos
-gerados eram lidos certo; com a correção, 99 %.
+**Diffusion, verifiable.** The DDIM sampler is tested, before any network,
+against the **closed-form optimal** denoiser of a Gaussian mixture: the modes
+land at their weights and their variances. For a finite set of points,
+that denoiser is **attention** (query = noisy image, keys and values = the
+training images) — and it reproduces copies of the training set: textbook memorization,
+which becomes the control of the novelty metric. That is how a real
+DDIM bug with *clamp* showed up: without recomputing ε̂ from the already clamped x̂₀, the pair
+is inconsistent in the first steps (ᾱ ≈ 0) and only 17% of the generated digits
+were read correctly; with the fix, 99%.
 
-**Fala, certificada.** O front-end (`Vapor.Modal.Speech`: quadros de 32 ms,
-espectro de Hann e banco mel como **um programa** da álgebra, log e média por
-banda em binary64 correto) dá os mesmos bits em todo substrato; o leitor foi
-treinado em cinco vozes do Free Spoken Digit Dataset e medido na sexta,
-escolhida antes do treino. Essa voz é a mais fácil das seis: com cada voz
-retida por vez (`train_speech.py --loso`), o acerto médio é **0,72** (de 0,59 a
-0,90: george 0,59, nicolas 0,62, lucas 0,73, yweweler 0,73, jackson 0,79,
-theo 0,90). Cinco vozes de treino são pouco para generalizar a qualquer voz;
-o número a citar é o médio, e o 0,90 é o da voz embarcada.
+**Speech, certified.** The front-end (`Vapor.Modal.Speech`: 32 ms frames,
+Hann spectrum and mel bank as **one program** of the algebra, log and per-band
+mean in correctly rounded binary64) gives the same bits on every substrate; the reader was
+trained on five voices of the Free Spoken Digit Dataset and measured on the sixth,
+chosen before training. That voice is the easiest of the six: with each voice
+held out in turn (`train_speech.py --loso`), the mean accuracy is **0.72** (from 0.59 to
+0.90: george 0.59, nicolas 0.62, lucas 0.73, yweweler 0.73, jackson 0.79,
+theo 0.90). Five training voices are too few to generalize to any voice;
+the number to cite is the mean, and 0.90 is that of the shipped voice.

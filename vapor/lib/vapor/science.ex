@@ -4,7 +4,7 @@ defmodule Vapor.Science do
   (quantum, relativistic, a tokamak's equilibrium), chemistry and matter,
   and biology — each experiment a function of its parameters with a
   closed-form or published reference and a control that must fail
-  (docs/CIENCIA.md). `experiments/0` lists them; `run/1` runs one and
+  (docs/SCIENCE.md). `experiments/0` lists them; `run/1` runs one and
   returns `%{name, value, reference, control, threshold, pass, data}` —
   the shape of the quality suite's checks, so the suite and the console
   run the same code.

@@ -3,7 +3,7 @@
 // the branches are walked with ‹ ›, an answer is regenerated, a message is
 // pinned, the conversation is forked and compacted, searched, shared — the
 // link read without the console — and revoked. Then the terminal: a sample
-// file checked by the Mīzān, a pipe, Tab completion, the file editor, a read
+// file checked by the Almizan, a pipe, Tab completion, the file editor, a read
 // outside the jail refused. Portuguese and dark at the end. Any page error,
 // error notice or missing element is reported.
 // usage: node console_majlis.mjs URL [SHOTS_DIR]  → JSON {failures, checks, errors}
@@ -117,7 +117,7 @@ await check("no error notice in the conversations", async () => (await notices()
 /* --------------------------------------------------------------- terminal */
 await page.click("#t-diwan");
 await page.waitForSelector("#dw-input");
-await check("a sample: the Mīzān proves the conservation law and refutes the damped one, in colour", async () => {
+await check("a sample: the Almizan proves the conservation law and refutes the damped one, in colour", async () => {
   await page.click('#dw .dw-samples button:has-text("wzn check oscillator.wzn")');
   await wait(() => /refuted/.test(document.querySelector("#dw-screen")?.textContent || ""));
   return page.$eval("#dw-screen", (s) => /proved/.test(s.textContent) && s.querySelector(".a-c6, .a-c1") !== null);

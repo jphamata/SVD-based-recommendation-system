@@ -1,97 +1,97 @@
-# Rebis — dois circuitos, uma função?
+# Rebis — two circuits, one function?
 
-> Desde 0.15.0. Código: `lib/vapor/rebis.ex`, `lib/vapor/rebis/{gen,ideal,field,gcm,stabilizer}.ex`.
-> Testes: `test/vapor/rebis_test.exs`. Console: *Opus → Rebis*. Terminal: `vapor rebis equiv|anf|identity|stabilizer|aiger`.
+> Since 0.15.0. Code: `lib/vapor/rebis.ex`, `lib/vapor/rebis/{gen,ideal,field,gcm,stabilizer}.ex`.
+> Tests: `test/vapor/rebis_test.exs`. Console: *Opus → Rebis*. Terminal: `vapor rebis equiv|anf|identity|stabilizer|aiger`.
 > MCP: `rebis_check`.
 
-O *rebis* é a "coisa dupla" dos alquimistas: duas naturezas mostradas como uma.
+The *rebis* is the alchemists' "double thing": two natures shown as one.
 
-## A dor
+## The pain
 
-Uma *netlist* depois da síntese, um bloco de IP de terceiros, um chip de volta da fundição — é a
-especificação? A simulação responde pelos padrões que tentou; um cavalo de Troia de hardware
-cujo gatilho é uma coincidência de 64 bits sobrevive a toda bancada de teste já rodada.
-Equivalência é um teorema ou não é nada.
+A *netlist* after synthesis, a third-party IP block, a chip back from the foundry — is it the
+specification? Simulation answers for the patterns it tried; a hardware Trojan horse
+whose trigger is a 64-bit coincidence survives every testbench ever run.
+Equivalence is a theorem or it is nothing.
 
-## A álgebra, dita com exatidão — e a correção da proposta
+## The algebra, stated exactly — and the correction to the proposal
 
-Sobre GF(2), XOR é `+`, AND é `·`, NOT é `+1`; toda função booleana de `n` entradas tem **um**
-polinômio multilinear — a forma normal algébrica (Zhegalkin) — em `GF(2)[x₁…xₙ]/⟨xᵢ² − xᵢ⟩`.
-A proposta da rodada ("provar `P_A − P_B ≡ 0` com bases de Gröbner") está certa e é a
-ferramenta errada: a ANF **já é** a forma normal módulo esse ideal, calculada pela transformada
-de Möbius em `O(n·2ⁿ)` operações de palavra — sem Buchberger — e além de ~20 entradas nenhuma
-forma normal é barata (equivalência é coNP-completa). Então, dois procedimentos, cada um com
-saída conferível:
+Over GF(2), XOR is `+`, AND is `·`, NOT is `+1`; every boolean function of `n` inputs has **one**
+multilinear polynomial — the algebraic normal form (Zhegalkin) — in `GF(2)[x₁…xₙ]/⟨xᵢ² − xᵢ⟩`.
+The round's proposal ("prove `P_A − P_B ≡ 0` with Gröbner bases") is right and is the
+wrong tool: the ANF **already is** the normal form modulo that ideal, computed by the Möbius
+transform in `O(n·2ⁿ)` word operations — no Buchberger — and beyond ~20 inputs no
+normal form is cheap (equivalence is coNP-complete). So, two procedures, each with
+checkable output:
 
-- **`n ≤ 16`**: a tabela-verdade de cada saída como **um** inteiro da BEAM de `2ⁿ` bits (todos os
-  padrões de uma vez), comparada; a ANF por Möbius em `n` passos de deslocamento e XOR.
-- **além**: 4 096 padrões aleatórios de uma vez, depois um **miter** — `OR(outᵃᵢ ⊕ outᵇᵢ)` — por
-  Tseitin em CNF para o `Vapor.Logic.SAT`. UNSAT vem com uma prova DRUP que o
-  `Vapor.Logic.DRUP` (código que não compartilha nada com o resolvedor) confere antes de a
-  resposta ser "equivalente"; SAT vem com um modelo, re-simulado nos dois circuitos antes de ser
-  chamado de contraexemplo.
+- **`n ≤ 16`**: the truth table of each output as **one** BEAM integer of `2ⁿ` bits (all
+  patterns at once), compared; the ANF by Möbius in `n` shift-and-XOR steps.
+- **beyond**: 4,096 random patterns at once, then a **miter** — `OR(outᵃᵢ ⊕ outᵇᵢ)` — via
+  Tseitin into CNF for `Vapor.Logic.SAT`. UNSAT comes with a DRUP proof that
+  `Vapor.Logic.DRUP` (code that shares nothing with the solver) checks before the
+  answer is "equivalent"; SAT comes with a model, re-simulated on both circuits before being
+  called a counterexample.
 
-Um contraexemplo é **encolhido** (o menor número de entradas em 1, gulosamente), então o
-gatilho de um cavalo de Troia se lê como o gatilho.
+A counterexample is **shrunk** (the fewest inputs at 1, greedily), so a
+Trojan's trigger reads as the trigger.
 
-## Aritmética de palavras: Gröbner onde Gröbner é a ferramenta certa
+## Word arithmetic: Gröbner where Gröbner is the right tool
 
-Para identidades de palavra (64 fios são o produto de duas palavras de 32 bits), GF(2) é o anel
-errado. `Vapor.Rebis.Ideal` trabalha **sobre ℤ** com `x² = x`: cada porta é um polinômio
-(`¬a = 1 − a`, `a∧b = ab`, `a⊕b = a + b − 2ab`, …) e, numa ordem lexicográfica que põe cada
-porta acima das suas entradas, os polinômios das portas **já são** uma base de Gröbner do ideal
-do circuito (os termos líderes são variáveis distintas). Reduzir a especificação por eles é
-substituir portas de trás para frente: o resto é `0` sse a identidade vale para toda entrada
-(Lv, Kalla & Enescu 2013; Ritirc, Biere & Kauers 2017). Um resto não nulo dá um ponto onde a
-identidade falha — reavaliado no circuito antes de ser relatado. Especificações em texto:
+For word identities (64 wires are the product of two 32-bit words), GF(2) is the wrong
+ring. `Vapor.Rebis.Ideal` works **over ℤ** with `x² = x`: each gate is a polynomial
+(`¬a = 1 − a`, `a∧b = ab`, `a⊕b = a + b − 2ab`, …) and, in a lexicographic order that puts each
+gate above its inputs, the gate polynomials **already are** a Gröbner basis of the circuit's
+ideal (the leading terms are distinct variables). Reducing the specification by them is
+substituting gates from back to front: the remainder is `0` iff the identity holds for every input
+(Lv, Kalla & Enescu 2013; Ritirc, Biere & Kauers 2017). A non-zero remainder gives a point where the
+identity fails — re-evaluated on the circuit before being reported. Specifications as text:
 `m[16] = a[8] * b[8]`, `s[8] + 2^8*cout = a[8] + b[8]`.
 
-Os dois procedimentos são **complementares**, medido:
+The two procedures are **complementary**, measured:
 
-| | CDCL + DRUP | álgebra sobre ℤ |
+| | CDCL + DRUP | algebra over ℤ |
 |---|---|---|
-| multiplicador, comutatividade | 2 963 conflitos a 5 bits; não termina em minutos a 6 | 16 bits: 2 748 substituições, pico de 522 termos; **32 bits: 1,4 s, pico de 2 058** |
-| somador *ripple* 64 bits | — | linear: pico < 1 000 termos |
-| *ripple* × Kogge–Stone | 16 bits: prova DRUP conferida; 64 bits: 88 s (7 541 conflitos, 5 380 lemas conferidos) | Kogge–Stone 32 bits: passa de 50 000 termos → `:unknown`, nunca um palpite |
+| multiplier, commutativity | 2,963 conflicts at 5 bits; does not finish in minutes at 6 | 16 bits: 2,748 substitutions, peak of 522 terms; **32 bits: 1.4 s, peak of 2,058** |
+| 64-bit *ripple* adder | — | linear: peak < 1,000 terms |
+| *ripple* × Kogge–Stone | 16 bits: DRUP proof checked; 64 bits: 88 s (7,541 conflicts, 5,380 lemmas checked) | Kogge–Stone 32 bits: goes past 50,000 terms → `:unknown`, never a guess |
 
-## Corpos binários, AES e GCM
+## Binary fields, AES and GCM
 
-`Vapor.Rebis.Field`: GF(2ⁿ) com o produto **sem vai-um** (o que `PCLMULQDQ`, `PMULL` e `vclmul`
-calculam), redução, inverso por Euclides estendido, teste de irredutibilidade de Rabin. A S-box
-do AES é **derivada** (o inverso em GF(2⁸) seguido da afim), não tabelada — e cada bit de saída
-tem grau algébrico 7, recalculado por Möbius. O GHASH é feito de dois jeitos (o algoritmo do
-NIST e o produto refletido) que concordam. `Vapor.Rebis.GCM`: AES-GCM inteiro sobre isso, igual
-ao OpenSSL (`:crypto`) em toda combinação testada de comprimento de mensagem, AAD e IV; uma
-etiqueta adulterada é recusada. É um **conferidor**, não uma biblioteca para cifrar dados de
-produção (sem tempo constante).
+`Vapor.Rebis.Field`: GF(2ⁿ) with the **carry-less** product (what `PCLMULQDQ`, `PMULL` and `vclmul`
+compute), reduction, inverse by extended Euclid, Rabin's irreducibility test. The AES S-box
+is **derived** (the inverse in GF(2⁸) followed by the affine map), not tabulated — and each output bit
+has algebraic degree 7, recomputed by Möbius. GHASH is done two ways (NIST's
+algorithm and the reflected product) that agree. `Vapor.Rebis.GCM`: the whole of AES-GCM on top of that, equal
+to OpenSSL (`:crypto`) on every tested combination of message length, AAD and IV; a
+tampered tag is rejected. It is a **checker**, not a library for encrypting
+production data (no constant time).
 
-## Estabilizadores
+## Stabilizers
 
-`Vapor.Rebis.Stabilizer`: circuitos de Clifford em milhares de qubits, exatos, numa máquina
-clássica (Gottesman–Knill, quadro CHP de Aaronson–Gottesman). Cada linha é dois inteiros da BEAM
-(`x`, `z`) e um sinal; a fase de um produto de linhas é calculada para todos os qubits de uma vez
-(as posições que ganham `+i` e `−i` são duas máscaras, a fase é a diferença dos *popcounts*
-mod 4). Conferido contra um simulador denso de vetor de estado em 60 circuitos aleatórios de até
-5 qubits; um estado GHZ de 400 qubits dá 1 medida aleatória e 399 determinadas. O `T` sai do
-formalismo e é recusado pelo nome.
+`Vapor.Rebis.Stabilizer`: Clifford circuits on thousands of qubits, exact, on a
+classical machine (Gottesman–Knill, Aaronson–Gottesman's CHP tableau). Each row is two BEAM integers
+(`x`, `z`) and a sign; the phase of a product of rows is computed for all qubits at once
+(the positions that gain `+i` and `−i` are two masks, the phase is the difference of the *popcounts*
+mod 4). Checked against a dense state-vector simulator on 60 random circuits of up to
+5 qubits; a 400-qubit GHZ state gives 1 random measurement and 399 determined ones. `T` leaves the
+formalism and is rejected by name.
 
-## Entrada
+## Input
 
-Uma pequena linguagem de *netlist* (`input`, `output`, `w = a & ~b ^ c`, `mux(s, a, b)`,
-`maj(a, b, c)`, com *hash-consing*) ou AIGER ASCII (`aag`, o formato das competições de
-verificação de hardware), lido em ordem topológica de Kahn (portas fora de ordem aceitas, ciclos
-recusados). Nomes nunca viram átomos; tamanhos têm teto.
+A small *netlist* language (`input`, `output`, `w = a & ~b ^ c`, `mux(s, a, b)`,
+`maj(a, b, c)`, with *hash-consing*) or ASCII AIGER (`aag`, the format of the hardware
+verification competitions), read in Kahn topological order (out-of-order gates accepted, cycles
+rejected). Names never become atoms; sizes have a ceiling.
 
-## Achado no caminho
+## Found along the way
 
-- Um miter com **literais repetidos** numa cláusula travava o resolvedor; as cláusulas são
-  normalizadas (repetições removidas, tautologias descartadas) antes do SAT.
-- AIGER com portas fora de ordem era recusado; arquivos reais não garantem a ordem.
-- A fase das linhas desestabilizadoras do CHP pode ser ímpar (só as estabilizadoras são
-  hermitianas); a soma de linhas aceita isso nelas.
+- A miter with **repeated literals** in a clause hung the solver; clauses are
+  normalised (repetitions removed, tautologies discarded) before SAT.
+- AIGER with out-of-order gates was rejected; real files do not guarantee the order.
+- The phase of CHP's destabilizer rows can be odd (only the stabilizer rows are
+  Hermitian); row addition accepts that for them.
 
-## O que não é
+## What it is not
 
-Não é síntese nem *place-and-route*; circuitos sequenciais (com registradores) entram só como a
-sua parte combinacional (o *miter* de um passo). Um emulador de chips antigos como redes sobre
-GF(2⁸) não foi feito ([DIRETRIZ §18](DIRETRIZ.md)).
+It is not synthesis or *place-and-route*; sequential circuits (with registers) come in only as
+their combinational part (the one-step *miter*). An emulator of old chips as networks over
+GF(2⁸) was not built ([DIRECTIVE §18](DIRECTIVE.md)).

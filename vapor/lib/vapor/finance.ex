@@ -1,6 +1,6 @@
 defmodule Vapor.Finance do
   @moduledoc """
-  The finance and trading desk (docs/FINANCAS.md): one front door for the
+  The finance and trading desk (docs/FINANCE.md): one front door for the
   console, the MCP server and the CLI. Every task takes the text a
   practitioner would write and answers with what lets it be judged.
 

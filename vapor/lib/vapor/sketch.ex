@@ -1,7 +1,7 @@
 defmodule Vapor.Sketch do
   @moduledoc """
   From a sketch to a drawing an engineer or an architect can use
-  (docs/CENA.md §5):
+  (docs/SCENE.md §5):
 
     * **vectorise** (`vectorize/2`) — the strokes are thinned to a skeleton
       graph; each chain is fitted by a line (total least squares), a circle

@@ -1,7 +1,7 @@
 defmodule Vapor.Science.Biology do
   @moduledoc """
   Evolution, genomes and folding, each against an exact or published
-  reference (docs/CIENCIA.md):
+  reference (docs/SCIENCE.md):
 
     * **population genetics** — a mutant's fixation in a Wright–Fisher
       population, simulated replicate by replicate with counter-based
@@ -22,7 +22,7 @@ defmodule Vapor.Science.Biology do
 
   Real protein structure — its metrics (TM-score, GDT, lDDT), folding
   from contacts by distance geometry and contacts read from co-evolution —
-  is `Vapor.Bio` (docs/PROTEINAS.md); the HP model here is the physics toy
+  is `Vapor.Bio` (docs/PROTEINS.md); the HP model here is the physics toy
   that makes the search problem exact.
   """
   alias Vapor.Sampler

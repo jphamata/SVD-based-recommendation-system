@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Vapor.Audit do
   `_build/audit-demo`).
 
   A dossier authenticates evidence; it is not a conformity assessment or a
-  legal opinion (docs/AUDITORIA.md).
+  legal opinion (docs/AUDIT.md).
   """
   use Mix.Task
   alias Vapor.{Audit, Certificate}

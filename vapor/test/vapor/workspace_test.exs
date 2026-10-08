@@ -88,7 +88,7 @@ defmodule Vapor.WorkspaceTest do
 
   describe "the command line" do
     test "alembic, athanor, verify and exit statuses", %{dir: d} do
-      p = Path.join(d, "euler.alb")
+      p = Path.join(d, "euler.nbq")
       File.write!(p, Examples.get("euler").text)
       assert capture_io(fn -> assert Vapor.Main.run(["alembic", "-e", "sum([x^2 for x in 1..10])"]) == 0 end) =~ "385"
       out = capture_io(fn -> assert Vapor.Main.run(["athanor", "run", p]) == 1 end)

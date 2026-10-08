@@ -102,7 +102,7 @@ defmodule Vapor.OpusTest do
 
     dir = Path.join(:code.priv_dir(:vapor), "console")
     opus = keys.(File.read!(Path.join(dir, "opus.js")))
-    others = for f <- ["index.html", "athanor.js", "bancada.js", "mercado.js"], reduce: %{}, do: (acc -> Map.merge(acc, keys.(File.read!(Path.join(dir, f)))))
+    others = for f <- ["index.html", "athanor.js", "workbench.js", "market.js"], reduce: %{}, do: (acc -> Map.merge(acc, keys.(File.read!(Path.join(dir, f)))))
     assert map_size(opus) > 100
     clashes = for {k, v} <- opus, Map.has_key?(others, k), others[k] != v, do: {k, v, others[k]}
     assert clashes == [], inspect(clashes)

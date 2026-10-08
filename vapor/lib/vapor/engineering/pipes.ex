@@ -1,7 +1,7 @@
 defmodule Vapor.Engineering.Pipes do
   @moduledoc """
   Pressurised pipe networks — water supply, fire mains, district
-  heating, process piping (docs/ENGENHARIA.md §5): Darcy–Weisbach losses
+  heating, process piping (docs/ENGINEERING.md §5): Darcy–Weisbach losses
   with the Colebrook–White friction factor solved exactly (laminar 64/Re
   below Re 2000), minor losses, and the network solved by Newton on the
   joint system of flows and heads — the formulation of Todini and Pilati's

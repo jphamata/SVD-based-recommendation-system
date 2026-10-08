@@ -40,7 +40,9 @@ defmodule Vapor.Docs do
   `max_total` expanded bytes per ingest (256 MiB), `max_entries` per
   archive (10 000), `max_depth` of nested archives (4), `max_ratio` of
   compression for members over 1 MiB (200×: text compresses 3–10×, a
-  bomb of zeros ~1000×). A zip's declared sizes and ratios are checked
+  bomb of zeros ~1000×). Every ingest runs under `Vapor.Hermetic.seal/2`:
+  `heap_mb` (2048, heap and binaries together) and `timeout` (600 s) bound
+  what a file that slips past the declared limits can cost. A zip's declared sizes and ratios are checked
   **before** anything is inflated, and inflation is capped at the declared
   size (a lying header is a rejection) — a zip bomb is a rejection, not an
   outage. Archive member names are never used as file
@@ -49,7 +51,8 @@ defmodule Vapor.Docs do
   alias Vapor.Rejection
   alias Vapor.Docs.{Markup, Office, PDF, Pictures, Zip}
 
-  @defaults [max_bytes: 64 * 1024 * 1024, max_total: 256 * 1024 * 1024, max_entries: 10_000, max_depth: 4, max_ratio: 200, ocr: :auto]
+  @defaults [max_bytes: 64 * 1024 * 1024, max_total: 256 * 1024 * 1024, max_entries: 10_000, max_depth: 4, max_ratio: 200, ocr: :auto,
+             heap_mb: 2048, timeout: 600_000]
 
   @doc """
   Ingest a file (path) or `{name, bytes}`: `{:ok, %{passages, images,
@@ -63,11 +66,20 @@ defmodule Vapor.Docs do
     with {:ok, name, bytes} <- read(src) do
       budget = :counters.new(1, [])
       acc = %{passages: [], images: [], files: [], warnings: []}
+      limits = [heap_mb: opts[:heap_mb], timeout: opts[:timeout]]
 
-      case visit(name, bytes, 0, opts, budget, acc) do
-        {:ok, acc} -> {:ok, %{passages: Enum.reverse(acc.passages), images: Enum.reverse(acc.images),
-                               files: Enum.reverse(acc.files), warnings: Enum.reverse(acc.warnings)}}
-        {:error, _} = e -> e
+      # every reader runs sealed: a malformed or hostile file costs at most the seal's memory and time
+      case Vapor.Hermetic.seal(fn -> visit(name, bytes, 0, opts, budget, acc) end, limits) do
+        {:ok, {:ok, acc}} ->
+          {:ok, %{passages: Enum.reverse(acc.passages), images: Enum.reverse(acc.images),
+                  files: Enum.reverse(acc.files), warnings: Enum.reverse(acc.warnings)}}
+
+        {:ok, {:error, _} = e} ->
+          e
+
+        {:error, failure} ->
+          {:error, Rejection.new({:docs, name}, "reading #{Vapor.Hermetic.describe(failure, limits)}",
+                                 "raise heap_mb or timeout if the file is genuine, or split it")}
       end
     end
   end

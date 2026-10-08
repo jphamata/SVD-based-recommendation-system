@@ -69,9 +69,9 @@ theorem padStride_coprime (s m : Nat) : Nat.gcd (s + padStride s m) (2 ^ m) = 1 
   by_cases hm : m = 0
   · subst hm; simp
   · by_cases hs : s % 2 = 0
-    · simp only [hm, hs, if_false, if_true]
+    · simp only [hm, hs, ite_false, ite_true]
       exact gcd_odd_pow_two (by omega) m
-    · simp only [hm, hs, if_false]
+    · simp only [hm, hs, ite_false]
       exact gcd_odd_pow_two (by omega) m
 
 /-- The pad is minimal: a non-zero pad is only chosen when the unpadded

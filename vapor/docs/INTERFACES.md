@@ -1,73 +1,73 @@
-# Interfaces: GUI, TUI, CLI — e por que não Tauri
+# Interfaces: GUI, TUI, CLI — and why not Tauri
 
-O vapor tem quatro faces sobre um núcleo só. Em todas, cada resposta chega com
-a sua medida (confiança, certeza, recibo, distância ao treino): a interface é
-onde a pergunta "isto é sinal ou ruído?" é respondida para uma pessoa.
+vapor has four faces over a single core. In all of them, every answer arrives with
+its measure (confidence, certainty, receipt, distance to the training data): the interface is
+where the question "is this signal or noise?" is answered for a person.
 
-| face | para | como |
+| face | for | how |
 |---|---|---|
-| **Console web** (GUI) | uso diário, demonstrações, revisar evidência | `mix vapor.serve [--model DIR] [--docs CAMINHO]` → `http://127.0.0.1:8000/` |
-| **App instalado** | uma janela própria, sem aba de navegador | o console é um app web instalável (`manifest.webmanifest`, ícones): no Chromium/Edge, *Instalar vapor* o abre em janela própria |
-| **Console no terminal** (TUI) | SSH, servidores sem navegador, logs de CI | `mix vapor.tui [--lang pt] [--docs CAMINHO]` |
-| **Tarefas de linha de comando** | scripts e pipelines | `mix vapor.ocr`, `vapor.merge`, `vapor.quality`, `vapor.rag`, `vapor.lock`, … |
-| **API HTTP** | outros programas | `/v1/*` compatível com OpenAI e `/v1/vapor/*` do console ([CONSOLE.md](CONSOLE.md)) |
+| **Web console** (GUI) | daily use, demonstrations, reviewing evidence | `mix vapor.serve [--model DIR] [--docs PATH]` → `http://127.0.0.1:8000/` |
+| **Installed app** | a window of its own, without a browser tab | the console is an installable web app (`manifest.webmanifest`, icons): in Chromium/Edge, *Install vapor* opens it in its own window |
+| **Terminal console** (TUI) | SSH, servers without a browser, CI logs | `mix vapor.tui [--lang pt] [--docs PATH]` |
+| **Command-line tasks** | scripts and pipelines | `mix vapor.ocr`, `vapor.merge`, `vapor.quality`, `vapor.rag`, `vapor.lock`, … |
+| **HTTP API** | other programs | OpenAI-compatible `/v1/*` and the console's `/v1/vapor/*` ([CONSOLE.md](CONSOLE.md)) |
 
-## Desde 0.14: o terminal primeiro
+## Since 0.14: the terminal first
 
-Tudo o que o console faz, `bin/vapor` faz — com JSON em *pipes*, códigos de saída com
-significado e leitura da entrada padrão ([CLI.md](CLI.md)). O console, a TUI e as
-ferramentas MCP chamam as mesmas funções; nenhuma capacidade existe só na interface gráfica.
+Everything the console does, `bin/vapor` does — with JSON in *pipes*, exit codes with
+meaning and reading from standard input ([CLI.md](CLI.md)). The console, the TUI and the
+MCP tools call the same functions; no capability exists only in the graphical interface.
 
-## O console web
+## The web console
 
-Um arquivo HTML autocontido (`priv/console/index.html`): sem CDN, sem baixar
-fontes, funciona sem internet, servido pela mesma BEAM que roda os modelos.
+A self-contained HTML file (`priv/console/index.html`): no CDN, no downloaded
+fonts, works without internet, served by the same BEAM that runs the models.
 
-- **Língua**: inglês por padrão, português a um clique (lembrado no
-  navegador). Todo texto da página vive num dicionário — uma terceira língua
-  é uma tabela, não uma reescrita. Os diagnósticos que dependem de números
-  (o regime de uma fusão) são montados no cliente a partir dos números, nas
-  duas línguas; mensagens que vêm do servidor (recusas, erros) ficam em
-  inglês, como a API.
-- **Tema**: claro e escuro, seguindo o sistema até a pessoa escolher.
-- **Identidade**: uma eclusa. O logo (`priv/console/logo.svg`,
-  `docs/img/logo.svg`) é a bacia entre as comportas, com a água num nível e o
-  vapor subindo; o elemento ousado da página é a mesma ideia — cada resultado
-  num tanque cujo nível é a sua medida, com a linha calibrada marcada. O resto
-  é quieto: uma sans para o texto, uma condensada de sinalização para os
-  títulos, monoespaçada só para *digests*.
-- **Painéis** agrupados pelo que se faz: *Perguntar* (conversa com evidência),
-  *Ler* (documentos, visão/OCR, fala), *Criar* (desenho por difusão), *Medir*
-  (fusão, portão de qualidade, a eclusa de modelos).
-- **Acessibilidade**: navegação por teclado (setas entre seções, link de pular,
-  foco visível), movimento reduzido respeitado, legível a 390 px. Conferido
-  no Chromium headless em claro, escuro, nas duas línguas e na largura de
-  celular, sem erro de console.
+- **Language**: English by default, Portuguese one click away (remembered in the
+  browser). All of the page's text lives in a dictionary — a third language
+  is a table, not a rewrite. The diagnostics that depend on numbers
+  (the regime of a merge) are assembled on the client from the numbers, in
+  both languages; messages that come from the server (refusals, errors) stay in
+  English, like the API.
+- **Theme**: light and dark, following the system until the person chooses.
+- **Identity**: a canal lock. The logo (`priv/console/logo.svg`,
+  `docs/img/logo.svg`) is the basin between the gates, with the water at a level and the
+  vapour rising; the page's bold element is the same idea — each result
+  in a tank whose level is its measure, with the calibrated line marked. The rest
+  is quiet: a sans for the text, a condensed signage face for the
+  headings, monospace only for *digests*.
+- **Panels** grouped by what one does: *Ask* (conversation with evidence),
+  *Read* (documents, vision/OCR, speech), *Create* (drawing by diffusion), *Measure*
+  (merging, quality gate, the model airlock).
+- **Accessibility**: keyboard navigation (arrows between sections, skip link,
+  visible focus), reduced motion respected, readable at 390 px. Checked
+  in headless Chromium in light, dark, in both languages and at phone
+  width, with no console error.
 
-## O console no terminal
+## The terminal console
 
-`Vapor.TUI` — uma sessão por linhas (sem curses, sem dependência): `read`
-(OCR), `listen`, `draw` (o dígito desenhado no terminal na escala de 24 cinzas
-e lido de volta pelo classificador), `add`/`search`, `quality`, `merge`,
-`lang en|pt`. Cor só em terminal e nunca com `NO_COLOR`; numa tubulação,
-texto puro. O intérprete (`eval/2`) é puro e testado sem terminal.
+`Vapor.TUI` — a line-based session (no curses, no dependency): `read`
+(OCR), `listen`, `draw` (the digit drawn in the terminal on the 24-grey scale
+and read back by the classifier), `add`/`search`, `quality`, `merge`,
+`lang en|pt`. Colour only in a terminal and never with `NO_COLOR`; in a pipe,
+plain text. The interpreter (`eval/2`) is pure and tested without a terminal.
 
-## Tauri: considerado, não adotado
+## Tauri: considered, not adopted
 
-Um invólucro Tauri daria uma janela nativa em volta da mesma página. Pesado
-contra o que o vapor é:
+A Tauri wrapper would give a native window around the same page. Weighed
+against what vapor is:
 
-| | Tauri | app web instalável (adotado) |
+| | Tauri | installable web app (adopted) |
 |---|---|---|
-| toolchains novas | Rust, Cargo, um WebView por SO, Node para o empacotador | nenhuma |
-| o runtime dos modelos | a BEAM e o worker nativo como *sidecar* por SO, com assinatura | já está rodando: é ele que serve a página |
-| política de dependências (`deps: []`) | quebra (crates, npm) | mantida |
-| sem internet | sim | sim (um arquivo, sem CDN) |
-| janela, ícone, entrada na barra de tarefas | sim | sim ("Instalar" no Chromium/Edge) |
-| sistema de arquivos, bandeja, atualização automática | sim | não — e não faz falta: arquivos entram pelo seletor e por arrastar e soltar, o servidor lê `--docs` |
-| o que acrescenta à *evidência* | nada | — |
+| new toolchains | Rust, Cargo, a WebView per OS, Node for the bundler | none |
+| the models' runtime | the BEAM and the native worker as a *sidecar* per OS, with signing | already running: it is what serves the page |
+| dependency policy (`deps: []`) | breaks (crates, npm) | kept |
+| no internet | yes | yes (one file, no CDN) |
+| window, icon, taskbar entry | yes | yes ("Install" in Chromium/Edge) |
+| file system, tray, automatic updates | yes | no — and it is not missed: files come in through the picker and by drag and drop, the server reads `--docs` |
+| what it adds to the *evidence* | nothing | — |
 
-O worker hoje é só Linux ([TODO](TODO.md)), então um pacote de desktop
-multiplataforma embrulharia um runtime que não roda em dois dos três alvos.
-Quando houver workers para macOS/Windows, vale revisitar — e a página não
-muda: um Tauri apontaria para o mesmo `http://127.0.0.1:PORTA/`.
+The worker is Linux-only today ([TODO](TODO.md)), so a cross-platform desktop
+package would wrap a runtime that does not run on two of the three targets.
+When there are workers for macOS/Windows, it is worth revisiting — and the page does not
+change: a Tauri would point to the same `http://127.0.0.1:PORT/`.

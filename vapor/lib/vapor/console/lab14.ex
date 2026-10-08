@@ -80,7 +80,7 @@ defmodule Vapor.Console.Lab14 do
             end
         end
       end
-      case Alembic.sandbox(run, heap_mb: 256, timeout: 20_000) do
+      case Vapor.Hermetic.seal(run, heap_mb: 256, timeout: 20_000) do
         {:ok, r} -> r
         {:error, w} -> {:error, %{message: "stopped: #{inspect(w)}", line: 0, col: 0}}
       end
@@ -142,7 +142,7 @@ defmodule Vapor.Console.Lab14 do
   def verify(req) do
     with {:ok, src} <- text(req),
          %{} = cert <- req["certificate"] || {:error, "certificate: the JSON certificate"} do
-      case Alembic.sandbox(fn -> Touchstone.verify(src, cert, full: req["full"] == true) end, heap_mb: 1024, timeout: 120_000) do
+      case Vapor.Hermetic.seal(fn -> Touchstone.verify(src, cert, full: req["full"] == true) end, heap_mb: 1024, timeout: 120_000) do
         {:ok, r} -> r
         {:error, w} -> {:error, "verification stopped: #{inspect(w)}"}
       end
@@ -159,7 +159,7 @@ defmodule Vapor.Console.Lab14 do
           Game.safely(fn -> game_action(g, state, req) end)
         end
       end
-      case Alembic.sandbox(run, heap_mb: 1024, timeout: 120_000) do
+      case Vapor.Hermetic.seal(run, heap_mb: 1024, timeout: 120_000) do
         {:ok, r} -> r
         {:error, w} -> {:error, "stopped: #{inspect(w)}"}
       end

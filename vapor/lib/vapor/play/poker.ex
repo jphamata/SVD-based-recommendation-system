@@ -1,6 +1,6 @@
 defmodule Vapor.Play.Poker do
   @moduledoc """
-  Poker with imperfect information (docs/TABULEIROS.md §5): **Kuhn poker**
+  Poker with imperfect information (docs/BOARDS.md §5): **Kuhn poker**
   (three cards) and **Leduc hold'em** (six cards, two betting rounds, a
   public card), solved by counterfactual regret minimisation (CFR+:
   regrets floored at zero, linearly weighted averages, alternating
@@ -101,7 +101,7 @@ defmodule Vapor.Play.Poker do
       {c0, c1} = pot(h)
       cond do
         String.ends_with?(h, "f") ->
-          folder = player(String.slice(h, 0..-2))
+          folder = player(String.slice(h, 0..-2//1))
           if folder == 0, do: -c0 * 1.0, else: c1 * 1.0
         true ->
           {ra, rb, rc} = {div(a, 2), div(b, 2), div(c, 2)}

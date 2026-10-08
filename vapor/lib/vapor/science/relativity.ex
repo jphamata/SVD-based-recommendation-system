@@ -6,7 +6,7 @@ defmodule Vapor.Science.Relativity do
   rotation in the magnetic field, half a kick, on the momentum
   u = γv.
 
-  Measured (docs/CIENCIA.md): the gyration period 2πγ/B (time dilation —
+  Measured (docs/SCIENCE.md): the gyration period 2πγ/B (time dilation —
   a fast particle turns slower), the conservation of |u| in a pure
   magnetic field to rounding, and the E×B drift velocity E/B. The control
   is the explicit Euler integrator of the same equations, whose energy

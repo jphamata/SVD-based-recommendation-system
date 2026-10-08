@@ -1,107 +1,107 @@
-# A linha de comando — a bancada inteira pelo terminal
+# The command line — the whole workbench from the terminal
 
-> Desde 0.14.0. Código: `lib/vapor/main.ex`, `lib/vapor/main/*`, `bin/vapor`, `mix vapor`.
+> Since 0.14.0. Code: `lib/vapor/main.ex`, `lib/vapor/main/*`, `bin/vapor`, `mix vapor`.
 
-Tudo o que o console faz, o terminal faz, na filosofia Unix: cada comando lê um arquivo ou a
-entrada padrão (`-`), escreve texto para pessoas num terminal e **JSON quando a saída é um
-*pipe*** (ou com `--json`), e diz o resultado pelo código de saída.
+Everything the console does, the terminal does, in the Unix philosophy: each command reads a file or
+standard input (`-`), writes text for people at a terminal and **JSON when the output is a
+*pipe*** (or with `--json`), and reports the result through the exit code.
 
 ```
 vapor alembic FILE | -e EXPR | --card
 vapor athanor run FILE [--budget N --seed N --seconds N --only s1,s2 --set k=v --mind SPEC
                         --measure CMD --interactive --no-control --json]
-vapor athanor ask FILE                  # medido: vapor propõe, você mede
+vapor athanor ask FILE                  # measured: vapor proposes, you measure
 vapor verify FILE CERT [--full --replay]
 vapor game FILE solve|search|learn|play
-vapor crucible KIND FILE                # `vapor crucible` lista; --example mostra um
-vapor assay TOOL FILE                   # `vapor assay` lista; --example mostra um
-vapor mind ask|formalize|transcript     # --model ou VAPOR_MIND
+vapor crucible KIND FILE                # `vapor crucible` lists; --example shows one
+vapor assay TOOL FILE                   # `vapor assay` lists; --example shows one
+vapor mind ask|formalize|transcript     # --model or VAPOR_MIND
 vapor scene new|edit|direct|export|card
-vapor solve FILE                        # a bancada de equações
-vapor rebis equiv|anf|identity|stabilizer|aiger FILE…   # circuitos sobre GF(2) (0.15)
-vapor aludel decide P --vars x,y --box '0,1;0,1' | REQUEST.json   # positividade, barreiras
-vapor tabula FILE [--facts a,b]          # um contrato: antinomias, provas, lacunas
-vapor cupel [--n 32 --k 64 --bit 26]     # o exercício de corrupção silenciosa
-vapor amalgam FILE|- [--f32]             # uma soma que não depende da ordem
+vapor solve FILE                        # the equation workbench
+vapor rebis equiv|anf|identity|stabilizer|aiger FILE…   # circuits over GF(2) (0.15)
+vapor aludel decide P --vars x,y --box '0,1;0,1' | REQUEST.json   # positivity, barriers
+vapor tabula FILE [--facts a,b]          # a contract: antinomies, proofs, gaps
+vapor cupel [--n 32 --k 64 --bit 26]     # the silent-corruption drill
+vapor amalgam FILE|- [--f32]             # a sum that does not depend on the order
 vapor chat new|say|show|edit|regen|switch|rewind|fork|pin|context|compact|search|export|import|share …  (0.16)
-vapor wzn check|show|hash|run|transmute|assay|abjad FILE …   # o Mīzān (0.16): afirmações decididas
-vapor lsp                                # o servidor de linguagem (VS Code, Neovim, Emacs, …)
-vapor serve | tui | ocr | merge | quality …   # as tarefas mix anteriores
+vapor wzn check|show|hash|run|transmute|assay|abjad FILE …   # Almizan (0.16): decided claims
+vapor lsp                                # the language server (VS Code, Neovim, Emacs, …)
+vapor serve | tui | ocr | merge | quality …   # the earlier mix tasks
 ```
 
-| código | significa |
+| code | meaning |
 |---|---|
-| 0 | positivo: achado, provado, verificado, sinal |
-| 1 | negativo: refutado, não achado, verificação falhou, ruído |
-| 2 | uso errado |
-| 3 | entrada inválida (com linha e coluna) |
-| 4 | falha |
+| 0 | positive: found, proved, verified, signal |
+| 1 | negative: refuted, not found, verification failed, noise |
+| 2 | wrong usage |
+| 3 | invalid input (with line and column) |
+| 4 | failure |
 
-`NO_COLOR` desliga a cor; `VAPOR_TTY=0|1` força o modo. Exemplos de composição:
+`NO_COLOR` turns colour off; `VAPOR_TTY=0|1` forces the mode. Composition examples:
 
 ```sh
-# a conjectura de Euler refutada, o certificado conferido por outro processo
-vapor athanor run euler.alb > c.json || vapor verify euler.alb c.json && echo "contraexemplo real"
+# Euler's conjecture refuted, the certificate checked by another process
+vapor athanor run euler.nbq > c.json || vapor verify euler.nbq c.json && echo "real counterexample"
 
-# o modelo rascunha, a pessoa lê a retrotradução, a fornalha busca
-echo "a régua de Golomb mais curta com 8 marcas" | vapor mind formalize - > g.alb && vapor athanor run g.alb
+# the model drafts, the person reads the back-translation, the furnace searches
+echo "the shortest Golomb ruler with 8 marks" | vapor mind formalize - > g.nbq && vapor athanor run g.nbq
 
-# um objetivo medido por um programa externo (um treino, uma simulação)
-vapor athanor run hp.alb --measure './treina.sh'   # lê $VAPOR_CANDIDATE_JSON, imprime o número (o último da saída)
+# an objective measured by an external program (a training run, a simulation)
+vapor athanor run hp.nbq --measure './treina.sh'   # reads $VAPOR_CANDIDATE_JSON, prints the number (the last one in the output)
 
-# uma cena editada por operações, como um documento
+# a scene edited by operations, like a document
 vapor scene new > s.json && vapor scene edit s.json "add glow sol { x: 0.7, y: 0.2 }" > s2.json
 ```
 
-## O Opus pelo terminal (0.15)
+## Opus from the terminal (0.15)
 
-Os mesmos códigos de saída: `0` é equivalente, provado, certificado ou consistente; `1` é
-diferente, refutado, esgotado ou com antinomias — então um *script* pode exigir a prova.
+The same exit codes: `0` is equivalent, proved, certified or consistent; `1` is
+different, refuted, exhausted or with antinomies — so a *script* can require the proof.
 
 ```sh
-# a netlist depois da síntese contra a especificação; o contraexemplo agrupado em palavras
-vapor rebis equiv spec.net synth.aag || echo "não é a mesma função"
+# the netlist after synthesis against the specification; the counterexample grouped into words
+vapor rebis equiv spec.net synth.aag || echo "not the same function"
 
-# um multiplicador provado por álgebra sobre ℤ (onde o SAT é exponencial)
+# a multiplier proved by algebra over ℤ (where SAT is exponential)
 vapor rebis identity mul16.net --spec 'm[32] = a[16] * b[16]'
 
-# uma afirmação estrita sobre um polinômio, com a testemunha reproduzível no JSON
+# a strict claim about a polynomial, with the reproducible witness in the JSON
 vapor aludel decide 'x^4*y^2 + x^2*y^4 - 3*x^2*y^2 + 1 + 1/1000' --vars x,y --box '-2,2;-2,2' --strict --json > w.json
 
-# um contrato: antinomias com o cenário; as posições quando a entrega atrasou
+# a contract: antinomies with the scenario; the positions when delivery was late
 vapor tabula venda.txt --facts delivered,late
 ```
 
-## Conversas, o Mīzān e o terminal único (0.16)
+## Conversations, Almizan and the single terminal (0.16)
 
 ```sh
-# uma conversa num arquivo seu (~/.vapor/majlis, ou $VAPOR_HOME), com o modelo de VAPOR_MIND
-T=$(vapor chat new --title rascunho --system "responda em português")
-vapor chat say $T "o que é uma base de Gröbner?"
-vapor chat edit $T 3fa2c1 "e um exemplo pequeno?"    # um ramo; o antigo fica
-vapor chat context $T                                # o que o modelo vai ler, e o que fica de fora
+# a conversation in a file of your own (~/.vapor/majlis, or $VAPOR_HOME), with the model from VAPOR_MIND
+T=$(vapor chat new --title draft --system "answer in Portuguese")
+vapor chat say $T "what is a Gröbner basis?"
+vapor chat edit $T 3fa2c1 "and a small example?"     # a branch; the old one stays
+vapor chat context $T                                # what the model will read, and what is left out
 vapor chat export $T --md > rascunho.md
 
-# uma lei de conservação provada sobre ℚ; a versão amortecida refutada no ponto
-vapor wzn check priv/mizan/oscillator.wzn
-vapor wzn show priv/mizan/oscillator.wzn --arabic | vapor wzn hash -   # o mesmo hash
+# a conservation law proved over ℚ; the damped version refuted at the point
+vapor wzn check priv/almizan/oscillator.wzn
+vapor wzn show priv/almizan/oscillator.wzn --arabic | vapor wzn hash -   # the same hash
 ```
 
-A linha de comando, o TUI (`mix vapor.tui`), o terminal do console e `POST /v1/vapor/diwan` são o
-mesmo interpretador — o Dīwān ([DIWAN.md](DIWAN.md)): pipes, redireção, `;`, aspas e arquivos;
-no console, uma sessão enjaulada. Conversas: [MAJLIS.md](MAJLIS.md); o Mīzān: [MIZAN.md](MIZAN.md);
-editores: [EDITORES.md](EDITORES.md).
+The command line, the TUI (`mix vapor.tui`), the console terminal and `POST /v1/vapor/diwan` are the
+same interpreter — the Dīwān ([DIWAN.md](DIWAN.md)): pipes, redirection, `;`, quotes and files;
+in the console, a jailed session. Conversations: [MAJLIS.md](MAJLIS.md); Almizan: [ALMIZAN.md](ALMIZAN.md);
+editors: [EDITORS.md](EDITORS.md).
 
-## Agentes e console de terminal
+## Agents and terminal console
 
-Os mesmos verbos são ferramentas MCP (`mix vapor.mcp`: `alembic_eval`, `athanor_run` com
-`proposals`, `athanor_verify`, `game_query`, `crucible_run`, `assay_run`, `scene_ops`; na 0.15
-`rebis_check`, `aludel_decide`, `tabula_analyze`, `cupel_drill`, `amalgam_sum` — 25 ao todo) e comandos da TUI (`mix vapor.tui`: `alembic -e "…"`, `athanor run arquivo`, …). Um
-agente propõe; a Touchstone confere — a mesma porta para pessoas, modelos e programas.
+The same verbs are MCP tools (`mix vapor.mcp`: `alembic_eval`, `athanor_run` with
+`proposals`, `athanor_verify`, `game_query`, `crucible_run`, `assay_run`, `scene_ops`; in 0.15
+`rebis_check`, `aludel_decide`, `tabula_analyze`, `cupel_drill`, `amalgam_sum` — 25 in all) and TUI commands (`mix vapor.tui`: `alembic -e "…"`, `athanor run file`, …). An
+agent proposes; the Touchstone checks — the same door for people, models and programs.
 
-## Mente
+## Mind
 
-`VAPOR_MIND` escolhe o modelo: `anthropic:MODELO`, `openai:MODELO[@URL]` (qualquer servidor
-compatível, inclusive local) ou `script:ARQUIVO` (respostas gravadas — os testes usam este, sem
-rede). Sem modelo, tudo funciona, menos o rascunho a partir de palavras, que diz como
-configurar um.
+`VAPOR_MIND` chooses the model: `anthropic:MODEL`, `openai:MODEL[@URL]` (any compatible
+server, including a local one) or `script:FILE` (recorded answers — the tests use this one, with no
+network). Without a model, everything works except drafting from words, which says how to
+configure one.

@@ -1,6 +1,6 @@
 defmodule Vapor.Scene.Ops do
   @moduledoc """
-  Scenes as documents edited by operations (docs/CENA.md §9). A scene is
+  Scenes as documents edited by operations (docs/SCENE.md §9). A scene is
   its base (an analysed picture, or a blank canvas) plus a log of
   operations; the engine replays the log on load, so the document is the
   whole history and every edit is a line of text — from a person, a

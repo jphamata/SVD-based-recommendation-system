@@ -1,6 +1,6 @@
 defmodule Vapor.Engineering.Circuit do
   @moduledoc """
-  Circuit simulation from a SPICE-style netlist (docs/ENGENHARIA.md §1):
+  Circuit simulation from a SPICE-style netlist (docs/ENGINEERING.md §1):
   modified nodal analysis, the DC operating point by Newton with
   junction-voltage limiting, DC sweeps, small-signal AC sweeps
   (complex MNA linearised at the operating point) and transient analysis
@@ -12,7 +12,7 @@ defmodule Vapor.Engineering.Circuit do
   diodes `D` (`IS= N=`), **MOSFETs** `M d g s [b] NMOS|PMOS` (level 1,
   Shichman–Hodges: `KP= VTO= LAMBDA= W= L=`) and **bipolar transistors**
   `Q c b e NPN|PNP` (Ebers–Moll transport model: `IS= BF= BR=`) — both
-  pinned against ngspice in `engenharia_test.exs` —, controlled sources `E` (VCVS), `G` (VCCS), `F`
+  pinned against ngspice in `engineering_test.exs` —, controlled sources `E` (VCVS), `G` (VCCS), `F`
   (CCCS) and `H` (CCVS) controlled by a voltage source's current, and
   ideal op-amps `O` (out, +, −: the virtual short). Values take the
   SPICE suffixes `f p n u µ m k meg g t` (`4.7k`, `1meg`, `100n`).
@@ -85,7 +85,7 @@ defmodule Vapor.Engineering.Circuit do
     s = String.downcase(String.trim(s))
     case Regex.run(~r/^([+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)(meg|mil|[fpnuµmkgt])?[a-zω]*$/u, s) do
       [_, num | rest] ->
-        {v, _} = Float.parse(if String.starts_with?(num, "."), do: "0" <> num, else: (if String.starts_with?(num, "-."), do: "-0" <> String.slice(num, 1..-1), else: num))
+        {v, _} = Float.parse(if String.starts_with?(num, "."), do: "0" <> num, else: (if String.starts_with?(num, "-."), do: "-0" <> String.slice(num, 1..-1//1), else: num))
         mult = %{"f" => 1.0e-15, "p" => 1.0e-12, "n" => 1.0e-9, "u" => 1.0e-6, "µ" => 1.0e-6, "m" => 1.0e-3, "k" => 1.0e3, "meg" => 1.0e6, "g" => 1.0e9, "t" => 1.0e12, "mil" => 25.4e-6}
         {:ok, v * Map.get(mult, List.first(rest) || "", 1.0)}
       _ -> {:error, "not a number: #{inspect(s)}"}

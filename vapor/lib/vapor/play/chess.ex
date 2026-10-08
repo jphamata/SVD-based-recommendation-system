@@ -1,6 +1,6 @@
 defmodule Vapor.Play.Chess do
   @moduledoc """
-  Chess (docs/TABULEIROS.md §1): the full rules — castling through
+  Chess (docs/BOARDS.md §1): the full rules — castling through
   unattacked squares, en passant, promotion to any piece, the fifty-move
   rule, insufficient material, threefold repetition in games — FEN in
   and out, SAN in and out, PGN of a game; **perft**, the move-generator

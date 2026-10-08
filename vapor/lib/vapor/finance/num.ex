@@ -1,6 +1,6 @@
 defmodule Vapor.Finance.Num do
   @moduledoc """
-  The numerical primitives the finance modules share (docs/FINANCAS.md):
+  The numerical primitives the finance modules share (docs/FINANCE.md):
   the normal distribution (Φ by `erfc`, Φ⁻¹ by Acklam's rational
   approximation polished by two Halley steps), Brent's root finder,
   Nelder–Mead, Gauss–Legendre quadrature, moments, the χ² and

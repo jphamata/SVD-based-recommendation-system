@@ -280,10 +280,13 @@ defmodule Vapor.Lock.Adapters.VAE do
   end
 
   @doc "The program's output as an image `[3, H, W]` (diffusers' layout, values about [−1, 1])."
-  def image(%Spec{config: c}, %Tensor{shape: [n, 16]} = out, {h, w} \\ nil) do
+  def image(%Spec{config: c}, %Tensor{shape: [n, 16]} = out, latent_hw \\ nil) do
     f = factor(c)
     side = round(:math.sqrt(n))
-    {hh, ww} = if h, do: {h * f, w * f}, else: {side, div(n, side)}
+    {hh, ww} = case latent_hw do
+      {h, w} -> {h * f, w * f}
+      nil -> {side, div(n, side)}
+    end
     Spatial.to_nchw(out, {hh, ww, 3})
   end
 end

@@ -1,21 +1,21 @@
-# Athanor — a fornalha de busca, e a Touchstone que a confere
+# Athanor — the search furnace, and the Touchstone that checks it
 
-> Desde 0.14.0. Código: `lib/vapor/athanor.ex`, `lib/vapor/athanor/` (`space.ex`, `spec.ex`,
-> `strategy.ex`, `gauss.ex`, `touchstone.ex`, `game.ex`, `session.ex`, `examples.ex`) e
-> `lib/vapor/mind.ex`. Testes: `test/vapor/athanor_test.exs`, `mind_test.exs`,
-> `workspace_test.exs`. Qualidade: `mix vapor.quality --only round14`.
+> Since 0.14.0. Code: `lib/vapor/athanor.ex`, `lib/vapor/athanor/` (`space.ex`, `spec.ex`,
+> `strategy.ex`, `gauss.ex`, `touchstone.ex`, `game.ex`, `session.ex`, `examples.ex`) and
+> `lib/vapor/mind.ex`. Tests: `test/vapor/athanor_test.exs`, `mind_test.exs`,
+> `workspace_test.exs`. Quality: `mix vapor.quality --only round14`.
 
-O athanor é o forno do alquimista que mantém o fogo constante por muito tempo. Aqui ele é um
-**buscador geral**: recebe um problema escrito em [Alembic](ALEMBIC.md) — um espaço e um
-objetivo, ou uma afirmação — e devolve um **certificado** que qualquer um pode reconferir sem
-confiar na busca. Não há categorias: Golomb, Ramsey, redes de ordenação, caixeiro-viajante,
-portfólios, hiperparâmetros, exemplos adversariais, regras de *trading* e fórmulas são apenas
-exemplos de partida (`Examples.all/0`), escritos na mesma linguagem que a pessoa usa.
+The athanor is the alchemist's furnace that keeps the fire constant for a long time. Here it is a
+**general searcher**: it receives a problem written in [Alembic](ALEMBIC.md) — a space and an
+objective, or a claim — and returns a **certificate** that anyone can re-check without
+trusting the search. There are no categories: Golomb, Ramsey, sorting networks, travelling salesman,
+portfolios, hyperparameters, adversarial examples, *trading* rules and formulas are just
+starting examples (`Examples.all/0`), written in the same language the person uses.
 
-## 1. Um problema
+## 1. A problem
 
 ```
-# a régua de Golomb com 7 marcas (o ótimo é 25)
+# the Golomb ruler with 7 marks (the optimum is 25)
 space = subset(1..30, 6)
 ruler(r) = [0] ++ r
 violation(r) = let d = [b - a for (a, b) in pairs(ruler(r))] in len(d) - len(distinct(d))
@@ -24,69 +24,69 @@ target = 25
 budget = 30000
 ```
 
-Nomes reservados: `space`, `minimize`/`maximize`/`claim`, `valid`, `violation`, `margin`,
+Reserved names: `space`, `minimize`/`maximize`/`claim`, `valid`, `violation`, `margin`,
 `target`, `budget`, `seed`, `start`, `show`, `describe`, `holdout`, `neighbor`, `measured`.
-Espaços: `bits`, `ints`, `reals`, `perm`, `subset`, `subsets`, `seq`, `graph`, `partition` e
-`program` (árvores de expressão — o candidato chega às suas funções como função).
+Spaces: `bits`, `ints`, `reals`, `perm`, `subset`, `subsets`, `seq`, `graph`, `partition` and
+`program` (expression trees — the candidate reaches your functions as a function).
 
-## 2. A fornalha
+## 2. The furnace
 
-- **Portfólio de estratégias** — exaustiva (retomável, quando o espaço cabe), aleatória,
-  recozimento, evolução com arquivo MAP-Elites (`describe`), CMA-ES (espaços reais, com
-  autovalores de Jacobi), bayesiana (processo gaussiano Matérn-5/2 + melhoria esperada, lote
-  pelo *kriging believer*), **mente** (um modelo de linguagem propõe) e **humano** (a pessoa
-  propõe). Um bandido UCB descontado (γ = 0,97) reparte o orçamento pelo que cada uma rende.
-- **Inviáveis ordenados**: com `violation`, o candidato inválido ainda tem posto (−violação),
-  e a busca sobe até a validade (Schur, Golomb 8).
-- **Controle**: o mesmo orçamento gasto em amostras uniformes. Se o aleatório nunca alcança o
-  melhor, o certificado dá o limite superior da chance por amostra (regra de três, 95 %).
-- **Holdout**: com `holdout(x)`, os finalistas são reavaliados num objetivo que a busca não viu;
-  a correlação de postos (Spearman) e o máximo-z do ruído (√(2 ln N)) dizem se o vencedor é
-  sinal ou viés de seleção. Num passeio aleatório, regras de média móvel: ρ ≈ −0,33; com
-  momento AR(1) plantado: ρ ≈ 0,73.
-- **Diário**: cada avaliação entra numa cadeia SHA-256 sobre a codificação canônica; a raiz
-  depende só do texto e da semente.
+- **Portfolio of strategies** — exhaustive (resumable, when the space fits), random,
+  annealing, evolution with a MAP-Elites archive (`describe`), CMA-ES (real spaces, with
+  Jacobi eigenvalues), Bayesian (Matérn-5/2 Gaussian process + expected improvement, batches
+  via the *kriging believer*), **mind** (a language model proposes) and **human** (the person
+  proposes). A discounted UCB bandit (γ = 0.97) shares out the budget by what each one yields.
+- **Ranked infeasibles**: with `violation`, an invalid candidate still has a rank (−violation),
+  and the search climbs up to validity (Schur, Golomb 8).
+- **Control**: the same budget spent on uniform samples. If random never reaches the
+  best, the certificate gives the upper bound of the per-sample chance (rule of three, 95%).
+- **Holdout**: with `holdout(x)`, the finalists are re-evaluated on an objective the search did not see;
+  the rank correlation (Spearman) and the noise's max-z (√(2 ln N)) say whether the winner is
+  signal or selection bias. On a random walk, moving-average rules: ρ ≈ −0.33; with
+  planted AR(1) momentum: ρ ≈ 0.73.
+- **Journal**: each evaluation enters a SHA-256 chain over the canonical encoding; the root
+  depends only on the text and the seed.
 
-## 3. O certificado e a Touchstone
+## 3. The certificate and the Touchstone
 
-O certificado diz o melhor (candidato, valor, quem o achou), o motivo da parada (`exhausted`,
-`target`, `counterexample`, `found`, `budget`, `time`), o veredito em palavras ("ótimo provado
-pela enumeração", "afirmação provada sobre o espaço inteiro"), o controle, o holdout e as
-propostas de fora. `Touchstone.verify/3` reconfere **sem confiar na busca**: reavalia o
-candidato, confere o valor e a pertença ao espaço; com `full: true` refaz a enumeração; com
-`replay: true` refaz a corrida e compara a raiz do diário. Um valor forjado é recusado com a
-verificação que falhou.
+The certificate states the best (candidate, value, who found it), the reason for stopping (`exhausted`,
+`target`, `counterexample`, `found`, `budget`, `time`), the verdict in words ("optimum proved
+by enumeration", "claim proved over the whole space"), the control, the holdout and the
+outside proposals. `Touchstone.verify/3` re-checks **without trusting the search**: it re-evaluates the
+candidate, checks the value and membership of the space; with `full: true` it redoes the enumeration; with
+`replay: true` it redoes the run and compares the journal root. A forged value is rejected with the
+check that failed.
 
 ```
-vapor athanor run golomb.alb > cert.json      # código de saída 0/1 conforme o resultado
-vapor verify golomb.alb cert.json --replay     # a pedra de toque
+vapor athanor run golomb.nbq > cert.json      # exit code 0/1 according to the result
+vapor verify golomb.nbq cert.json --replay     # the touchstone
 ```
 
-## 4. Humano e modelo no laço
+## 4. Human and model in the loop
 
-- **Sessões** (`Athanor.Session`, sob `DynamicSupervisor`): a busca corre em segundo plano; a
-  pessoa observa as faíscas, **propõe** candidatos (conferidos e avaliados como os outros),
-  **fixa** e **bane** finalistas, estende o orçamento, para e retoma. No console, isso é a
-  fornalha ao vivo; no terminal, `vapor athanor run --interactive`.
-- **Medido** (`measured = true`): o objetivo está fora da máquina — um experimento de
-  laboratório, um treino, uma pessoa. `vapor athanor ask` propõe, a pessoa mede e digita;
-  `--measure 'comando'` mede por um programa externo. A estratégia bayesiana trabalha em lotes.
-- **Mente** (`Vapor.Mind`, `VAPOR_MIND=anthropic:MODELO | openai:MODELO[@URL] | script:ARQ`):
-  `formalize` traduz palavras em Alembic, compila, repara até três vezes com o erro do
-  compilador e devolve uma **retrotradução** para a pessoa conferir o que foi entendido;
-  `propose` sugere candidatos — que entram pela mesma porta que os de qualquer um. O modelo
-  nunca decide: a Touchstone decide.
+- **Sessions** (`Athanor.Session`, under `DynamicSupervisor`): the search runs in the background; the
+  person watches the sparks, **proposes** candidates (checked and evaluated like the others),
+  **pins** and **bans** finalists, extends the budget, stops and resumes. In the console, this is the
+  live furnace; in the terminal, `vapor athanor run --interactive`.
+- **Measured** (`measured = true`): the objective is outside the machine — a laboratory
+  experiment, a training run, a person. `vapor athanor ask` proposes, the person measures and types it in;
+  `--measure 'command'` measures through an external program. The Bayesian strategy works in batches.
+- **Mind** (`Vapor.Mind`, `VAPOR_MIND=anthropic:MODEL | openai:MODEL[@URL] | script:FILE`):
+  `formalize` translates words into Alembic, compiles, repairs up to three times with the
+  compiler's error and returns a **back-translation** for the person to check what was understood;
+  `propose` suggests candidates — which come in through the same door as anyone's. The model
+  never decides: the Touchstone decides.
 
-## 5. Jogos
+## 5. Games
 
-Com `init`, `player`, `moves`, `play` e `winner`, qualquer jogo de dois jogadores:
-`solve` (negamax com tabela de transposição — o jogo da velha é empate sobre 5 478 posições),
-`search` (UCT/MCTS), `learn` (valor linear tanh(w·features) por autojogo) e `play`
-(partida contra o humano), e `match` com intervalo de Wilson.
+With `init`, `player`, `moves`, `play` and `winner`, any two-player game:
+`solve` (negamax with a transposition table — tic-tac-toe is a draw over 5,478 positions),
+`search` (UCT/MCTS), `learn` (linear value tanh(w·features) by self-play) and `play`
+(a game against the human), and `match` with a Wilson interval.
 
-## 6. O que não é
+## 6. What it is not
 
-Não é um provador de teoremas: "provado" aqui significa **enumeração completa de um espaço
-finito**, e o certificado diz o tamanho. Espaços infinitos dão evidência, não prova. Não é
-paralelo entre nós (ainda). O orçamento padrão é modesto; a fornalha é honesta sobre o que
-não achou.
+It is not a theorem prover: "proved" here means **complete enumeration of a finite
+space**, and the certificate states the size. Infinite spaces give evidence, not proof. It is not
+parallel across nodes (yet). The default budget is modest; the furnace is honest about what
+it did not find.

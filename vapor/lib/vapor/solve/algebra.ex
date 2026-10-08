@@ -1,6 +1,6 @@
 defmodule Vapor.Solve.Algebra do
   @moduledoc """
-  Algebraic problems typed in as text (docs/BANCADA.md §4): systems of
+  Algebraic problems typed in as text (docs/WORKBENCH.md §4): systems of
   nonlinear equations (Newton with the symbolic Jacobian and a
   backtracking line search; with `search = [a, b]`, every root a
   quasi-random multistart finds in the box, deduplicated), nonlinear

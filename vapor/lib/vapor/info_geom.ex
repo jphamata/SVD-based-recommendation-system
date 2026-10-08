@@ -1,9 +1,9 @@
 defmodule Vapor.InfoGeom do
   @moduledoc """
   Information geometry where there is a statistical manifold to measure
-  (docs/GEOMETRIA.md) — model outputs, estimators, ensembles — and not where
+  (docs/GEOMETRY.md) — model outputs, estimators, ensembles — and not where
   there is none (a compiler's cost surface over registers is a discrete
-  lattice; DIRETRIZ §19 says why geodesics do not belong there).
+  lattice; DIRECTIVE §19 says why geodesics do not belong there).
 
   On the probability simplex the Fisher information metric is, under the map
   `p ↦ 2√p`, the round metric of a sphere. Everything below follows exactly

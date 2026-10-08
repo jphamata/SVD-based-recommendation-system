@@ -1,7 +1,7 @@
 defmodule Vapor.Finance.Exchange do
   @moduledoc """
   An exchange session simulated by agents through the **same** gate and
-  engine a production deployment would use (docs/FINANCAS.md §13) — the
+  engine a production deployment would use (docs/FINANCE.md §13) — the
   backtest is not a model of the venue, it is the venue's code.
 
   Agents: market makers quoting post-only around an inventory-skewed

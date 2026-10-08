@@ -1,185 +1,185 @@
-# Pendências — estado em 2026-10-07 (0.16.0)
+# Open items — state as of 2026-10-07 (0.16.0)
 
-Só o que está **aberto**. O que foi fechado está no [CHANGELOG](../CHANGELOG.md),
-com o teste que o prova. Cada item diz por que importa e o que o fecha;
-◐ = feito em parte (o que falta está escrito). Os itens dos anexos das
-rodadas 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15 e 0.16 que ficaram de fora estão aqui com o motivo
-([DIRETRIZ.md §9, §11–§19](DIRETRIZ.md)).
+Only what is **open**. What was closed is in the [CHANGELOG](../CHANGELOG.md),
+with the test that proves it. Each item says why it matters and what closes it;
+◐ = partly done (what is missing is written down). The items from the attachments of
+rounds 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15 and 0.16 that were left out are here with the reason
+([DIRECTIVE.md §9, §11–§19](DIRECTIVE.md)).
 
-## Rodada 0.16 — o que ficou aberto
+## Round 0.16 — what was left open
 
-- ☐ **Conversas: *streaming***. Hoje a resposta chega inteira; o servidor já transmite em
-  `/v1/chat/completions` — falta ligar `Majlis.reply` a um *stream* (o nó só é escrito no fim, então
-  a atomicidade não muda) e a página a mostrá-lo.
-- ☐ **Conversas: anexos** (imagens e documentos na mensagem, guardados por hash na Khazāna, lidos
-  pelos leitores do vapor com proveniência) e **memória entre conversas** (fatos fixados que valem
-  para todas, com a mesma barra de contexto mostrando o custo).
-- ☐ **Conversas: agente com passos visíveis** na página (hoje o diário fica guardado e verificável por
-  `GET /v1/vapor/journal/:id`, mas a página mostra só a resposta).
-- ☐ **Mīzān**: fechar as exportações Lean com `lake` quando presente (o livro-razão as marca como
-  devidas); quantificadores limitados sobre inteiros (Presburger) como quarto decisor; `import`
-  entre arquivos com hash fixado (o embrião da Khazāna P2P).
-- ☐ **Khazāna P2P** (o manifesto): dependências por conteúdo trocadas entre pares — precisa antes de
-  um modelo de confiança (quem assina o quê), senão é um vetor de cadeia de suprimentos.
-- ☐ **A raiz da Khazāna provada em Lean** (o protocolo de dois slots), como o ASAS §11 também deve.
-- ☐ **Memória fraca** do protocolo `/dev/shm` do *worker* (litmus contra um modelo RVWMO/TSO) — no
-  livro-razão como devido.
-- ☐ **Editores**: abrir de fato a extensão no VS Code, o *plugin* no Neovim e o modo no Emacs numa
-  máquina que os tenha (aqui só o servidor e os formatos são testados); publicar a extensão.
+- ☐ **Conversations: *streaming***. Today the answer arrives whole; the server already streams on
+  `/v1/chat/completions` — what is missing is connecting `Majlis.reply` to a *stream* (the node is only written at the end, so
+  atomicity does not change) and the page showing it.
+- ☐ **Conversations: attachments** (images and documents in the message, stored by hash in the Khazāna, read
+  by vapor's readers with provenance) and **memory across conversations** (pinned facts that hold
+  for all of them, with the same context bar showing the cost).
+- ☐ **Conversations: agent with visible steps** on the page (today the journal is kept and verifiable through
+  `GET /v1/vapor/journal/:id`, but the page shows only the answer).
+- ☐ **Almizan**: close the Lean exports with `lake` when present (the ledger marks them as
+  owed); bounded quantifiers over integers (Presburger) as a fourth decider; `import`
+  across files with a pinned hash (the embryo of Khazāna P2P).
+- ☐ **Khazāna P2P** (the manifesto): content-addressed dependencies exchanged between peers — it first needs
+  a trust model (who signs what), otherwise it is a supply-chain vector.
+- ☐ **The Khazāna root proved in Lean** (the two-slot protocol), as ASAS §11 also owes.
+- ☐ **Weak memory** of the `/dev/shm` protocol of the *worker* (litmus against an RVWMO/TSO model) — in the
+  ledger as owed.
+- ☐ **Editors**: actually open the extension in VS Code, the *plugin* in Neovim and the mode in Emacs on a
+  machine that has them (here only the server and the formats are tested); publish the extension.
 
-## Rodada 0.15 — o que ficou aberto
+## Round 0.15 — what was left open
 
-- ☐ **Amálgama no worker**: a soma exata como programa nativo (um acumulador de Kulisch de ~4 300 bits para f32 em registradores, ou a soma em duas passadas por expoente) — hoje ≈ 6 M adições/s na BEAM, o que basta para gradientes entre micro-lotes e nós, não para dentro de um *kernel*. Também: o *all-reduce* exato entre nós do `Vapor.Cluster` (as células já atravessam a rede por `to_wire/1`), e a divisão **por linhas** no `Vapor.Shard` (hoje recusada) refeita com `partial_dot/3` — a peça existe e está testada; falta ligá-la ao particionador.
-- ☐ **Copela no caminho de treino**: a mesma identidade no *backward* (`∂x = ∂y·W` confere com `r`) e na atualização do otimizador; a sentinela ligada ao `Vapor.Cluster` (quarentena de um nó inteiro, não só de um trabalhador); medir a sobrecarga no worker nativo.
-- ☐ **Rebis**: circuitos sequenciais (indução k sobre o *miter* de vários passos, com IC3/PDR como horizonte); ler Verilog estrutural/BLIF; `PCLMULQDQ`/`vclmul` como operação do compilador (multiplicação sem vai-um nos emissores) para o GHASH e para torres binárias; reescrita algébrica com regras para somadores de prefixo paralelo (hoje `:unknown` acima de 50 000 termos).
-- ☐ **Aludel**: dividir também pelo grau (elevação de grau quando a envoltória é larga), mais variáveis com subdivisão adaptativa por eixo, e barreiras com termos racionais; exportar a testemunha para um verificador em Lean quando o `lake` estiver presente.
-- ☐ **Tábua**: prazos (lógica temporal linear limitada sobre os fatos), quantificação sobre partes, e o rascunho por modelo (`Mind`) de cláusulas a partir de texto, com retrotradução, como o Alembic tem.
-- ☐ **Mecanismos** (VCG, Gale–Shapley) com estabilidade e veracidade conferidas — pequenos, adiados por falta de caso (§18).
-- ☐ **Compilação dupla diversificada** (Wheeler) do worker com dois Zig independentes — a resposta certa ao *trusting trust* (§18).
-- ☐ **JBIG2**: Huffman com refinamento (SDREFAGG/SBREFINE sob SDHUFF/SBHUFF) e contextos aritméticos retidos entre segmentos; JPX.
+- ☐ **Amalgam in the worker**: the exact sum as a native program (a Kulisch accumulator of ~4,300 bits for f32 in registers, or the sum in two passes by exponent) — today ≈ 6 M additions/s on the BEAM, which is enough for gradients across micro-batches and nodes, not for inside a *kernel*. Also: the exact *all-reduce* across nodes of `Vapor.Cluster` (the cells already cross the network through `to_wire/1`), and the split **by rows** in `Vapor.Shard` (refused today) redone with `partial_dot/3` — the piece exists and is tested; what is missing is connecting it to the partitioner.
+- ☐ **Cupel in the training path**: the same identity in the *backward* (`∂x = ∂y·W` checks with `r`) and in the optimizer update; the sentinel connected to `Vapor.Cluster` (quarantine of a whole node, not only of a worker); measure the overhead on the native worker.
+- ☐ **Rebis**: sequential circuits (k-induction over the multi-step *miter*, with IC3/PDR as the horizon); read structural Verilog/BLIF; `PCLMULQDQ`/`vclmul` as a compiler operation (carry-less multiplication in the emitters) for GHASH and for binary towers; algebraic rewriting with rules for parallel-prefix adders (today `:unknown` above 50,000 terms).
+- ☐ **Aludel**: also split by degree (degree elevation when the enclosure is wide), more variables with adaptive per-axis subdivision, and barriers with rational terms; export the witness to a verifier in Lean when `lake` is present.
+- ☐ **Tabula**: deadlines (bounded linear temporal logic over the facts), quantification over parties, and drafting of clauses from text by a model (`Mind`), with back-translation, as Alembic has.
+- ☐ **Mechanisms** (VCG, Gale–Shapley) with stability and truthfulness checked — small, deferred for lack of a case (§18).
+- ☐ **Diverse double-compiling** (Wheeler) of the worker with two independent Zigs — the right answer to *trusting trust* (§18).
+- ☐ **JBIG2**: Huffman with refinement (SDREFAGG/SBREFINE under SDHUFF/SBHUFF) and arithmetic contexts retained across segments; JPX.
 
-## Rodada 0.14 — o que ficou aberto
+## Round 0.14 — what was left open
 
-- ☐ **Athanor distribuído**: as avaliações são puras e o diário é canônico — repartir o orçamento entre nós BEAM (o `Vapor.Cluster` já existe) e juntar os diários por raiz de Merkle. Hoje: um nó, avaliações sequenciais por estratégia.
-- ☐ **Alembic compilado**: o compilador de fechos é ~20–50× mais lento que Elixir nativo; os objetivos numéricos poderiam descer para a álgebra de tensores (o caminho de `Vapor.Expr.compile`) com o mesmo combustível contado por bloco.
-- ☐ **Provas além da enumeração**: exportar a afirmação e o espaço para SAT/SMT (a mesa de lógica já tem DRUP) quando o espaço não cabe na enumeração — "provado" passaria a valer para espaços que hoje só têm evidência.
-- ☐ **Crucible**: orbitais p (bases 6-31G) e UHF para quebrar ligações; EDPs em 2D com a mesma evidência de ordem; leis de conservação para sistemas com parâmetros simbólicos.
-- ☐ **Assay**: avaliação de modelos generativos com IRT (dificuldade por item), testes sequenciais (parar cedo com controle de erro), e o *dedup* em escala de corpus (LSH em disco).
-- ☐ **Mente**: um laço autônomo opcional (o modelo propõe, a fornalha mede, o modelo lê o certificado e propõe de novo) com orçamento de chamadas e registro no diário; hoje o laço é guiado pela pessoa.
-- ◐ **Cenas livres**: operações em texto, expressões por quadro e direção por modelo existem; falta física simples entre entidades (colisão, molas) escrita em Alembic, e a linha do tempo editável no console.
+- ☐ **Distributed Athanor**: the evaluations are pure and the journal is canonical — split the budget across BEAM nodes (`Vapor.Cluster` already exists) and join the journals by Merkle root. Today: one node, sequential evaluations per strategy.
+- ☐ **Compiled Alembic**: the closure compiler is ~20–50× slower than native Elixir; the numerical objectives could go down to the tensor algebra (the path of `Vapor.Expr.compile`) with the same fuel counted per block.
+- ☐ **Proofs beyond enumeration**: export the claim and the space to SAT/SMT (the logic desk already has DRUP) when the space does not fit in the enumeration — "proved" would then hold for spaces that today only have evidence.
+- ☐ **Crucible**: p orbitals (6-31G bases) and UHF to break bonds; PDEs in 2D with the same evidence of order; conservation laws for systems with symbolic parameters.
+- ☐ **Assay**: evaluation of generative models with IRT (difficulty per item), sequential tests (stopping early with error control), and *dedup* at corpus scale (LSH on disk).
+- ☐ **Mind**: an optional autonomous loop (the model proposes, the furnace measures, the model reads the certificate and proposes again) with a call budget and recording in the journal; today the loop is guided by the person.
+- ◐ **Free scenes**: text operations, per-frame expressions and direction by a model exist; what is missing is simple physics between entities (collision, springs) written in Alembic, and the editable timeline in the console.
 
-## Rodada 0.13 — o que ficou aberto
+## Round 0.13 — what was left open
 
-- ☐ **Motor de ofertas de baixa latência**: o casamento como programa do worker (Zig, sem alocação, livro em arranjos por nível) com o mesmo diário e o mesmo juiz; latência medida com PMU em *bare-metal*. *Kernel bypass* e FPGA ficam fora. Hoje: ~8,5 µs por evento na BEAM, com o hash.
-- ☐ **Dados de mercado reais**: um dia de ITCH de amostra da Nasdaq e as curvas e preços indicativos da ANBIMA (precisam de rede): reconstruir o livro e conferir contra os instantâneos publicados; reprecificar títulos públicos com as taxas do dia.
-- ☐ **Gerador inteiro no compilador**: Philox/Threefry exigem multiplicação inteira de 32/64 bits na álgebra (a mesma falta do kernel NTT); substituiriam o Wichmann–Hill do worker. Quase-Monte Carlo (Sobol, com *scrambling*) e gregas por diferenciação automática *pathwise* (o autodiff de termos já existe).
-- ☐ **Modelos de taxa e de volatilidade**: Hull–White e LMM; volatilidade local de Dupire e calibração do Heston a uma superfície inteira (SVI por fatia → SSVI); XVA e crédito.
-- ☐ **Backtests**: dados intradiários com o livro (o motor já existe), custo com impacto de Almgren–Chriss dentro do backtest, *walk-forward*; o CSCV custa O(N·12 870) — amostrar as metades quando N > 100.
-- ☐ **Arbitragem na superfície inteira**: calendário × strike num só LP (hoje: uma maturidade por vez, mais o calendário do SVI à parte).
-- ☐ **Juiz em outra linguagem**: o motor ingênuo também em Python, para que a independência seja de linguagem e não só de algoritmo; FIX de sessão (logon, *heartbeat*, *resend*), não só mensagens de aplicação.
-- ☐ **Pré-negociação**: limites de crédito por contraparte e taxa em tempo de parede (hoje: tempo do evento).
+- ☐ **Low-latency order engine**: matching as a worker program (Zig, no allocation, book in per-level arrays) with the same journal and the same judge; latency measured with PMU on *bare-metal*. *Kernel bypass* and FPGA stay out. Today: ~8.5 µs per event on the BEAM, with the hash.
+- ☐ **Real market data**: a sample day of Nasdaq ITCH and ANBIMA's curves and indicative prices (they need network access): rebuild the book and check it against the published snapshots; reprice government bonds with the day's rates.
+- ☐ **Integer generator in the compiler**: Philox/Threefry require 32/64-bit integer multiplication in the algebra (the same gap as for the NTT kernel); they would replace the worker's Wichmann–Hill. Quasi-Monte Carlo (Sobol, with *scrambling*) and Greeks by *pathwise* automatic differentiation (the autodiff over terms already exists).
+- ☐ **Rate and volatility models**: Hull–White and LMM; Dupire local volatility and calibration of Heston to a whole surface (SVI per slice → SSVI); XVA and credit.
+- ☐ **Backtests**: intraday data with the book (the engine already exists), cost with Almgren–Chriss impact inside the backtest, *walk-forward*; CSCV costs O(N·12,870) — sample the halves when N > 100.
+- ☐ **Arbitrage over the whole surface**: calendar × strike in a single LP (today: one maturity at a time, plus the SVI calendar separately).
+- ☐ **Judge in another language**: the naive engine also in Python, so that the independence is one of language and not only of algorithm; session-level FIX (logon, *heartbeat*, *resend*), not only application messages.
+- ☐ **Pre-trade**: credit limits per counterparty and rate in wall-clock time (today: event time).
 
-## Fora do alcance desta máquina (precisam de hardware)
+## Out of reach of this machine (they need hardware)
 
-- ☐ RVV 1.0 em silício (BPI-F3 / Milk-V) e `cooperative_matrix` numa GPU real. *Aqui: QEMU, interpretador RVV próprio, lavapipe.*
-- ☐ PMU e RAPL (J/token) em bare-metal. *O código já lê os dois; esta VM não tem nenhum.*
-- ☐ Medir as sessões residentes (0.8) numa GPU real, discreta (caminho de *staging*) e integrada.
-- ◐ **Apple Silicon** (0.10): worker de CPU (`MAP_JIT`, `__ulock`) e daemon Metal **compilados**; o MSL executado por um *shim* com clang e admitido pela eclusa. Falta **executar num Mac** (o daemon `mtl.zig` nunca rodou) e o isolamento do worker no macOS (sem seccomp; processo sem direitos + `posix_spawn` restrito); e Windows. *Também decide o Tauri ([INTERFACES.md](INTERFACES.md)).*
-- ☐ **Tenstorrent de verdade** (0.10): o kit StableHLO + PJRT foi julgado no XLA de CPU; falta rodá-lo numa placa (tt-xla) e admitir o que ela é.
-- ☐ **FreeBSD executado** (0.10): o worker compila e o binário é conferido; falta rodar a suíte num FreeBSD (Capsicum, `_umtx_op`) e portar o fabric Vulkan (`fabric.zig` usa chamadas Linux cruas) para `sys.zig`.
+- ☐ RVV 1.0 in silicon (BPI-F3 / Milk-V) and `cooperative_matrix` on a real GPU. *Here: QEMU, our own RVV interpreter, lavapipe.*
+- ☐ PMU and RAPL (J/token) on bare-metal. *The code already reads both; this VM has neither.*
+- ☐ Measure the resident sessions (0.8) on a real GPU, discrete (*staging* path) and integrated.
+- ◐ **Apple Silicon** (0.10): CPU worker (`MAP_JIT`, `__ulock`) and Metal daemon **compiled**; the MSL executed by a *shim* with clang and admitted by the airlock. What is missing is **executing on a Mac** (the `mtl.zig` daemon has never run) and the isolation of the worker on macOS (no seccomp; a process without rights + restricted `posix_spawn`); and Windows. *It also decides Tauri ([INTERFACES.md](INTERFACES.md)).*
+- ☐ **Real Tenstorrent** (0.10): the StableHLO + PJRT kit was judged on CPU XLA; what is missing is running it on a board (tt-xla) and admitting what it is.
+- ☐ **FreeBSD executed** (0.10): the worker compiles and the binary is checked; what is missing is running the suite on a FreeBSD (Capsicum, `_umtx_op`) and porting the Vulkan fabric (`fabric.zig` uses raw Linux calls) to `sys.zig`.
 
-## Rodada 0.12 — o que ficou aberto
+## Round 0.12 — what was left open
 
-- ☐ **Proteínas com alinhamentos reais**: ler um MSA (Stockholm/A3M do Pfam), pesos de sequência (80 % de identidade), pseudocontagens e DCA por pseudoverossimilhança (plmDCA), que é bem mais preciso que o de campo médio em alinhamentos reais; estrutura secundária prevista da sequência (não tirada da nativa); cadeias laterais. Medir no conjunto de Jones et al. (PSICOV) contra o que se publica. *A predição de estrutura com redes treinadas segue fora: pesos e bases.*
-- ☐ **Render**: amostragem por importância múltipla (BSDF × luz) para fechar as cáusticas ruidosas; BVH e malhas de triângulos (GLB do esboço → cena), texturas de imagem, materiais de microfacetas (GGX) e subsuperfície; denoiser conferido contra a referência de muitas amostras.
-- ◐ **Bancada**: unidades afins (°C, °F) como leituras ✅ 0.13; faltam EDPs 2-D no tempo e sistemas acoplados (reação–difusão de várias espécies), malhas não estruturadas; DAEs (índice 1) e EDOs com atraso; otimização global (multipartida com certificado de intervalo).
-- ◐ **Engenharia**: transistores (Ebers–Moll, MOSFET nível 1) ✅ 0.13, iguais ao ngspice; faltam `.subckt`, capacitâncias dos dispositivos no transitório; curto-circuito e limites de reativos no fluxo de potência; flambagem (autovalor geométrico) e não linearidade geométrica nos pórticos; bombas e válvulas nas redes; equilíbrio líquido–vapor não ideal (NRTL/UNIQUAC).
-- ◐ **Lógica**: aritmética linear (simplex racional com certificado de Farkas) ✅ 0.13 ([LOGICA.md §5](LOGICA.md)); faltam o verificador DRUP no worker nativo (R(3, 4) em segundos); LRAT (verificação linear); exportar certificados de Gröbner e de Knuth–Bendix para o Lean quando o `lake` estiver presente; programação inteira (*branch and bound* com certificados).
-- ☐ **Tabuleiros**: avaliação por rede treinada pelo autojogo genérico (o laço já existe) para xadrez/shogi pequenos (minishogi 5×5, Los Alamos 6×6); NNUE como programa do compilador; Go 9×9 com rede; hold'em com abstração de cartas.
-- ☐ **Autojogo genérico** perde 21 % das linhas ótimas com 8 simulações no jogo da velha, contra 13 % do especializado — falta igualar (rede residual, *temperature schedule*, mais partidas) antes de ir a jogos maiores.
-- ☐ **Cena**: MP4 de quadros exatos (o GIF de quadros exatos existe); a direção por gramática de orações ainda não analisa coordenação ("Ana e Bento dançam") nem subordinadas.
+- ☐ **Proteins with real alignments**: read an MSA (Pfam's Stockholm/A3M), sequence weights (80 % identity), pseudocounts and DCA by pseudo-likelihood (plmDCA), which is much more accurate than the mean-field one on real alignments; secondary structure predicted from the sequence (not taken from the native); side chains. Measure on the set of Jones et al. (PSICOV) against what is published. *Structure prediction with trained networks remains out: weights and databases.*
+- ☐ **Render**: multiple importance sampling (BSDF × light) to close the noisy caustics; BVH and triangle meshes (the sketch's GLB → scene), image textures, microfacet materials (GGX) and subsurface; a denoiser checked against the many-sample reference.
+- ◐ **Workbench**: affine units (°C, °F) as readings ✅ 0.13; missing are time-dependent 2-D PDEs and coupled systems (multi-species reaction–diffusion), unstructured meshes; DAEs (index 1) and delay ODEs; global optimization (multistart with an interval certificate).
+- ◐ **Engineering**: transistors (Ebers–Moll, level-1 MOSFET) ✅ 0.13, equal to ngspice; missing are `.subckt`, device capacitances in the transient; short circuit and reactive limits in power flow; buckling (geometric eigenvalue) and geometric nonlinearity in frames; pumps and valves in networks; non-ideal liquid–vapour equilibrium (NRTL/UNIQUAC).
+- ◐ **Logic**: linear arithmetic (rational simplex with a Farkas certificate) ✅ 0.13 ([LOGIC.md §5](LOGIC.md)); missing are the DRUP checker in the native worker (R(3, 4) in seconds); LRAT (linear checking); exporting Gröbner and Knuth–Bendix certificates to Lean when `lake` is present; integer programming (*branch and bound* with certificates).
+- ☐ **Boards**: evaluation by a network trained by generic self-play (the loop already exists) for small chess/shogi (5×5 minishogi, 6×6 Los Alamos); NNUE as a compiler program; 9×9 Go with a network; hold'em with card abstraction.
+- ☐ **Generic self-play** loses 21 % of the optimal lines with 8 simulations at tic-tac-toe, against 13 % for the specialized one — it still has to match it (residual network, *temperature schedule*, more games) before going to larger games.
+- ☐ **Scene**: exact-frame MP4 (the exact-frame GIF exists); direction by clause grammar does not yet parse coordination ("Ana e Bento dançam") nor subordinate clauses.
 
-## Rodada 0.11 — o que ficou aberto
+## Round 0.11 — what was left open
 
-- ☐ **Profundidade aprendida para a cena viva**: a heurística do plano do chão é a reserva; um modelo de profundidade monocular pela eclusa (as camadas e as profundidades já são dados) abriria fotos sem chão (retratos, vistas aéreas) e uma navegação maior. Com segmentação, as pessoas da própria foto viram habitantes.
-- ☐ **Direção por um modelo de linguagem**: o esquema de operações da cena sob a decodificação restrita por JSON Schema que o vapor já tem, quando um modelo útil estiver carregado; o vocabulário continua a reserva que relata o que não entende.
-- ◐ **Quadros exatos offline**: ✅ 0.12 — GIF de quadros exatos pelo codificador do vapor (até 240 quadros, passo fixo). Falta um laço que fecha (o último quadro = o primeiro) e MP4.
-- ☐ **Esboço → fotorrealista** com um checkpoint do usuário (img2img já existe) e a medida que diz se a imagem gerada respeita o esboço (as retas vetorizadas da saída contra as do esboço).
-- ☐ **Geometria**: triangularização de Wu (pontos por duas condições quadráticas), desigualdades, provas legíveis; exportar certificados para o Lean (quando o `lake` estiver presente).
-- ☐ **Descoberta**: 3×3 (posto 23), o *flip graph* de Kauers & Moosbauer; profundidade mínima das redes; síntese com prova simbólica em 32/64 bits (bit-vetores) em vez de amostra.
-- ☐ **Ciência como programas vapor**: o *split-step* (DFT como `linear`), o Boris e o Lennard-Jones como programas — os mesmos bits em todo substrato; DFT de sólidos, eletrólitos, corpos rígidos.
-- ✅ **Arquivos assinados** (0.13): Ed25519 sobre o manifesto com a chave do operador; `verify(zip, trusted: …)`; `mix vapor.archive`. Falta: assinatura por KMS/HSM (o mesmo item do `Keys`).
-- ☐ **Controles mais fortes na ciência**: o estado coerente e o tunelamento comparam com referência, mas o "controle" do primeiro é uma conservação e o do segundo uma previsão calculada; E×B e HeH⁺ não têm. Um esquema errado rodado (Lie em vez de Strang com passo grande; potencial com sinal trocado) seria o controle de verdade.
-- ☐ **Autojogo maior**: um jogo com estado que não cabe na memória (Connect-Four 6×7) e a rede como programa do compilador; ambientes gerados por um adversário (PAIRED) além da aleatorização.
+- ☐ **Learned depth for the living scene**: the ground-plane heuristic is the fallback; a monocular depth model through the airlock (the layers and the depths are already data) would open up photos without ground (portraits, aerial views) and wider navigation. With segmentation, the people in the photo itself become inhabitants.
+- ☐ **Direction by a language model**: the scene's operation schema under the JSON Schema constrained decoding that vapor already has, when a useful model is loaded; the vocabulary remains the fallback that reports what it does not understand.
+- ◐ **Exact frames offline**: ✅ 0.12 — exact-frame GIF by vapor's encoder (up to 240 frames, fixed step). Missing: a loop that closes (the last frame = the first) and MP4.
+- ☐ **Sketch → photorealistic** with a user checkpoint (img2img already exists) and the measurement that says whether the generated image respects the sketch (the vectorized lines of the output against those of the sketch).
+- ☐ **Geometry**: Wu's triangulation (points by two quadratic conditions), inequalities, readable proofs; export certificates to Lean (when `lake` is present).
+- ☐ **Discovery**: 3×3 (rank 23), the *flip graph* of Kauers & Moosbauer; minimum depth of the networks; synthesis with symbolic proof at 32/64 bits (bit-vectors) instead of a sample.
+- ☐ **Science as vapor programs**: the *split-step* (DFT as `linear`), Boris and Lennard-Jones as programs — the same bits on every substrate; DFT of solids, electrolytes, rigid bodies.
+- ✅ **Signed archives** (0.13): Ed25519 over the manifest with the operator's key; `verify(zip, trusted: …)`; `mix vapor.archive`. Missing: signing by KMS/HSM (the same item as for `Keys`).
+- ☐ **Stronger controls in science**: the coherent state and tunnelling are compared with a reference, but the "control" of the first is a conservation and that of the second a computed prediction; E×B and HeH⁺ have none. A wrong scheme, run (Lie instead of Strang with a large step; a potential with its sign flipped), would be the real control.
+- ☐ **Larger self-play**: a game whose state does not fit in memory (Connect-Four 6×7) and the network as a compiler program; environments generated by an adversary (PAIRED) beyond randomization.
 
-## Rodada 0.10 — o que ficou aberto
+## Round 0.10 — what was left open
 
-- ☐ **Contexto sem fim no motor paginado**: `Vapor.Streaming` usa a sessão densa; falta fixar as páginas das âncoras no anel do `Vapor.Engine` e re-rotacionar por *slot* (muitas sequências), e medir o efeito das âncoras num modelo grande (pesos que esta máquina não baixa) e com *needle-in-a-haystack*.
-- ☐ **Letra de mão real**: nenhum leitor de manuscrito é embarcado (fontes manuscritas: 64 % de CER em mãos nunca vistas). O caminho é treinar `test/python/train_ocr.py` em IAM (latim), KHATT (árabe), CASIA-HWDB (chinês) e um conjunto cirílico, numa máquina com rede — o contrato do leitor não muda.
-- ☐ **Rótulos de eixo pequenos e serifados**: o digitalizador recusa 12 de 30 gráficos do conjunto difícil (nunca lê errado). Um leitor de dígitos por modelos de forma (como o do CJK) e a segmentação de dígitos que se tocam fechariam boa parte.
-- ☐ **Modelos de língua de outro domínio** para o CJK (o atual vem das listas de palavras do Faker: em chinês, numa semente nova, não ajuda) e um para o árabe (em ordem visual).
-- ☐ **Física de corpos rígidos** (a ciência da 0.11 cobre quântica, relatividade, tokamak, química e biologia, não isto): rotação e inércia, juntas angulares, contato entre corpos e atrito (XPBD trata todos do mesmo modo); a política do RL dentro do programa (um episódio = uma execução).
-- ☐ **Redes grandes**: operadores esparsos no compilador (PageRank e SIR em milhões de arestas); PageRank pessoal na biblioteca (`Vapor.Docs.Library`) como ordenação de RAG.
-- ☐ **Fórmulas além da gramática**: matrizes, acentos, `\left…\right`, várias linhas; e fórmulas manuscritas.
+- ☐ **Endless context in the paged engine**: `Vapor.Streaming` uses the dense session; what is missing is pinning the anchors' pages in the ring of `Vapor.Engine` and re-rotating per *slot* (many sequences), and measuring the effect of the anchors on a large model (weights this machine does not download) and with *needle-in-a-haystack*.
+- ☐ **Real handwriting**: no handwriting reader is shipped (handwritten fonts: 64 % CER on never-seen hands). The path is to train `test/python/train_ocr.py` on IAM (Latin), KHATT (Arabic), CASIA-HWDB (Chinese) and a Cyrillic set, on a machine with network access — the reader's contract does not change.
+- ☐ **Small and serif axis labels**: the digitizer refuses 12 of 30 charts of the hard set (it never reads wrong). A digit reader by shape models (like the CJK one) and segmentation of touching digits would close a good part of it.
+- ☐ **Language models from another domain** for CJK (the current one comes from Faker's word lists: in Chinese, on a new seed, it does not help) and one for Arabic (in visual order).
+- ☐ **Rigid-body physics** (the 0.11 science covers quantum, relativity, tokamak, chemistry and biology, not this): rotation and inertia, angular joints, contact between bodies and friction (XPBD treats them all the same way); the RL policy inside the program (one episode = one run).
+- ☐ **Large networks**: sparse operators in the compiler (PageRank and SIR on millions of edges); personalized PageRank in the library (`Vapor.Docs.Library`) as a RAG ranking.
+- ☐ **Formulas beyond the grammar**: matrices, accents, `\left…\right`, multiple lines; and handwritten formulas.
 
-## Desempenho
+## Performance
 
-- ◐ GPU: sessões residentes no fabric ✅ (0.8: `OPEN/STEP/CLOSE`, memória direta ou *staging*, gravações reaproveitadas, o motor serve na GPU); faltam a atenção com memória de *workgroup* (fim do `@max_dh = 512`) e o laço de difusão inteiro numa sessão (o protocolo serve; não está medido).
-- ☐ FlashAttention como política `:fast` declarada (o softmax online em blocos é outra ordem canônica: não pode ser a canônica).
-- ☐ *Prefill* do Mamba num único quadro `RUN` com iterações (hoje um `STEP` por token); servir modelos recorrentes no `Vapor.Engine` (estado por *slot*).
-- ☐ Especulação em árvore sem recomputar a página parcial (cópia-na-escrita da página) e integrada ao `Vapor.Engine`; árvores gerais (hoje: ramos raiz-folha).
-- ☐ GEMV `sb4` com α/β vetorizados e `k` não múltiplo de 256; AVX-512 VNNI/AMX. (GEMV predicado para `sb4`: ✅ 0.8.)
-- ◐ Fusão: 20× mais rápida ✅; *streaming* disco→disco ✅ (0.7, métodos elemento a elemento, mesmos bytes); falta o RegMean como programa no worker (Cholesky e as matrizes de calibração; hoje `O(d³)` na BEAM e com os modelos em memória) — pedido no anexo da 0.8, adiado sem dor medida.
-- ◐ Paralelismo de tensor: entre nós BEAM ✅ (0.8: fragmentos residentes com SHA-256, *failover* sem deriva, réplicas comparadas bit a bit); falta a atenção fragmentada por cabeças e servir um modelo inteiro pelo `Vapor.Engine` em cluster.
+- ◐ GPU: resident sessions in the fabric ✅ (0.8: `OPEN/STEP/CLOSE`, direct memory or *staging*, reused recordings, the engine serves on the GPU); missing are attention with *workgroup* memory (the end of `@max_dh = 512`) and the whole diffusion loop in one session (the protocol serves; it is not measured).
+- ☐ FlashAttention as a declared `:fast` policy (the online softmax in blocks is another canonical order: it cannot be the canonical one).
+- ☐ Mamba *prefill* in a single `RUN` frame with iterations (today one `STEP` per token); serving recurrent models in `Vapor.Engine` (state per *slot*).
+- ☐ Tree speculation without recomputing the partial page (copy-on-write of the page) and integrated into `Vapor.Engine`; general trees (today: root-to-leaf branches).
+- ☐ `sb4` GEMV with vectorized α/β and `k` not a multiple of 256; AVX-512 VNNI/AMX. (Predicated GEMV for `sb4`: ✅ 0.8.)
+- ◐ Merging: 20× faster ✅; disk→disk *streaming* ✅ (0.7, element-wise methods, same bytes); missing is RegMean as a program in the worker (Cholesky and the calibration matrices; today `O(d³)` on the BEAM and with the models in memory) — requested in the 0.8 attachment, deferred with no measured pain.
+- ◐ Tensor parallelism: across BEAM nodes ✅ (0.8: resident shards with SHA-256, *failover* without drift, replicas compared bit for bit); missing are attention sharded by heads and serving a whole model through `Vapor.Engine` on a cluster.
 
-## Modelos e operadores
+## Models and operators
 
-- ◐ SSMs: Mamba ✅, **Mamba-2 ✅** (0.8); faltam Jamba/Zamba/Bamba (híbridos: cache KV **e** estado por sequência no motor) e Falcon-Mamba (RMS de B, C, Δ dentro do misturador); *soft-capping* de atenção (Gemma 2); `relu²`; NTK dinâmico e LongRoPE (recusados pelo nome).
-- ☐ RoPE 2D/3D (M-RoPE do Qwen2-VL, DiTs de vídeo) — quando um modelo admitido precisar, conferido contra o `transformers`.
-- ☐ Tokenizadores Unigram e WordPiece (famílias T5/BERT).
-- ◐ Busca de imagem por significado: texto nas imagens via OCR ✅, torres de visão **e de texto** do CLIP conferidas contra o `transformers` ✅; falta ligar as duas torres à biblioteca (`Vapor.Docs.Library`) — só tem sentido com pesos CLIP treinados, que não são embarcados.
-- ◐ Whisper: encoder + decoder conferidos ✅; faltam o front-end log-mel idêntico ao do `transformers`, os tokens de tarefa/idioma/tempo do `generate` e uma medida de WER com pesos reais.
-- ☐ LLaVA (encoder + projetor + `inject`) como adaptador conferido contra o `transformers`.
-- ◐ Difusão: U-Net do diffusers ✅, encoder do VAE ✅, DDIM/Euler/DPM++ 2M ✅, pipelines txt2img/img2img/inpainting = diffusers ✅ (0.9); faltam **ControlNet** (cópia do encoder + convoluções-zero), LoRA de difusão, **SDXL** (duas torres de texto, `add_embeds`), a U-Net de inpainting de 9 canais, sigmas de Karras, DiTs com atenção cruzada a texto (PixArt, SD3, Flux: recusados com quase-acerto) e **medir um SD real** (qualidade e tempo por passo) numa máquina que baixe pesos.
-- ☐ Convoluções agrupadas/*depthwise* e transpostas em `Vapor.Spatial`.
+- ◐ SSMs: Mamba ✅, **Mamba-2 ✅** (0.8); missing are Jamba/Zamba/Bamba (hybrids: KV cache **and** per-sequence state in the engine) and Falcon-Mamba (RMS of B, C, Δ inside the mixer); attention *soft-capping* (Gemma 2); `relu²`; dynamic NTK and LongRoPE (refused by name).
+- ☐ 2D/3D RoPE (Qwen2-VL's M-RoPE, video DiTs) — when an admitted model needs it, checked against `transformers`.
+- ☐ Unigram and WordPiece tokenizers (T5/BERT families).
+- ◐ Image search by meaning: text in images via OCR ✅, CLIP vision **and text** towers checked against `transformers` ✅; missing is connecting the two towers to the library (`Vapor.Docs.Library`) — it only makes sense with trained CLIP weights, which are not shipped.
+- ◐ Whisper: encoder + decoder checked ✅; missing are the log-mel front-end identical to that of `transformers`, the task/language/timestamp tokens of `generate` and a WER measurement with real weights.
+- ☐ LLaVA (encoder + projector + `inject`) as an adapter checked against `transformers`.
+- ◐ Diffusion: diffusers U-Net ✅, VAE encoder ✅, DDIM/Euler/DPM++ 2M ✅, txt2img/img2img/inpainting pipelines = diffusers ✅ (0.9); missing are **ControlNet** (a copy of the encoder + zero convolutions), diffusion LoRA, **SDXL** (two text towers, `add_embeds`), the 9-channel inpainting U-Net, Karras sigmas, DiTs with cross-attention to text (PixArt, SD3, Flux: refused with a near-miss) and **measuring a real SD** (quality and time per step) on a machine that downloads weights.
+- ☐ Grouped/*depthwise* and transposed convolutions in `Vapor.Spatial`.
 
-## Estúdio (0.9)
+## Studio (0.9)
 
-- ☐ Vídeo: H.264/MP4/WebM. Um codificador próprio é um projeto inteiro, e o ffmpeg por *shell* viola a regra do produto; o caminho é um **extrator confinado** (abaixo) que fale o protocolo de quadros.
-- ☐ Nós do ComfyUI além do subconjunto: `LoraLoader`, `ControlNetApply`, `KSamplerAdvanced`, `UpscaleModelLoader`/`ImageUpscaleWithModel` (traduzível para `image.upscale` quando o modelo for o nosso), `SetLatentNoiseMask`. Cada um traduzido pela semântica documentada, com teste.
-- ☐ A chave do checkpoint no cache: hoje é o caminho; deve passar a incluir o digest dos pesos sem relê-los a cada execução (por exemplo, o índice do safetensors e o `mtime`).
-- ☐ Lanczos da câmera mais barato: hoje os pesos passam pelo seno corretamente arredondado, ~0,25 s por quadro 320×192 num núcleo. A identidade sin(π(d+k)) = (−1)ᵏ sin(πd) reduziria a um seno por pixel de saída, mas muda os bits; tem de entrar com recalibragem dos testes de paridade.
-- ☐ Destilação robusta a perturbações adversariais (o sentido defensivo, oferecido na DIRETRIZ §12): a perda do aluno sob perturbação limitada, contra o aluno comum.
-- ☐ Medida do **excesso de recusa** de um modelo (recusas em pedidos benignos), como um portão calibrado com controles.
-- ☐ RL: PPO e DQN como programas; formato de dataset do LeRobot para as demonstrações; um ambiente de jogo.
-- ☐ 3D: NeRF ou *Gaussian splatting* conferidos contra uma referência; imagem → 3D só com pesos treinados.
-- ☐ Manifestos de contexto assinados para o servidor MCP (o que um agente recebeu, com raiz) e SFT/DPO no `Vapor.Train`.
+- ☐ Video: H.264/MP4/WebM. Our own encoder is a whole project, and ffmpeg through a *shell* violates the product's rule; the path is a **confined extractor** (below) that speaks the frame protocol.
+- ☐ ComfyUI nodes beyond the subset: `LoraLoader`, `ControlNetApply`, `KSamplerAdvanced`, `UpscaleModelLoader`/`ImageUpscaleWithModel` (translatable to `image.upscale` when the model is ours), `SetLatentNoiseMask`. Each one translated from the documented semantics, with a test.
+- ☐ The checkpoint's key in the cache: today it is the path; it should come to include the digest of the weights without re-reading them on every run (for example, the safetensors index and the `mtime`).
+- ☐ Cheaper camera Lanczos: today the weights go through the correctly rounded sine, ~0.25 s per 320×192 frame on one core. The identity sin(π(d+k)) = (−1)ᵏ sin(πd) would reduce it to one sine per output pixel, but it changes the bits; it has to come in with a recalibration of the parity tests.
+- ☐ Distillation robust to adversarial perturbations (the defensive sense, offered in DIRECTIVE §12): the student's loss under bounded perturbation, against the ordinary student.
+- ☐ A measurement of a model's **over-refusal** (refusals on benign requests), as a gate calibrated with controls.
+- ☐ RL: PPO and DQN as programs; LeRobot's dataset format for the demonstrations; a game environment.
+- ☐ 3D: NeRF or *Gaussian splatting* checked against a reference; image → 3D only with trained weights.
+- ☐ Signed context manifests for the MCP server (what an agent received, with a root) and SFT/DPO in `Vapor.Train`.
 
-## Leitura (documentos e visão)
+## Reading (documents and vision)
 
-- ☐ **Extratores plugáveis confinados**: um lançador que aplica seccomp a um binário alheio e fala o protocolo de quadros do worker — só então formatos externos (CAD, RAW de câmera…) entram sem executar código hostil na BEAM.
-- ◐ OCR: texto impresso horizontal ✅; ordem de leitura em colunas ✅ e feixe CTC com modelo de língua ✅ (0.7); **tabelas** com réguas ou filetes ✅ (0.8: estrutura exata em 12/12, CER por célula 5,5 %); faltam tabelas sem régua, tabelas entre páginas, tokens curtos de cabeçalho ("T1"), fontes geométricas (URW Gothic: 7,5 %), manuscrito, um corpus do domínio do usuário.
-- ◐ Outros sistemas de escrita: árabe com RTL ✅, CJK ✅, cirílico ✅, fórmulas → LaTeX ✅ (0.10, [OCR.md §3g–§3k](OCR.md)); faltam modelo de língua para árabe e cirílico, Nastaliq, CJK vertical, fórmulas de várias linhas e matrizes, e **letra de mão real** (abaixo).
-- ◐ Fala: dígitos falados ✅; faltam mais vozes, aumento de dados e vocabulário além de dígitos (ou o Whisper com pesos reais).
-- ◐ Imagens de escaneados em PDF: CCITT Group 3/4 ✅, LZW e RunLength ✅ (0.7, = libtiff); **JBIG2 aritmético** ✅ (0.8, = jbig2dec); **JBIG2 Huffman e meio-tom** ✅ (0.15, conferidos por um codificador independente e pelo jbig2dec); faltam Huffman com refinamento e JPX.
-- ☐ Índice incremental da biblioteca e sua persistência no servidor.
+- ☐ **Confined pluggable extractors**: a launcher that applies seccomp to a foreign binary and speaks the worker's frame protocol — only then do external formats (CAD, camera RAW…) come in without running hostile code in the BEAM.
+- ◐ OCR: horizontal printed text ✅; reading order in columns ✅ and CTC beam with a language model ✅ (0.7); **tables** with rules or ruling lines ✅ (0.8: exact structure on 12/12, per-cell CER 5.5 %); missing are tables without rules, tables across pages, short header tokens ("T1"), geometric fonts (URW Gothic: 7.5 %), handwriting, a corpus from the user's domain.
+- ◐ Other writing systems: Arabic with RTL ✅, CJK ✅, Cyrillic ✅, formulas → LaTeX ✅ (0.10, [OCR.md §3g–§3k](OCR.md)); missing are a language model for Arabic and Cyrillic, Nastaliq, vertical CJK, multi-line formulas and matrices, and **real handwriting** (above, round 0.10).
+- ◐ Speech: spoken digits ✅; missing are more voices, data augmentation and vocabulary beyond digits (or Whisper with real weights).
+- ◐ Images from scans in PDF: CCITT Group 3/4 ✅, LZW and RunLength ✅ (0.7, = libtiff); **arithmetic JBIG2** ✅ (0.8, = jbig2dec); **JBIG2 Huffman and halftone** ✅ (0.15, checked by an independent encoder and by jbig2dec); missing are Huffman with refinement and JPX.
+- ☐ Incremental index of the library and its persistence in the server.
 
-## Numérica e verificação
+## Numerics and verification
 
-- ☐ **Kernel NTT** no worker: exige multiplicação inteira alta (`mulhi` 64 bits) nos cinco codificadores (hoje a NTT exata roda na BEAM).
-- ☐ Envelope analítico para `log`, `softplus` e `div` (hoje `:na` — a escada mede, não limita).
-- ◐ Lean: regras de reescrita ✅ (0.8, `Binary32.lean`, finitos; NaN fora por princípio); falta a dobra de constantes (hoje: a semântica do oráculo, conferida por teste) e a correspondência formal do emulador RVV com a ISA (exigiria a especificação da RVV 1.0 em Lean).
-- ☐ Kits DO-178C / IEC 62304.
-- ☐ Autodiff de atenção, RoPE, gather e RMSNorm; treino multinúcleo/GPU; `Vapor.Train` como *callback* da eclusa.
+- ☐ **NTT kernel** in the worker: it requires high integer multiplication (64-bit `mulhi`) in the five encoders (today the exact NTT runs on the BEAM).
+- ☐ Analytic envelope for `log`, `softplus` and `div` (today `:na` — the ladder measures, it does not bound).
+- ◐ Lean: rewrite rules ✅ (0.8, `Binary32.lean`, finite values; NaN out by principle); missing are constant folding (today: the oracle's semantics, checked by a test) and the formal correspondence of the RVV emulator with the ISA (it would require the RVV 1.0 specification in Lean).
+- ☐ DO-178C / IEC 62304 kits.
+- ☐ Autodiff of attention, RoPE, gather and RMSNorm; multi-core/GPU training; `Vapor.Train` as an airlock *callback*.
 
-## Agentes, ecossistema, ZK
+## Agents, ecosystem, ZK
 
-- ◐ Atestados ancorados num log de transparência ✅ (`Vapor.Tlog`, testemunha, verificador no navegador); faltam *tiles* C2SP (`tlog-tiles`) para logs de centenas de milhões de entradas e testemunhas de terceiros de fato rodando.
-- ☐ *Lease* sobre o `intent`; KMS/HSM para `Keys`; diário com acréscimo O(1); `fsync` do diretório no `Store.File`.
-- ☐ Ecto/Postgres, Oban, LiveView testados com serviços reais (*store* Ecto oficial, `UNIQUE(run_id, seq)`); *streaming* zero-cópia no transporte Plug/Bandit; imagem Nerves e AOT para microcontroladores (um *backend* MVE/Helium novo). *Sem esses serviços nem dispositivos neste ambiente.*
-- ◐ Dossiês de auditoria ✅ (0.8); faltam perfis de mapeamento para outras normas (NIST AI RMF, ISO/IEC 23894) e assinatura por KMS/HSM.
-- ◐ `pattern`/`format` de JSON Schema ✅ (0.7: ECMA-262 → autômato de bytes; `date`, `time`, `date-time`, `uuid`, `ipv4`, `email`, `hostname`); faltam `ipv6`/`uri`, a interseção de `pattern` com `minLength`/`maxLength` (hoje recusada) e `\b`/olhar adiante (não regulares por bytes, ou caros).
-- ☐ Requantização `s32 → s8`; PLONK/STARK sem *setup* por circuito; cotas de ruído BFV propagadas. *Recusados por ora: CKKS/BFV próprios, zkVM sem caso, "zkFHE de 70 B".*
+- ◐ Attestations anchored in a transparency log ✅ (`Vapor.Tlog`, witness, verifier in the browser); missing are C2SP *tiles* (`tlog-tiles`) for logs of hundreds of millions of entries and third-party witnesses actually running.
+- ☐ *Lease* on the `intent`; KMS/HSM for `Keys`; journal with O(1) append; `fsync` of the directory in `Store.File`.
+- ☐ Ecto/Postgres, Oban, LiveView tested with real services (official Ecto *store*, `UNIQUE(run_id, seq)`); zero-copy *streaming* in the Plug/Bandit transport; a Nerves image and AOT for microcontrollers (a new MVE/Helium *backend*). *Without those services or devices in this environment.*
+- ◐ Audit dossiers ✅ (0.8); missing are mapping profiles for other standards (NIST AI RMF, ISO/IEC 23894) and signing by KMS/HSM.
+- ◐ JSON Schema `pattern`/`format` ✅ (0.7: ECMA-262 → byte automaton; `date`, `time`, `date-time`, `uuid`, `ipv4`, `email`, `hostname`); missing are `ipv6`/`uri`, the intersection of `pattern` with `minLength`/`maxLength` (refused today) and `\b`/lookahead (not regular over bytes, or expensive).
+- ☐ `s32 → s8` requantization; PLONK/STARK without per-circuit *setup*; propagated BFV noise bounds. *Refused for now: our own CKKS/BFV, a zkVM without a case, "70 B zkFHE".*
 
-## Menores (cada um, horas)
+## Minor (each one, hours)
 
-- ☐ Log-softmax do juiz de checkpoints (`Vapor.Quality.Model`) no substrato — agora possível com o `log` canônico.
-- ◐ Reivindicar diretórios HF pelo índice de tensores antes de ler os pesos: feito para a fusão em *streaming* (`Lock.select/1` sobre o catálogo do safetensors); falta usá-lo no `Lock.open/2` para recusar antes de ler gigabytes.
-- ☐ Exportar para o HF fatores de RoPE que chegaram como tensor GGUF.
-- ☐ Portão de imagem recalibrado com fotos retidas (hoje: cenas sintéticas).
-- ☐ Selar os nomes de ferramentas nos diários quando a política exigir.
-- ☐ Nx: termo `view`, reduções em outros eixos, `dot` em lote; ponte zero-cópia com Python.
-- ☐ Testar `send_body/5` e o token do console no transporte Plug (sem Plug neste ambiente).
+- ☐ Log-softmax of the checkpoint judge (`Vapor.Quality.Model`) on the substrate — now possible with the canonical `log`.
+- ◐ Claim HF directories by the tensor index before reading the weights: done for *streaming* merging (`Lock.select/1` over the safetensors catalog); missing is using it in `Lock.open/2` to refuse before reading gigabytes.
+- ☐ Export to HF the RoPE factors that arrived as a GGUF tensor.
+- ☐ Image gate recalibrated with held-out photos (today: synthetic scenes).
+- ☐ Seal the tool names in the journals when the policy requires it.
+- ☐ Nx: `view` term, reductions over other axes, batched `dot`; zero-copy bridge with Python.
+- ☐ Test `send_body/5` and the console token in the Plug transport (no Plug in this environment).
 
-## Prioridade proposta
+## Proposed priority
 
-| | item | por quê |
+| | item | why |
 |---|---|---|
-| P0 | GPU real (sessões medidas, atenção com *workgroup*) | a sessão residente existe; falta o número que importa |
-| P1 | silício real; Apple Silicon | tira o asterisco da emulação; o maior parque de máquinas de desenvolvedor |
-| P1 | Engine com modelos recorrentes e híbridos (Jamba); árvore integrada; atenção por cabeças entre nós | servir SSMs e híbridos no motor; modelos maiores que um nó |
-| P2 | ControlNet, SDXL, um SD real medido; DiTs com texto; CLIP ligado à biblioteca | o estúdio com geração condicionada; busca semântica de fotos (com pesos) |
-| P2 | extrator confinado para vídeo (H.264/MP4) | o estúdio lendo e escrevendo o vídeo que as pessoas têm |
-| P2 | extratores confinados; tabelas sem régua; JPX | o resto dos escaneados de escritório, formatos externos sem risco |
-| P2 | motor de ofertas no worker; dados de mercado reais; gerador inteiro (Philox) no compilador | a mesa de operações com latência de máquina e dados do mundo; o Monte Carlo com um gerador moderno |
-| P3 | kernel NTT; Unigram/WordPiece; treino; homologação | escopo maior, retorno mais tardio |
+| P0 | real GPU (sessions measured, attention with *workgroup*) | the resident session exists; the number that matters is missing |
+| P1 | real silicon; Apple Silicon | removes the emulation asterisk; the largest fleet of developer machines |
+| P1 | Engine with recurrent and hybrid models (Jamba); integrated tree; attention by heads across nodes | serving SSMs and hybrids in the engine; models larger than one node |
+| P2 | ControlNet, SDXL, a real SD measured; DiTs with text; CLIP connected to the library | the studio with conditioned generation; semantic search of photos (with weights) |
+| P2 | confined extractor for video (H.264/MP4) | the studio reading and writing the video that people have |
+| P2 | confined extractors; tables without rules; JPX | the rest of the office scans, external formats without risk |
+| P2 | order engine in the worker; real market data; integer generator (Philox) in the compiler | the trading desk with machine latency and data from the world; Monte Carlo with a modern generator |
+| P3 | NTT kernel; Unigram/WordPiece; training; certification | larger scope, later return |

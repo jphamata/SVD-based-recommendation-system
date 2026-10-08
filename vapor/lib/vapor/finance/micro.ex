@@ -1,7 +1,7 @@
 defmodule Vapor.Finance.Micro do
   @moduledoc """
   Market microstructure models, each with the measurement that says
-  whether it fits (docs/FINANCAS.md §12).
+  whether it fits (docs/FINANCE.md §12).
 
   * **Hawkes** (self-exciting arrivals, exponential kernel): simulation by
     Ogata's thinning, maximum likelihood by the O(n) recursion, and the

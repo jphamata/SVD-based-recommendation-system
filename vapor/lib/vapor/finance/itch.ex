@@ -1,7 +1,7 @@
 defmodule Vapor.Finance.Itch do
   @moduledoc """
   NASDAQ TotalView-ITCH 5.0, the binary market-by-order feed
-  (docs/FINANCAS.md §10): an encoder, a decoder, and a book rebuilt from
+  (docs/FINANCE.md §10): an encoder, a decoder, and a book rebuilt from
   the feed alone.
 
   Messages handled (lengths as in the specification, big-endian, prices

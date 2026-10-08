@@ -1,6 +1,6 @@
 defmodule Vapor.Bio.Align do
   @moduledoc """
-  Pairwise sequence alignment (docs/PROTEINAS.md §4): Gotoh's dynamic
+  Pairwise sequence alignment (docs/PROTEINS.md §4): Gotoh's dynamic
   programme with affine gaps (open + extend), global (Needleman–Wunsch)
   or local (Smith–Waterman), scored by BLOSUM62 for proteins or by
   match/mismatch for nucleotides. Exact: the score is the optimum, and

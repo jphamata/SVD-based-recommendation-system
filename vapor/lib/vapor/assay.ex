@@ -63,7 +63,7 @@ defmodule Vapor.Assay do
     else
       t0 = System.monotonic_time(:millisecond)
       res =
-        Vapor.Alembic.sandbox(fn ->
+        Vapor.Hermetic.seal(fn ->
           try do
             dispatch(tool, text, opts)
           rescue

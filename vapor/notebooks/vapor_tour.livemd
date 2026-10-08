@@ -258,6 +258,6 @@ forged = %{done.journal | events: List.update_at(done.journal.events, 2, &put_in
 
 ## Para onde ir
 
-* `docs/AGENTES.md` — a reflexão sobre agentes imutáveis e o que cada peça resolve;
-* `docs/ECOSSISTEMA_ELIXIR.md` — Phoenix/LiveView, Ecto, Oban, Broadway, Nx, Nerves… com escrutínio;
+* `docs/AGENTS.md` — a reflexão sobre agentes imutáveis e o que cada peça resolve;
+* `docs/ELIXIR_ECOSYSTEM.md` — Phoenix/LiveView, Ecto, Oban, Broadway, Nx, Nerves… com escrutínio;
 * `integrations/vapor_plug` — a API compatível com OpenAI montada num roteador Phoenix.

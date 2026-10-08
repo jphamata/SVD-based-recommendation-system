@@ -6,7 +6,7 @@ defmodule Vapor.Science.Quantum do
   step of the potential — unitary, second order in dt. Binary64 on the
   BEAM, deterministic.
 
-  Measured against closed forms (docs/CIENCIA.md):
+  Measured against closed forms (docs/SCIENCE.md):
 
     * a **coherent state** of the harmonic oscillator follows the classical
       orbit, ⟨x⟩(t) = x₀ cos t, and keeps its norm;

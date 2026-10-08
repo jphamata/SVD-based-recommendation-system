@@ -1,6 +1,6 @@
 defmodule Vapor.Logic do
   @moduledoc """
-  The logic desk (docs/LOGICA.md): claims of any of four logics typed in
+  The logic desk (docs/LOGIC.md): claims of any of four logics typed in
   as text, each settled by a procedure that proposes and a checker that
   decides — and the same desk open to any outside proposer (a person, a
   search, a language model through the MCP server's `logic_check` tool),
@@ -14,8 +14,12 @@ defmodule Vapor.Logic do
   | equations + `complete` / `decide s = t` | equational theories | a convergent rewriting system; normal forms with derivations |
   | `vars …` `hyp …` `claim …` | polynomial (real/complex algebraic geometry) | Gröbner certificate {1}, or the remainder |
   | `maximize …` / `minimize …` + linear constraints | linear arithmetic over ℚ | exact simplex: optimal (primal + dual, zero gap), infeasible (Farkas), unbounded (ray) — `Vapor.Logic.LP` |
+  | the same + `int x, y` / `bin z` | mixed-integer linear arithmetic | branch and bound: the tree, with a dual or Farkas certificate at every leaf — `Vapor.Logic.MIP` |
+  | `causal` + edges `a -> b`, `a <-> b` + `identify y \| do(x)`, `backdoor x -> y \| z`, `dsep a; b \| c` | causal diagrams (do-calculus) | the estimand by the ID algorithm or a checked hedge; back-door validity or the open path; d-separation or the connecting path — `Vapor.Logic.Causal` |
   """
-  alias Vapor.Logic.{DRUP, Formula, Groebner, LP, Problems, Rewrite, SAT}
+  alias Vapor.Logic.{Causal, DRUP, Formula, Groebner, LP, MIP, Problems, Rewrite, SAT}
+
+  @integer_decl ~S"^\s*(int|integer|inteiro|inteiros|bin|binary|binario|binário)\s+"
 
   @doc "Settle a claim given as text. `{:ok, %{kind, verdict, …}}` or `{:error, why}`."
   def run(text) when is_binary(text) do
@@ -23,7 +27,9 @@ defmodule Vapor.Logic do
     first = t |> String.split("\n") |> hd() |> String.trim() |> String.downcase()
 
     cond do
+      first in ["causal", "causal:"] -> Causal.run(t)
       t =~ ~r/^\s*p\s+cnf\b/m or first =~ ~r/^c\s/ -> dimacs(t)
+      first =~ ~r/^(max|maximi[sz]e|maximizar|min|minimi[sz]e|minimizar)\b/ and integer?(t) -> integer_linear(t)
       first =~ ~r/^(max|maximi[sz]e|maximizar|min|minimi[sz]e|minimizar)\b/ -> linear(t)
       first =~ ~r/^(valid|válida|tautology|tautologia)\s*:/ -> formula(:valid, rest(t))
       first =~ ~r/^(sat|satisfy|satisfaz)\s*:/ -> formula(:sat, rest(t))
@@ -31,7 +37,7 @@ defmodule Vapor.Logic do
       first =~ ~r/^(schur|vdw|waerden|ramsey|pigeonhole|pombos|queens|rainhas)\b/ -> combinatorics(first)
       t =~ ~r/^\s*(hyp|hipótese|claim|tese|member)\b/m -> Groebner.run(t) |> tag("polynomial")
       t =~ ~r/=/ -> equational(t)
-      true -> {:error, "not recognised: start with 'p cnf', 'valid:', 'sat:', 'equiv:', 'schur', 'vdw', 'ramsey', 'pigeonhole', 'queens', polynomial lines (vars/hyp/claim) or equations"}
+      true -> {:error, "not recognised: start with 'p cnf', 'valid:', 'sat:', 'equiv:', 'schur', 'vdw', 'ramsey', 'pigeonhole', 'queens', 'causal', 'maximize'/'minimize', polynomial lines (vars/hyp/claim) or equations"}
     end
   end
 
@@ -51,6 +57,7 @@ defmodule Vapor.Logic do
   | `maximize`/`minimize` LP | `%{"x" => %{var => "p/q"}, "y" => ["p/q"…]}` | x feasible, y dual-feasible, zero duality gap — exactly (optimality) |
   | `maximize`/`minimize` LP | `%{"farkas" => ["p/q"…]}` | Aᵀy ≥ 0 with the row signs, bᵀy < 0 (infeasibility) |
   | `maximize`/`minimize` LP | `%{"x" => …, "ray" => %{var => "p/q"}}` | x feasible, d an improving recession direction (unboundedness) |
+  | the same with `int`/`bin` (MIP) | `%{"incumbent" => %{var => "p/q"} or nil, "objective" => "p/q", "tree" => node}`, a node `%{"split", "at", "le", "ge"}` or `%{"leaf" => "infeasible" \| "bound", "y" => […]}` | `Vapor.Logic.MIP.check/2`: the splits cover every integer point, every leaf's y holds, the incumbent is feasible, integral and as good as claimed |
 
   `{:ok, %{accepted, claim, reason}}` or `{:error, why}` when no checker fits.
   """
@@ -107,6 +114,12 @@ defmodule Vapor.Logic do
           end
         end
 
+      first =~ ~r/^(max|maximi[sz]e|maximizar|min|minimi[sz]e|minimizar)\b/ and integer?(t) ->
+        with {:ok, p} <- MIP.parse(t), {:ok, cert} <- mip_proposal(proposal) do
+          r = MIP.check(p, cert)
+          {:ok, %{accepted: r.accepted, claim: if(cert.incumbent, do: "optimal", else: "infeasible"), reason: r.reason}}
+        end
+
       first =~ ~r/^(max|maximi[sz]e|maximizar|min|minimi[sz]e|minimizar)\b/ ->
         with {:ok, p} <- LP.parse(t) do
           rat = fn v -> try do LP.rat(if is_number(v), do: v, else: to_string(v)) rescue _ -> nil end end
@@ -130,6 +143,41 @@ defmodule Vapor.Logic do
 
       true -> {:error, "no checker for this claim and proposal (see Vapor.Logic.check/2)"}
     end
+  end
+
+  defp integer?(t), do: t |> String.split("\n") |> Enum.any?(&(&1 |> String.split("#") |> hd() |> String.match?(Regex.compile!(@integer_decl, "i"))))
+
+  defp integer_linear(t) do
+    case MIP.solve(t) do
+      {:ok, _} = r ->
+        v = MIP.present(r)
+        {:ok, Map.merge(v, %{kind: "integer linear", verdict: Atom.to_string(v.status), certified: match?(%{accepted: true}, v[:check])})}
+
+      e ->
+        e
+    end
+  end
+
+  # a MIP certificate from JSON: rationals as "p/q" or decimals, the tree as nested maps
+  defp mip_proposal(prop) do
+    rat = fn v -> try do LP.rat(if is_number(v), do: v, else: to_string(v)) rescue _ -> throw(:bad) end end
+
+    tree = fn
+      %{"split" => v, "at" => k, "le" => lo, "ge" => hi}, f when is_binary(v) and is_integer(k) -> {:branch, v, k, f.(lo, f), f.(hi, f)}
+      %{"leaf" => kind, "y" => y}, _f when kind in ["infeasible", "bound"] and is_list(y) -> {:leaf, String.to_existing_atom(kind), Enum.map(y, rat)}
+      _, _ -> throw(:bad)
+    end
+
+    inc =
+      case prop["incumbent"] do
+        nil -> nil
+        m when is_map(m) -> %{x: Map.new(m, fn {k, v} -> {to_string(k), rat.(v)} end), objective: rat.(prop["objective"])}
+        _ -> throw(:bad)
+      end
+
+    {:ok, %{incumbent: inc, tree: tree.(prop["tree"], tree)}}
+  catch
+    :bad -> {:error, "a MIP proposal is incumbent (a map, or null for infeasible) + objective + tree (split/at/le/ge or leaf/y), numbers as \"p/q\" or decimals"}
   end
 
   defp linear(t) do

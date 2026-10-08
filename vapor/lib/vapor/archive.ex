@@ -260,6 +260,5 @@ defmodule Vapor.Archive do
   def plain(l) when is_list(l), do: Enum.map(l, &plain/1)
   def plain(t) when is_tuple(t), do: t |> Tuple.to_list() |> plain()
   def plain(a) when is_atom(a) and a not in [true, false, nil], do: Atom.to_string(a)
-  def plain(f) when is_float(f), do: if(f != f or abs(f) == :infinity, do: nil, else: f)
   def plain(x), do: x
 end

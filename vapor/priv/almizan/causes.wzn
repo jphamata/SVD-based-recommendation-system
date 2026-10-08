@@ -1,0 +1,30 @@
+; Causal claims (root s-b-b), each decided on the diagram it states — never on data.
+
+; front door: a hidden confounder of x and y, but the whole effect runs through m
+(claim front-door (root s-b-b) (wazn burhan)
+  (graph (-> x m) (-> m y) (<-> x y))
+  (proof identifiable)
+  (body (do (y) (x))))
+
+; the bow: the confounder sits on the only path — no data can separate cause from confounding
+(claim bow (root s-b-b) (wazn burhan)
+  (graph (-> x y) (<-> x y))
+  (proof identifiable)
+  (body (do (y) (x))))
+
+; adjusting for the common cause is enough; adjusting for the mediator would not be
+(claim adjust-z (root s-b-b) (wazn burhan)
+  (graph (-> z x) (-> z y) (-> x m) (-> m y))
+  (proof (adjustment z))
+  (body (do (y) (x))))
+
+(claim adjust-m (root s-b-b) (wazn burhan)
+  (graph (-> z x) (-> z y) (-> x m) (-> m y))
+  (proof (adjustment m))
+  (body (do (y) (x))))
+
+; a collider separates until it is conditioned on
+(claim collider (root s-b-b) (wazn burhan)
+  (graph (-> a c) (-> b c))
+  (proof separated)
+  (body (independent (a) (b) ())))

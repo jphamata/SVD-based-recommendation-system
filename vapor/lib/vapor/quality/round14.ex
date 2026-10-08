@@ -108,8 +108,8 @@ defmodule Vapor.Quality.Round14 do
   # ============================================================ Alembic
 
   defp sandbox do
-    bomb = Alembic.sandbox(fn -> Alembic.eval("[repeat(1, 1000000) for k in 1..200]", fuel: 10_000_000_000) end, heap_mb: 16)
-    small = Alembic.sandbox(fn -> Alembic.eval("sum([x^2 for x in 1..10])") end, heap_mb: 16)
+    bomb = Vapor.Hermetic.seal(fn -> Alembic.eval("[repeat(1, 1000000) for k in 1..200]", fuel: 10_000_000_000) end, heap_mb: 16)
+    small = Vapor.Hermetic.seal(fn -> Alembic.eval("sum([x^2 for x in 1..10])") end, heap_mb: 16)
     names = for i <- 1..2_000, do: "q14_ident_#{i}_#{System.unique_integer([:positive])}"
     before = :erlang.system_info(:atom_count)
     {:ok, _} = Alembic.load(Enum.map_join(names, "\n", &"#{&1} = 1"))

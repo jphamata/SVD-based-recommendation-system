@@ -4,7 +4,7 @@ defmodule Vapor.Assurance do
   each with its basis and an honest status — what is *proved*, what is
   *checked* by code on every build or on every answer, what is *tested*,
   what is *argued*, and what is still *owed*. The ledger is data; the
-  document (`docs/GARANTIAS.md`) is rendered from it (`mix vapor.assurance`),
+  document (`docs/ASSURANCE.md`) is rendered from it (`mix vapor.assurance`),
   and a test fails when a cited file is missing or the document drifts from
   the data — so the ledger cannot quietly overstate.
 
@@ -44,9 +44,9 @@ defmodule Vapor.Assurance do
     {"0.16", "An altered vapor export is refused on import", "every message hash recomputed", :checked, ["lib/vapor/majlis/exchange.ex", "test/vapor/majlis_test.exs"], nil},
     {"0.16", "Shared links cannot be forged and die on revocation", "HMAC-SHA256 under the store's key; generation counter", :argued, ["lib/vapor/khazana.ex", "test/vapor/hall_test.exs"], "reduces to the PRF security of HMAC-SHA256"},
     {"0.16", "The console terminal cannot read or write the server's files or run programs", "jailed reads and writes, --measure refused, heap ceiling and deadline per command", :tested, ["lib/vapor/diwan.ex", "test/vapor/diwan_test.exs", "test/vapor/hall_test.exs"], "rests on the BEAM's process isolation and on every verb reading through Vapor.Main.read_input"},
-    {"0.16", "Al-Mizān: the Latin and Arabic projections are bijective with the tree", "read(print(t)) = t on 300 random programs in both scripts", :tested, ["lib/vapor/mizan/syntax.ex", "test/vapor/mizan_test.exs"], nil},
-    {"0.16", "Al-Mizān burhān: identities and conservation laws decided exactly", "exact polynomial normal form over ℚ; positivity by Aludel; invariants by SAT + DRUP", :checked, ["lib/vapor/mizan.ex", "test/vapor/mizan_test.exs"], nil},
-    {"0.16", "Al-Mizān obligations exported to Lean 4 close by ring / decide", "Lower.lean/2 emits the theorems", :owed, ["lib/vapor/mizan/lower.ex"], "Lean is not installed on this machine: the export is generated, not checked here"},
+    {"0.16", "Almizan: the Latin and Arabic projections are bijective with the tree", "read(print(t)) = t on 300 random programs in both scripts", :tested, ["lib/vapor/almizan/syntax.ex", "test/vapor/almizan_test.exs"], nil},
+    {"0.16", "Almizan burhān: identities and conservation laws decided exactly", "exact polynomial normal form over ℚ; positivity by Aludel; invariants by SAT + DRUP", :checked, ["lib/vapor/almizan.ex", "test/vapor/almizan_test.exs"], nil},
+    {"0.16", "Almizan obligations exported to Lean 4 close by ring / decide", "Lower.lean/2 emits the theorems", :owed, ["lib/vapor/almizan/lower.ex"], "Lean is not installed on this machine: the export is generated, not checked here"},
     {"0.16", "Fisher–Rao distances are a metric; natural gradient is invariant to feature scaling", "property tests against controls (KL; plain gradient)", :tested, ["lib/vapor/info_geom.ex", "test/vapor/info_geom_test.exs"], nil},
     {"0.16", "The language server answers editors over real stdio framing", "a Node client against bin/vapor lsp", :tested, ["lib/vapor/lsp.ex", "test/vapor/lsp_test.exs", "test/js/lsp_client.mjs"], "VS Code, Neovim and Emacs themselves are not run here"},
     # ---- what is owed
@@ -67,7 +67,7 @@ defmodule Vapor.Assurance do
 
   @labels %{proved: "**provado**", checked: "**conferido**", tested: "testado", argued: "argumentado", owed: "*devido*"}
 
-  @doc "The ledger as Markdown (docs/GARANTIAS.md)."
+  @doc "The ledger as Markdown (docs/ASSURANCE.md)."
   def markdown do
     counts = claims() |> Enum.frequencies_by(& &1.status)
 

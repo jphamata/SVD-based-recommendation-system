@@ -104,7 +104,7 @@ defmodule Vapor.Main.AthanorCli do
 
   defp interactive(text, base, o) do
     with {:ok, spec} <- Spec.parse(text, Keyword.take(base, [:consts, :budget, :seed, :measured])) do
-      Process.flag(:max_heap_size, %{size: div(1024 * 1_048_576, :erlang.system_info(:wordsize)), kill: true, error_logger: false})
+      Vapor.Hermetic.cap_self(1024)
       r = Athanor.init(spec, base)
       err(dim("interactive: Enter continues · p LITERAL proposes · pin N · ban N · more N · mind · stop"))
       loop(r, o[:every] || 20)
@@ -228,7 +228,7 @@ defmodule Vapor.Main.AthanorCli do
       end
     else
       :usage -> 2
-      :bad_args -> err("usage: vapor verify PROBLEM.alb CERTIFICATE.json [--full] [--replay]   (either may be -)"); 2
+      :bad_args -> err("usage: vapor verify PROBLEM.nbq CERTIFICATE.json [--full] [--replay]   (either may be -)"); 2
       {:error, m} -> err("verify: " <> to_string(m)); 3
     end
   end
@@ -259,7 +259,7 @@ defmodule Vapor.Main.AthanorCli do
       cert.error_samples != [] && dim("errors   ") <> warn(Enum.join(Enum.take(cert.error_samples, 3), " | ")),
       cert.notes != [] && dim("notes    ") <> Enum.join(cert.notes, "; "),
       dim("journal  #{cert.journal_root}"),
-      dim("check    vapor verify PROBLEM.alb CERT.json   (replay: #{cert.replay})")
+      dim("check    vapor verify PROBLEM.nbq CERT.json   (replay: #{cert.replay})")
     ]
 
     lines |> Enum.filter(&is_binary/1) |> Enum.join("\n")

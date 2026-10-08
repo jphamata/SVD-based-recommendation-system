@@ -298,7 +298,8 @@ defmodule Vapor.Console.Hall do
     end
   end
 
-  @verbs ~w(alembic athanor verify game crucible assay mind scene solve rebis aludel tabula cupel amalgam chat wzn help)
+  # the terminal completes every verb but those that make no sense in a jail (models from disk, the editors' server)
+  @verbs Vapor.Main.verbs() -- ~w(lsp version search palingenesis)
 
   @doc "Completions for the last word of a line: verbs and builtins first, then the session's files."
   def complete(line, files) do

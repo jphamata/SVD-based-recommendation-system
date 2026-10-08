@@ -12,7 +12,7 @@ defmodule Vapor.ConsoleMajlisTest do
   test "the conversation strings never redefine another script's key with other text, and every English key has a Portuguese one" do
     dir = Path.join(:code.priv_dir(:vapor), "console")
     mine = keys(File.read!(Path.join(dir, "majlis.js")))
-    others = for f <- ["index.html", "athanor.js", "bancada.js", "mercado.js", "opus.js"], reduce: %{}, do: (acc -> Map.merge(acc, keys(File.read!(Path.join(dir, f)))))
+    others = for f <- ["index.html", "athanor.js", "workbench.js", "market.js", "opus.js"], reduce: %{}, do: (acc -> Map.merge(acc, keys(File.read!(Path.join(dir, f)))))
     assert map_size(mine) > 100
     clashes = for {k, v} <- mine, Map.has_key?(others, k), others[k] != v, do: {k, v, others[k]}
     assert clashes == [], inspect(clashes)

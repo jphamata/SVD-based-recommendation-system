@@ -1,8 +1,8 @@
 defmodule Vapor.Logic.LP do
   @moduledoc """
   Linear programming in **exact rational arithmetic**, with certificates
-  any reader can check by multiplication (docs/LOGICA.md §5,
-  docs/FINANCAS.md §8).
+  any reader can check by multiplication (docs/LOGIC.md §5,
+  docs/FINANCE.md §8).
 
       maximize 3x + 2y
       subject to

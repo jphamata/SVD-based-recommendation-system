@@ -1,7 +1,7 @@
 defmodule Vapor.Quality.Round16 do
   @moduledoc """
   Quality checks for the 0.16 round — conversations, the store, the terminal,
-  Al-Mizān, information geometry — in the suite's discipline: a value, a
+  Almizan, information geometry — in the suite's discipline: a value, a
   **control** that a naive implementation would produce, and a threshold
   that separates them.
 
@@ -20,7 +20,7 @@ defmodule Vapor.Quality.Round16 do
   | entropy boundary | the source audit finds no OS randomness outside one module | an injected draw is flagged |
   """
   alias Vapor.Khazana, as: K
-  alias Vapor.{InfoGeom, Majlis, Mizan}
+  alias Vapor.{InfoGeom, Majlis, Almizan}
 
   defmodule Echo do
     @moduledoc false
@@ -38,7 +38,7 @@ defmodule Vapor.Quality.Round16 do
     File.mkdir_p!(tmp)
 
     try do
-      %{checks: List.flatten([store(tmp), conversations(tmp), mizan(), geometry(), jail(tmp), entropy()])}
+      %{checks: List.flatten([store(tmp), conversations(tmp), almizan(), geometry(), jail(tmp), entropy()])}
     after
       File.rm_rf!(tmp)
     end
@@ -137,14 +137,14 @@ defmodule Vapor.Quality.Round16 do
     end
   end
 
-  # ------------------------------------------------------------------ mizan
+  # ------------------------------------------------------------------ almizan
 
-  defp mizan do
+  defp almizan do
     law = fn c -> "(claim e (root H-f-Z) (wazn burhan) (inputs (x q) (v q)) (field (x v) (v (- (- x) (* #{c} v)))) (proof conserved) (body (+ (* 1/2 v v) (* 1/2 x x))))" end
-    {:ok, ok} = Mizan.parse(law.("0"))
-    {:ok, damped} = Mizan.parse(law.("1/1000000000"))
-    [%{verdict: v1}] = Mizan.check(ok)
-    [%{verdict: v2}] = Mizan.check(damped)
+    {:ok, ok} = Almizan.parse(law.("0"))
+    {:ok, damped} = Almizan.parse(law.("1/1000000000"))
+    [%{verdict: v1}] = Almizan.check(ok)
+    [%{verdict: v2}] = Almizan.check(damped)
 
     # the control: dH/dt = -c·v², sampled at 1000 points of [-1, 1]², judged in binary64 with a tolerance
     rng = Vapor.Entropy.rng({:round16, :sampling})
@@ -157,16 +157,16 @@ defmodule Vapor.Quality.Round16 do
         {k, rng} = Vapor.Entropy.uniform(4, rng)
         name = Enum.at(~w(سالم أحمد إبراهيم آمنة ألف), rem(i + k, 5)) <> "-" <> arabic_digits(i)
         text = "(claim #{name} (root H-s-b) (wazn fail) (inputs (x q)) (body (* #{k} x)))"
-        {:ok, t} = Mizan.parse(text)
-        ok = Enum.all?([:latin, :arabic], fn p -> Mizan.parse(Mizan.print(t, p)) == {:ok, t} end)
+        {:ok, t} = Almizan.parse(text)
+        ok = Enum.all?([:latin, :arabic], fn p -> Almizan.parse(Almizan.print(t, p)) == {:ok, t} end)
         {n + if(ok, do: 1, else: 0), rng}
       end)
 
     names = ~w(أحمد إحمد احمد آحمد أمل إمل امل)
     folded = names |> Enum.map(&String.replace(&1, ~r/[أإآ]/u, "ا")) |> Enum.uniq() |> length()
 
-    c = Vapor.Mizan.Abjad.collisions()
-    letters = Enum.map(Vapor.Mizan.Abjad.letters(), &elem(&1, 0))
+    c = Vapor.Almizan.Abjad.collisions()
+    letters = Enum.map(Vapor.Almizan.Abjad.letters(), &elem(&1, 0))
     hashes = for a <- letters, b <- letters, d <- letters, do: :crypto.hash(:sha256, a <> "-" <> b <> "-" <> d)
 
     [check("conservation decided exactly: an undamped oscillator; the same with damping 10⁻⁹", "#{v1}; #{v2}",

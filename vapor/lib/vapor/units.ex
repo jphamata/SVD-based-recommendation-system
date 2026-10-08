@@ -1,6 +1,6 @@
 defmodule Vapor.Units do
   @moduledoc """
-  Physical units with dimensional analysis (docs/BANCADA.md §2).
+  Physical units with dimensional analysis (docs/WORKBENCH.md §2).
 
   A dimension is the vector of exponents over the seven SI base
   quantities `{L, M, T, I, Θ, N, J}` (metre, kilogram, second, ampere,

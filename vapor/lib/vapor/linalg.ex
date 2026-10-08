@@ -105,11 +105,11 @@ defmodule Vapor.Linalg do
       row =
         Enum.reduce(0..(j - 1)//1, {}, fn k, row ->
           lk = elem(l, k)
-          Tuple.append(row, (elem(aj, k) - dot(row, lk, 0, k, 0.0)) / elem(lk, k))
+          :erlang.append_element(row, (elem(aj, k) - dot(row, lk, 0, k, 0.0)) / elem(lk, k))
         end)
 
       d = elem(aj, j) - dot(row, row, 0, j, 0.0)
-      if d > 0.0, do: {:cont, Tuple.append(l, Tuple.append(row, :math.sqrt(d)))}, else: {:halt, {:error, :not_positive_definite, j}}
+      if d > 0.0, do: {:cont, :erlang.append_element(l, :erlang.append_element(row, :math.sqrt(d)))}, else: {:halt, {:error, :not_positive_definite, j}}
     end)
     |> case do
       {:error, _, _} = e -> e
@@ -129,7 +129,7 @@ defmodule Vapor.Linalg do
       Enum.reduce(0..(n - 1)//1, {}, fn i, y ->
         li = elem(l, i)
         s = Enum.reduce(0..(i - 1)//1, 0.0, fn k, s -> s + elem(li, k) * elem(y, k) end)
-        Tuple.append(y, (elem(b, i) - s) / elem(li, i))
+        :erlang.append_element(y, (elem(b, i) - s) / elem(li, i))
       end)
 
     lt = transpose_lower(l, n)

@@ -1,6 +1,6 @@
 defmodule Vapor.Play do
   @moduledoc """
-  Games (docs/TABULEIROS.md): the rules of chess, shogi, Go, the m,n,k
+  Games (docs/BOARDS.md): the rules of chess, shogi, Go, the m,n,k
   family (tic-tac-toe, Connect Four, gomoku) and two poker games, each
   checked against the published counts that pin a rule set down, and the
   searches that play them — one generic Monte Carlo tree search for any

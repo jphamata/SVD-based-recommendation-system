@@ -7,7 +7,7 @@ defmodule Vapor.HFParityTest do
 
       max |logit_vapor − logit_hf|  ≤  1e-5 · max |logit_hf|
 
-  (measured: ≤ 6e-7 on every variant — see docs/ECOSSISTEMA.md), and greedy
+  (measured: ≤ 6e-7 on every variant — see docs/ECOSYSTEM.md), and greedy
   decoding must produce the same tokens, except after a step whose top-two
   logits are closer than the tolerance (a tie that either order may break).
 

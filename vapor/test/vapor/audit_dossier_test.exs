@@ -1,6 +1,6 @@
 defmodule Vapor.AuditDossierTest do
   @moduledoc """
-  Audit dossiers (`Vapor.Audit`, docs/AUDITORIA.md): evidence the system
+  Audit dossiers (`Vapor.Audit`, docs/AUDIT.md): evidence the system
   produced — a compilation certificate, an attested agent journal, a
   transparency-log receipt, a quality report, a model contract — packed,
   signed and co-signed; verified offline from the bytes; **any altered byte

@@ -1,7 +1,7 @@
 defmodule Vapor.Bio.Structure do
   @moduledoc """
   Protein structure — measured, compared, folded from contacts, and the
-  contacts read from evolution (docs/PROTEINAS.md).
+  contacts read from evolution (docs/PROTEINS.md).
 
   **Comparison**, the metrics of CASP and of every structure-prediction
   paper: optimal superposition (Horn's quaternion solution of the Kabsch

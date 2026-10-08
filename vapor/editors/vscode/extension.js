@@ -8,9 +8,9 @@ function activate(context) {
   const command = vscode.workspace.getConfiguration("vapor").get("path") || "vapor";
   const server = { command, args: ["lsp"] };
   client = new LanguageClient("vapor", "vapor", { run: server, debug: server }, {
-    documentSelector: [{ language: "mizan" }, { language: "alembic" }],
+    documentSelector: [{ language: "almizan" }, { language: "alembic" }],
   });
-  for (const cmd of ["vapor.mizan.toArabic", "vapor.mizan.toLatin"]) {
+  for (const cmd of ["vapor.almizan.toArabic", "vapor.almizan.toLatin"]) {
     context.subscriptions.push(vscode.commands.registerCommand(cmd, () => {
       const ed = vscode.window.activeTextEditor;
       if (ed) return client.sendRequest("workspace/executeCommand", { command: cmd, arguments: [ed.document.uri.toString()] });

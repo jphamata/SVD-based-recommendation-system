@@ -1,6 +1,6 @@
 defmodule Vapor.SceneTest do
   @moduledoc """
-  The living scene's analysis (docs/CENA.md), on pictures whose geometry
+  The living scene's analysis (docs/SCENE.md), on pictures whose geometry
   is known (`priv/quality/scene`, drawn by a script): the sky found and
   pushed to infinity, objects ordered by where they stand, the ground
   walkable, the light where the fire is; a drawing's skeleton with its
