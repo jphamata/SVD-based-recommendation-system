@@ -427,6 +427,14 @@ In a Phoenix app: `forward "/llm", Vapor.Plug, name: MyApp.LLM` (see
 
 ## Results (this machine: Xeon 2.1 GHz, 2 vCPUs, AVX-512, no PMU, no GPU)
 
+- **Round 0.17.0** (Xeon, 2 vCPUs, no physical GPU, Elixir 1.18.5/OTP 28, Zig 0.16, Lean 4.34.1;
+  headless Chromium): the full suite **1,096 tests, 2 failures** in 76 min (130 excluded for lack of
+  a tool in this session), both real and both fixed (the siphon shelled out to `kill`, against the
+  audit; the Livebook tour still used a renamed module); then every test file that a change since
+  could reach, chosen by the test cache's own reach, **427 tests, 0 failures** in 47 min. **Quality:
+  213/213** checks with a control in 42 min (`mix vapor.quality`, native), the ink check among them.
+  Kimi K3's topology against an independent float64 reference: relative error 4.4·10⁻⁶, greedy
+  identical, native = oracle.
 - **Round 0.14.0** (Elixir 1.14/OTP 25, no Zig in this session — without the
   native process): **87 tests, 0 failures** in the eight files of the open
   workbench, plus the official MCP SDK, the noise parity in JS and the
