@@ -110,12 +110,9 @@ defmodule Vapor.TestHelpers do
   The interpreter used by the differential tiers: `$VAPOR_PYTHON` or
   `python3`, and whether it can import `mods`.
   """
-  def python, do: System.get_env("VAPOR_PYTHON") || System.find_executable("python3")
+  def python, do: Vapor.TestTiers.python()
 
-  def python?(mods) do
-    py = python()
-    py != nil and match?({_, 0}, System.cmd(py, ["-c", "import " <> Enum.join(mods, ", ")], stderr_to_stdout: true))
-  end
+  def python?(mods), do: Vapor.TestTiers.python?(mods)
 
   @py_env [{"TQDM_DISABLE", "1"}, {"HF_HUB_DISABLE_PROGRESS_BARS", "1"}, {"TRANSFORMERS_VERBOSITY", "error"}]
 

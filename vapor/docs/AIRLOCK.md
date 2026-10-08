@@ -260,8 +260,8 @@ data about a family, and it belongs to the airlock alone.
 
 Applied in this round:
 
-- `Vapor.Model.Llama` was correct code under the wrong name: eight
-  families read it. It is now `Vapor.Model.Decoder`.
+- The decoder module was correct code under the wrong name (it was named
+  for Llama, and eight families read it). It is now `Vapor.Model.Decoder`.
 - The Kimi K3 adapter is now the **delta-rule hybrid** topology
   (`Vapor.Lock.Adapters.DeltaHybrid`, claiming only vapor's spelling
   `vapor_delta_hybrid`). K3 itself is a built-in alias (`kimi_k3`), and

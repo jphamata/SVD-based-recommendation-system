@@ -74,7 +74,7 @@ Vapor.Alembic.call(prog, "f", [10])               # {:ok, value} | {:error, mess
 Vapor.Alembic.eval("sum([x^2 for x in 1..10])")    # {:ok, 385}
 Vapor.Alembic.literal(~S|[1, (2, 3), {"k": 4}]|)   # data, never code
 Vapor.Alembic.show(value)                           # text that literal/1 reads back
-Vapor.Alembic.sandbox(fn -> … end, heap_mb: 64, timeout: 5_000)
+Vapor.Hermetic.seal(fn -> … end, heap_mb: 64, timeout: 5_000)   # the one seal on untrusted work (docs/HERMETIC.md)
 ```
 
 `show` and `literal` are inverses (tested with 300 random nested values).

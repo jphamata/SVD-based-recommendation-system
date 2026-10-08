@@ -117,7 +117,8 @@ defmodule Vapor.LSPTest do
     assert [%{"line" => 0, "severity" => 1, "message" => msg}] = r["diagnostics"]
     assert msg =~ "refuted"
     assert r["hover"] =~ "conservation"
-    assert r["formatted"] == 1
+    # the document is not canonical (spacing) and carries a comment: one edit, the comment kept
+    assert r["formatted"] == 1 and r["kept"] == true
     assert r["arabic"] =~ "دعوى"
   end
 end

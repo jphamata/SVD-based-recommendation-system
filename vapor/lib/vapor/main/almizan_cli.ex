@@ -12,6 +12,9 @@ defmodule Vapor.Main.AlmizanCli do
   @usage """
   vapor wzn check FILE [--lib DIR]          decide every obligation: proved · refuted (with the point) · unknown
   vapor wzn show FILE [--arabic|--latin]    the program in one script (the same tree, the same hash)
+  vapor wzn fmt FILE [--arabic|--latin] [--check|--write]
+                                            the canonical form, comments kept above their declarations;
+                                            --check exits 1 if FILE is not canonical, --write rewrites it
   vapor wzn hash FILE                       the program's identity: SHA-256 of its tree, whatever the script
   vapor wzn run FILE CLAIM [ARGS…]          evaluate (exact over ℚ, binary32 as vapor rounds it); burhān claims only once proved
   vapor wzn transmute FILE CLAIM [--to vapor|aiger|lean] [--out DIR]
@@ -25,7 +28,8 @@ defmodule Vapor.Main.AlmizanCli do
   def run(["help" | _]), do: (out(@usage); 0)
 
   def run([cmd | rest]) do
-    case opts(rest, [lib: :string, arabic: :boolean, latin: :boolean, to: :string, out: :string, points: :integer, depth: :integer]) do
+    case opts(rest, [lib: :string, arabic: :boolean, latin: :boolean, to: :string, out: :string, points: :integer, depth: :integer,
+                     check: :boolean, write: :boolean]) do
       :usage -> 2
       {:ok, o, args} -> verb(cmd, args, o)
     end
@@ -54,6 +58,34 @@ defmodule Vapor.Main.AlmizanCli do
     with {:ok, text} <- read_input(file), {:ok, m} <- Almizan.parse(text) do
       IO.write(Almizan.print(m, if(o[:arabic], do: :arabic, else: :latin)))
       0
+    else
+      {:error, e} -> (err("wzn: " <> e); 3)
+    end
+  end
+
+  defp verb("fmt", [file], o) do
+    proj = cond do
+      o[:arabic] -> :arabic
+      o[:latin] -> :latin
+      true -> nil
+    end
+
+    with {:ok, text} <- read_input(file),
+         {:ok, canonical} <- Vapor.Almizan.Format.format(text, proj) do
+      cond do
+        o[:check] == true and canonical == text -> 0
+        o[:check] == true -> err("wzn: #{file} is not in canonical form (vapor wzn fmt --write #{file})"); 1
+        o[:write] == true and file not in [nil, "-"] ->
+          if canonical != text do
+            tmp = file <> ".fmt#{System.unique_integer([:positive])}"
+            File.write!(tmp, canonical)
+            File.rename!(tmp, file)
+          end
+
+          0
+
+        true -> IO.write(canonical); 0
+      end
     else
       {:error, e} -> (err("wzn: " <> e); 3)
     end

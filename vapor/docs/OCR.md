@@ -327,7 +327,7 @@ that emitted them to check against, was closed from the other side: an
 with the decoder) emits the streams, and each one is judged by jbig2dec before
 becoming a fixture. Now decoded:
 
-- **Huffman coding** (`Vapor.Docs.JBIG2Huffman`): the fifteen standard tables
+- **Huffman coding** (`Vapor.Docs.JBIG2.Huffman`): the fifteen standard tables
   B.1–B.15 (with the lower/upper range lines and OOB), user
   tables (segment type 53, built by algorithm B.3), SDHUFF symbol
   dictionaries (heights, widths, aggregation sizes, and each height class's

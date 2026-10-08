@@ -30,8 +30,8 @@ const until = async (pred, ms = 20000) => { const t0 = Date.now(); while (!notes
 
 const uri = "file:///tmp/oscillator.wzn";
 const text = `(claim energy (root H-f-Z) (wazn burhan)
-  (inputs (x q) (v q))
-  (field (x v) (v (- (- x) (* 1/10 v))))
+  (inputs (x q)   (v q))
+  (field (x v) (v (- (- x) (* 1/10 v))))   ; damped
   (proof conserved)
   (body (+ (* 1/2 v v) (* 1/2 x x))))
 `;
@@ -47,6 +47,7 @@ const hover = await call("textDocument/hover", { textDocument: { uri }, position
 out.hover = hover.result && hover.result.contents.value;
 const fmt = await call("textDocument/formatting", { textDocument: { uri }, options: { tabSize: 2, insertSpaces: true } });
 out.formatted = fmt.result.length;
+out.kept = fmt.result.length === 1 && fmt.result[0].newText.includes("; damped");
 const conv = await call("workspace/executeCommand", { command: "vapor.almizan.toArabic", arguments: [uri] });
 const edit = await until((m) => m.method === "workspace/applyEdit");
 out.arabic = edit ? edit.params.edit.changes[uri][0].newText : null;

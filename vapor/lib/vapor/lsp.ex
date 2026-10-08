@@ -155,9 +155,11 @@ defmodule Vapor.LSP do
   def handle(%{"method" => "textDocument/formatting", "id" => id, "params" => %{"textDocument" => %{"uri" => uri}}}, st) do
     edits =
       case st.docs[uri] do
+        # comments kept (glosses): the printer alone would drop them
         %{lang: :almizan, text: text} ->
-          case Almizan.parse(text) do
-            {:ok, m} -> [%{"range" => whole(text), "newText" => Almizan.print(m, Syntax.projection(text))}]
+          case Vapor.Almizan.Format.format(text) do
+            {:ok, ^text} -> []
+            {:ok, canonical} -> [%{"range" => whole(text), "newText" => canonical}]
             _ -> []
           end
 
@@ -171,10 +173,11 @@ defmodule Vapor.LSP do
       when cmd in ["vapor.almizan.toArabic", "vapor.almizan.toLatin"] do
     case st.docs[uri] do
       %{text: text} ->
-        case Almizan.parse(text) do
-          {:ok, m} ->
-            proj = if cmd == "vapor.almizan.toArabic", do: :arabic, else: :latin
-            edit = %{"changes" => %{uri => [%{"range" => whole(text), "newText" => Almizan.print(m, proj)}]}}
+        proj = if cmd == "vapor.almizan.toArabic", do: :arabic, else: :latin
+
+        case Vapor.Almizan.Format.format(text, proj) do
+          {:ok, projected} ->
+            edit = %{"changes" => %{uri => [%{"range" => whole(text), "newText" => projected}]}}
             {[reply(id, nil), request("workspace/applyEdit", %{"label" => "Almizan: #{proj}", "edit" => edit})], st}
 
           {:error, why} ->

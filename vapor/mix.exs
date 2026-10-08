@@ -23,6 +23,9 @@ defmodule Vapor.MixProject do
     [extra_applications: [:logger, :crypto, :inets, :ssl, :public_key], mod: {Vapor.Application, []}]
   end
 
+  # `mix vapor.test` (the content-addressed test cache) runs in the test environment
+  def cli, do: [preferred_envs: ["vapor.test": :test]]
+
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 end
