@@ -4,8 +4,11 @@ defmodule Vapor.UnicodeTest do
   alias Vapor.Unicode
   import Vapor.TestHelpers
 
-  test "the primary-composite table has the standard's 941 pairs; blocking by a class-0 mark is respected" do
-    assert Unicode.composites() == 941
+  test "the primary-composite table has the standard's pairs for its Unicode version; blocking by a class-0 mark is respected" do
+    # the count depends on the Unicode data OTP ships (15.x: 941; 16.0, OTP 28: 961, as Python 3.14's unicodedata counts them)
+    expected = %{{15, 0} => 941, {15, 1} => 941, {16, 0} => 961}[:unicode_util.spec_version()]
+    assert expected != nil, "no recorded count for Unicode #{Unicode.version()}: count it with Python's unicodedata"
+    assert Unicode.composites() == expected
     # и, THAI YAMAKKAN (class 0), COMBINING DIAERESIS: no composition across the mark
     assert Unicode.nfc("и๎̈") == "и๎̈"
     assert Unicode.nfc("ӥ") == "ӥ"

@@ -30,7 +30,7 @@ defmodule Vapor.MCPServerTest do
     assert r["result"]["serverInfo"]["name"] == "vapor" and r["result"]["capabilities"]["tools"]
     assert {nil, st} = Server.handle(%{"jsonrpc" => "2.0", "method" => "notifications/initialized"}, st)
     {r, st} = Server.handle(%{"jsonrpc" => "2.0", "id" => 2, "method" => "tools/list"}, st)
-    assert length(r["result"]["tools"]) == 25 and Enum.all?(r["result"]["tools"], &match?(%{"inputSchema" => %{"type" => "object"}}, &1))
+    assert length(r["result"]["tools"]) == 27 and Enum.all?(r["result"]["tools"], &match?(%{"inputSchema" => %{"type" => "object"}}, &1))
     {r, st} = Server.handle(%{"jsonrpc" => "2.0", "id" => 3, "method" => "nope"}, st)
     assert r["error"]["code"] == -32601
     {r, st} = Server.handle(%{"jsonrpc" => "2.0", "id" => 4, "method" => "tools/call", "params" => %{"name" => "studio_run", "arguments" => %{"graph" => 7}}}, st)
@@ -46,7 +46,9 @@ defmodule Vapor.MCPServerTest do
     {out, 0} = System.cmd(python(), [Path.expand("../python/mcp_client.py", __DIR__), File.cwd!(), dir], env: [{"MIX_ENV", to_string(Mix.env())}])
     d = Vapor.JSON.decode!(out |> String.split("\n", trim: true) |> List.last())
 
-    assert d["tools"] == ~w(alembic_eval aludel_decide amalgam_sum arbitrage_check assay_run athanor_run athanor_verify board_query comfy_import context_search crucible_run cupel_drill engineering_run finance_run game_query logic_check rebis_check render_scene scene_ops studio_catalogue studio_run studio_validate studio_verify tabula_analyze workbench_solve)
+    # the SDK lists exactly the server's tools (sorted, as the client prints them)
+    assert d["tools"] == Vapor.MCP.Server.tools() |> Enum.map(& &1["name"]) |> Enum.sort()
+    assert "qalib_check" in d["tools"] and "recommend_run" in d["tools"]
     assert d["catalogue"]["structured"]["nodes"] |> Enum.map(& &1["type"]) |> Enum.all?(&String.starts_with?(&1, "diffusion."))
     assert d["invalid"]["isError"] and hd(d["invalid"]["content"])["text"] =~ "audio"
     refute d["valid"]["isError"]

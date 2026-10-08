@@ -25,6 +25,10 @@ vapor cupel [--n 32 --k 64 --bit 26]     # the silent-corruption drill
 vapor amalgam FILE|- [--f32]             # a sum that does not depend on the order
 vapor chat new|say|show|edit|regen|switch|rewind|fork|pin|context|compact|search|export|import|share …  (0.16)
 vapor wzn check|show|hash|run|transmute|assay|abjad FILE …   # Almizan (0.16): decided claims
+vapor logic FILE | check FILE PROPOSAL.json   # the logic desk (0.17): SAT, LP, integer LP, causal, Gröbner…
+vapor qalib map|check …                  # sky130 netlists, mapped and proved equal (0.17)
+vapor recommend RATINGS.csv              # factorisation with baselines and a control (0.17)
+vapor palingenesis planks|try MODEL …    # renew a model plank by plank (0.17)
 vapor lsp                                # the language server (VS Code, Neovim, Emacs, …)
 vapor serve | tui | ocr | merge | quality …   # the earlier mix tasks
 ```
@@ -92,11 +96,41 @@ same interpreter — the Dīwān ([DIWAN.md](DIWAN.md)): pipes, redirection, `;`
 in the console, a jailed session. Conversations: [MAJLIS.md](MAJLIS.md); Almizan: [ALMIZAN.md](ALMIZAN.md);
 editors: [EDITORS.md](EDITORS.md).
 
+## Decisions, netlists, recommendations and planks (0.17)
+
+```sh
+# an integer program: the optimum and the tree that proves it (exit 0); anyone's proposal, checked
+vapor logic knapsack.lp | jq .objective
+vapor logic check knapsack.lp my_proposal.json          # exit 0 accepted, 1 refused
+
+# a causal question on a stated diagram: the estimand, or the hedge (exit 1)
+printf 'causal\nx -> m\nm -> y\nx <-> y\nidentify y | do(x)\n' | vapor logic -
+
+# a netlist written in sky130 cells, read back and proved equal before it is printed
+vapor qalib map adder.net --style nand > adder.v
+vapor qalib check adder.net yosys_out.v                 # exit 1 with the input that tells them apart
+
+# recommendations, with the evidence: exit 0 only for signal
+vapor recommend ratings.csv --top 5
+
+# renew one plank from a donor checkpoint, through the brake and the target test
+vapor palingenesis planks ./Model
+vapor palingenesis try ./Model --plank model.layers.12.mlp --from ./Finetuned \
+      --anchors keep.txt --targets improve.txt --epsilon 0.05 --out ./Model-gen1
+```
+
+Logic: [LOGIC.md §6–§7](LOGIC.md); netlists: [QALIB.md](QALIB.md); recommendations:
+[RECOMMEND.md](RECOMMEND.md); planks: [PALINGENESIS.md](PALINGENESIS.md). In the console's
+terminal (the jail) `palingenesis` is refused, because it reads models from the server's disk;
+the other three verbs read only the session's files.
+
 ## Agents and terminal console
 
 The same verbs are MCP tools (`mix vapor.mcp`: `alembic_eval`, `athanor_run` with
 `proposals`, `athanor_verify`, `game_query`, `crucible_run`, `assay_run`, `scene_ops`; in 0.15
-`rebis_check`, `aludel_decide`, `tabula_analyze`, `cupel_drill`, `amalgam_sum` — 25 in all) and TUI commands (`mix vapor.tui`: `alembic -e "…"`, `athanor run file`, …). An
+`rebis_check`, `aludel_decide`, `tabula_analyze`, `cupel_drill`, `amalgam_sum`; in 0.17
+`qalib_check` and `recommend_run`, with `logic_check` now covering LP, integer programs and causal
+diagrams — 27 in all) and TUI commands (`mix vapor.tui`: `alembic -e "…"`, `athanor run file`, …). An
 agent proposes; the Touchstone checks — the same door for people, models and programs.
 
 ## Mind

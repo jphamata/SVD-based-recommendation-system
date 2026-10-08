@@ -6,7 +6,7 @@ defmodule Vapor.MixProject do
   def project do
     [
       app: :vapor,
-      version: "0.16.0",
+      version: "0.17.0",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),

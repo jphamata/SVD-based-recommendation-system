@@ -22,9 +22,14 @@ defmodule Vapor.MSLShim do
   def device_name(:contracting), do: "MSL shim — clang -ffp-contract=fast (fuses a·b+c)"
   def device_name(:ftz), do: "MSL shim — flush-to-zero (MXCSR FTZ|DAZ)"
 
-  @doc "The cache directory of a device mode (created on demand)."
+  # The objects need nothing from the C++ runtime: linking none keeps them loadable by any glibc
+  # loader, including a worker built against another libc than the system clang's (Nix on Ubuntu).
+  @link ["-std=c++17", "-shared", "-fPIC", "-nostdlib++", "-static-libgcc", "-Wno-unknown-attributes"]
+
+  @doc "The cache directory of a device mode (created on demand), keyed by its build flags."
   def dir(mode) do
-    d = Path.join(System.tmp_dir!(), "vapor-msl-#{mode}")
+    tag = :crypto.hash(:sha256, :erlang.term_to_binary({@link, flags(mode)})) |> Base.encode16(case: :lower) |> binary_part(0, 8)
+    d = Path.join(System.tmp_dir!(), "vapor-msl-#{mode}-#{tag}")
     File.mkdir_p!(d)
     File.write!(Path.join(d, "device"), device_name(mode) <> "\n")
     d
@@ -57,7 +62,7 @@ defmodule Vapor.MSLShim do
       cpp = Path.join(d, hex <> ".cpp")
       File.write!(cpp, src)
       tmp = so <> ".#{System.unique_integer([:positive])}"
-      args = ["-std=c++17", "-shared", "-fPIC", "-Wno-unknown-attributes", "-I", @shim] ++ flags(mode) ++ ["-o", tmp, cpp]
+      args = @link ++ ["-I", @shim] ++ flags(mode) ++ ["-o", tmp, cpp]
       {out, rc} = System.cmd("clang++", args, stderr_to_stdout: true)
       if rc != 0, do: raise("clang++ failed for #{cpp}:\n#{out}")
       File.rename!(tmp, so)

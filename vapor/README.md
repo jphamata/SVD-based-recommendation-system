@@ -203,6 +203,21 @@ codes with meaning), over MCP and through the TUI; the console gained an identit
 of its own in which the furnace is the chart of the search and the touchstone is the
 verdict.
 
+Since 0.17.0, vapor **builds where you build it** and **renews what it serves**. The flake and
+the code compile cleanly on the current nixpkgs (Elixir 1.18, OTP 28, Zig 0.16), and the Lean
+development runs on Lean 4.34 here, where it can now check Almizan's exports. English is the
+project's default language. A **hermetic seal** contains every job on untrusted input and counts
+the off-heap binaries the 0.16 sandboxes let through. The logic desk decides **integer programs**,
+with a tree any reader can check, and **causal claims** on a stated diagram (the ID algorithm:
+the estimand, or a hedge), also an Almizan root. **Palingenesis** renews a model plank by plank
+through a Fisher–Rao drift brake and a paired target test, publishes each generation without
+disturbing a reader, and keeps a signed lineage. **Qālib** reads the netlists of the open sky130 flow
+and proves them equal to their specification, or finds the input that tells them apart.
+**Recommend** absorbs this repository's SVD script and gives its RMSE the baselines, test and control
+it lacked. Alembic files are `.nbq`; Mīzān is now **Almizan**.
+
+- Round 0.17 — the build, English, the seal **[docs/HERMETIC.md](docs/HERMETIC.md)** · integer programs and causes **[docs/LOGIC.md §6–§7](docs/LOGIC.md)** · Palingenesis **[docs/PALINGENESIS.md](docs/PALINGENESIS.md)** · Qālib **[docs/QALIB.md](docs/QALIB.md)** · recommendations **[docs/RECOMMEND.md](docs/RECOMMEND.md)** · the editor question **[docs/EDITORS.md](docs/EDITORS.md)** · the scrutiny of the request and its attachments: **[docs/DIRECTIVE.md §20](docs/DIRECTIVE.md)**
+
 Since 0.16.0, vapor is more **pure** and **converses**. What only re-enacted a fixed example went out
 (complex networks, algorithm discovery, tic-tac-toe, ten demonstration panels — almost
 3,000 lines). In came **Majlis**: conversations as a content-addressed tree, in which

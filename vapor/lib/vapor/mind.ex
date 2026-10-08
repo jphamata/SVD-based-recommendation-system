@@ -169,7 +169,7 @@ defmodule Vapor.Mind do
 
   @doc "The code inside the first fenced block of a reply (or the whole reply)."
   def extract_code(reply) do
-    case Regex.run(~r/```(?:alembic|alb|text)?\s*\n(.*?)```/s, reply) do
+    case Regex.run(~r/```(?:alembic|nbq|text)?\s*\n(.*?)```/s, reply) do
       [_, code] -> String.trim(code)
       nil -> String.trim(reply)
     end

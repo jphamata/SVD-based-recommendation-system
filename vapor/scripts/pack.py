@@ -3,9 +3,9 @@
 
     python3 scripts/pack.py [OUT_DIR]          # default: ../dist
 
-    vapor_<version>-1-codigo.zip      code, tests, fixtures, docs, proofs, console
-    vapor_<version>-2-qualidade.zip   priv/quality: the retained data of the quality suite
-    vapor_<version>-3-modelos.zip     the small trained readers and policies (priv/ocr*, priv/lm)
+    vapor_<version>-1-code.zip        code, tests, fixtures, docs, proofs, console
+    vapor_<version>-2-quality.zip     priv/quality: the retained data of the quality suite
+    vapor_<version>-3-models.zip      the small trained readers and policies (priv/ocr*, priv/lm)
     SHA256SUMS
 
 Every archive holds paths under `vapor/`, so unzipping the three in one place
@@ -89,7 +89,7 @@ def main():
     groups = {1: [], 2: [], 3: []}
     for n in names:
         groups[part(n)].append(n)
-    labels = {1: "codigo", 2: "qualidade", 3: "modelos"}
+    labels = {1: "code", 2: "quality", 3: "models"}
     sums = []
     for k in (1, 2, 3):
         if not groups[k]:

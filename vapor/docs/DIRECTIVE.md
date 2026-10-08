@@ -1557,3 +1557,159 @@ bin/vapor wzn check priv/almizan/oscillator.wzn          # proved; refuted, with
 bin/vapor wzn show priv/almizan/oscillator.wzn --arabic  # the same tree, the other script
 T=$(bin/vapor chat new --title teste) && bin/vapor chat say $T "olá" && bin/vapor chat context $T   # with VAPOR_MIND
 ```
+
+## 20. Round 0.17: the alchemical re-engineering — the build, English, Palingenesis, the mould, causes
+
+> Request 9 (2026-10-08), translated and condensed: "Act as principal software engineer, systems
+> researcher and product designer: a complete, first-principles re-engineering of the attachments.
+> Phase 0, a critical audit, including of this instruction. Phase 1, ruthless cleanup: no dead
+> code, no TODO, FIXME or stub. Phase 2, the core rebuilt for resilience, low latency and safe
+> concurrency, with non-trivial innovation. Phase 3, an original, minimal, ergonomic UI. Phase 4,
+> rigorous tests: unit, edge and stress; deterministic under failure. Phase 5, the complete source,
+> packaged as a zip. The target is vapor; the other bases are to be absorbed; total freedom to rename
+> under the theme of alchemy. English the default, not Portuguese." Attached: two long analyses
+> (a "Ship of Theseus" for AI over the Merkle store, Fisher–Rao and Re-Basin; a frontier programme of
+> ternary quantisation, an "Arché suite", 3D Gaussian splatting, infinite context, robotics and
+> artificial life); a `Vapor.Silicon` that emits GDSII; notes on LoRA, distillation and natural
+> gradient; a design for agents behind a frozen, content-addressed web and human-signed action
+> plans; a "ghost network" with traffic mimicry and its incentives; notes on metaprogramming in
+> Almizan and Alembic; `.nbq` for Alembic, and perhaps "Almizan" for Mīzān. And a build log:
+> `nix develop` fails on `poppler_utils`, then `mix vapor.serve` fails to compile on Elixir 1.18.5.
+
+### The instruction, scrutinised
+
+- **"Rebuild the core."** The core's value is its evidence: bits identical across five substrates,
+  a register-allocation checker proved in Lean, certificates on every answer, a ledger that fails
+  the build when it overstates. Rewriting 96,000 tested lines in one round would discard exactly
+  that. First principles here meant finding what is actually wrong and fixing it where it lives,
+  then adding what is missing. The defects found are listed below, each with the test that pins it.
+- **"No TODO, FIXME or stub."** The code had none (a search of `lib/`, `native/` and `proofs/`
+  finds no marker, no `sorry`, no `axiom`). The open work lives in [TODO.md](TODO.md), where each
+  item says why it matters. Deleting that file would hide the work, not clean it. This round closes
+  items from it instead (below).
+- **"English the default."** Done for everything a reader meets first: the README, the CHANGELOG,
+  every document under `docs/`, the generated reports, the ledger, the CLI, and the console (already English by
+  default, with Portuguese as its second language). Two things stay in Portuguese on purpose: the
+  thesis (`monografia/`, abnTeX2) and its defence slides, which are documents of a Brazilian
+  institution. The Portuguese keywords the parsers accept (`deve`, `maximizar`, `se … então`) stay
+  too: bilingual input is a feature.
+- **"Rename freely, alchemically."** Renames break receipts, signed archives and the thesis's
+  citations, so only three were made, each for a reason beyond taste. **Almizan**, because the
+  language was spelled four ways (Mīzān, Mizān, Al-Mizān, Al-Mīzān) and English fuses the Arabic
+  article everywhere else (alembic, alchemy, algebra); the hashed format tag stays `mizan`, so
+  every 0.16 module keeps its identity. **`.nbq`** for Alembic, its triliteral root (ن-ب-ق), as
+  `.wzn` is Almizan's (و-ز-ن). **English file names** for documents and tests. The new modules took
+  alchemical names: the **hermetic seal**, **Palingenesis** (rebirth from the ashes), **Qālib** (the
+  mould).
+- **"An original UI."** The console already had an identity (the canal lock, water level as
+  measurement). The round adds to the surfaces people already use: four verbs that appear in the
+  CLI, the TUI and the console's terminal through the one interpreter; two MCP tools; and inlay hints,
+  so a claim's verdict sits beside it in every editor. A new page would have been decoration.
+- **"Package as a zip."** Done, in the same three parts as the upload (code, quality data,
+  admitted models), each one a subset of the repository at the commit.
+
+### The build, first
+
+| failure | cause | fix |
+|---|---|---|
+| `nix develop`: `'poppler_utils' has been renamed` | nixpkgs renamed it (and deprecated top-level `elixir`/`erlang`, `nixpkgs-fmt`, `texlive.combine`) | `poppler-utils`, `beamPackages.*`, `nixfmt`, `texliveMedium.withPackages`; every flake output evaluates on the user's pinned nixpkgs (151fa4e8) with no error or deprecation warning |
+| `cannot inject attribute @modal … cannot escape #Reference` | on OTP 28 a compiled regex is a reference, and three modules kept regexes in module attributes | regexes live in functions |
+| 7 warnings, then 9 from the type checker | ranges without steps, `0.0` patterns, `Tuple.append`, dead clauses; **one real bug**: `mix vapor.lock` with no argument raised `MatchError` (a match inside `cond`) | all fixed; the build has no warnings |
+| Lean | the proofs pinned Lean 4.23, and this machine had none | ported to 4.34.1 (deprecated lemma names, one `omega` that exceeds the recursion depth); extraction byte-identical except the sources' digest; `lake build` warning-free |
+| a test pinned 941 primary composites | OTP 28 ships Unicode 16.0, which has 961 (Python 3.14's `unicodedata` agrees) | the test knows both versions |
+
+### The attachments, weighed claim by claim
+
+| claim | verdict | what was done |
+|---|---|---|
+| A Fisher–Rao brake "ends catastrophic forgetting" | **overstated**: it bounds drift on the anchor set only | built as Palingenesis's brake, with that scope written into the module, the doc and the ledger |
+| Fisher–Rao is "the only Riemannian metric invariant to reparametrisation" | half right: Čencov's theorem makes it the unique metric (up to scale) invariant under sufficient statistics on the simplex; computed on output distributions, parametrisation-independence is immediate | used where it is right: the brake |
+| Hungarian Re-Basin gives a "zero-tolerance fit" of a new plank | **wrong for whole-block replacement**: permuting a block's hidden units changes nothing (measured: drift 4.9·10⁻⁷); alignment matters only when blending, and joint alignment across layers is a heuristic, not exact | `mode: {:blend, t}` aligns first; without it the blend drifts more than 3× |
+| an atomic pointer swap on `/dev/shm` (RCU) | on the BEAM, immutability gives RCU for free; a worker's shared-memory session takes a new generation at its next session | built at the BEAM level, stated |
+| validate on Qwen 7B/14B and DeepSeek-V3 | not on this machine (no weights, no memory) | owed, in the ledger |
+| ternary `:sb2` ("90 % less energy", "no multiplications") | the saving is memory bandwidth; ternarising a model trained in floating point destroys it (it needs a model trained ternary, such as BitNet b1.58); every backend needs a kernel | deferred, in the TODO |
+| K-FAC "in the SIMD registers, without DRAM" | false: the Kronecker factors are d × d (16 M entries at d = 4096) | not built; the natural gradient with its control exists (0.16) |
+| "one natural-gradient step = 10–20 AdamW steps", "3–5× fewer epochs", "half the LoRA rank" | numbers without a measurement | not claimed |
+| Fisher–Rao geodesics over Lean's proof trees ("Logos") | a category error: tactic trees carry no statistical manifold | refused |
+| 3D Gaussian splatting sorted by sorting networks at 60 FPS | sorting networks are O(n log² n) and suit small fixed n; millions of splats want a radix sort | refused |
+| infinite context in O(1) memory | true of the SSM state, but the state is a lossy summary and recall degrades | exists (0.10), with its measurement |
+| a "zero sim-to-real gap" from exact rationals | false: the gap is model mismatch (friction, compliance, sensors), not rounding | refused |
+| `Vapor.Silicon` to GDSII, "the end of proprietary EDA" | the sky130 flow is open source (Yosys, OpenROAD, Magic, KLayout), and a layout that has not passed DRC and LVS is not a chip | built **Qālib**: read, map and prove, i.e. translation validation of the open flow ([QALIB.md](QALIB.md)) |
+| interpretability by Gröbner bases of an LLM's Boolean polynomials | exponential beyond tiny binarised networks | refused |
+| do-calculus in Almizan; "an agent may act only with a proof that X causes Y" | identifiability given a diagram is decidable (the ID algorithm is complete); causation itself is not provable from data | built: the root **s-b-b** and the logic desk's `causal`; the second half refused, and the doc says why |
+| mixed-integer programming certified over ℚ | sound | built: branch and bound with a checkable tree ([LOGIC.md §6](LOGIC.md)); cutting planes owed |
+| moving the PDF and JBIG2 parsers into the Zig worker under seccomp | it trades a memory-safe language for an unsafe one, for isolation the BEAM already gives each process; the real exposures are memory, time and crashes | built **the hermetic seal**, which also closed a real hole (below) |
+| a frozen, content-addressed web; human-signed action plans | sound, and already half true: the agent journal never re-executes `observe` | a sanitising, budgeted fetcher is in the TODO |
+| a "ghost network" (mimicry, onion routing, incentives) | a security system for specialists, and against vapor's axiom that agents have no network | refused; Tor, I2P or Yggdrasil if a transport is needed |
+| metaprogramming without `eval`, hygienic, fuelled | already true of Alembic (fuel, no atoms, no I/O); Almizan has no macros, and its terms are closed | nothing to change |
+| "rewrite the slides and thesis in a sovereign posture, deleting 'expectation vs reality'" | refused: the limit sections are the evidence; deleting them is marketing | kept |
+| "`sketch.ex` is broken" | false: it is a working vectoriser with constraint beautification; parametric solving is a real gap | in the TODO |
+| RNA folding (Nussinov/Zuker), Lenia, MCTS, docking | possible; no user brought data | not built |
+
+### What was built
+
+- **The hermetic seal** (`Vapor.Hermetic`, [HERMETIC.md](HERMETIC.md)): one containment primitive
+  in place of four copies, now around document ingestion too.
+- **Integer programs** (`Vapor.Logic.MIP`): 40/40 random programs equal brute force; forgeries
+  refused.
+- **Causes** (`Vapor.Logic.Causal`, the Almizan root s-b-b): estimands exact against the true
+  intervention on random models; hedges checked; Lean is not asked, since core Lean has no causal
+  calculus.
+- **Palingenesis** ([PALINGENESIS.md](PALINGENESIS.md)): planks, the brake, the target test, RCU,
+  signed lineage.
+- **Qālib** ([QALIB.md](QALIB.md)): sky130 Verilog and BLIF read, circuits mapped, every step proved;
+  a 20-bit trojan trigger found by SAT that 4,096 random patterns miss.
+- **Recommend** ([RECOMMEND.md](RECOMMEND.md)), absorbing this repository's `SVD_Recommendation_System.py`
+  and its six defects; with `Dense.svd`, one-sided Jacobi with its certificate.
+- **A second kernel for Almizan**: the Lean export now targets core Lean (`Rat`, `grind`), and the
+  `:lean` tier checks that Lean proves what vapor proved and rejects what vapor refuted. The ledger
+  item moves from owed to tested.
+- **The editor question** ([EDITORS.md](EDITORS.md)): no editor of vapor's own. The evidence goes to
+  the editors people have (inlay hints), and the notebook-like surface stays the console.
+
+Every item has its controls in §5m of the quality suite (`mix vapor.quality --only round17`:
+12/12).
+
+### What was found on the way
+
+- **The four sandboxes capped the heap but not the binaries.** Every binary over 64 bytes lives off
+  the process heap, so under a 64 MB cap a job could hold 512 MB, in the console's jailed terminal
+  among other places. The seal counts both.
+- **Significance without size.** The first recommender called an unstructured table "signal": a
+  heavily regularised model beat the biases by 10⁻¹⁰ on every rating, which a paired test calls
+  significant. The control caught it, and a minimum gain is now part of the verdict.
+- **The Lean export needed Mathlib** (`ℚ`, `ring`) on a project whose proofs are core-only, and
+  exported positivity claims as a vacuous `theorem … : True`. Both are fixed: core `Rat` and `grind`,
+  and positivity exported as the statement, with the Bernstein witness named.
+- **A rename that a pattern missed**: the Neovim client mapped the extension `alb` (no dot). The
+  editors' grammars and clients were re-read by hand afterwards.
+- **Duplicated lists**: the console's completion kept its own copy of the verbs (now derived from
+  `Vapor.Main.verbs/0`); `bin/vapor` ignored `MIX_BUILD_PATH`.
+- **Six contradictions in the documents**, found by the translation: transistors called absent after
+  they were added (ENGINEERING), °C/°F refused after they were admitted (WORKBENCH), `sb4` given as
+  4.75 bits/weight (that is `sb4x`; `sb4` is 4.6875), and three wrong cross-references.
+- **The repository's own script** (`SVD_Recommendation_System.py`): unseeded; 60 % of the ratings
+  overwritten with 50.0 and trained on as data (measured here: over 1.5× the honest error); a
+  table row two values short; a grid search that saw the test set; a declared scale the data does not
+  use; an RMSE with no baseline.
+
+### What this document does not claim
+
+- That Palingenesis has renewed a production model. It has renewed a tiny one, under measurement.
+- That Qālib makes chips. It proves that the open flow's netlists compute the specification.
+- That a causal verdict says anything without its diagram.
+- That the seal resists code with access to the BEAM itself.
+
+### How to contest
+
+```sh
+mix test test/vapor/hermetic_test.exs test/vapor/mip_test.exs test/vapor/causal_test.exs \
+         test/vapor/almizan_test.exs test/vapor/palingenesis_test.exs test/vapor/qalib_test.exs \
+         test/vapor/recommend_test.exs test/vapor/forge_cli_test.exs test/vapor/lsp_test.exs \
+         test/vapor/unicode_test.exs test/vapor/audit_test.exs --include lean
+mix vapor.quality --only round17                        # §5m, about a minute
+mix vapor.assurance --check
+bin/vapor wzn check priv/almizan/causes.wzn             # three proved, two refuted
+bin/vapor recommend test/fixtures/recommend/genres_films.csv
+nix flake check                                         # on the pinned nixpkgs
+```

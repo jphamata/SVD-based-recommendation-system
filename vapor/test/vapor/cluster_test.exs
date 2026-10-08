@@ -67,7 +67,10 @@ defmodule Vapor.ClusterTest do
     assert Cluster.status(cl).stats.cache_hits == 1
   end
 
-  test "redundant execution catches a node that flips one bit; without it the error goes through", %{nodes: [a, b, c]} do
+  test "redundant execution catches a node that flips one bit; without it the error goes through", %{nodes: nodes} do
+    # placement breaks ties by node name, so with one job at a time the audited pair is the first two
+    # names: the liar is the first, whatever integers the peers' names were given
+    [b, a, c] = Enum.sort_by(nodes, &to_string/1)
     # control: no audit, one liar among three — some answers are wrong
     {:ok, open} = Cluster.start_link(nodes: [a, b, c], audit_rate: 0.0)
     Vapor.Cluster.Node.corrupt(node_pid(open, b), true)

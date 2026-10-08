@@ -929,14 +929,14 @@ defmodule Vapor.Scene do
 
     """
     <!doctype html>
-    <html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <title>#{title |> String.replace("<", "&lt;")}</title>
     <style>html,body{margin:0;height:100%;background:#0b1516;color:#d8e6e3;font:14px system-ui,sans-serif}
     #stage{width:100vw;height:100vh;display:block;touch-action:none}
     .bar{position:fixed;left:16px;bottom:16px;display:flex;gap:8px;align-items:center;background:rgba(11,21,22,.72);padding:8px 12px;border-radius:10px;backdrop-filter:blur(6px)}
     .bar button{background:#17393a;color:#d8e6e3;border:0;border-radius:7px;padding:6px 10px;cursor:pointer}</style></head>
     <body><canvas id="stage"></canvas>
-    <div class="bar"><button id="pp">⏸</button><span id="info">vapor · arraste para olhar em volta, roda para aproximar</span></div>
+    <div class="bar"><button id="pp">⏸</button><span id="info">vapor · drag to look around, scroll to zoom</span></div>
     <script>
     #{engine}
     const SCENE = #{safe};

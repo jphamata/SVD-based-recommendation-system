@@ -170,7 +170,7 @@ Each phase ends with green tests at every level, a commit and an entry here.
   **Finding:** OTP's NFC (`:unicode.characters_to_nfc_binary`) composes
   across a class-0 mark (`и ๎ ̈` → `ӥ ๎`), violating UAX #15 — and
   changes token ids in Qwen2. `Vapor.Unicode` implements NFC/NFKC by the
-  definition (table of 941 primary composites derived at compile time);
+  definition (table of primary composites derived at compile time from OTP's Unicode data: 941 for Unicode 15, 961 for 16.0 under OTP 28);
   equal to Python's `unicodedata` at every code point up to U+2FFFF and on
   20,000 random mark sequences.
   Speed (1 core, BEAM): ~330 thousand tokens/s encoding English text

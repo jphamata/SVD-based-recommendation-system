@@ -1,5 +1,71 @@
 # Changes
 
+## 0.17.0 — 2026-10-08
+
+Scrutiny of the ninth request (translated: "a complete, first-principles re-engineering; ruthless
+cleanup; the core rebuilt; an original UI; rigorous tests; the source as a zip; English the
+default; rename alchemically") and of its attachments, claim by claim:
+[docs/DIRECTIVE.md §20](docs/DIRECTIVE.md). Checks with a control in `mix vapor.quality` (§5m, 12;
+`--only round17`: [docs/bench/ROUND17.md](docs/bench/ROUND17.md)).
+
+**The build.** `nix develop` failed on the current nixpkgs (`poppler_utils` renamed; top-level
+`elixir`/`erlang`, `nixpkgs-fmt` and `texlive.combine` deprecated): fixed, and every flake output
+evaluates on the pinned nixpkgs without error or warning. On Elixir 1.18.5 / OTP 28 the code did
+not compile: regexes in module attributes are references now (`Tabula`, `Scene`, `Vision.Figure`).
+That and every warning are fixed, among them a real `MatchError` in `mix vapor.lock` without
+arguments. The Lean development moved to Lean 4.34.1 (deprecated lemmas, one `omega`), and
+extraction is byte-identical. A test that pinned 941 primary composites knows Unicode 16.0's 961.
+`bin/vapor` honours `MIX_BUILD_PATH`.
+
+**English.** README, CHANGELOG, every document, the generated reports and the ledger are in
+English; documents and tests have English names (`DIRETRIZ.md` → `DIRECTIVE.md`,
+`GARANTIAS.md` → `ASSURANCE.md`, `bancada_test.exs` → `workbench_test.exs`, …). The thesis and its
+slides stay in Portuguese. Six contradictions in the documents, found while translating, were fixed.
+
+**Names.** Mīzān → **Almizan** (`Vapor.Almizan`, `vapor almizan`, `vapor.almizan.toArabic`, the
+editors' modes; the hashed format tag is kept, so 0.16 modules keep their hashes). Alembic files:
+`.alb` → **`.nbq`**.
+
+**The hermetic seal** ([HERMETIC.md](docs/HERMETIC.md)) — `Vapor.Hermetic.seal/2` and `cap_self/1`
+replace four copies of the same containment (the Alembic sandbox, the Dīwān's jail, Athanor's
+session, the interactive furnace). The copies capped the heap only. Off-heap binaries escaped them:
+512 MB under a 64 MB cap. The seal counts them, and document ingestion now runs sealed.
+
+**Integer programs** ([LOGIC.md §6](docs/LOGIC.md)) — `Vapor.Logic.MIP`: `int`/`bin` declarations
+on the LP text form, branch and bound over the exact simplex, and a certificate (the tree, the
+incumbent, a Farkas or dual vector at every leaf) checked by code separate from the search. 40/40
+random programs equal brute force; forgeries are refused. `logic_check` takes MIP proposals.
+
+**Causes** ([LOGIC.md §7](docs/LOGIC.md), [ALMIZAN.md](docs/ALMIZAN.md)) — `Vapor.Logic.Causal`:
+the ID algorithm (complete) returns the estimand or a hedge, checked; the back-door criterion;
+d-separation. Estimands equal the true intervention in exact rationals on random models; the naive
+`P(y | x)` is the control. The Almizan root **س-ب-ب s-b-b** puts causal claims beside conservation
+laws, in both scripts.
+
+**Palingenesis** ([PALINGENESIS.md](docs/PALINGENESIS.md)) — a model as planks under Merkle roots; a
+plank enters through a contract gate, a Fisher–Rao drift brake on anchor sequences, a paired target
+test and caller invariants; generations are published by read-copy-update on immutable values; the
+lineage is a chain of (optionally signed) records that `verify/2` re-derives. Re-Basin alignment
+where it matters (blending), not where it does nothing (whole-block replacement, measured).
+
+**Qālib** ([QALIB.md](docs/QALIB.md)) — structural Verilog and BLIF over sky130_fd_sc_hd cells read
+(unknown cells refused), circuits mapped to cells (`:cells`, `:nand`), and every step proved by
+Rebis; a 20-bit trojan trigger in a 21-input adder found by SAT, where 4,096 random patterns miss it.
+
+**Recommend** ([RECOMMEND.md](docs/RECOMMEND.md)) — the repository's `SVD_Recommendation_System.py`,
+absorbed: biased factorisation by ALS, nested selection, two baselines, a paired test with a
+minimum gain, a shuffled control. `Dense.svd/1` (one-sided Jacobi) with its certificate.
+
+**Editors** ([EDITORS.md](docs/EDITORS.md)) — the question "a vapor editor?" answered (no: the
+evidence goes to the editors people use); the language server gains inlay hints (each claim's
+verdict at the end of its line), Neovim enables them, JetBrains IDEs are listed. Almizan's Lean
+export targets core Lean (`Rat`, `grind`), and the `:lean` tier checks that Lean proves what vapor
+proved and rejects what it refuted.
+
+**Interfaces** — `vapor logic`, `vapor qalib`, `vapor recommend`, `vapor palingenesis`; MCP
+`qalib_check`, `recommend_run` (27 tools); the console's completion derives its verbs from
+`Vapor.Main.verbs/0`.
+
 ## 0.16.0 — 2026-10-07
 
 Scrutiny of the eighth request (translated: "loose ends; purge of the merely illustrative; conversations and agent up to

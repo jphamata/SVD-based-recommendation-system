@@ -13,9 +13,11 @@ defmodule Vapor.Almizan.Lower do
       (`Vapor.Rebis` netlist, then AIGER): "the circuit is the proof's
       object" made literal — the invariant proved by SAT is about exactly
       the circuit printed.
-    * `lean/2` — the claim's obligation as a Lean 4 theorem over ℚ (or Bool)
-      closed by `ring` or `decide`, for a second, independent kernel. Lean is
-      not run here; the statement is what anyone can check with it.
+    * `lean/2` — the claim's obligation as a theorem of **core** Lean 4 (no
+      Mathlib) over `Rat` (or `Bool`), closed by `grind` or `decide`: a
+      second, independent kernel. The test tier `:lean` runs Lean on the
+      exported theorems of the example modules, and on a refuted claim's,
+      which Lean must reject.
   """
   alias Vapor.Algebra.Term, as: T
   alias Vapor.Almizan
@@ -166,11 +168,12 @@ defmodule Vapor.Almizan.Lower do
   # ------------------------------------------------------------------ Lean
 
   @doc """
-  The obligation as a Lean 4 theorem (with Mathlib): identities and
-  conservation laws over ℚ closed by `ring`; Boolean invariants over `Bool`
-  closed by `decide`. Positivity on a box has no one-tactic proof and is
-  emitted as a statement with `sorry` marked as such — the Bernstein witness
-  is vapor's certificate for it.
+  The obligation as a theorem of core Lean 4 (no Mathlib): identities and
+  conservation laws over `Rat` closed by `grind` (its commutative-ring
+  normaliser); Boolean invariants over `Bool` closed by `decide`. Positivity
+  on a box has no core-Lean proof here: it is returned as the statement in a
+  comment, with the Bernstein witness named as vapor's certificate — never as
+  a vacuous theorem.
   """
   def lean(m, name) do
     with %{} = c <- Enum.find(m["decls"], &(&1["claim"] == name)) || {:error, "no claim #{name}"} do
@@ -183,10 +186,10 @@ defmodule Vapor.Almizan.Lower do
         {"hfz", _} ->
           h = lean_expr(c["body"], lv, env)
           lie = Enum.map_join(c["field"], " + ", fn [v, f] -> "(#{deriv(c["body"], v, lv, env)}) * (#{lean_expr(f, lv, env)})" end)
-          {:ok, "-- d/dt of #{name} along its field is zero (#{h})\n#{thm} (#{Enum.map_join(vars, " ", &lv[&1])} : ℚ) :\n    #{lie} = 0 := by\n  ring\n"}
+          {:ok, "-- d/dt of #{name} along its field is zero (#{h})\n#{thm} (#{Enum.map_join(vars, " ", &lv[&1])} : Rat) :\n    #{lie} = 0 := by\n  grind\n"}
 
         {"hsb", %{"kind" => "identity", "rhs" => r}} ->
-          {:ok, "#{thm} (#{Enum.map_join(vars, " ", &lv[&1])} : ℚ) :\n    #{lean_expr(c["body"], lv, env)} = #{lean_expr(r, lv, env)} := by\n  ring\n"}
+          {:ok, "#{thm} (#{Enum.map_join(vars, " ", &lv[&1])} : Rat) :\n    #{lean_expr(c["body"], lv, env)} = #{lean_expr(r, lv, env)} := by\n  grind\n"}
 
         {"nql", _} ->
           inv = lean_bool(c["invariant"], lv)
@@ -194,8 +197,19 @@ defmodule Vapor.Almizan.Lower do
           {:ok, "#{thm} : ∀ #{Enum.map_join(vars, " ", &lv[&1])} : Bool,\n    (#{inv}) = true → (#{nxt}) = true := by\n  decide\n"}
 
         {_, %{"kind" => k}} when k in ["nonneg", "pos", "bounded"] ->
-          {:ok, "-- positivity on a box: vapor's certificate is the Bernstein subdivision witness (Vapor.Aludel);\n-- there is no single-tactic Lean proof, so the statement is given for reference.\n" <>
-                  "#{thm} (#{Enum.map_join(vars, " ", &lv[&1])} : ℚ) : True := by\n  trivial\n"}
+          box = Enum.map_join(c["box"], " → ", fn [v, {ln, ld}, {hn, hd}] -> "(#{ln} : Rat) / #{ld} ≤ #{lv[v]} → #{lv[v]} ≤ (#{hn} : Rat) / #{hd}" end)
+          body = lean_expr(c["body"], lv, env)
+
+          goal =
+            case k do
+              "nonneg" -> "0 ≤ #{body}"
+              "pos" -> "0 < #{body}"
+              "bounded" -> "(#{elem(c["proof"]["lo"], 0)} : Rat) / #{elem(c["proof"]["lo"], 1)} ≤ #{body} ∧ #{body} ≤ (#{elem(c["proof"]["hi"], 0)} : Rat) / #{elem(c["proof"]["hi"], 1)}"
+            end
+
+          {:ok, "-- positivity on a box has no core-Lean proof here; vapor's certificate is the Bernstein\n" <>
+                  "-- subdivision witness (Vapor.Aludel), replayed on every answer. The statement:\n" <>
+                  "-- ∀ #{Enum.map_join(vars, " ", &lv[&1])} : Rat, #{box} → #{goal}\n"}
 
         {"sbb", _} ->
           {:error, "#{name} is a causal claim: vapor decides it (ID algorithm, back-door, d-separation) and core Lean has no causal calculus to restate it in"}
@@ -206,8 +220,8 @@ defmodule Vapor.Almizan.Lower do
     end
   end
 
-  defp lean_expr(["q", n, 1], _lv, _env), do: "(#{n} : ℚ)"
-  defp lean_expr(["q", n, d], _lv, _env), do: "((#{n} : ℚ) / #{d})"
+  defp lean_expr(["q", n, 1], _lv, _env), do: "(#{n} : Rat)"
+  defp lean_expr(["q", n, d], _lv, _env), do: "((#{n} : Rat) / #{d})"
   defp lean_expr(["v", x], lv, _env), do: lv[x]
   defp lean_expr(["op", op, args], lv, env) when op in ["+", "*"], do: "(" <> Enum.map_join(args, " #{op} ", &lean_expr(&1, lv, env)) <> ")"
   defp lean_expr(["op", "-", [a]], lv, env), do: "(-" <> lean_expr(a, lv, env) <> ")"

@@ -107,7 +107,9 @@ defmodule Vapor.WorkspaceTest do
       assert capture_io(fn -> assert Vapor.Main.run(["crucible", "laws", f]) == 0 end) =~ "9·x^2 + v^2"
       j = Path.join(d, "judge.csv")
       File.write!(j, Vapor.Assay.example("judge"))
-      assert capture_io(fn -> assert Vapor.Main.run(["assay", "judge", j]) == 0 end) =~ "p_position_bias"
+      # the example judge prefers the first slot by construction: the check fails, and so does the status
+      out = capture_io(fn -> assert Vapor.Main.run(["assay", "judge", j]) == 1 end)
+      assert out =~ "p_position_bias" and out =~ "position bias, p ="
       s0 = capture_io(fn -> Vapor.Main.run(["scene", "new", "--w", "320", "--h", "200"]) end)
       sf = Path.join(d, "s.json")
       File.write!(sf, s0)

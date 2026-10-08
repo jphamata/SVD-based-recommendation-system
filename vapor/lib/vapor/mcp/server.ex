@@ -116,7 +116,7 @@ defmodule Vapor.MCP.Server do
       %{"name" => "engineering_run", "description" => "Engineering solvers that read an engineer's text and return a certificate computed independently of the solver (docs/ENGINEERING.md). kind: circuit (SPICE netlist: R C L V I D E G F H O; .op .dc .ac .tran), power (bus/line list: Newton–Raphson power flow), structure (node/support/beam/truss/load/udl/modes: 2-D frames), fem (plate/material/fix/traction: plane stress Q4/QM6), pipes (reservoir/junction/pipe: Colebrook networks), reactions (A + B -> C ; k = …: kinetics and conserved moieties), flash (Rachford–Rice VLE), distill (McCabe–Thiele/Fenske/Underwood/Gilliland).",
         "inputSchema" => %{"type" => "object", "properties" => %{"kind" => %{"type" => "string", "enum" => ~w(circuit power structure fem pipes reactions flash distill)}, "text" => %{"type" => "string"},
                                                                  "method" => %{"type" => "string", "enum" => ~w(newton gauss_seidel)}}, "required" => ["kind", "text"]}},
-      %{"name" => "logic_check", "description" => "The proposer/checker desk (docs/LOGIC.md). Without `proposal`, the desk settles the claim itself with a certificate: DIMACS CNF (model or DRUP refutation), `valid: φ` / `sat: φ` / `equiv: a ; b`, `schur k`, `vdw k r`, `ramsey s t`, `pigeonhole p h`, `queens n`, equations (Knuth–Bendix; `decide s = t`), polynomials (vars/hyp/claim: Gröbner). With `proposal`, YOUR candidate is checked and never trusted: {model: [lits]} or {drup: [[lits]…]} for a CNF, {witness: [colours]} for schur/vdw, {n, red: [[a,b]…]} for ramsey, {assignment: {var: bool}} for sat:/valid:. Acceptance depends only on the checker.",
+      %{"name" => "logic_check", "description" => "The proposer/checker desk (docs/LOGIC.md). Without `proposal`, the desk settles the claim itself with a certificate: DIMACS CNF (model or DRUP refutation), `valid: φ` / `sat: φ` / `equiv: a ; b`, `schur k`, `vdw k r`, `ramsey s t`, `pigeonhole p h`, `queens n`, equations (Knuth–Bendix; `decide s = t`), polynomials (vars/hyp/claim: Gröbner), linear programs (`maximize …` / `minimize …`: exact simplex), integer programs (the same plus `int x, y` / `bin z`: branch and bound with a checkable tree), causal diagrams (`causal`, edges `a -> b`, `a <-> b`, then `identify y | do(x)`, `backdoor x -> y | z`, `dsep a; b | c`: ID algorithm, back-door, d-separation). With `proposal`, YOUR candidate is checked and never trusted: {model: [lits]} or {drup: [[lits]…]} for a CNF, {witness: [colours]} for schur/vdw, {n, red: [[a,b]…]} for ramsey, {assignment: {var: bool}} for sat:/valid:, {x, y} / {farkas} / {x, ray} for an LP, {incumbent, objective, tree} for an integer program. Acceptance depends only on the checker.",
         "inputSchema" => %{"type" => "object", "properties" => %{"text" => %{"type" => "string"}, "proposal" => %{"type" => "object"}}, "required" => ["text"]}},
       %{"name" => "board_query", "description" => "Chess and shogi (docs/BOARDS.md): game chess with fen, or shogi with sfen; action state (legal moves), move (move: UCI/USI), engine (best reply, depth), analyse (score, principal variation), mate (chess: a proof tree of mate in n, replayed by an independent checker), perft (move-generator count).",
         "inputSchema" => %{"type" => "object", "properties" => %{"game" => %{"type" => "string", "enum" => ~w(chess shogi)}, "fen" => %{"type" => "string"}, "sfen" => %{"type" => "string"},
@@ -150,6 +150,11 @@ defmodule Vapor.MCP.Server do
         "inputSchema" => %{"type" => "object", "properties" => %{"n" => %{"type" => "integer"}, "k" => %{"type" => "integer"}, "seed" => %{"type" => "integer"}, "trials" => %{"type" => "integer"}, "bit" => %{"type" => "integer"}}}},
       %{"name" => "amalgam_sum", "description" => "Sum numbers (text, whitespace-separated) in several orders left to right and once exactly (docs/AMALGAM.md): the exact sum rounded once does not depend on the order, the topology or the number of workers. format f32 or f64.",
         "inputSchema" => %{"type" => "object", "properties" => %{"numbers" => %{"type" => "string"}, "format" => %{"type" => "string", "enum" => ~w(f32 f64)}}, "required" => ["numbers"]}},
+      %{"name" => "qalib_check", "description" => "Netlists and the sky130 cells (docs/QALIB.md). op check: are `spec` and `impl` the same Boolean function? Each may be a Rebis netlist, AIGER ASCII, BLIF or structural Verilog (gate primitives, assign, sky130_fd_sc_hd cell instances with named pins). Proved by truth table (≤ 16 inputs) or a SAT miter with a DRUP proof checked by separate code; a difference comes with a shrunk counterexample. op map: `spec` written as sky130 Verilog (style cells or nand), read back and proved equal before it is returned. Combinational only.",
+        "inputSchema" => %{"type" => "object", "properties" => %{"op" => %{"type" => "string", "enum" => ~w(check map)}, "spec" => %{"type" => "string"}, "impl" => %{"type" => "string"},
+                                                                 "style" => %{"type" => "string", "enum" => ~w(cells nand)}}, "required" => ["op", "spec"]}},
+      %{"name" => "recommend_run", "description" => "Recommendations by matrix factorisation with the evidence that decides whether they work (docs/RECOMMEND.md): `csv` with items in the first row, users in the first column, empty cells missing. Rank and λ chosen on a validation split, test RMSE against the global mean and the biases, a paired sign-flip test with a minimum gain, a shuffled control; verdict signal or not, and the top items per user.",
+        "inputSchema" => %{"type" => "object", "properties" => %{"csv" => %{"type" => "string"}, "top" => %{"type" => "integer"}, "seed" => %{"type" => "integer"}}, "required" => ["csv"]}},
       %{"name" => "assay_run", "description" => "AI-research statistics (docs/ASSAY.md): tool compare (columns a, b), leaderboard (one column per system), contamination (JSON train/test/scores), dedup (one document per line), scaling (N, D, L), calibration (p, correct), agreement (one column per annotator), judge (ab, ba). Every answer says whether it is signal or noise.",
         "inputSchema" => %{"type" => "object", "properties" => %{"tool" => %{"type" => "string"}, "text" => %{"type" => "string"}}, "required" => ["tool", "text"]}},
       %{"name" => "scene_ops", "description" => "Parse scene operations (docs/SCENE.md §9) into the operations a living scene applies; problems name each line not understood.\n" <> Vapor.Scene.Ops.card(),
@@ -289,6 +294,38 @@ defmodule Vapor.MCP.Server do
     lab(f.(args) |> then(fn {:ok, v} -> {:ok, Vapor.Main.jsonable(v)}; e -> e end))
   end
 
+  defp call("qalib_check", %{"op" => "check", "spec" => a, "impl" => b}, _st) when is_binary(a) and is_binary(b) do
+    case Vapor.Hermetic.seal(fn -> Vapor.Qalib.certify(a, b) end, heap_mb: 1024, timeout: 120_000) do
+      {:ok, {:equivalent, ev}} -> ok(json(%{verdict: "equivalent", evidence: ev}), "EQUIVALENT (#{ev.method})")
+      {:ok, {:different, d}} -> ok(json(%{verdict: "different", counterexample: d.counterexample, spec: d.a, impl: d.b}), "DIFFERENT at #{inspect(d.counterexample)}")
+      {:ok, {:unknown, why}} -> err("unknown: " <> why)
+      {:ok, {:error, why}} -> err(why)
+      {:error, f} -> err(Vapor.Hermetic.describe(f, heap_mb: 1024, timeout: 120_000))
+    end
+  end
+
+  defp call("qalib_check", %{"op" => "map", "spec" => a} = args, _st) when is_binary(a) do
+    style = if args["style"] == "nand", do: :nand, else: :cells
+
+    with {:ok, c} <- Vapor.Qalib.circuit(a), {:ok, v, stats} <- Vapor.Qalib.to_verilog(c, style: style),
+         {:equivalent, ev} <- Vapor.Qalib.certify(c, v) do
+      ok(json(%{verilog: v, cells: stats.cells, by_type: stats.by_type, proved: ev.method}), v)
+    else
+      {:error, why} -> err(why)
+      other -> err("the mapped netlist did not prove equal: #{inspect(other)}")
+    end
+  end
+
+  defp call("recommend_run", %{"csv" => t} = args, _st) when is_binary(t) do
+    run = fn -> with {:ok, d} <- Vapor.Recommend.parse_csv(t), do: Vapor.Recommend.evaluate(d, top: args["top"] || 5, seed: args["seed"] || 1) end
+
+    case Vapor.Hermetic.seal(run, heap_mb: 1024, timeout: 120_000) do
+      {:ok, {:ok, r}} -> ok(json(Vapor.Main.jsonable(r)), "#{r.verdict}: test RMSE #{r.rmse.model} (biases #{r.rmse.biases}, mean #{r.rmse.mean})")
+      {:ok, {:error, why}} -> err(why)
+      {:error, f} -> err(Vapor.Hermetic.describe(f, heap_mb: 1024, timeout: 120_000))
+    end
+  end
+
   defp call("assay_run", %{"tool" => _, "text" => _} = args, _st), do: lab(Vapor.Console.Lab14.assay(args) |> then(fn {:ok, v} -> {:ok, Vapor.Main.jsonable(v)}; e -> e end))
   defp call("scene_ops", %{"text" => _} = args, _st), do: lab(Vapor.Console.Lab14.scene_ops(args) |> then(fn {:ok, v} -> {:ok, Vapor.Main.jsonable(v)}; e -> e end))
 
@@ -330,7 +367,7 @@ defmodule Vapor.MCP.Server do
     end
   end
 
-  defp call(name, _args, _st) when name in ["studio_validate", "studio_run", "studio_verify", "comfy_import", "context_search", "workbench_solve", "engineering_run", "logic_check", "board_query", "render_scene", "finance_run", "arbitrage_check"],
+  defp call(name, _args, _st) when name in ["studio_validate", "studio_run", "studio_verify", "comfy_import", "context_search", "workbench_solve", "engineering_run", "logic_check", "board_query", "render_scene", "finance_run", "arbitrage_check", "qalib_check", "recommend_run"],
     do: err("missing required arguments for #{name}")
 
   defp call(name, _, _), do: err("unknown tool #{inspect(name)}")

@@ -46,10 +46,23 @@ defmodule Vapor.Assurance do
     {"0.16", "The console terminal cannot read or write the server's files or run programs", "jailed reads and writes, --measure refused, heap ceiling and deadline per command", :tested, ["lib/vapor/diwan.ex", "test/vapor/diwan_test.exs", "test/vapor/hall_test.exs"], "rests on the BEAM's process isolation and on every verb reading through Vapor.Main.read_input"},
     {"0.16", "Almizan: the Latin and Arabic projections are bijective with the tree", "read(print(t)) = t on 300 random programs in both scripts", :tested, ["lib/vapor/almizan/syntax.ex", "test/vapor/almizan_test.exs"], nil},
     {"0.16", "Almizan burhān: identities and conservation laws decided exactly", "exact polynomial normal form over ℚ; positivity by Aludel; invariants by SAT + DRUP", :checked, ["lib/vapor/almizan.ex", "test/vapor/almizan_test.exs"], nil},
-    {"0.16", "Almizan obligations exported to Lean 4 close by ring / decide", "Lower.lean/2 emits the theorems", :owed, ["lib/vapor/almizan/lower.ex"], "Lean is not installed on this machine: the export is generated, not checked here"},
+    {"0.16", "Almizan obligations exported to core Lean 4 close by grind / decide; a refuted claim's statement does not", "Lower.lean/2 emits theorems over Rat and Bool with no Mathlib; the :lean tier runs Lean on the example modules' exports and on a refuted one (0.17)", :tested, ["lib/vapor/almizan/lower.ex", "test/vapor/almizan_test.exs"], "positivity on a box has no core-Lean proof: it is exported as a statement, its certificate is Aludel's witness"},
     {"0.16", "Fisher–Rao distances are a metric; natural gradient is invariant to feature scaling", "property tests against controls (KL; plain gradient)", :tested, ["lib/vapor/info_geom.ex", "test/vapor/info_geom_test.exs"], nil},
     {"0.16", "The language server answers editors over real stdio framing", "a Node client against bin/vapor lsp", :tested, ["lib/vapor/lsp.ex", "test/vapor/lsp_test.exs", "test/js/lsp_client.mjs"], "VS Code, Neovim and Emacs themselves are not run here"},
+    # ---- 0.17
+    {"0.17", "The Lean development builds warning-free on Lean 4.34.1, and re-extraction is byte-identical", "lake build; the extracted module compared with the sources' digest", :checked, ["proofs/lean-toolchain", "test/vapor/audit_test.exs"], nil},
+    {"0.17", "The hermetic seal stops a job whose heap and off-heap binaries together exceed its cap, or that misses its deadline; the caller survives", "max_heap_size with include_shared_binaries; a 512 MB binary bomb under 64 MB against the 0.16 heap-only cap", :tested, ["lib/vapor/hermetic.ex", "test/vapor/hermetic_test.exs"], "bounds memory and time; does not resist code with access to the BEAM itself"},
+    {"0.17", "An integer program's 'optimal' or 'infeasible' carries a branch-and-bound tree checked by code that shares nothing with the search", "MIP.check/2 on every answer: the splits cover the integer points, every leaf's Farkas or dual certificate, the incumbent", :checked, ["lib/vapor/logic/mip.ex", "test/vapor/mip_test.exs"], "branching only (no cutting planes); a relaxation unbounded at the root is refused"},
+    {"0.17", "Causal estimands equal the true intervention", "exact rationals on random structural causal models with explicit hidden parents; the naive P(y | x) as control", :tested, ["lib/vapor/logic/causal.ex", "test/vapor/causal_test.exs"], "every verdict is conditional on the stated diagram; ID's completeness is a published theorem (Shpitser & Pearl, 2006), not mechanised"},
+    {"0.17", "A causal identification that fails carries a hedge, checked", "Causal.hedge?/5 on every failure", :checked, ["lib/vapor/logic/causal.ex", "test/vapor/causal_test.exs"], nil},
+    {"0.17", "Qālib: a netlist and its specification are called equivalent only with a truth table or a DRUP-checked SAT proof", "Vapor.Rebis.equivalent/3; mapped netlists are read back and proved before they are printed", :checked, ["lib/vapor/qalib.ex", "test/vapor/qalib_test.exs"], "combinational only; each cell's function is tested against its formula, not read from the liberty files"},
+    {"0.17", "Palingenesis: a published generation passed every gate, and its lineage re-derives from launch", "the gates measured before publication; verify/2 recomputes the record chain and the root from the weights", :tested, ["lib/vapor/palingenesis.ex", "test/vapor/palingenesis_test.exs"], "drift is measured on the anchors only; measured on a tiny model here, not on production checkpoints"},
+    {"0.17", "Palingenesis: a reader keeps its generation whole while new ones are published", "immutable generations published by one persistent_term put; concurrent readers re-hash what they hold", :tested, ["lib/vapor/palingenesis.ex", "test/vapor/palingenesis_test.exs"], "at the BEAM level; a worker's shared-memory session sees the new generation at its next session"},
+    {"0.17", "Recommendations are called signal only with a significant, minimum-size gain over the biases and a shuffled control at the mean", "paired sign-flip test, a 1 % minimum gain, a shuffled-ratings control, nested selection", :tested, ["lib/vapor/recommend.ex", "test/vapor/recommend_test.exs"], nil},
+    {"0.17", "The one-sided Jacobi SVD comes with its residual and orthogonality, and keeps small singular values to relative precision", "Dense.svd_residual/2; σ_min of a κ = 10⁸ matrix against the Gram-matrix route", :tested, ["lib/vapor/dense.ex", "test/vapor/recommend_test.exs"], nil},
     # ---- what is owed
+    {"owed", "Palingenesis measured on production checkpoints (Qwen 2.5, DeepSeek-V3)", "vapor palingenesis try on real models", :owed, ["lib/vapor/palingenesis.ex"], "this machine has neither the weights nor the memory"},
+    {"owed", "Sequential equivalence (latches, flip-flops) for Qālib", "k-induction on the miter, IC3/PDR", :owed, ["lib/vapor/qalib.ex"], nil},
     {"owed", "Weak-memory correctness of the worker's shared-memory protocol", "litmus tests against a RVWMO/TSO model", :owed, ["native/src"], "the worker uses pipes and /dev/shm with explicit synchronisation; no axiomatic-model check exists yet"},
     {"owed", "Constant folding proved, not only tested", "extend Binary32.lean", :owed, ["proofs/Vapor/Binary32.lean"], nil}
   ]
@@ -65,7 +78,7 @@ defmodule Vapor.Assurance do
     for c <- claims(), path <- c.evidence, not File.exists?(Path.join(root, path)), do: {c.claim, path}
   end
 
-  @labels %{proved: "**provado**", checked: "**conferido**", tested: "testado", argued: "argumentado", owed: "*devido*"}
+  @labels %{proved: "**proved**", checked: "**checked**", tested: "tested", argued: "argued", owed: "*owed*"}
 
   @doc "The ledger as Markdown (docs/ASSURANCE.md)."
   def markdown do
@@ -74,22 +87,22 @@ defmodule Vapor.Assurance do
     rows =
       claims()
       |> Enum.group_by(& &1.area)
-      |> Enum.sort_by(fn {a, _} -> Enum.find_index(["core", "0.15", "0.16", "owed"], &(&1 == a)) end)
+      |> Enum.sort_by(fn {a, _} -> Enum.find_index(["core", "0.15", "0.16", "0.17", "owed"], &(&1 == a)) end)
       |> Enum.map_join("\n\n", fn {area, cs} ->
-        "## #{%{"core" => "O núcleo", "0.15" => "Rodada 0.15", "0.16" => "Rodada 0.16", "owed" => "O que é devido"}[area]}\n\n" <>
-          "| afirmação | base | estado | evidência | limites |\n|---|---|---|---|---|\n" <>
+        "## #{%{"core" => "The core", "0.15" => "Round 0.15", "0.16" => "Round 0.16", "0.17" => "Round 0.17", "owed" => "What is owed"}[area]}\n\n" <>
+          "| claim | basis | status | evidence | limits |\n|---|---|---|---|---|\n" <>
           Enum.map_join(cs, "\n", fn c ->
             "| #{c.claim} | #{c.basis} | #{@labels[c.status]} | #{Enum.map_join(c.evidence, " · ", &"`#{&1}`")} | #{c.limits || "—"} |"
           end)
       end)
 
     """
-    # Garantias — o livro-razão
+    # Assurance — the ledger
 
-    > Gerado de `lib/vapor/assurance.ex` por `mix vapor.assurance`; um teste falha se a evidência citada sumir ou se
-    > este arquivo divergir dos dados. A disciplina é a do ASAS (§11): cada afirmação diz se é **provada** (Lean 4,
-    > sem axioma), **conferida** (um verificador independente roda a cada resposta ou a cada build), testada,
-    > argumentada ou *devida*.
+    > Generated from `lib/vapor/assurance.ex` by `mix vapor.assurance`; a test fails if cited evidence disappears or if
+    > this file drifts from the data. The discipline is the ASAS's (§11): each claim says whether it is **proved** (Lean 4,
+    > no axiom), **checked** (an independent checker runs on every answer or every build), tested,
+    > argued or *owed*.
 
     #{Enum.map_join([:proved, :checked, :tested, :argued, :owed], " · ", &"#{@labels[&1]}: #{Map.get(counts, &1, 0)}")}
 

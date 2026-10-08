@@ -5,7 +5,7 @@ local M = {}
 function M.setup(opts)
   opts = opts or {}
   local cmd = opts.cmd or { "vapor", "lsp" }
-  vim.filetype.add({ extension = { wzn = "almizan", alb = "alembic" } })
+  vim.filetype.add({ extension = { wzn = "almizan", nbq = "alembic" } })
   vim.api.nvim_create_autocmd("FileType", {
     pattern = { "almizan", "alembic" },
     callback = function(args)
@@ -14,6 +14,10 @@ function M.setup(opts)
         name = "vapor",
         cmd = cmd,
         root_dir = vim.fs.root(args.buf, { ".git", "mix.exs" }) or vim.fn.getcwd(),
+        -- the verdicts beside the claims (the server's inlay hints)
+        on_attach = function(_, buf)
+          if vim.lsp.inlay_hint then vim.lsp.inlay_hint.enable(true, { bufnr = buf }) end
+        end,
       })
     end,
   })

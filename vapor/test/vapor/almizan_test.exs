@@ -165,9 +165,32 @@ defmodule Vapor.AlmizanTest do
       {:ok, c} = Lower.aiger(parse!(ex("handshake.wzn")), "handshake")
       assert c.aiger =~ ~r/^aag /
       {:ok, l1} = Lower.lean(parse!(ex("oscillator.wzn")), "energy")
-      assert l1 =~ "theorem almizan_energy" and l1 =~ "ring"
+      assert l1 =~ "theorem almizan_energy" and l1 =~ "grind" and not (l1 =~ "ℚ")
       {:ok, l2} = Lower.lean(parse!(ex("handshake.wzn")), "handshake")
       assert l2 =~ "decide"
+      # positivity: the statement, as a comment — never a vacuous theorem
+      {:ok, l3} = Lower.lean(parse!(ex("bounds.wzn")), "motzkin")
+      refute l3 =~ "theorem"
+      assert l3 =~ "∀ v_x v_y : Rat" and l3 =~ "Bernstein"
+    end
+
+    @tag :lean
+    test "a second kernel: core Lean proves the exported obligations vapor proved, and rejects the one it refuted" do
+      dir = Path.join(System.tmp_dir!(), "almizan-lean-#{System.unique_integer([:positive])}")
+      File.mkdir_p!(dir)
+      osc = parse!(ex("oscillator.wzn"))
+      bounds = parse!(ex("bounds.wzn"))
+      hs = parse!(ex("handshake.wzn"))
+      proved = for {m, c} <- [{osc, "energy"}, {bounds, "square"}, {hs, "handshake"}], do: elem(Lower.lean(m, c), 1)
+      File.write!(Path.join(dir, "Proved.lean"), Enum.join(proved, "\n"))
+      {out, code} = System.cmd("lean", [Path.join(dir, "Proved.lean")], stderr_to_stdout: true)
+      assert code == 0, out
+      # the control: vapor refutes the damped law; its exported statement must not close
+      {:ok, damped} = Lower.lean(osc, "damped-energy")
+      File.write!(Path.join(dir, "Refuted.lean"), damped)
+      {out2, code2} = System.cmd("lean", [Path.join(dir, "Refuted.lean")], stderr_to_stdout: true)
+      assert code2 != 0 and out2 =~ "error"
+      File.rm_rf!(dir)
     end
   end
 

@@ -1,10 +1,33 @@
-# Open items — state as of 2026-10-07 (0.16.0)
+# Open items — state as of 2026-10-08 (0.17.0)
 
 Only what is **open**. What was closed is in the [CHANGELOG](../CHANGELOG.md),
 with the test that proves it. Each item says why it matters and what closes it;
 ◐ = partly done (what is missing is written down). The items from the attachments of
-rounds 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15 and 0.16 that were left out are here with the reason
-([DIRECTIVE.md §9, §11–§19](DIRECTIVE.md)).
+rounds 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16 and 0.17 that were left out are here with the reason
+([DIRECTIVE.md §9, §11–§20](DIRECTIVE.md)).
+
+## Round 0.17 — what was left open
+
+- ☐ **Palingenesis on production checkpoints** (Qwen 2.5 7B/14B, a quantised DeepSeek-V3 expert): the
+  gates, the RCU publication and the lineage are measured on a tiny model only. Also: growing a
+  mixture (adding an expert changes the router's contract and is refused today), and a worker-level
+  swap inside a running session (today the next session sees the new generation).
+- ☐ **Qālib**: sequential equivalence (k-induction on the miter, IC3/PDR), cell functions read from the
+  liberty files instead of the table, and the area and timing those files hold.
+- ☐ **Integer programs**: cutting planes (Gomory, each with its Chvátal–Gomory derivation in the
+  certificate) and export in the VIPR format, so other checkers can read vapor's certificates.
+- ☐ **Causes**: the two witness models built from a hedge (today the hedge is checked structurally, and
+  the bow's two models are built by hand in the tests); counterfactuals (ID*) and transportability.
+- ☐ **Ternary weights `:sb2`** with a model trained ternary (BitNet b1.58): a GEMV of additions and
+  subtractions in every backend, and the accumulator's overflow bound in Lean. Without such a model
+  the format measures nothing.
+- ☐ **Agents and the web, as the 0.17 request designed it**: an `observe` tool that fetches through the
+  hermetic seal, strips scripts, stores the snapshot in the Khazāna by hash under a byte budget, and is
+  never re-fetched on replay; an `act` plan executed only with a person's Ed25519 signature.
+- ☐ **Sketch**: a parametric constraint solver (coincidence, tangency, distance) with a degrees-of-freedom
+  report; Gröbner bases to prove a constraint set inconsistent.
+- ☐ **Language server**: rename, code actions ("add the missing `(box …)`"), semantic tokens.
+- ☐ **Recommendations**: implicit feedback (weighted ALS) and a worker kernel for tables beyond ~10⁵ ratings.
 
 ## Round 0.16 — what was left open
 
@@ -16,8 +39,8 @@ rounds 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15 and 0.16 that were left
   for all of them, with the same context bar showing the cost).
 - ☐ **Conversations: agent with visible steps** on the page (today the journal is kept and verifiable through
   `GET /v1/vapor/journal/:id`, but the page shows only the answer).
-- ☐ **Almizan**: close the Lean exports with `lake` when present (the ledger marks them as
-  owed); bounded quantifiers over integers (Presburger) as a fourth decider; `import`
+- ◐ **Almizan**: the Lean exports close in core Lean ✅ 0.17 (`grind`/`decide`, checked by the `:lean`
+  tier); missing are bounded quantifiers over integers (Presburger) as another decider, and `import`
   across files with a pinned hash (the embryo of Khazāna P2P).
 - ☐ **Khazāna P2P** (the manifesto): content-addressed dependencies exchanged between peers — it first needs
   a trust model (who signs what), otherwise it is a supply-chain vector.
@@ -31,7 +54,7 @@ rounds 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15 and 0.16 that were left
 
 - ☐ **Amalgam in the worker**: the exact sum as a native program (a Kulisch accumulator of ~4,300 bits for f32 in registers, or the sum in two passes by exponent) — today ≈ 6 M additions/s on the BEAM, which is enough for gradients across micro-batches and nodes, not for inside a *kernel*. Also: the exact *all-reduce* across nodes of `Vapor.Cluster` (the cells already cross the network through `to_wire/1`), and the split **by rows** in `Vapor.Shard` (refused today) redone with `partial_dot/3` — the piece exists and is tested; what is missing is connecting it to the partitioner.
 - ☐ **Cupel in the training path**: the same identity in the *backward* (`∂x = ∂y·W` checks with `r`) and in the optimizer update; the sentinel connected to `Vapor.Cluster` (quarantine of a whole node, not only of a worker); measure the overhead on the native worker.
-- ☐ **Rebis**: sequential circuits (k-induction over the multi-step *miter*, with IC3/PDR as the horizon); read structural Verilog/BLIF; `PCLMULQDQ`/`vclmul` as a compiler operation (carry-less multiplication in the emitters) for GHASH and for binary towers; algebraic rewriting with rules for parallel-prefix adders (today `:unknown` above 50,000 terms).
+- ☐ **Rebis**: sequential circuits (k-induction over the multi-step *miter*, with IC3/PDR as the horizon); read structural Verilog/BLIF ✅ 0.17 ([QALIB.md](QALIB.md)); `PCLMULQDQ`/`vclmul` as a compiler operation (carry-less multiplication in the emitters) for GHASH and for binary towers; algebraic rewriting with rules for parallel-prefix adders (today `:unknown` above 50,000 terms).
 - ☐ **Aludel**: also split by degree (degree elevation when the enclosure is wide), more variables with adaptive per-axis subdivision, and barriers with rational terms; export the witness to a verifier in Lean when `lake` is present.
 - ☐ **Tabula**: deadlines (bounded linear temporal logic over the facts), quantification over parties, and drafting of clauses from text by a model (`Mind`), with back-translation, as Alembic has.
 - ☐ **Mechanisms** (VCG, Gale–Shapley) with stability and truthfulness checked — small, deferred for lack of a case (§18).
@@ -74,7 +97,7 @@ rounds 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15 and 0.16 that were left
 - ☐ **Render**: multiple importance sampling (BSDF × light) to close the noisy caustics; BVH and triangle meshes (the sketch's GLB → scene), image textures, microfacet materials (GGX) and subsurface; a denoiser checked against the many-sample reference.
 - ◐ **Workbench**: affine units (°C, °F) as readings ✅ 0.13; missing are time-dependent 2-D PDEs and coupled systems (multi-species reaction–diffusion), unstructured meshes; DAEs (index 1) and delay ODEs; global optimization (multistart with an interval certificate).
 - ◐ **Engineering**: transistors (Ebers–Moll, level-1 MOSFET) ✅ 0.13, equal to ngspice; missing are `.subckt`, device capacitances in the transient; short circuit and reactive limits in power flow; buckling (geometric eigenvalue) and geometric nonlinearity in frames; pumps and valves in networks; non-ideal liquid–vapour equilibrium (NRTL/UNIQUAC).
-- ◐ **Logic**: linear arithmetic (rational simplex with a Farkas certificate) ✅ 0.13 ([LOGIC.md §5](LOGIC.md)); missing are the DRUP checker in the native worker (R(3, 4) in seconds); LRAT (linear checking); exporting Gröbner and Knuth–Bendix certificates to Lean when `lake` is present; integer programming (*branch and bound* with certificates).
+- ◐ **Logic**: linear arithmetic (rational simplex with a Farkas certificate) ✅ 0.13 ([LOGIC.md §5](LOGIC.md)); missing are the DRUP checker in the native worker (R(3, 4) in seconds); LRAT (linear checking); exporting Gröbner and Knuth–Bendix certificates to Lean (now that Lean runs here); integer programming ✅ 0.17 ([LOGIC.md §6](LOGIC.md); cutting planes are in round 0.17's list).
 - ☐ **Boards**: evaluation by a network trained by generic self-play (the loop already exists) for small chess/shogi (5×5 minishogi, 6×6 Los Alamos); NNUE as a compiler program; 9×9 Go with a network; hold'em with card abstraction.
 - ☐ **Generic self-play** loses 21 % of the optimal lines with 8 simulations at tic-tac-toe, against 13 % for the specialized one — it still has to match it (residual network, *temperature schedule*, more games) before going to larger games.
 - ☐ **Scene**: exact-frame MP4 (the exact-frame GIF exists); direction by clause grammar does not yet parse coordination ("Ana e Bento dançam") nor subordinate clauses.
