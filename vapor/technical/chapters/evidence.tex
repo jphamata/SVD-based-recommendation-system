@@ -1,0 +1,77 @@
+\chapter{The evidence discipline}\label{ch:evidence}
+
+\section{A value, a control, a threshold}
+
+Every quality check pairs three things: a \textbf{value} computed by the system, a \textbf{control}
+that a broken, naive or lucky implementation would produce, and a \textbf{threshold} that separates
+them. The question each check answers is the one that matters for open input: \emph{would the same
+answer have come out if there were nothing to find?}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lXX@{}}
+\toprule
+check & value & control (must fail, or be caught) \\
+\midrule
+render, white furnace & a sphere of albedo $a$ in a uniform environment shows exactly $a$ & -- \\
+render, gradient furnace & $a(\tfrac12 + n_y/3)$ under a sky that brightens upward & the biased estimator gives $a(\tfrac12 + n_y/4)$ and is caught \\
+ink style & a hard shadow at exactly albedo $\times$ ambient & the same scene without the occluder: the pixel is lit \\
+ODE integration & Dormand--Prince to $10^{-8}$ & fixed-step RK4 at $h = 0.1$: error above $10^{-5}$ \\
+PDE & Crank--Nicolson observed order 2 & backward Euler: order 1 \\
+SAT & a witness and a DRUP refutation & a truncated proof: rejected \\
+scaling law & the planted exponent inside the confidence interval & shuffled losses: holdout error above 1\,\% \\
+calibration & a calibrated model not flagged & an over-confident one flagged \\
+recommendations & a significant, minimum-size gain over the biases & shuffled ratings: at the mean \\
+\bottomrule
+\end{tabularx}
+\caption{A few of the quality checks; the suite holds about one hundred and fifty.}
+\end{table}
+
+Noise gates (for text, images and audio) are fitted to negative controls (noise, shuffled signal,
+repetition) and positive ones (held-out real signal), and \emph{refuse to exist} if the two overlap.
+
+\section{The Assay: statistics for AI research}
+
+The Assay is a set of tools whose answers say whether a difference is signal or noise: paired
+comparisons with bootstrap intervals and sign-flip tests; leaderboards with rank intervals; calibration
+against its own sampling floor; inter-annotator agreement (Krippendorff's $\alpha$); the position bias of
+a model used as a judge; train/test contamination by $n$-gram overlap; near-duplicate detection by MinHash
+verified by exact Jaccard; scaling-law fits with confidence intervals; which layer of an encoder a linear
+probe should read (chosen on validation, read once on test, with a shuffled-label control); and detection
+scored by cgF1, where boxes are matched by an optimal assignment solved exactly by the rational simplex
+on a totally unimodular program, so the matching is certified optimal.
+
+\section{The assurance ledger}
+
+Claims about the system are kept in a ledger (\texttt{Vapor.Assurance}) with a status (\emph{proved},
+\emph{checked}, \emph{tested}, \emph{owed}), the evidence (files that must exist) and the limits. The
+human-readable document is generated from the ledger, and a test fails if cited evidence disappears or if
+the document drifts from the ledger. Documentation that names a module, a function or a repository path
+that does not exist fails another test.
+
+\section{Tests}
+
+The suite holds about a thousand tests in 159 files. Its structure follows the evidence it gathers.
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+tier & what it adds \\
+\midrule
+unit and property & the BEAM alone; random programs, round trips, invariants \\
+native & the worker on the host: every kernel against the oracle, bit for bit \\
+cross & QEMU for AArch64 and RISC-V; the RVV interpreter against QEMU \\
+GPU & lavapipe (Vulkan on the CPU); headless Chromium for the console and the WebGL tracer \\
+differential & independent references: \texttt{transformers}, \texttt{diffusers}, NumPy, Tesseract, QuantLib, ngspice, python-chess and others, each a tier that runs when its tool is present \\
+formal & Lean builds, the extraction is byte-identical, exported Almizan claims agree \\
+\bottomrule
+\end{tabularx}
+\caption{Test tiers. A tier whose tooling is missing is excluded and reported, never silently passed.}
+\end{table}
+
+For the edit loop, \texttt{mix vapor.test} keeps a content-addressed cache. A test file's key is the
+SHA-256 of the file, the support files and fixtures, \texttt{priv/}, the toolchain versions, the excluded
+tiers, and the compiled bytecode of every module the file can reach, transitively through the modules'
+atom tables. A file is recorded only when every test in it passed; changing one module reruns only the
+files that can reach it. The cache is for the edit loop, not for releases: \texttt{mix test} ignores it.

@@ -111,7 +111,18 @@ rechecked after every change (`K` for the detail); `Ctrl-A`/`Ctrl-X` scrub the n
 cursor and the gutter answers; `%`, `[[`, `]]`; `:fmt`, `:ar`, `:la`; a Merkle undo tree whose
 branches are kept. The language server and the editor share `Vapor.Almizan.verdict_lines/2`.
 
-**Fixed** — `bin/vapor` replaced an exported `VAPOR_HOME` with the repository's path, so `vapor chat`
+**Temporal upscaling** ([STUDIO.md §3.1](docs/STUDIO.md)) — `Vapor.Vision.Upscale.temporal/4`: the
+previous output moved by the motion, clamped to the current frame's local range, blended and
+projected, so every frame satisfies `D(y) = x` whatever its history; +0.72 dB under a half-pixel pan,
+nothing under a whole-pixel pan (the control), and the ghost of a vanished object rejected.
+
+**Technical documents** (`technical/`, `make technical`) — a monograph (33 pages) and slides (18),
+LuaLaTeX, in English: the architecture and its guarantees as the system is, beside the academic
+thesis and deck, which are unchanged.
+
+**Fixed** — the siphon killed a fetcher by shelling out to `kill`, which the audit forbids; a shell
+wrapper now runs the fetcher in its own session and ends its whole process group at the deadline or
+when the byte cap closes the port. `bin/vapor` replaced an exported `VAPOR_HOME` with the repository's path, so `vapor chat`
 and `vapor siphon` read the wrong directory. The console's guide described panels removed in 0.16; the
 README listed removed modules. MCP: 27 tools (`siphon_propose` in, `scene_ops` out).
 

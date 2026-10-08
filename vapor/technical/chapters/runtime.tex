@@ -1,0 +1,118 @@
+\chapter{Substrates and the runtime}\label{ch:runtime}
+
+\section{The worker}
+
+\texttt{vapor-worker} is a static Zig executable with no libc. At start-up (\textsc{hello}) it fixes the
+number of threads; the thread pool and the event counters (\texttt{perf\_event\_open}: cycles,
+instructions and cache events when a PMU exists; task clock, page faults and context switches always)
+are created \emph{before} the seccomp filter, which is installed with \texttt{TSYNC} on every thread.
+Each call carries a \emph{partition descriptor} (a count argument, a grain, pointers that advance per
+unit, per-thread scratch, an optional guard) and the worker splits the units among threads. Because the
+units are independent rows, the result is the same for one thread or many.
+
+Code runs in one of two modes. \textbf{Native}: the machine code is copied to a writable page, the page
+is made read--execute (W\^{}X), the instruction cache is synchronised where the architecture needs it,
+and the kernel is called as \texttt{void k(const uint64\_t *args)}. \textbf{Emulated}: RV64GCV code is
+interpreted by \texttt{rvemu.zig}, which checks every memory access against the bound buffers and every
+fetch against the code, and turns an unknown instruction into an error with its address and word. The
+interpreter implements RVV~1.0 faithfully (round-to-nearest, fused \texttt{vfmacc}, canonical NaN,
+NaN-boxing, group alignment, \texttt{vill}), with a \emph{poison} mode that writes ones into
+tail- and mask-agnostic elements, proving that kernels do not depend on them, and a configurable VLEN
+from 128 to 512 bits.
+
+Containment is a seccomp-BPF allow-list (read, write, openat, close, lseek, mmap, munmap, mprotect,
+clock\_gettime, setitimer, signals, exit; the architecture is audited),
+\texttt{PR\_SET\_NO\_NEW\_PRIVS}, and a \texttt{SIGALRM} watchdog for native code that does not finish.
+The tests provoke all four failure classes (\texttt{SIGILL}, \texttt{SIGSEGV}, \texttt{SIGALRM},
+\texttt{SIGSYS}); in each, only the worker dies, the BEAM process that owns it reports the signal,
+restarts it, and the next unit runs.
+
+\section{The Vulkan daemon}
+
+\texttt{vapor-fabric} drives Vulkan compute through hand-written bindings (libc only for the loader's
+\texttt{dlopen}): instance, physical device with a compute queue, logical device, buffers, shader modules
+from the SPIR-V emitted by the BEAM, pipelines with push constants, descriptor sets, one command buffer
+per run with barriers, per-iteration windows and state copies, submission with a fenced deadline, and
+readback. A driver crash or a lost device kills only the daemon. Its plans are self-contained, so a
+restarted daemon needs no replay.
+
+\section{One protocol}
+
+Both processes speak the same framing: \texttt{\{packet, 4\}} frames on standard I/O (big-endian
+length, little-endian fields), so a process that dies in the middle of a frame cannot desynchronise the
+BEAM.
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+frame & code & content \\
+\midrule
+\textsc{hello} & 1 & flags, threads $\to$ architecture, sandbox state, version, threads \\
+\textsc{run} & 2 & mode, VLEN, flags, fuel, deadline, code, buffers (inline or mapped files), calls with arguments and partition descriptors, iterations, streamed emissions, copies, returns \\
+\textsc{emit} & 3 & per-iteration output, streamed \\
+\textsc{done} & 4 & elapsed time, retired instructions, counters, returned buffers \\
+\textsc{err} & 5 & code, program counter, instruction word, message \\
+\textsc{open}, \textsc{step}, \textsc{close} & 6--8 & resident sessions: weights mapped once, state kept between steps, each step writing only its inputs and returning only the requested outputs, with optional state copies inside the worker \\
+\bottomrule
+\end{tabularx}
+\caption{The worker protocol. Tables are sized by the frame itself, so a hostile count cannot allocate
+more than the frame describes.}
+\end{table}
+
+\section{Memory}
+
+Weights of 64\,KiB or more are written once to \texttt{/dev/shm/vapor-<sha256>} (content addressed,
+atomic write) and mapped copy-on-write by every worker; the Vulkan daemon imports them without copy
+through \texttt{VK\_EXT\_external\_memory\_host} when the device offers it. Replicas and restarts map the
+same files, so $n$ workers serving one model occupy one copy in the page cache. Weights can stay in
+bfloat16: the kernels widen sixteen weights exactly on load, so the result is bit for bit that of the
+f32 program over the rounded values. Per-token inputs are windows into one buffer; state feedback
+($h \leftarrow h_{\text{next}}$) is a copy declared in the plan.
+
+\section{Dispatch and failover}
+
+\texttt{Vapor.Runtime.Dispatch} tries the arbiter's choice and walks down the chain
+\[
+\text{fabric} \to \text{host AVX-512} \to \text{host base ISA} \to \text{RVV interpreter} \to \text{oracle},
+\]
+recording the reason for each step. Under the canonical policy every link computes the same bits, so
+rerouting never changes an answer.
+
+\section{Parallelism without changing bits}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lXl@{}}
+\toprule
+form & where & invariant \\
+\midrule
+SIMD & AVX2, AVX-512, NEON, RVV (VLEN 128--512), SPIR-V & same bits as the oracle \\
+instruction-level & $R$ rows per iteration in matrix--vector products, chosen by the allocator & same \\
+threads & the worker's pool; decode attention split by key--value head & 1 thread $=$ $n$ threads \\
+continuous batching & decode and prefill chunks in one step & a sequence alone $=$ in a batch \\
+paged cache & paged key--value writes and attention over a block table & paged $=$ contiguous \\
+replicas & one compilation, shared weight pages, shortest queue & same answer from any replica \\
+speculation & a draft proposes, the target verifies $k{+}1$ rows in one step & output $=$ the target's \\
+GPU & SPIR-V for every model operator & fabric $=$ oracle \\
+\bottomrule
+\end{tabularx}
+\caption{Every form of parallelism draws on independent outputs.}
+\end{table}
+
+Speculative decoding needs no further correctness argument: the $k{+}1$-row verification step is
+bit-identical to $k{+}1$ single steps by batch invariance, so the output equals the target's greedy
+decoding whatever the draft, and the draft only changes the number of steps. Block drafters and tree
+drafts are degenerate and general cases of the same rule.
+
+\section{The engine and serving}
+
+\texttt{Vapor.Engine} serves compiled models in resident sessions with continuous batching, a paged
+key--value cache, replicas and cancellation: the engine monitors the process that asked for each
+sequence, and a sequence whose requester dies leaves the batch at the next step boundary without
+changing the bits of the others. Recurrent models (Mamba, Mamba-2, the delta-rule hybrid of
+Chapter~\ref{ch:models}) run as step programs whose state stays in the worker. The HTTP server speaks
+the OpenAI chat and completion protocols with streaming, and every response carries a receipt, the
+canonical digest of model, prompt tokens, parameters and generated tokens. Constrained decoding
+(\texttt{Vapor.Grammar}) restricts generation to a grammar derived from a JSON Schema, a regular
+expression or a tool's declared arguments, with the invariant that no accepted prefix is a dead end.

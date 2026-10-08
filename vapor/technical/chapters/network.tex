@@ -1,0 +1,71 @@
+\chapter{The network airlock}\label{ch:network}
+
+\section{The rule}
+
+\vapor{} has no network access of its own. The one exception is the agent backends, which speak to the
+hosted model a person configured. Everything else that comes from outside comes through the
+\textbf{siphon} (\texttt{Vapor.Siphon}), under one rule: \emph{an agent never connects on its own; only
+the person opens the tap.}
+
+\section{Fetchers}
+
+The person declares fetchers in \texttt{\$VAPOR\_HOME/siphons.json}. A fetcher is any program (the
+official Python client of a model hub, \texttt{aws s3 cp}, \texttt{rsync} to a private cluster) with an
+argument template, the environment variables it may see, a deadline and a byte cap:
+
+\begin{lstlisting}
+{"fetchers": [
+  {"name": "hub", "argv": ["python3", "fetch.py", "{ref}", "{out}"],
+   "env": ["HF_TOKEN"], "timeout_s": 600, "max_bytes": 20000000000},
+  {"name": "range", "argv": ["sh", "-c", "curl -r {range} ...", "{ref}", "{out}"]}
+]}
+\end{lstlisting}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+who & what they can do \\
+\midrule
+the person, at a terminal & \texttt{vapor siphon run NAME REF}; \texttt{approve ID}; \texttt{headers}; \texttt{preflight} \\
+an agent (MCP) & \texttt{siphon\_propose}: queue a request with its reason; nothing is fetched \\
+the browser console & nothing: the verb is not offered \\
+\bottomrule
+\end{tabularx}
+\caption{Who opens the tap.}
+\end{table}
+
+\section{What a fetch can do, and what comes in}
+
+A fetch runs as an operating-system port with only the declared environment variables, a deadline and
+a byte cap; exceeding either kills it. A reference that could be read as an option is refused, and a
+reference is always one argument, never a shell word. What lands goes through the format airlocks
+(safetensors and GGUF headers parsed and bounded, JSON decoded) and may be pinned by SHA-256. Every fetch
+leaves a receipt with the exact argument vector, the digests and the formats found; nothing lands from a
+malformed file, a wrong digest or a failing fetcher.
+
+\section{Headers before data}
+
+A remote safetensors file can be admitted from its header alone, with two ranged reads: the first eight
+bytes give the header length, the next read gives the header. \texttt{vapor siphon preflight NAME CONFIG
+SHARD\ldots} fetches the configuration and every shard's header and asks the model airlock whether the
+checkpoint can run, naming what is missing or unexpected, before a byte of weights is fetched.
+
+\section{Streaming weights: the arithmetic}
+
+Decoding reads every active weight once per token, so the time per token is bounded below by active
+bytes divided by bandwidth.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+model & bytes per token & RAM 50\,GB/s & NVMe 3\,GB/s & net 20\,MB/s \\
+\midrule
+15\,GB dense & 15\,GB & 0.3\,s & 5\,s & 12.5\,min \\
+2.8\,T hybrid (MXFP4 experts) & $\approx$146\,GB & $\approx$3\,s & $\approx$50\,s & $\approx$2\,h \\
+\bottomrule
+\end{tabular}
+\caption{Streaming weights over a network does not serve conversation. It serves work that reads the
+weights once for a whole input: one prefill pass to score, classify or embed a long document.}
+\end{table}

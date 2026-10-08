@@ -1,0 +1,28 @@
+\chapter{Module map}
+
+\begin{small}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+component & modules \\
+\midrule
+algebra & \texttt{Vapor.Algebra.Term}, \texttt{Vapor.Program}, \texttt{Vapor.Tensor}, \texttt{Vapor.F32}, \texttt{Vapor.Canon}, \texttt{Vapor.CR} \\
+oracle and envelope & \texttt{Vapor.Runtime.Oracle}, \texttt{Vapor.Verify.Envelope} \\
+compiler & \texttt{Vapor.Compile.Rewrite}, \texttt{Vapor.Compile.Lower}, \texttt{Vapor.KIR.\{Kernels, Liveness, RegAlloc\}}, \texttt{Vapor.Extracted} \\
+encoders & \texttt{Vapor.Emit.\{X86, X86.AVX512, ARM, RVV, SpirV, MSL\}}, \texttt{Vapor.Export.StableHLO} \\
+runtime & \texttt{Vapor.Runtime.\{Worker, Session, Dispatch, Shm, Substrates\}}, \texttt{Vapor.Substrate} \\
+certificates & \texttt{Vapor.Certificate}, \texttt{Vapor.Bundle}, \texttt{Vapor.Canonical} (CBOR, RFC~8949 \S4.2), \texttt{Vapor.Merkle} \\
+engine and serving & \texttt{Vapor.Engine}, \texttt{Vapor.Recurrent}, \texttt{Vapor.Speculative}, \texttt{Vapor.Sampler}, \texttt{Vapor.Grammar}, \texttt{Vapor.Serve}, \texttt{Vapor.Plug} (\texttt{integrations/vapor\_plug}) \\
+model airlock & \texttt{Vapor.Lock}, \texttt{Vapor.Lock.\{Spec, Contract, Alias, Adapter\}}, \texttt{Vapor.Lock.Adapters.*}, \texttt{Vapor.Quant.MXFP4}, \texttt{Vapor.Ingest.Safetensors}, \texttt{Vapor.Model.GGUF} \\
+network airlock & \texttt{Vapor.Siphon} \\
+renewal and merging & \texttt{Vapor.Palingenesis}, \texttt{Vapor.Merge}, \texttt{Vapor.Train.Balance} \\
+deciders & \texttt{Vapor.Logic} (\texttt{DRUP}, \texttt{LP}, \texttt{MIP}, \texttt{Causal}, Knuth--Bendix, Gröbner), \texttt{Vapor.Aludel}, \texttt{Vapor.Rebis}, \texttt{Vapor.Qalib}, \texttt{Vapor.Tabula}, \texttt{Vapor.Cupel}, \texttt{Vapor.Amalgam} \\
+languages & \texttt{Vapor.Almizan}, \texttt{Vapor.Almizan.\{Syntax, Format\}}, \texttt{Vapor.Alembic}, \texttt{Vapor.Athanor}, \texttt{Vapor.Athanor.Touchstone}, \texttt{Vapor.Hermetic} \\
+laboratory & \texttt{Vapor.Crucible}, \texttt{Vapor.Assay}, \texttt{Vapor.Solve}, \texttt{Vapor.Engineering}, \texttt{Vapor.Finance}, \texttt{Vapor.Play}, \texttt{Vapor.Bio}, \texttt{Vapor.Render}, \texttt{Vapor.Sketch}, \texttt{Vapor.Studio}, \texttt{Vapor.Docs} \\
+evidence & \texttt{Vapor.Quality}, \texttt{Vapor.Assurance}, \texttt{Vapor.TestCache} \\
+agents & \texttt{Vapor.Agent}, \texttt{Vapor.Agent.\{Spec, Journal, Keys, Store, Backend.*\}}, \texttt{Vapor.MCP.Server}, \texttt{Vapor.Mind} \\
+interfaces & \texttt{Vapor.Main} (and the Dīwān), \texttt{Vapor.Console}, \texttt{Vapor.TUI}, \texttt{Vapor.LSP}, \texttt{Vapor.Qalam} \\
+native & \texttt{native/src}: the worker, the thread pool, the RVV interpreter, the sandbox, the Vulkan and Metal daemons \\
+proofs & \texttt{proofs/Vapor}: integer parity, banks, the affine monoid, the allocation checker, the envelope, Higham's bound; the extractor \\
+\bottomrule
+\end{tabularx}
+\end{small}

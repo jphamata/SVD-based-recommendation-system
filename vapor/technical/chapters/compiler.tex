@@ -1,0 +1,101 @@
+\chapter{The compiler}\label{ch:compiler}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[node distance=5mm and 5mm, every node/.style={minimum height=8mm}]
+  \node[box] (t) {term};
+  \node[box, right=of t] (s) {sorts and\\shapes};
+  \node[box, right=of s] (r) {rewrite\\($\varepsilon=0$)};
+  \node[box, right=of r] (l) {lower\\cut sweep};
+  \node[box, right=of l] (k) {KIR};
+  \node[box, below=8mm of k] (sel) {selection\\per ISA};
+  \node[box, left=of sel] (live) {liveness};
+  \node[core, left=of live] (ra) {linear scan,\\no spill};
+  \node[gate, left=of ra] (chk) {checker\\(from Lean)};
+  \node[box, left=of chk] (enc) {encoders};
+  \draw[edge] (t)--(s); \draw[edge] (s)--(r); \draw[edge] (r)--(l); \draw[edge] (l)--(k);
+  \draw[edge] (k)--(sel); \draw[edge] (sel)--(live); \draw[edge] (live)--(ra); \draw[edge] (ra)--(chk); \draw[edge] (chk)--(enc);
+  \draw[edge, dashed] (ra.north) -- (l.south);
+\end{tikzpicture}
+\caption{The compilation pipeline. An allocation that runs out of registers is never spilled: the
+compiler goes back (dashed) and retries with a smaller group factor, fewer rows per iteration, or a cut of the fused region.}
+\end{figure}
+
+\section{A portable kernel IR}
+
+Kernels (\texttt{Vapor.KIR.Kernels}: fused element-wise strips, reductions, matrix--vector products in
+f32, bf16 and 4-bit formats, int8 matrix products, and the model operators) are written once over
+virtual registers with \emph{types}: \texttt{:strip}, \texttt{:f16l} (sixteen f32 lanes),
+\texttt{:i32acc} and others. Each backend sizes the types. The \textbf{group factor} $g$ generalises
+the RVV register-group multiplier (LMUL) to every instruction set: an AVX2 strip with $g=4$ is four
+\texttt{ymm} registers in lockstep, an RVV strip with $g=8$ is an \texttt{m8} group.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}lllll@{}}
+\toprule
+type & RVV & AVX2 & AVX-512 & NEON \\
+\midrule
+\texttt{:strip} & m$g$ & $g$ ymm & $g$ zmm & $g$ q \\
+\texttt{:f16l} & m4, vl$=16$ & 2 ymm & 1 zmm & 4 q \\
+\texttt{:i32acc} & m$4g$ & $g$ ymm & $g$ zmm & 2 q \\
+\bottomrule
+\end{tabular}
+\caption{One kernel IR, four register files.}
+\end{table}
+
+Selection happens \emph{before} allocation, as in production compilers. Lane-wise instructions are
+emitted as bundles (one allocation unit), so a destination can reuse a source register that dies at
+that point. On AVX-512, strip tails are one masked pass (\texttt{bzhi} into mask registers, masked loads
+and stores only) instead of a scalar loop, and four-byte constants use embedded broadcast; the
+reduction tree is lane for lane the same as AVX2's, so the bits are the same.
+
+\section{Allocation without spill, checked}
+
+\texttt{Vapor.KIR.Liveness} computes liveness by fixed point over the control-flow graph (values live on
+a back edge cover the whole loop), with early-clobber constraints for the overlap rules of RVV's
+widening instructions. \texttt{Vapor.KIR.RegAlloc} is a linear scan with aligned blocks of one, two,
+four or eight registers.
+
+There is no spill path. When registers run out, the allocator returns the pressure point, and the
+compiler tries a smaller group factor, then fewer rows per iteration for the 4-bit products, then a
+cut of the fused region at that point. Every accepted allocation is revalidated by
+\texttt{check\_alloc/3}, which is extracted from Lean together with its soundness theorem
+(\texttt{checkAlloc\_sound}): groups are aligned, inside the register file, outside the reserved
+registers, and no two simultaneously live values share a register. Every emitted region is therefore
+free of spill and clobber by construction, not by trust in the heuristic.
+
+\section{Encoders}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+target & encoding \\
+\midrule
+x86-64 (AVX2, AVX-512) & REX, three-byte VEX, EVEX (always \texttt{disp32}), ModR/M, SIB; System~V ABI, callee-saved registers saved only when used \\
+AArch64 (NEON) & A64 words; AAPCS64, \texttt{x18} never allocated \\
+RV64GCV & \texttt{vtype} fields, vector loads and stores with width fields, static round-to-nearest for scalar FP; full psABI; long branches as an inverted branch over a \texttt{jal} \\
+SPIR-V (Vulkan) & a symbolic assembler that interns types and constants and orders the logical sections; \texttt{NoContraction} on every multiply and add under the canonical policy \\
+MSL, StableHLO & emitted for Metal and for PJRT devices, and admitted only through the substrate airlock \\
+\bottomrule
+\end{tabularx}
+\caption{Encoders. The product never calls an assembler.}
+\end{table}
+
+The tests validate every emitted instruction (every kernel constructor, in every backend, at every
+group factor and policy) against GNU binutils, and every SPIR-V module against \texttt{spirv-val}.
+Those tools are used only to check; the product encodes bytes itself.
+
+\section{Cost model}
+
+The arbiter predicts the time of a schedule on a substrate as
+\[
+  t = \sum_{\text{loops}} \max\!\left(\frac{F}{\pi}, \frac{Q}{\beta}, \frac{I}{\iota}\right) + \text{overheads},
+\]
+with floating-point work $F$ and bytes $Q$ counted from the schedule and $I$ the static count of
+instructions in each hot loop as emitted, times its iterations. The third ceiling makes the model
+honest: the 4-bit matrix--vector product is bound by instruction issue (about 1.1 instructions per
+weight), not by bandwidth, and a two-ceiling model misses it by a factor of about five. Profiles are
+declared per vendor; the dispatch decision is the argmin of the predicted time, taken on each node from
+the certified work and the node's own profile.

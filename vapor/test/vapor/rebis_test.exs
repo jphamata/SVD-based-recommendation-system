@@ -382,7 +382,7 @@ defmodule Vapor.RebisTest do
 
   # ⟨ψ|P|ψ⟩ for a signed Pauli string, qubit 0 first
   defp expectation(psi, "" <> p, n) do
-    {sign, ops} = {if(String.starts_with?(p, "-"), do: -1.0, else: 1.0), String.slice(p, 1..-1) |> String.graphemes()}
+    {sign, ops} = {if(String.starts_with?(p, "-"), do: -1.0, else: 1.0), String.slice(p, 1..-1//1) |> String.graphemes()}
     ppsi =
       Map.new(psi, fn {k, _} ->
         # (P ψ)(k) = Σ over the source basis state that P maps to k

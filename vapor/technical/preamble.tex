@@ -1,0 +1,32 @@
+% Shared preamble of the technical monograph and the technical slides (LuaLaTeX).
+\usepackage{fontspec}
+\usepackage{amsmath,amssymb}
+\setmonofont{DejaVu Sans Mono}[Scale=0.84]
+\newfontfamily\arabicfont[Script=Arabic,Renderer=HarfBuzz,Scale=0.95]{DejaVu Sans}
+\newcommand{\ar}[1]{{\arabicfont\textdir TRT #1}}
+% LuaTeX has no bidi algorithm: a left-to-right run inside Arabic (a number) is marked by hand
+\newcommand{\Lr}[1]{{\textdir TLT #1}}
+\usepackage{xcolor}
+\definecolor{soot}{HTML}{1E1A14}
+\definecolor{brass}{HTML}{B08A3E}
+\definecolor{verdigris}{HTML}{3F8F80}
+\definecolor{cinnabar}{HTML}{B5432F}
+\definecolor{parchment}{HTML}{F4EEE2}
+\definecolor{ink}{HTML}{102A30}
+\usepackage{booktabs,tabularx,array}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,calc,shapes.geometric}
+\tikzset{
+  box/.style={draw=ink, rounded corners=2pt, fill=parchment, align=center, font=\small, inner sep=4pt},
+  core/.style={box, fill=brass!25},
+  gate/.style={box, fill=verdigris!20},
+  edge/.style={-{Stealth[length=2mm]}, ink, thick},
+}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\small, columns=fullflexible, keepspaces=true, breaklines=true,
+        frame=single, rulecolor=\color{ink!40}, backgroundcolor=\color{parchment},
+        xleftmargin=0.5em, xrightmargin=0.5em, aboveskip=0.8em, belowskip=0.8em,
+        commentstyle=\color{verdigris}, keywordstyle=\color{cinnabar}}
+\setlength{\emergencystretch}{3em}
+\newcommand{\vapor}{\textsf{vapor}}
+\newcommand{\Q}{\mathbb{Q}}

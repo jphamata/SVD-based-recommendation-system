@@ -226,7 +226,7 @@ editor of its own, **Al-Qalam** (`vapor qalam`): vi keys, each claim's verdict i
 numbers you scrub until a law starts or stops holding.
 
 - Round 0.17 — the build, English, the seal **[docs/HERMETIC.md](docs/HERMETIC.md)** · integer programs and causes **[docs/LOGIC.md §6–§7](docs/LOGIC.md)** · Palingenesis **[docs/PALINGENESIS.md](docs/PALINGENESIS.md)** · Qālib **[docs/QALIB.md](docs/QALIB.md)** · recommendations **[docs/RECOMMEND.md](docs/RECOMMEND.md)** · the editor question **[docs/EDITORS.md](docs/EDITORS.md)** · the scrutiny of the request and its attachments: **[docs/DIRECTIVE.md §20](docs/DIRECTIVE.md)**
-- Round 0.17, continued — Kimi K3 **[docs/KIMI.md](docs/KIMI.md)** · the siphon **[docs/SIPHON.md](docs/SIPHON.md)** · where names live **[docs/AIRLOCK.md §11](docs/AIRLOCK.md)** · ink **[docs/RENDER.md §3](docs/RENDER.md)** · sketch **[docs/SKETCH.md](docs/SKETCH.md)** · Al-Qalam **[docs/EDITORS.md](docs/EDITORS.md)** · the scrutiny of fifteen proposals: **[docs/DIRECTIVE.md §21](docs/DIRECTIVE.md)**
+- Round 0.17, continued — Kimi K3 **[docs/KIMI.md](docs/KIMI.md)** · the siphon **[docs/SIPHON.md](docs/SIPHON.md)** · where names live **[docs/AIRLOCK.md §11](docs/AIRLOCK.md)** · ink **[docs/RENDER.md §3](docs/RENDER.md)** · sketch **[docs/SKETCH.md](docs/SKETCH.md)** · Al-Qalam **[docs/EDITORS.md](docs/EDITORS.md)** · technical monograph and slides **[technical/](technical/monograph.pdf)** · the scrutiny of fifteen proposals: **[docs/DIRECTIVE.md §21](docs/DIRECTIVE.md)**
 
 Since 0.16.0, vapor is more **pure** and **converses**. What only re-enacted a fixed example went out
 (complex networks, algorithm discovery, tic-tac-toe, ten demonstration panels — almost
@@ -361,7 +361,8 @@ mix vapor.test             # the edit loop: only the test files whose reach chan
 make e2e                   # the whole pipeline, see below
 mix vapor.bench            # regenerates docs/bench (kernels, engine, ULP, tokenizer)
 mix vapor.quality          # output quality: docs/bench/QUALITY.md, quality.json, PNG/WAV gallery
-make slides                # the presentation PDF
+make slides                # the presentation PDF (the academic deck)
+make technical             # technical/: the technical monograph and slides, the system as it is
 ```
 
 With a model (a Hugging Face directory or a `.gguf` file):

@@ -94,8 +94,12 @@
         slides = pkgs.mkShell {
           packages = [
             pkgs.gnumake
-            (pkgs.texliveMedium.withPackages (ps: with ps; [ beamer pgf pgfplots abntex2 ]))   # slides/ and thesis/
+            (pkgs.texliveMedium.withPackages (ps: with ps; [ beamer pgf pgfplots abntex2 booktabs listings xcolor latexmk ]))   # slides/, thesis/, technical/
+            pkgs.dejavu_fonts   # technical/: the monospace and the Arabic script, found by luaotfload
           ];
+          shellHook = ''
+            export OSFONTDIR=${pkgs.dejavu_fonts}/share/fonts''${OSFONTDIR:+:$OSFONTDIR}
+          '';
         };
       });
 

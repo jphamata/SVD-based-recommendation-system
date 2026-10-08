@@ -160,6 +160,31 @@ It **does not invent detail**, and that is on purpose: a result that
 contradicts the input is not consistent. A GAN that hallucinates texture is another
 tool, and it is not here.
 
+### 3.1 Temporal upscaling (0.17)
+
+`Upscale.temporal(lr, prev, motion)` upscales a frame of a sequence using the previous
+output: the history is moved by the motion (`{dx, dy}`, or a function per output pixel, as a
+renderer's motion vectors give), clamped pixel by pixel to the range of the current frame's
+single-frame upscaling over a 3×3 neighbourhood (history that does not fit what this frame
+shows is rejected, as temporal anti-aliasing does), blended with it, and projected so that
+**D(y) = x for every frame**, whatever the history holds. Measured (`upscale_test.exs`, a
+48 × 48 window over a striped world with a disc):
+
+| case | result |
+|---|---|
+| the picture moves half an input pixel per frame | +0.72 dB over single-frame upscaling (frames 2–5); each frame samples positions the last did not |
+| a whole input pixel per frame (the control) | +0.08 dB: the same samples again, nothing to gain |
+| an object present in one frame and gone in the next | the error in its region equals the single-frame error (0.23); a naive blend keeps the ghost (0.47) and contradicts the input by 0.39 |
+| wrong motion vectors | every frame still consistent (10⁻¹⁶); the quality drops (17.8 against 19.4 dB) |
+
+What this is, against the proposal that asked for it (a "sovereign DLSS"): temporal reuse
+helps exactly when frames carry new sub-pixel information, and the consistency projection
+makes the result unable to contradict the current frame, which is the honest form of
+"no hallucination". It runs on the CPU, the same bits everywhere. It is not 4K at 60 FPS:
+a 4K frame is 8.3 million pixels, and even a small network per pixel is hundreds of
+billions of operations per second at that rate. Colour sequences, per-pixel motion from a
+renderer's buffers and a compiled kernel are owed (TODO.md).
+
 ## 4. Reinforcement learning, 3D, games
 
 Reinforcement learning (`Vapor.RL`):

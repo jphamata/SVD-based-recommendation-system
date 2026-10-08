@@ -1,0 +1,34 @@
+\chapter{Limits}\label{ch:limits}
+
+What the system does not do, or has not been shown to do, is part of its specification.
+
+\paragraph{Hardware.} RVV and NEON code is validated under QEMU, and the RVV interpreter against QEMU;
+Vulkan is validated under lavapipe. No physical RISC-V vector hardware, discrete GPU or Apple Silicon
+machine has run the code. The cooperative-matrix path of the SPIR-V backend is emitted and validated but
+has not executed. Scaling to many cores and hardware counters are measured where a PMU exists.
+
+\paragraph{Numerics.} Under the canonical policy $+$, $-$, $\times$ and $\div$ are IEEE operations; the
+transcendental functions are identical on every substrate but within one or two ulps, not correctly
+rounded. The oracle and the envelope are exact and therefore slow, which limits the size of the probes in
+the differential rungs (the bounds extend to the maximal extents by monotonicity). Normalised text
+depends on OTP's Unicode version, which is recorded in digests rather than eliminated.
+
+\paragraph{Performance.} The 4-bit matrix--vector product is bound by instruction issue. The Vulkan
+daemon runs self-contained units without resident sessions, and its attention recomputes scores in
+passes without shared memory: correct and bit for bit, not tuned for a real GPU.
+
+\paragraph{Models.} Families whose mathematics differs from every topology are refused by name (for
+example dynamic NTK and LongRoPE rotary scaling). Frontier checkpoints of trillions of parameters are
+admitted on small instances against independent references; their own released spellings must be read
+through header-only admission before they are claimed. Hosted models are observations, not functions:
+their decisions can be recorded and protected, not reproduced.
+
+\paragraph{Certificates.} A certificate says what was computed, not whether a model is good. A causal
+verdict says nothing without its diagram. Qālib proves combinational equivalence of netlists; it does not
+make chips. The hermetic seal bounds memory and time, not code with access to the BEAM.
+
+\paragraph{The network airlock.} It bounds what a fetch can do and what it brings in; it does not audit
+the fetchers, which are the person's programs.
+
+\paragraph{Editors.} Al-Qalam counts a wide character as one column and leaves right-to-left layout to
+the terminal; it redraws the whole screen per key, which suits source files, not very large ones.

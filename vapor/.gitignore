@@ -18,6 +18,13 @@
 /slides/*.vrb
 /slides/*.fls
 /slides/*.fdb_latexmk
+/technical/*.aux
+/technical/*.log
+/technical/*.nav
+/technical/*.out
+/technical/*.snm
+/technical/*.toc
+/technical/*.vrb
 /test/fixtures/vocab/
 _build118/
 integrations/*/_build/

@@ -37,6 +37,11 @@ rounds 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16 and 0.17 that wer
   with a performance gate (τ histogram, full-block acceptance); correctness needs nothing new, because the
   verify pass is already bit-identical to single steps. Speculative *sampling* certified exactly on a small
   vocabulary in rationals.
+- ☐ **Temporal upscaling, further**: colour sequences, per-pixel motion and depth from a renderer's
+  buffers, and the step compiled to the algebra (today it runs on the BEAM).
+- ☐ **A release artifact** (`mix release`: the BEAM runtime, the application and the worker, without
+  the test suite, the oracles and the thesis). First the Mix-task verbs (`serve`, `tui`, `ocr`, `merge`,
+  …) must become entry points that do not need Mix at run time.
 - ☐ **Ink, further**: hatching, line weight by depth, and an ink mode in the GPU tracer (today ink runs on
   the server only).
 - ☐ **Sketch**: a parametric constraint solver (coincidence, tangency, distance) with a degrees-of-freedom

@@ -1,0 +1,124 @@
+\chapter{Languages}\label{ch:languages}
+
+\section{Almizan: claims that do not compile until they are decided}
+
+Almizan is a small language in which each claim says \emph{what kind} it is (its root) and \emph{how
+it may be used} (its pattern, \emph{wazn}). A claim marked as proved does not compile until a decision
+procedure proves it, or refutes it with the point that breaks it.
+
+\paragraph{One tree, two scripts.} A program is a tree; Latin and Arabic are bijective printings of it,
+with the same canonical hash: the projection changes keywords and digits, never names. Below, a law
+written with Latin names in the Latin printing, and the same law as an Arabic-speaking author writes it,
+with Arabic names, in the Arabic printing.
+
+\begin{lstlisting}
+(claim energy (root H-f-Z) (wazn burhan)
+  (inputs (x q) (v q))
+  (field (x v) (v (- x)))
+  (proof conserved)
+  (body (+ (kinetic v) (* 1/2 x x))))
+\end{lstlisting}
+
+\newcommand{\arline}[2][0em]{\hbox to \linewidth{\hfill\ar{#2}\hspace*{#1}}}
+\begin{center}\setlength{\fboxsep}{6pt}\colorbox{parchment}{\begin{minipage}{0.96\textwidth}
+\arline{(دعوى طاقة (جذر ح-ف-ظ) (وزن برهان)}
+\arline[1.4em]{(مدخلات (س نسبي) (ع نسبي))}
+\arline[1.4em]{(حقل (س ع) (ع (- س)))}
+\arline[1.4em]{(برهان محفوظ)}
+\arline[1.4em]{(تنفيذ (جمع (حركية ع) (* \Lr{١/٢} س س))))}
+\end{minipage}}\end{center}
+
+Keywords have both forms; numbers use Western digits in one script and Arabic-Indic digits in the other;
+names are Latin or Arabic but never mixed; roots in Latin use the Buckwalter transliteration, which is
+lossless. \texttt{read(print(t)) = t} holds in both scripts.
+
+\paragraph{A morphological type system.}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+root & domain & what can be claimed \\
+\midrule
+H-s-b & calculation & a value; identities; bounds and positivity on a box \\
+H-f-Z & conservation & a quantity constant along a field $\dot x = f(x)$ \\
+n-q-l & transition & a system of Boolean steps and its invariant \\
+k-t-b & record & a stored value, named by its hash \\
+s-b-b & cause & an interventional query on a stated causal diagram \\
+\bottomrule
+\end{tabularx}
+\caption{Roots. The patterns are \emph{fāʿil} (a pure function, lowered to the compiler), \emph{mafʿūl}
+(a stored value) and \emph{burhān} (proved: nothing runs until the obligation is met). Meaningless pairs
+are refused.}
+\end{table}
+
+\paragraph{Proof by decision.}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+proof & decider & certificate \\
+\midrule
+\texttt{(identity E)} & polynomial normal form over $\Q$ & both sides normalise to one polynomial \\
+\texttt{conserved} & $\dot H = \nabla H\cdot f$ normalised over $\Q$ & the zero polynomial, or the remainder and a point where it is not zero \\
+\texttt{nonneg}, \texttt{pos}, \texttt{(bounded a b)} & Bernstein subdivision in exact integers & a replayable subdivision, or the refuting point \\
+\texttt{invariant} & SAT by induction & a DRUP proof checked separately, or the counterexample \\
+\texttt{identifiable}, \texttt{(adjustment z)}, \texttt{separated} & ID, back-door, d-separation & the estimand, or a hedge, or the open path \\
+\bottomrule
+\end{tabularx}
+\caption{Almizan's deciders.}
+\end{table}
+
+The damped oscillator shows a refutation: with the field $\dot v = -x - \tfrac{1}{10}v$, the decider
+reports $\dot H = -\tfrac{1}{10}v^2$ and the point $v = 1, x = 0$ where it is not zero. A canonical
+formatter keeps comments as glosses attached to the declaration they precede; it does not reorder
+declarations, because the order is the author's argument and the hash already ignores layout and
+script. Almizan exports its claims to core Lean (\texttt{Rat}, \texttt{grind}), and a test tier checks
+that Lean proves what \vapor{} proved and rejects what it refuted.
+
+\section{Alembic: open input, sanitised}
+
+Alembic is the language in which a person or a model writes a problem for the search engine: a space and
+an objective, a claim to refute or prove by enumeration, a game. The input is free, so the limits belong
+to the machine:
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+risk & defence \\
+\midrule
+infinite loops, deep recursion & fuel charged on every call and iteration; depth bounded \\
+huge numbers and lists & integers up to 65{,}536 bits; lists of two million elements; bounded ranges \\
+memory and time & the hermetic seal (below) \\
+the atom table & identifiers stay binaries, never atoms \\
+code in place of data & a literal reader that accepts only data and constant arithmetic \\
+\bottomrule
+\end{tabularx}
+\caption{Alembic's defences. There is no I/O, no clock and no randomness beyond a deterministic hash:
+a program is a pure function of its text.}
+\end{table}
+
+The evaluator compiles the tree once into nested closures, so a verifier called a hundred thousand times
+during a search pays for the tree walk once.
+
+\section{Athanor and the Touchstone}
+
+Athanor is a general search engine for problems written in Alembic. It runs a portfolio of strategies
+under a bandit that allocates the budget by measured progress, beside a random-search control with the
+same budget, and records every evaluation in a journal whose Merkle root identifies the run; the same seed
+gives the same root. A result is a certificate (a counterexample, an exhaustive enumeration, an
+incumbent) that the \textbf{Touchstone} re-checks without trusting the search: a forged value is refused.
+Games written in Alembic are solved exactly by negamax when they fit, or searched by Monte Carlo tree
+search. Problems whose objective is measured outside (a training run, a simulation) are optimised by
+asking the person to measure the proposed candidates.
+
+\section{The hermetic seal}
+
+One containment primitive, \texttt{Vapor.Hermetic.seal/2}, runs every job on untrusted input: an
+Alembic evaluation, a document ingestion, a console terminal session, an Athanor run. The job runs in
+its own process with a heap cap that \emph{includes} off-heap binaries (which on the BEAM live outside
+the process heap and would otherwise escape a cap) and a deadline. A memory bomb is killed and the
+caller survives. The seal bounds memory and time; it does not defend against code that already has access
+to the BEAM itself.

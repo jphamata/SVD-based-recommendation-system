@@ -1,0 +1,150 @@
+\chapter{Models: the airlock}\label{ch:models}
+
+\section{The contract, not the family}
+
+A program in the algebra is self-describing: its inputs, outputs and state are typed terms. What the
+core needs to know about a model is therefore the \emph{shape of its program}, not its family. The model
+airlock (\texttt{Vapor.Lock}) is the only place where a family is known. Inside, there is only a
+\texttt{Vapor.Lock.Spec}, the contract, and a program checked against it.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[node distance=5mm, every node/.style={minimum height=8mm}]
+  \node[box] (ck) {checkpoint};
+  \node[box, right=of ck] (mf) {manifest};
+  \node[gate, right=of mf] (cl) {claim\\(all adapters)};
+  \node[gate, right=of cl] (ad) {admit};
+  \node[box, right=of ad] (sp) {Spec +\\weights};
+  \node[gate, below=7mm of sp] (bd) {build};
+  \node[gate, left=of bd] (ct) {Contract.check};
+  \node[core, left=of ct] (co) {core};
+  \draw[edge] (ck)--(mf); \draw[edge] (mf)--(cl); \draw[edge] (cl)--(ad); \draw[edge] (ad)--(sp);
+  \draw[edge] (sp)--(bd); \draw[edge] (bd)--(ct); \draw[edge] (ct)--(co);
+\end{tikzpicture}
+\caption{Admission. A defective adapter is stopped at the boundary, not inside the engine.}
+\end{figure}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lXXl@{}}
+\toprule
+contract & inputs & outputs & state \\
+\midrule
+\texttt{:causal\_lm} & tokens and positions (and, by option, sampling, a block table, a slot, soft tokens) & logits and/or hidden rows & paired $\{x, x_{\text{next}}\}$ of equal sorts \\
+\texttt{:encoder} & rows, horizon & hidden rows (pooled, logits) & -- \\
+\texttt{:codec} & rows $\leftrightarrow$ codes & same & -- \\
+\texttt{:map} & rows & rows & -- \\
+\bottomrule
+\end{tabularx}
+\caption{Program contracts. A spec also carries widths, vocabulary, end tokens, modalities, the features
+its builder accepts, and the digest of the admitted configuration.}
+\end{table}
+
+Three properties are enforced. \textbf{One owner per checkpoint}: every adapter answers a claim with a
+score, a near miss with its reason, or nothing; with no owner, the refusal lists every near miss and its
+fix. \textbf{The contract at the airlock}: the built program is checked before the core sees it.
+\textbf{No family in the core}: a test reads the atom tables of the compiled core modules and fails if
+any of them references an adapter or a family's configuration module.
+
+\section{Where names live}
+
+A checkpoint computes a function, and someone must write that function once in the algebra; that code is
+mathematics. A checkpoint is also \emph{spelled} a certain way (a \texttt{model\_type}, configuration
+keys, tensor names, fused matrices), and a spelling is data about a family.
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lXXX@{}}
+\toprule
+tier & holds & names it may use & enforced by \\
+\midrule
+core & algebra, compiler, emitters, runtime, engine, deciders & none & atom-table test \\
+topologies & the function, once per \emph{kind} of network: decoder, delta-rule hybrid, encoder, encoder--decoder, Mamba, Mamba-2, DiT, U-Net, VAE, codec & what they compute & a test that no module name carries a product or family name \\
+spellings & claims, aliases and refusals & product and family names, here only & aliases and refusals are data \\
+agent protocols & the wire format of a hosted model's API & the vendor's protocol name & the single allowance \\
+\bottomrule
+\end{tabularx}
+\caption{The naming rule.}
+\end{table}
+
+Adding a family costs, from cheapest to dearest: an \textbf{alias} (data only: key renamings, forced and
+required values, forbidden keys, tensor renamings by template, splits of fused tensors sized by products
+of configuration fields; an alias can narrow what its base accepts, never widen it); a \textbf{blueprint}
+(a few lines translating configuration into the knobs of an existing topology); a \textbf{topology} (a
+new program built from existing operators, no new kernel). A \textbf{refusal} is also data: a family
+whose mathematics differs from every topology is refused by name, with the reason.
+
+Admission can run on headers alone: \texttt{Vapor.Lock.preflight/2} takes a configuration and the
+safetensors headers of the shards (names, dtypes, shapes, no data) and returns the airlock's verdict,
+including missing and unexpected tensors, before a byte of weights is read.
+
+\section{A worked example: the delta-rule hybrid}
+
+The delta-rule hybrid topology (\texttt{Vapor.Lock.Adapters.DeltaHybrid}) shows what admitting a
+frontier architecture involves. Its layers alternate a gated delta-rule attention with a latent attention
+without positions, combine blocks through attention over earlier block outputs, and route tokens to a
+latent mixture of experts.
+
+\paragraph{Gated delta rule.} Per head, the state $S \in \mathbb{R}^{d_k \times d_v}$ evolves as
+\[
+  S_t = \bigl(I - \beta_t k_t k_t^{\mathsf T}\bigr)\,\mathrm{Diag}(\alpha_t)\,S_{t-1} + \beta_t k_t v_t^{\mathsf T},
+  \qquad o_t = S_t^{\mathsf T} q_t ,
+\]
+with a per-channel forget gate $\alpha_t = \exp(g_t)$ bounded as $g_t = g_{\min}\,\sigma(e^{A} z_t) \in
+(g_{\min}, 0)$. For prefill in chunks, the recurrence is equivalent to a chunkwise form built on the UT
+transform: with $\Gamma$ the cumulative decays inside a chunk and $L_s$ the strictly lower part of the
+decayed key Gram matrix,
+\[
+  T = \bigl(I + \mathrm{diag}(\beta) L_s\bigr)^{-1},\qquad
+  U = T\,\mathrm{diag}(\beta)\,V,\qquad
+  W = T\,\mathrm{diag}(\beta)\,(K \odot \Gamma).
+\]
+The two forms agree to $3\cdot 10^{-16}$ in float64; the bounded gate is what keeps the chunk's
+reciprocal decay finite in float32 over a 16-token tile, where an unbounded gate overflows.
+
+\paragraph{Latent attention.} The latent attention keeps only the compressed latent in the cache
+($\texttt{kv\_lora\_rank}$ numbers per token and layer) and absorbs the key projection into the query
+through a grouped contraction, so decoding never decompresses keys.
+
+\paragraph{Experts.} Routing is a sigmoid score plus a bias, top-$k$ by exact counting, shared experts,
+and a projection into a latent width with a normalisation before the up-projection; the gated activation
+soft-caps both branches, $\beta_1\tanh(g/\beta_1)\,\sigma(g)\cdot\beta_2\tanh(u/\beta_2)$.
+
+\paragraph{Weights in MXFP4.} An MXFP4 value is $\pm\{0, \tfrac12, 1, \tfrac32, 2, 3, 4, 6\}\cdot
+2^{s-127}$: a two-bit significand times a power of two. Every such value inside binary32's range is a
+binary32 value, so decoding is \emph{exact}, and a model computes the same bits from MXFP4 experts as
+from any other copy of the same values. Elements that would overflow and NaN scales are refused by name.
+
+\paragraph{Checks.} An independent float64 reference, written from the equations alone, computes two
+small instances its own way (no caches, decompressed latent keys, the whole sequence at every step). The
+compiled program agrees with it to a relative error of $4.4\cdot10^{-6}$ (and $1.35\cdot10^{-5}$ with
+the soft caps active, a low-rank query and MXFP4 experts); greedy decoding is identical; the native worker
+equals the oracle bit for bit; and the controls (forgetting the delta-rule state or the latent cache at
+every token) fail, as they must.
+
+\paragraph{Balanced routing, certified.} The router's balanced assignment (each token $k$ experts, each
+expert $q = mk/n$ tokens) is a bipartite $b$-matching whose constraint matrix is totally unimodular, so
+its linear relaxation is integral. \texttt{Vapor.Train.Balance} solves it with the exact rational simplex
+and checks the dual certificate. Coordinate descent on the dual reaches the certified optimum when each
+threshold is placed between the $k$-th and $(k{+}1)$-th entries; placing it \emph{at} an entry creates
+ties that leave most fixed points unbalanced.
+
+\section{The substrate airlock}
+
+A substrate receives canonical programs only after it has been measured. The probes of
+\texttt{Vapor.Substrate} produce a verdict (\texttt{:canonical}, \texttt{:envelope} with a numerical
+fingerprint, or \texttt{:refused}) and the dispatcher respects it. The fingerprint records fused
+multiply--add, flush-to-zero and denormals-are-zero behaviour, reduction order, mantissa bits, signed
+zero, NaN handling, division and the transcendental functions; each field that departs from the oracle is
+named. Metal (through an MSL shim), StableHLO devices through PJRT, cluster nodes and other operating
+systems enter the same way.
+
+\section{Renewal and merging}
+
+Models are values under Merkle roots. \textbf{Palingenesis} renews a model plank by plank: a plank enters
+through a contract gate, a Fisher--Rao drift brake measured on anchor sequences, a paired test on target
+sequences and caller invariants; generations are published by read-copy-update on immutable values, and
+the lineage is a chain of signed records that re-derives from the weights. \textbf{Merging} combines
+checkpoints by declared methods (linear, SLERP, TIES and others), disk to disk, one tensor at a time,
+with a signed receipt; a diagnostic mode measures the regime before merging, and merging by measurement
+chooses among methods on held-out text.

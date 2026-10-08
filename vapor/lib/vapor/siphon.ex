@@ -244,31 +244,56 @@ defmodule Vapor.Siphon do
     end
   end
 
-  # the fetcher's process: an empty directory, a reduced environment, a deadline, a byte cap
+  # the fetcher's process: an empty directory, a reduced environment, a deadline, a byte cap. A shell
+  # wrapper runs it in its own session (setsid, where present) and ends its whole process group, so a
+  # fetcher's children go with it: when the deadline passes (a watchdog in the wrapper), or when this
+  # side closes the port (the byte cap), which ends the wrapper's standard input (kept as fd 3: an
+  # asynchronous list's own standard input is /dev/null). The arguments reach
+  # the fetcher as "$@", never through the shell's parser. Nothing here shells out from the BEAM.
+  @wrapper ~S"""
+  exec 3<&0
+  if command -v setsid >/dev/null 2>&1; then setsid "$@" </dev/null & c=$!; g=-$c; else "$@" </dev/null & c=$!; g=$c; fi
+  ( sleep "$VAPOR_SIPHON_SECS" & s=$!; trap "kill $s 2>/dev/null; exit 0" TERM; wait $s; kill -9 $g 2>/dev/null ) >/dev/null 2>&1 & w=$!
+  ( cat <&3 >/dev/null; kill -9 $g 2>/dev/null ) >/dev/null 2>&1 & r=$!
+  wait $c 2>/dev/null; s=$?
+  kill $w $r 2>/dev/null
+  exit $s
+  """
+
   defp exec(f, exe, args, dir, out) do
     keep = @base_env ++ f.env
     env = for {k, v} <- System.get_env(), do: if(k in keep, do: {String.to_charlist(k), String.to_charlist(v)}, else: {String.to_charlist(k), false})
-    port = Port.open({:spawn_executable, exe}, [:binary, :exit_status, :stderr_to_stdout, :hide, args: args, cd: dir, env: env])
-    {:os_pid, pid} = Port.info(port, :os_pid)
-    watch(port, pid, f, out, System.monotonic_time(:millisecond) + f.timeout_s * 1000, "")
+    env = [{~c"VAPOR_SIPHON_SECS", Integer.to_charlist(f.timeout_s)} | env]
+
+    case System.find_executable("sh") do
+      nil ->
+        {:error, Rejection.new({:siphon, f.name}, "a POSIX shell to run the fetcher under a deadline", "install sh")}
+
+      sh ->
+        port = Port.open({:spawn_executable, sh}, [:binary, :exit_status, :stderr_to_stdout, :hide, args: ["-c", @wrapper, "sh", exe | args], cd: dir, env: env])
+        watch(port, f, out, System.monotonic_time(:millisecond) + f.timeout_s * 1000, "")
+    end
   end
 
-  defp watch(port, pid, f, out, deadline, log) do
+  defp watch(port, f, out, deadline, log) do
     receive do
       {^port, {:data, d}} ->
-        watch(port, pid, f, out, deadline, tail(log <> d))
+        watch(port, f, out, deadline, tail(log <> d))
 
       {^port, {:exit_status, 0}} ->
         if bytes(out) > f.max_bytes, do: {:error, refused(f, "wrote more than max_bytes (#{f.max_bytes})", log)}, else: {:ok, log}
 
       {^port, {:exit_status, s}} ->
-        {:error, refused(f, "exited with status #{s}", log)}
+        if System.monotonic_time(:millisecond) >= deadline,
+          do: {:error, refused(f, "ran past timeout_s (#{f.timeout_s} s) and was killed", log)},
+          else: {:error, refused(f, "exited with status #{s}", log)}
     after
       200 ->
         cond do
-          System.monotonic_time(:millisecond) > deadline -> kill(port, pid); {:error, refused(f, "ran past timeout_s (#{f.timeout_s} s) and was killed", log)}
-          bytes(out) > f.max_bytes -> kill(port, pid); {:error, refused(f, "wrote more than max_bytes (#{f.max_bytes}) and was killed", log)}
-          true -> watch(port, pid, f, out, deadline, log)
+          # the wrapper's watchdog ends a fetcher at its deadline; this is the second barrier
+          System.monotonic_time(:millisecond) > deadline + 2_000 -> kill(port); {:error, refused(f, "ran past timeout_s (#{f.timeout_s} s) and was killed", log)}
+          bytes(out) > f.max_bytes -> kill(port); {:error, refused(f, "wrote more than max_bytes (#{f.max_bytes}) and was killed", log)}
+          true -> watch(port, f, out, deadline, log)
         end
     end
   end
@@ -276,19 +301,18 @@ defmodule Vapor.Siphon do
   defp tail(log) when byte_size(log) > 4096, do: binary_part(log, byte_size(log) - 4096, 4096)
   defp tail(log), do: log
 
-  defp kill(port, pid) do
-    System.cmd("kill", ["-KILL", to_string(pid)], stderr_to_stdout: true)
-
-    receive do
-      {^port, {:exit_status, _}} -> :ok
-    after
-      5_000 -> :ok
-    end
-
+  # closing the port ends the wrapper's standard input, and the wrapper ends the fetcher's process group
+  defp kill(port) do
     try do
       Port.close(port)
     rescue
       ArgumentError -> :ok
+    end
+
+    receive do
+      {^port, {:exit_status, _}} -> :ok
+    after
+      0 -> :ok
     end
   end
 

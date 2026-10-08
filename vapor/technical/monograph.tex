@@ -1,0 +1,55 @@
+% vapor — a technical monograph: the system as it is, its architecture and its guarantees.
+% Build: make technical (lualatex, twice). Separate from monografia/ (the academic record).
+\documentclass[11pt,a4paper,open=any,parskip=half,headings=standardclasses,chapterprefix=false,numbers=noenddot]{scrreprt}
+\usepackage[margin=2.6cm]{geometry}
+\input{preamble}
+\usepackage[hidelinks]{hyperref}
+\addtokomafont{disposition}{\color{ink}}
+\RedeclareSectionCommand[beforeskip=0pt,afterskip=1.6em]{chapter}
+\usepackage{microtype}
+\renewcommand{\arraystretch}{1.18}
+
+\title{\Huge\bfseries\color{ink} vapor\\[0.6em]
+       \LARGE\mdseries A certified tensor compiler and the laboratory built on it\\[0.4em]
+       \large Architecture, semantics and guarantees}
+\author{João Phamata}
+\date{Technical monograph — version 0.17}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+\vapor{} is a compiler and runtime for tensor programs, written in Elixir on the BEAM with a small
+native worker in Zig, and a laboratory of tools built on top of it. Its organising principle is that
+every result carries what is needed to judge it. Tensor programs compile to machine code for x86-64
+(AVX2, AVX-512), AArch64, RISC-V with the vector extension and Vulkan, and under the canonical policy
+produce the same bits on all of them and on an exact binary32 oracle. Register allocation is checked by
+a verifier proved correct in Lean~4 and extracted to Elixir. A six-rung verification ladder ends in an
+Ed25519 certificate that independent nodes can reproduce byte for byte and co-sign. Models enter
+through an airlock that separates the function a network computes from the way a family spells it;
+network access enters through a second airlock that only the person can open. Around the core sit
+deciders whose answers come with independently checked certificates (exact linear and integer
+programming, SAT with DRUP proofs, Gröbner bases, causal identification, polynomial positivity, circuit
+equivalence), a bilingual language of decided claims, a search engine whose results are re-verified,
+and an evidence discipline in which every quality check is paired with a control. This monograph
+describes the system as it is, its architecture, the invariants each component keeps, how they are
+checked, and the limits that remain.
+\end{abstract}
+
+\tableofcontents
+
+\input{chapters/introduction}
+\input{chapters/overview}
+\input{chapters/semantics}
+\input{chapters/compiler}
+\input{chapters/runtime}
+\input{chapters/verification}
+\input{chapters/models}
+\input{chapters/network}
+\input{chapters/deciders}
+\input{chapters/languages}
+\input{chapters/evidence}
+\input{chapters/interfaces}
+\input{chapters/limits}
+\appendix
+\input{chapters/appendix}
+\end{document}

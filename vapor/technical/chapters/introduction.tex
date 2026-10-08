@@ -1,0 +1,61 @@
+\chapter{Introduction}
+
+\section{What the system is}
+
+\vapor{} has two parts that share one discipline.
+
+The first is a \textbf{compiler and runtime for tensor programs}. A program is a term of a small free
+algebra (element-wise operations, contractions, reductions, the operators of modern neural networks)
+whose meaning is fixed by an exact reference implementation, the \emph{oracle}. The compiler lowers a
+program to a portable kernel IR, allocates registers without spilling, and encodes machine code for
+four instruction sets and for Vulkan compute shaders. The runtime executes that code in a separate,
+sandboxed process, keeps model weights in content-addressed shared memory, serves models through an
+OpenAI-compatible interface and records a receipt for every answer.
+
+The second is a \textbf{laboratory}: deciders, languages, search, numerical workbenches, statistical
+tools, document readers and desks for engineering and finance, all reachable from one command-line
+interpreter, a browser console, an MCP server for agents, a language server for editors, and a small
+editor of its own.
+
+What the two share is the rule that a result is never just a value. A compiled kernel comes with the
+evidence that it computes the oracle's bits; an \emph{optimal} integer program comes with a
+branch-and-bound tree that separate code checks; a refuted conservation law comes with the point that
+refutes it; a statistical claim comes with a control that a broken implementation would have passed.
+
+\section{Three properties}
+
+Three properties run through every chapter.
+
+\paragraph{Determinism.} Under the \emph{canonical} numerical policy, a program produces the same bits
+on every substrate: x86-64 with AVX2 or AVX-512, AArch64 with NEON, RISC-V with RVV (native or
+interpreted), Vulkan (on any driver) and the oracle. The bits also do not depend on the number of
+threads, on how many sequences share a decoding step, on where the key--value cache lives, or on which
+replica serves a request. Parallelism is drawn from independent outputs, never from reassociating a sum
+(Chapter~\ref{ch:semantics}).
+
+\paragraph{Certification.} Wherever a claim can be checked by a procedure simpler than the one that
+produced it, the system ships the certificate and the checker. Register allocations are revalidated by
+a checker proved sound in Lean~4. Kernels climb a ladder of differential checks that ends in a signed,
+reproducible certificate. Deciders return witnesses, Farkas vectors, DRUP proofs or hedges, and each is
+checked by code that shares nothing with the search (Chapters~\ref{ch:verification}
+and~\ref{ch:deciders}).
+
+\paragraph{Containment.} Nothing generated runs inside the BEAM: there are no NIFs. Machine code runs in
+a static, libc-free worker under seccomp, with W\^{}X pages and a watchdog. Work on untrusted input runs
+under one containment primitive, the \emph{hermetic seal}, which caps memory (on-heap and off-heap) and
+time. Models enter only through the model airlock; bytes from the network enter only through the
+network airlock, and only a person can open it (Chapters~\ref{ch:models} and~\ref{ch:network}).
+
+\section{How to read this document}
+
+Chapter~\ref{ch:overview} gives the layers and the trust boundaries. Chapters~\ref{ch:semantics}
+to~\ref{ch:verification} describe the core: the algebra and its numerical semantics, the compiler, the
+runtime and the verification ladder. Chapters~\ref{ch:models} and~\ref{ch:network} describe the two
+airlocks. Chapters~\ref{ch:deciders} and~\ref{ch:languages} describe the certified deciders and the
+languages built on them. Chapter~\ref{ch:evidence} describes how quality is measured and how the test
+suite is organised, Chapter~\ref{ch:interfaces} the interfaces, and Chapter~\ref{ch:limits} what the
+system does not do. The appendix maps components to modules.
+
+Every statement of fact in this document corresponds to a test or a check in the repository, named in
+the system's own documents (\texttt{docs/}); this monograph gives the architecture and leaves the
+contestation commands to them.

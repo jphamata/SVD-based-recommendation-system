@@ -1,0 +1,88 @@
+\chapter{System overview}\label{ch:overview}
+
+\section{Layers}
+
+Figure~\ref{fig:layers} shows the layers. Each layer uses the ones below it and adds no trust to them:
+what a layer produces is either a certified program for the core or canonical data.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[node distance=3mm, every node/.style={minimum height=8mm}]
+  \node[box, text width=13.6cm] (ifc) {\textbf{Interfaces}: command line (the Dīwān interpreter) $\cdot$ browser console $\cdot$ TUI $\cdot$ MCP server $\cdot$ language server $\cdot$ Al-Qalam editor};
+  \node[box, text width=13.6cm, below=of ifc] (lab) {\textbf{Laboratory}: deciders with certificates $\cdot$ Almizan $\cdot$ Alembic and Athanor $\cdot$ Crucible $\cdot$ Assay $\cdot$ workbench $\cdot$ engineering $\cdot$ finance $\cdot$ documents};
+  \node[gate, text width=4.1cm, below=of lab.south west, anchor=north west] (mair) {\textbf{Model airlock}\\adapters, aliases, refusals};
+  \node[gate, text width=4.1cm, right=2mm of mair] (sair) {\textbf{Substrate airlock}\\probes, verdicts};
+  \node[gate, text width=4.3cm, right=2mm of sair] (nair) {\textbf{Network airlock}\\the siphon};
+  \node[box, text width=13.6cm, below=of sair.south, anchor=north, xshift=-0.05cm] (eng) {\textbf{Engine and serving}: sessions, continuous batching, paged cache, recurrent engine, speculation, receipts};
+  \node[core, text width=13.6cm, below=of eng] (cmp) {\textbf{Core}: algebra $\to$ rewriting $\to$ KIR $\to$ selection $\to$ allocation (Lean-checked) $\to$ encoders; verification ladder; certificates};
+  \node[core, text width=4.1cm, below=of cmp.south west, anchor=north west] (wk) {\textbf{vapor-worker}\\x86-64, AArch64, RV64GCV};
+  \node[core, text width=4.1cm, right=2mm of wk] (fb) {\textbf{vapor-fabric}\\Vulkan (SPIR-V)};
+  \node[core, text width=4.3cm, right=2mm of fb] (or) {\textbf{Oracle}\\exact binary32 on the BEAM};
+\end{tikzpicture}
+\caption{Layers. The airlocks are the only ways in for models, substrates and network bytes.}
+\label{fig:layers}
+\end{figure}
+
+\paragraph{The core} turns a term of the algebra into machine code and evidence. It is about ten
+thousand lines of Elixir (algebra, compiler, kernel IR, encoders, verification, runtime), plus the
+code extracted from Lean and the native worker.
+
+\paragraph{The engine} runs compiled model programs in resident sessions: one compilation, many steps,
+weights mapped once. It schedules many sequences into one step without changing any sequence's bits.
+
+\paragraph{The airlocks} are the boundaries through which outside things enter. A checkpoint must be
+claimed by an adapter that writes its function in the algebra; a substrate must pass numerical probes
+before it receives canonical programs; a byte from the network must come through a fetcher that the
+person declared and ran.
+
+\paragraph{The laboratory} holds tools whose answers carry their evidence. Some compile to the core
+(a Monte Carlo pricer whose generator is written as algebra terms, so the same bits come out on every
+substrate); most inherit only its canonical encodings, Merkle trees and the discipline of independent
+checking.
+
+\section{Trust boundaries}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+boundary & what crosses it, and what keeps it \\
+\midrule
+BEAM $\leftrightarrow$ native code & framed messages on stdio ({\ttfamily\{packet, 4\}}); no NIF is loaded (a test forbids it); a crash, an illegal instruction or a timeout kills the worker process, which is restarted, and the next unit runs \\
+worker $\leftrightarrow$ kernel & seccomp-BPF allow-list, \texttt{PR\_SET\_NO\_NEW\_PRIVS}, W\^{}X code pages, a \texttt{SIGALRM} watchdog \\
+job $\leftrightarrow$ host & the hermetic seal: a process with a heap cap that counts off-heap binaries, and a deadline \\
+checkpoint $\leftrightarrow$ engine & the model airlock: claimed by an adapter, every tensor accounted for, configuration keys that change the mathematics read or refused by name \\
+substrate $\leftrightarrow$ dispatcher & the substrate airlock: probes classify a substrate as canonical, within an envelope, or refused \\
+network $\leftrightarrow$ system & the siphon: only fetchers the person declares, run by the person; an agent can only queue a request \\
+agent $\leftrightarrow$ world & effect classes (\texttt{pure}, \texttt{observe}, \texttt{act}), grants fixed in the agent's digest, a write-ahead journal \\
+\bottomrule
+\end{tabularx}
+\caption{Trust boundaries and what holds each.}
+\end{table}
+
+The trusted base is the BEAM, the Linux kernel, the IEEE-754 standard model of rounding (from which the
+error bounds are proved), the printer of the Lean extractor (about two hundred lines), and the Vulkan
+driver, which runs in its own process.
+
+\section{Size}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+component & lines \\
+\midrule
+Elixir, all of \texttt{lib/} (379 files, 425 modules) & 101{,}000 \\
+\quad of which the core (algebra, compiler, KIR, encoders, verification, runtime) & 10{,}400 \\
+native worker and Vulkan daemon (Zig, \texttt{native/src}) & 4{,}700 \\
+Lean~4 proofs and extractor (82 theorems, no \texttt{sorry}, no \texttt{axiom}) & 1{,}500 \\
+tests (Elixir, and the Python and Node scripts of the differential tiers; 159 files) & 27{,}000 \\
+\bottomrule
+\end{tabular}
+\caption{Size of the system. The native binaries are 330--360\,KB each; the BEAM application has no
+dependencies outside OTP and Elixir.}
+\end{table}
+
+A full build takes about thirty seconds on two virtual CPUs. The application declares no Hex
+dependency: JSON, CBOR, SHA-256 trees, Ed25519, safetensors, GGUF, PNG, JPEG, PDF and the HTTP server are
+implemented in the tree or taken from OTP.

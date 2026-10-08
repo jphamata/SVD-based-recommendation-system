@@ -1,0 +1,72 @@
+\chapter{Verification and certificates}\label{ch:verification}
+
+\section{The ladder}
+
+A program is certified by climbing six rungs. Each rung checks something the previous one cannot.
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}clX@{}}
+\toprule
+rung & establishes & how \\
+\midrule
+1 & sorts, shapes, feedback & \texttt{Program.check/1} \\
+-- & exact rewriting & only identities valid over all of IEEE-754 \\
+2 & admission & the allocation accepted by the extracted checker on \emph{every} instruction set; int8 contractions free of wrap-around at the maximum extents (\texttt{admissible/3}); SPIR-V limits \\
+3 & adjoint identity & $\langle Wx, v\rangle = \langle x, W^{\mathsf T}v\rangle$ between the compiled kernel and the exact transpose: catches layout and transposition errors \\
+4 & differential oracle & each CPU substrate equal to the exact oracle, bit for bit \\
+5 & parity and envelope & equal FNV-1a digests across substrates; every output inside the envelope \\
+6 & proof-carrying code & an Ed25519 certificate with a quorum of co-signatures \\
+\bottomrule
+\end{tabularx}
+\caption{The verification ladder.}
+\end{table}
+
+\section{The certificate}
+
+The payload holds the SHA-256 of the program, of each machine-code blob and of each SPIR-V module; the
+digest of the Lean sources of the checkers; the evidence of each rung; and the \emph{counted work}
+(floating-point operations, bytes, instructions per instruction set). It holds nothing that depends on
+the host: no timings and no dispatch decision. Independent nodes that redo the ladder therefore produce
+payloads identical byte for byte and can co-sign them (\texttt{Certificate.cosign/3});
+\texttt{verify/3} requires a quorum of valid signatures from distinct trusted keys. A bundle packages
+artefacts and certificate, and an edge node checks signatures and hashes in about two milliseconds and
+runs the code without redoing the ladder.
+
+\section{What is proved in Lean}
+
+The Lean~4 development uses the core library only, with no \texttt{axiom} and no \texttt{sorry}. It
+proves, among its 82 theorems:
+
+\begin{itemize}
+\item in $\mathbb{Z}/2^{32}\mathbb{Z}$: associativity and commutativity, that wrapping is a homomorphism,
+  and that \emph{every} reduction tree with a wrapping adder computes the exact value when
+  $K\cdot\max|A|\cdot\max|B| < 2^{31}$, for any permutation of the leaves (\texttt{integer\_parity});
+  monotonicity of admissibility;
+\item for memory banks: coprime strides are injective on the lanes (\texttt{bank\_injective}), and the
+  closed-form padding for $2^m$ banks is sufficient and minimal;
+\item for recurrences: the affine monoid is associative with neutral element $(1,0)$, composition is
+  sequential application, and segmented lifting is associative for any monoid;
+\item the soundness of the allocation checker (\texttt{checkAlloc\_sound});
+\item the exact envelope decision and its monotonicity in the extent; Higham's bound on products of
+  $(1+\delta_i)$;
+\item the depth of Estrin's evaluation scheme against Horner's, computed over the tree.
+\end{itemize}
+
+\section{Extraction}
+
+The extractor (\texttt{lake exe vapor-extract}) reads the \emph{elaborated} definitions (the same terms
+the theorems speak about) and prints Elixir, failing on any construct outside its fragment. The
+extracted functions are \texttt{check\_alloc}, \texttt{admissible}, \texttt{wrap\_s32},
+\texttt{pad\_stride}, \texttt{bank\_of}, \texttt{affine\_op}, \texttt{seg\_affine} and
+\texttt{within\_envelope}. Lean computes more than 480 conformance vectors that the extracted code must
+reproduce, and the generated module carries the digest of the Lean sources, which a test checks without
+needing the Lean toolchain. Extraction happens at build time: production never runs Lean.
+
+\section{What is tested and what is trusted}
+
+Tested but not proved: the encoders (against binutils and \texttt{spirv-val}, and by execution under
+QEMU and lavapipe), the RVV interpreter against QEMU at VLEN 128, 256 and 512, bit-for-bit equality
+across substrates, and fault containment. Trusted: the BEAM and the Linux kernel, the extractor's
+printer and its six-line prelude, the IEEE-754 standard model, and the Vulkan driver, contained in its
+own process.

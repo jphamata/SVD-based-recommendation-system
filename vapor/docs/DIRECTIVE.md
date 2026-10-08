@@ -1862,6 +1862,38 @@ specification, not from the source.
 - **Dead code**: the Assay CLI built a list of documents and discarded it.
 - **Two test files with Portuguese names** (`rodada12`, `rodada13`), now `quality_round12/13`.
 
+### Asked later in the round: the editor, technical documents, and super-sampling
+
+> Translated: "for the record, I would very much like Al-Qalam (the editor), even if only for me;
+> a new and separate set of slides and monograph in LaTeX, this time with a technical and
+> architectural emphasis, without the record of historical scars and evolution (we keep the current
+> ones for that), to serve as technical, professional presentations of the system as it is; and weigh
+> the brainstorm again for anything else worth taking, remembering suckless." Then a proposal for a
+> "sovereign DLSS": super-sampling by an implicit neural representation in ternary weights, on the CPU
+> at 4K and 60 FPS, with ghosting forbidden by a formal invariant.
+
+- **Al-Qalam**: built, suckless (the row in the table above).
+- **The technical monograph and slides** (`technical/`, `make technical`): 33 pages and 18 slides,
+  LuaLaTeX, in English; the system as it is (layers, semantics, compiler, runtime, ladder, airlocks,
+  deciders, languages, evidence, interfaces, limits), no history. The academic thesis and its deck
+  stay as they were.
+- **VaporScale**, claim by claim:
+
+| claim | verdict | what was done |
+|---|---|---|
+| DLSS, FSR and XeSS are closed | half wrong: AMD's FSR is open source (MIT), and runs on any GPU | — |
+| an implicit representation F(x, y, t) makes the cost "constant" whatever the output size | the memory of the representation is constant; the work is one query per output pixel, so it scales with the resolution | — |
+| ternary weights make it additions only, "4K, 8K, 16K in the same clock cycle", 60 FPS on a CPU | a 4K frame is 8.3 million pixels; at 60 FPS even a few hundred operations per pixel is about 10¹¹ per second, and ternary needs a model trained ternary (§20) | not claimed |
+| ghosting forbidden by a formal invariant on the optical flow | the invariant that holds is consistency, `D(y) = x` for every frame, which the upscaler already guaranteed for one frame; it cannot forbid detail inside a block, and disocclusions have no history to transport | built `Upscale.temporal/4`: history moved by the motion, clamped to the current frame's local range, blended, projected. Every frame stays consistent whatever the history holds; a half-pixel pan gains +0.72 dB, a whole-pixel pan (the control) +0.08 dB; a vanished object's ghost is rejected, where a naive blend keeps it |
+| open, any hardware, the same bits everywhere | true of everything compiled by vapor | the temporal step runs on the BEAM today; a compiled kernel is owed |
+
+- **The brainstorm, again, under suckless.** Nothing else passes the bar of being small and useful
+  with one's own data: the REPL's deterministic parts already exist (`vapor alembic -e`,
+  `vapor wzn run`); "Kitāb" is the docs test; paredit's slurp and barf would double the editor for a
+  convenience; a release artifact (`mix release`) is real but needs the Mix-task verbs (`serve`, `tui`,
+  `ocr`, …) rewritten as entry points that do not need Mix at run time, so it is in the TODO with that
+  reason, not half-built.
+
 ### What this document does not claim
 
 - That K3 runs at its real size here, or that its real spelling was read.

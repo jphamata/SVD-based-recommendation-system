@@ -178,6 +178,67 @@ defmodule Vapor.Vision.Upscale do
     %{hr | px: rows |> List.flatten() |> List.to_tuple()}
   end
 
+  # ------------------------------------------------------------- temporal --
+
+  @doc """
+  **Temporal upscaling that cannot contradict any frame.** `lr` is the
+  current low-resolution frame (one channel), `prev` the previous output (or
+  `nil` for the first frame), and `motion` how the picture moved since then,
+  in output pixels: `{dx, dy}` for the whole frame, or a function
+  `{x, y} -> {dx, dy}` per output pixel (what a renderer's motion vectors
+  give).
+
+  The history (`prev` moved by `motion`) is clamped, pixel by pixel, to the
+  range of the current frame's single-frame upscaling over a 3×3
+  neighbourhood, so history that does not fit what this frame shows is
+  rejected (as temporal anti-aliasing does); it is blended with that
+  upscaling (`alpha`, the current frame's weight, 0.25); and the result is
+  projected so that `D(y) = lr` exactly. Whatever the history holds (an
+  object that has since gone, wrong motion vectors), the output agrees with
+  this frame's input. What the history can add is detail inside the 2×2
+  blocks: new information when successive frames sample different sub-pixel
+  positions (the picture moved by a fraction of an input pixel), and none
+  when they sample the same ones.
+
+  Options: `alpha`; `spatial`, the single-frame upscaling of `lr` (default
+  `upscale(lr, opts)`); and those of `upscale/2`.
+  """
+  def temporal(%Image{c: 1} = lr, prev, motion, opts \\ []) do
+    spatial = Keyword.get_lazy(opts, :spatial, fn -> upscale(lr, opts) end)
+
+    case prev do
+      nil -> spatial
+      %Image{} -> prev |> warp(motion, spatial) |> clamp_to(spatial) |> mix(spatial, Keyword.get(opts, :alpha, 0.25)) |> project(lr)
+    end
+  end
+
+  # the previous output where each pixel now is; outside the old frame, the current one
+  defp warp(%Image{w: w, h: h, px: p}, motion, %Image{px: s} = cur) do
+    at = fn x, y -> case motion do {dx, dy} -> {x - dx, y - dy}; f -> {dx, dy} = f.({x, y}); {x - dx, y - dy} end end
+
+    px =
+      for y <- 0..(h - 1), x <- 0..(w - 1) do
+        {sx, sy} = at.(x, y)
+        if sx in 0..(w - 1) and sy in 0..(h - 1), do: elem(p, sy * w + sx), else: elem(s, y * w + x)
+      end
+
+    %{cur | px: List.to_tuple(px)}
+  end
+
+  defp clamp_to(%Image{px: hp} = hist, %Image{w: w, h: h, px: s}) do
+    px =
+      for y <- 0..(h - 1), x <- 0..(w - 1) do
+        nb = for j <- max(y - 1, 0)..min(y + 1, h - 1), i <- max(x - 1, 0)..min(x + 1, w - 1), do: elem(s, j * w + i)
+        elem(hp, y * w + x) |> max(Enum.min(nb)) |> min(Enum.max(nb))
+      end
+
+    %{hist | px: List.to_tuple(px)}
+  end
+
+  defp mix(%Image{px: hp} = hist, %Image{px: s}, alpha) do
+    %{hist | px: Enum.zip_with(Tuple.to_list(s), Tuple.to_list(hp), fn a, b -> alpha * a + (1 - alpha) * b end) |> List.to_tuple()}
+  end
+
   defp fix(vals, target, clip, round \\ 0) do
     r = target - Enum.sum(vals) / 4
     free = if clip, do: Enum.map(vals, fn v -> if (r > 0 and v >= 1.0) or (r < 0 and v <= 0.0), do: false, else: true end), else: [true, true, true, true]

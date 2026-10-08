@@ -4,7 +4,7 @@ ZIG  ?= zig
 LAKE ?= lake
 OPT  ?= ReleaseSafe
 
-.PHONY: freebsd all native metal cross proofs extract test test-core integrations notebook example bench quality slides fixtures e2e clean
+.PHONY: freebsd all native metal cross proofs extract test test-core integrations notebook example bench quality slides fixtures e2e technical clean
 
 all: native proofs test
 
@@ -101,6 +101,10 @@ e2e: native fixtures
 ## slides: the Beamer deck (pdflatex twice for the page references)
 slides:
 	cd slides && pdflatex -interaction=nonstopmode -halt-on-error vapor.tex >/dev/null && pdflatex -interaction=nonstopmode -halt-on-error vapor.tex >/dev/null
+
+## technical: the technical monograph and slides, the system as it is (lualatex twice; DejaVu fonts)
+technical:
+	cd technical && for f in monograph slides; do lualatex -interaction=nonstopmode -halt-on-error $$f.tex >/dev/null && lualatex -interaction=nonstopmode -halt-on-error $$f.tex >/dev/null || exit 1; done
 
 clean:
 	rm -rf _build priv/bin native/zig-out native/.zig-cache proofs/.lake

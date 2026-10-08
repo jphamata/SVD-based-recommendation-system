@@ -1,0 +1,372 @@
+% vapor — technical slides: the architecture and its guarantees, as the system is.
+% Build: make technical (lualatex, twice). Separate from slides/ (the academic deck).
+\documentclass[aspectratio=169,11pt]{beamer}
+\input{preamble}
+\usetheme{default}
+\setbeamertemplate{navigation symbols}{}
+\setbeamercolor{frametitle}{fg=ink}
+\setbeamercolor{title}{fg=ink}
+\setbeamercolor{structure}{fg=brass!80!black}
+\setbeamercolor{background canvas}{bg=white}
+\setbeamerfont{frametitle}{series=\bfseries,size=\Large}
+\setbeamertemplate{footline}{\hfill\textcolor{ink!50}{\scriptsize vapor \quad \insertframenumber\ /\ \inserttotalframenumber}\hspace*{1em}\vspace*{0.6em}}
+\setbeamertemplate{itemize items}{\textcolor{brass}{\textbullet}}
+\renewcommand{\arraystretch}{1.15}
+\lstset{basicstyle=\ttfamily\scriptsize}
+
+\title{\Huge vapor}
+\subtitle{A certified tensor compiler and the laboratory built on it}
+\author{João Phamata}
+\date{Architecture and guarantees}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{The principle}
+\Large Every result carries what is needed to judge it.
+\vspace{1em}
+\normalsize
+\begin{itemize}
+\item a kernel: evidence that it computes the oracle's bits, on every substrate
+\item an optimal integer program: the branch-and-bound tree, checked by separate code
+\item a refuted conservation law: the polynomial remainder and the point where it is not zero
+\item a statistical claim: a control that a broken implementation would have passed
+\end{itemize}
+\vspace{1em}
+Three properties: \textbf{determinism}, \textbf{certification}, \textbf{containment}.
+\end{frame}
+
+\begin{frame}{Layers}
+\centering
+\begin{tikzpicture}[node distance=2mm, every node/.style={minimum height=6.5mm, font=\scriptsize}]
+  \node[box, text width=12.4cm] (ifc) {\textbf{Interfaces}: CLI (Dīwān) $\cdot$ console $\cdot$ TUI $\cdot$ MCP $\cdot$ LSP $\cdot$ Al-Qalam};
+  \node[box, text width=12.4cm, below=of ifc] (lab) {\textbf{Laboratory}: certified deciders $\cdot$ Almizan $\cdot$ Alembic/Athanor $\cdot$ Crucible $\cdot$ Assay $\cdot$ workbench $\cdot$ finance};
+  \node[gate, text width=3.8cm, below=of lab.south west, anchor=north west] (m) {\textbf{model airlock}};
+  \node[gate, text width=3.8cm, right=2mm of m] (s) {\textbf{substrate airlock}};
+  \node[gate, text width=3.9cm, right=2mm of s] (n) {\textbf{network airlock}};
+  \node[box, text width=12.4cm, below=of s.south, anchor=north] (e) {\textbf{Engine}: sessions, batching, paged cache, recurrence, speculation, receipts};
+  \node[core, text width=12.4cm, below=of e] (c) {\textbf{Core}: algebra $\to$ rewrite $\to$ KIR $\to$ selection $\to$ allocation (Lean-checked) $\to$ encoders $\to$ ladder $\to$ certificate};
+  \node[core, text width=3.8cm, below=of c.south west, anchor=north west] (w) {\textbf{worker}: x86-64, AArch64, RV64GCV};
+  \node[core, text width=3.8cm, right=2mm of w] (f) {\textbf{fabric}: Vulkan};
+  \node[core, text width=3.9cm, right=2mm of f] (o) {\textbf{oracle}: exact binary32};
+\end{tikzpicture}
+
+\vspace{0.6em}
+\scriptsize 101k lines of Elixir (core: 10k) $\cdot$ 4.7k Zig $\cdot$ 1.5k Lean (82 theorems) $\cdot$ no dependencies outside OTP $\cdot$ no NIF
+\end{frame}
+
+\begin{frame}{Programs are terms; meaning is the oracle's}
+\begin{itemize}
+\item a symbolic free algebra: element-wise ops, \texttt{sel}, contractions (\texttt{linear}, grouped, masked, 4-bit, int8), reductions, \texttt{gather\_row}, \texttt{rope}, \texttt{kv\_write}, \texttt{attention}, \texttt{sample}
+\item semi-dynamic dimensions: bounds at the maximum, extended by monotonicity lemmas (Lean)
+\item recurrent programs: the loop runs in the worker; the state never leaves it
+\item \texttt{Vapor.F32}: exact binary32 on the BEAM (fma in dyadic rationals, one rounding)
+\end{itemize}
+\vspace{0.6em}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+\texttt{:canonical} & separate rounding; one 16-lane reduction tree; $\div$ correctly rounded $\Rightarrow$ \textbf{identical bits} on every substrate \\
+\texttt{:fast} & fused FMA $\Rightarrow$ every output inside a \textbf{rigorous envelope} (exact dyadic bounds) \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.6em}
+Parallelism from \textbf{independent outputs}, never from reassociating a sum.
+\end{frame}
+
+\begin{frame}{The compiler}
+\centering
+\begin{tikzpicture}[node distance=1.8mm and 1.8mm, every node/.style={minimum height=7mm, font=\scriptsize, inner sep=3pt}]
+  \node[box] (t) {term};
+  \node[box, right=of t] (r) {rewrite\\$\varepsilon=0$};
+  \node[box, right=of r] (l) {lower,\\cut sweep};
+  \node[box, right=of l] (k) {KIR\\(factor $g$)};
+  \node[box, right=of k] (sel) {selection};
+  \node[core, right=of sel] (ra) {linear scan\\no spill};
+  \node[gate, right=of ra] (chk) {checker\\from Lean};
+  \node[box, right=of chk] (enc) {encoders};
+  \foreach \a/\b in {t/r,r/l,l/k,k/sel,sel/ra,ra/chk,chk/enc} \draw[edge] (\a)--(\b);
+\end{tikzpicture}
+
+\vspace{0.8em}
+\begin{itemize}
+\item rewriting admits only identities valid over all of IEEE-754 ($x+(+0) \not\to x$)
+\item one kernel IR over typed virtual registers; $g$ generalises LMUL to AVX2, AVX-512, NEON, RVV
+\item out of registers? smaller $g$, fewer rows, or cut the fused region: \textbf{never spill}
+\item every allocation revalidated by \texttt{check\_alloc}, extracted from Lean with \texttt{checkAlloc\_sound}
+\item encoders write bytes (REX/VEX/EVEX, A64, RV64GCV, SPIR-V); binutils and \texttt{spirv-val} only check
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Substrates and isolation}
+\begin{columns}[T]
+\column{0.5\linewidth}
+\textbf{vapor-worker} (static Zig, no libc, 350\,KB)
+\begin{itemize}\small
+\item seccomp allow-list, \texttt{NO\_NEW\_PRIVS}, W\^{}X pages, watchdog
+\item thread pool and counters set up before the filter
+\item native code, or the RVV~1.0 interpreter (VLEN 128--512, poison mode)
+\item resident sessions: weights mapped once, state kept
+\end{itemize}
+\textbf{vapor-fabric}: Vulkan compute, its own process
+\column{0.5\linewidth}
+\textbf{One protocol}: \texttt{\{packet,4\}} frames on stdio
+\begin{itemize}\small
+\item \textsc{hello} $\cdot$ \textsc{run} $\cdot$ \textsc{emit} $\cdot$ \textsc{done} $\cdot$ \textsc{err} $\cdot$ \textsc{open}/\textsc{step}/\textsc{close}
+\item a crash kills only the process; the next unit runs
+\end{itemize}
+\textbf{Memory}: weights in \texttt{/dev/shm/vapor-<sha256>}, mapped copy-on-write; imported without copy by Vulkan
+\textbf{Failover}: fabric $\to$ AVX-512 $\to$ base $\to$ RVV interpreter $\to$ oracle: same bits at every link
+\end{columns}
+\end{frame}
+
+\begin{frame}{Parallelism without changing bits}
+\small
+\begin{tabularx}{\linewidth}{@{}lXl@{}}
+\toprule
+form & where & invariant \\
+\midrule
+SIMD & AVX2, AVX-512, NEON, RVV, SPIR-V & = oracle \\
+rows per iteration & chosen by the allocator & = oracle \\
+threads & the worker's pool & 1 = $n$ threads \\
+continuous batching & decode + prefill chunks in one step & alone = in a batch \\
+paged cache & block tables & paged = contiguous \\
+replicas & one compilation, shared pages & any replica \\
+speculation & $k{+}1$ rows verified in one step & = target alone \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.6em}
+Speculative decoding needs no extra proof: the verify step is bit-identical to single steps.
+\end{frame}
+
+\begin{frame}{The verification ladder}
+\small
+\begin{tabularx}{\linewidth}{@{}clX@{}}
+\toprule
+1 & sorts, shapes & \texttt{Program.check/1} \\
+2 & admission & checker accepts the allocation on \emph{every} ISA; no int8 wrap at the max extents \\
+3 & adjoint & $\langle Wx,v\rangle = \langle x,W^{\mathsf T}v\rangle$ catches layout errors \\
+4 & oracle & each CPU substrate = exact oracle, bit for bit \\
+5 & parity, envelope & equal digests across substrates; outputs inside the envelope \\
+6 & certificate & Ed25519; host-independent payload $\Rightarrow$ byte-identical across nodes $\Rightarrow$ co-signable, quorum \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.6em}
+\textbf{Lean~4} (core only, no \texttt{sorry}/\texttt{axiom}): integer parity of any reduction tree, bank injectivity, the affine monoid, allocation soundness, envelope, Higham's bound $\to$ extracted at build time, 480+ conformance vectors.
+\end{frame}
+
+\begin{frame}{Models: function versus spelling}
+\begin{columns}[T]
+\column{0.52\linewidth}
+\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+tier & names \\
+\midrule
+core & none (atom-table test) \\
+topologies & what they compute: decoder, delta-rule hybrid, encoder, encoder--decoder, Mamba, DiT, U-Net, VAE \\
+spellings & families, as \textbf{data}: aliases and refusals \\
+agent protocols & the vendor's wire format \\
+\bottomrule
+\end{tabularx}
+\column{0.46\linewidth}
+\small
+\begin{itemize}
+\item one owner per checkpoint; no owner $\Rightarrow$ refusal listing every near miss and its fix
+\item the program checked against its contract at the boundary
+\item alias $<$ blueprint $<$ topology, in cost
+\item \textbf{preflight}: verdict from \texttt{config.json} and safetensors headers alone
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}{A frontier topology: the delta-rule hybrid}
+\small
+\[
+S_t = (I - \beta_t k_t k_t^{\mathsf T})\,\mathrm{Diag}(\alpha_t)\,S_{t-1} + \beta_t k_t v_t^{\mathsf T},
+\qquad \alpha_t = e^{g_t},\ g_t = g_{\min}\sigma(e^{A}z_t)
+\]
+\vspace{-0.4em}
+\begin{itemize}
+\item chunked prefill via the UT transform $T = (I + \mathrm{diag}(\beta)L_s)^{-1}$: equal to the recurrence to $3\cdot10^{-16}$
+\item latent attention: only the latent cached; key map absorbed into the query
+\item latent mixture of experts; soft-capped gated activation; \textbf{MXFP4 decodes exactly} to binary32
+\item vs an independent float64 reference: rel.\ error $4.4\cdot10^{-6}$; greedy identical; native = oracle; controls fail
+\item balanced routing is a totally unimodular $b$-matching: \textbf{certified} by the exact simplex
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The network airlock}
+\begin{columns}[T]
+\column{0.5\linewidth}
+\textbf{Rule}: an agent never connects on its own; only the person opens the tap.
+\begin{itemize}\small
+\item fetchers the person declares (\texttt{siphons.json}): any program
+\item a port with a reduced environment, deadline, byte cap
+\item through the format airlocks; SHA-256 pins; a receipt
+\item agents: \texttt{siphon\_propose} queues, fetches nothing
+\end{itemize}
+\column{0.5\linewidth}
+\textbf{Streaming weights}: time per token $\ge$ active bytes / bandwidth
+\vspace{0.3em}
+
+\scriptsize
+\begin{tabular}{@{}lrr@{}}
+\toprule
+ & 15\,GB dense & 146\,GB active \\
+\midrule
+RAM 50\,GB/s & 0.3\,s & 3\,s \\
+NVMe 3\,GB/s & 5\,s & 50\,s \\
+net 20\,MB/s & 12.5\,min & 2\,h \\
+\bottomrule
+\end{tabular}
+
+\small
+$\Rightarrow$ read-once work (prefill), not conversation
+\end{columns}
+\end{frame}
+
+\begin{frame}{Deciders: a search proposes, a checker decides}
+\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+SAT & CDCL; model, or DRUP refutation checked by separate code \\
+LP / MIP & exact simplex over $\Q$: duals, Farkas vectors; branch-and-bound tree as certificate \\
+Gröbner, Knuth--Bendix & basis $\{1\}$ or remainder; convergent rewriting with derivations \\
+causes & ID algorithm: estimand, or a hedge; on a \emph{stated} diagram \\
+positivity & Bernstein subdivision in exact integers, or the refuting point \\
+circuits, netlists & truth table or SAT miter with DRUP; sky130 mapping proved before printing \\
+contracts & antinomies with a scenario; consistency by DRUP \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.6em}
+A language model's proposal goes through the same checker as anyone's.
+\end{frame}
+
+\begin{frame}[fragile]{Almizan: claims that do not compile until decided}
+\begin{columns}[T]
+\column{0.5\linewidth}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+(claim energy (root H-f-Z) (wazn burhan)
+  (inputs (x q) (v q))
+  (field (x v) (v (- x)))
+  (proof conserved)
+  (body (+ (kinetic v) (* 1/2 x x))))
+\end{lstlisting}
+\vspace{-0.6em}
+{\small\raggedleft
+\hbox to \linewidth{\hfill\ar{(دعوى طاقة (جذر ح-ف-ظ) (وزن برهان)}}
+\hbox to \linewidth{\hfill\ar{(برهان محفوظ)}\hspace*{1.2em}}\par}
+\column{0.48\linewidth}
+\small
+\begin{itemize}
+\item root (kind) + pattern (use): a morphological type system
+\item Latin and Arabic: two printings, one tree, one hash
+\item \texttt{conserved}: $\dot H = \nabla H\cdot f$ over $\Q$; damped $\Rightarrow$ $\dot H = -\tfrac1{10}v^2$ at $v{=}1$
+\item identities, positivity, invariants (SAT), causal queries
+\item export to core Lean, checked to agree
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Containment of open input}
+\begin{columns}[T]
+\column{0.5\linewidth}
+\textbf{Alembic}: problems as text
+\begin{itemize}\small
+\item fuel on every call and iteration; bounded depth
+\item integers $\le$ 65{,}536 bits; lists $\le$ 2 million
+\item no atoms created; no I/O, clock or randomness
+\item a literal reader for data
+\end{itemize}
+\textbf{Athanor}: portfolio search with a random control; journal under a Merkle root; the \textbf{Touchstone} re-checks every certificate
+\column{0.5\linewidth}
+\textbf{The hermetic seal}
+\begin{itemize}\small
+\item one primitive for every job on untrusted input
+\item heap cap that \emph{counts off-heap binaries}
+\item deadline; the caller survives a memory bomb
+\end{itemize}
+\vspace{0.5em}
+\textbf{Agents}: effect classes (pure, observe, act), grants in the digest, write-ahead journal, replay is verification
+\end{columns}
+\end{frame}
+
+\begin{frame}{The evidence discipline}
+\small
+Every check = \textbf{value} + \textbf{control} + \textbf{threshold}: \emph{would this answer come out with nothing to find?}
+
+\vspace{0.4em}
+\begin{tabularx}{\linewidth}{@{}lXX@{}}
+\toprule
+check & value & control \\
+\midrule
+gradient furnace & $a(\frac12 + n_y/3)$ & biased estimator: caught \\
+ODE & Dormand--Prince $10^{-8}$ & RK4 $h{=}0.1$: $>10^{-5}$ \\
+SAT & witness + DRUP & truncated proof: rejected \\
+scaling law & planted exponent in CI & shuffled losses: fails \\
+ink rendering & shadow $= 0.8\times0.3$ & no occluder: lit \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.5em}
+Assurance ledger (proved / checked / tested / owed) generated into the docs; docs that name a missing module or path fail a test; test tiers excluded only when their tool is absent; a content-addressed cache reruns only what a change can reach.
+\end{frame}
+
+\begin{frame}[fragile]{Interfaces}
+\begin{columns}[T]
+\column{0.55\linewidth}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+vapor wzn check energy.wzn
+vapor athanor run p.nbq | vapor verify p.nbq -
+vapor logic knapsack.lp | jq .objective
+vapor qalib check spec.net synth.v
+vapor render scene.txt --ink
+vapor siphon preflight hub config.json ...
+vapor qalam energy.wzn
+\end{lstlisting}
+\small exit 0 positive $\cdot$ 1 negative $\cdot$ 2 usage $\cdot$ 3 bad input $\cdot$ 4 failure; JSON in pipes
+\column{0.43\linewidth}
+\small
+\begin{itemize}
+\item one interpreter for CLI, TUI and the console's terminal (jailed)
+\item console: one offline page, live furnace, GPU render desk
+\item MCP: 27 tools; agents propose, checkers decide
+\item LSP: verdicts as diagnostics and inlay hints
+\item \textbf{Al-Qalam}: vi keys, verdicts in the gutter, scrubbable numbers, Merkle undo tree
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Limits}
+\small
+\begin{itemize}
+\item RVV and NEON validated under QEMU, Vulkan under lavapipe; no physical RVV, discrete GPU or Apple Silicon run
+\item transcendental functions identical everywhere but within 1--2 ulps, not correctly rounded
+\item 4-bit GEMV bound by instruction issue; the Vulkan path is correct, not tuned
+\item frontier topologies checked on small instances; released spellings read through header-only admission
+\item hosted models are observations, not functions
+\item a certificate says what was computed, not whether a model is good; a causal verdict needs its diagram
+\item the seal bounds memory and time, not code with access to the BEAM
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\centering
+\vspace{2em}
+{\Huge vapor}
+
+\vspace{1em}
+\Large Determinism $\cdot$ certification $\cdot$ containment
+
+\vspace{2em}
+\normalsize \texttt{docs/ARCHITECTURE.md} $\cdot$ \texttt{docs/ASSURANCE.md} $\cdot$ \texttt{technical/monograph.pdf}
+\end{frame}
+
+\end{document}

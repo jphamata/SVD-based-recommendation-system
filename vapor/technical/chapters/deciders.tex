@@ -1,0 +1,68 @@
+\chapter{Deciders with certificates}\label{ch:deciders}
+
+\section{One pattern}
+
+Every decider follows the same pattern: \emph{a search proposes, a checker decides}. The search may be
+heuristic, fast and complicated; the checker is small, separate (it shares no code with the search) and
+reads only the certificate. Anyone's proposal (a person's, a program's, a language model's) goes
+through the same checker, so a model that proposes nonsense simply has its proposal refused.
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.3cm}XX@{}}
+\toprule
+problem & procedure & certificate, and its check \\
+\midrule
+propositional logic (DIMACS, formulas through Tseitin) & CDCL: two watched literals, first-UIP learning, minimisation, Luby restarts & a model evaluated clause by clause, or a DRUP refutation checked backwards by \texttt{Vapor.Logic.DRUP} \\
+finite combinatorics (Schur, van der Waerden, Ramsey, pigeonhole, queens) & encoding and CDCL, threshold search & a witness below the threshold checked against the definition, and a DRUP refutation at it \\
+equational theories & Knuth--Bendix completion, lexicographic path order & a convergent rewriting system; normal forms with derivations \\
+polynomial geometry & Buchberger with criteria; Rabinowitsch's trick & the basis $\{1\}$ for an implication, or the remainder and the non-degeneracy conditions \\
+linear programs & two-phase simplex over $\Q$ & \emph{optimal}: primal $x$ and dual $y$ with $c^{\mathsf T}x = b^{\mathsf T}y$; \emph{infeasible}: a Farkas vector; \emph{unbounded}: a feasible point and an improving ray \\
+integer programs & branch and bound over the exact simplex & the tree: splits that cover the integer points, a Farkas or dual vector at every leaf, the incumbent \\
+causal identification & the ID algorithm (complete), back-door criterion, d-separation & the estimand, or a hedge checked structurally \\
+polynomial positivity on a box & Bernstein subdivision in exact integers & a replayable subdivision, or the exact point that refutes; barrier certificates by their three conditions \\
+circuit equivalence over GF(2) & truth table up to 16 inputs, otherwise a SAT miter; word-level identities by Gröbner reduction over $\mathbb{Z}$ & DRUP-checked proof, or a shrunk counterexample \\
+contracts (deontic norms) & Tseitin and CDCL over the clauses and facts & antinomies with a scenario; consistency proved by DRUP \\
+\bottomrule
+\end{tabularx}
+\caption{The deciders. All arithmetic is exact.}
+\end{table}
+
+\section{Selected details}
+
+\paragraph{Integer programs.} The certificate of an optimal or infeasible integer program is the
+branch-and-bound tree itself. \texttt{MIP.check/2} verifies that the splits partition the integer points
+of each node, that every pruned leaf carries either a Farkas vector for its rows (infeasible) or a
+dual-feasible vector whose bound does not beat the incumbent (by weak duality), and that the incumbent is
+feasible and integral. On random programs the answers equal brute force, and forged certificates are
+refused.
+
+\paragraph{Causes.} A causal question is asked of a stated diagram, with explicit hidden confounders.
+Identification returns the estimand, for example $\sum_m P(m \mid x)\sum_{x'} P(x')\,P(y \mid x', m)$, or a
+hedge that proves non-identifiability; on random structural models, estimands evaluated in exact
+rationals equal the true intervention, and the naive $P(y\mid x)$ serves as the control. No verdict says
+anything without its diagram, and the system says so with every answer.
+
+\paragraph{Circuits and silicon netlists.} Rebis decides whether two circuits compute the same function,
+reads AIGER, BLIF and structural Verilog, and computes algebraic normal forms and word-level identities.
+Qālib reads netlists of the open sky130 cell library, maps circuits to cells, and proves every mapped
+netlist equal to its specification before it is printed; it finds, by SAT, a 20-bit trigger in a 21-input
+adder that 4{,}096 random patterns miss. It is translation validation of the open flow, not a chip
+compiler.
+
+\paragraph{Silent corruption and order.} Two numerical tools guard computations at scale. The cupel
+checks matrix products by a randomised projection identity in $O(n+k)$ and reports a per-bit detection
+profile, catching a flipped bit in a product. The amalgam sums numbers exactly and rounds once, so the
+result does not depend on order, topology or the number of workers; naive sums in several orders are
+shown beside it.
+
+\section{Finance}
+
+The finance desk applies the same rule where the pain is verifiability. Money is exact decimal;
+business calendars follow rules that match QuantLib day by day from 1990 to 2078; curves come with a
+repricing certificate; option surfaces are checked for static arbitrage by the exact simplex, with a
+Farkas vector as proof of absence; backtests pass four noise gates (including combinatorially symmetric
+cross-validation); an order book is replayed against a naive judge written separately. The Monte Carlo
+engine compiles its trajectory step (generator included) to the algebra: the generator is chosen to fit
+exactly in binary32 (Lehmer products below $2^{23}$, the modulo by a rounding trick), so the paths are the
+same bits on every substrate and at every thread count, checked against the oracle in the answer itself.

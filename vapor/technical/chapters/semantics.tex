@@ -1,0 +1,84 @@
+\chapter{The algebra and its numerical semantics}\label{ch:semantics}
+
+\section{Programs are terms}
+
+A program is a term of \texttt{Vapor.Algebra.Term}, a \emph{symbolic} free algebra: every operator is a
+name whose meaning is fixed by the oracle (\texttt{Vapor.Runtime.Oracle}), never an embedded closure.
+That is what makes a term compilable to machine code and comparable across substrates.
+
+\begin{itemize}
+\item \textbf{Generators}: inputs and constants; element-wise operations (\texttt{add}, \texttt{sub},
+  \texttt{mul}, \texttt{fma}, \texttt{neg}, \texttt{relu}, the canonical transcendental functions, the
+  comparison-select \texttt{sel(a,b,x,y)} $= a<b\ ?\ x : y$); contractions (\texttt{linear}$(x,w) =
+  xw^{\mathsf T}$, grouped and masked variants, 4-bit and int8 matrices); reductions that keep rank; and
+  the operators of neural networks (\texttt{gather\_row}, \texttt{rope}, \texttt{kv\_write} and
+  \texttt{attention} with an explicit scale, contiguous and paged, \texttt{sample}).
+\item \textbf{Semi-dynamic dimensions} \texttt{\{:dyn, :S, max\}}: every bound is established at the
+  maximum, and monotonicity lemmas proved in Lean carry the certificate to every extent $S \le
+  \textit{max}$.
+\item \textbf{Recurrent programs} declare state feedback (\texttt{state: [h: :h\_next]}): the whole
+  loop runs in the worker behind one crossing from the BEAM, the state never leaves the worker, and
+  outputs stream per step.
+\end{itemize}
+
+Numerical data live in contiguous binaries (\texttt{Vapor.Tensor}); random access uses tuples.
+
+\section{Exact binary32 on the BEAM}
+
+\texttt{Vapor.F32} implements binary32 exactly: values are bit patterns; \texttt{add}, \texttt{sub} and
+\texttt{mul} go through binary64 and one rounding (correct, since $53 \ge 2\cdot 24 + 2$); \texttt{fma}
+is computed in dyadic rationals with a single rounding, round-to-nearest-even, gradual underflow and
+overflow to infinity. It agrees with the hardware on 800{,}000 operations including subnormals and
+signed zeros. The oracle is built on it.
+
+\section{Two policies}
+
+\begin{table}[h]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lXX@{}}
+\toprule
+policy & semantics & guarantee \\
+\midrule
+\texttt{:canonical} & multiply and add rounded separately; every reduction in one fixed 16-lane tree
+($r_8 \to r_4 \to r_2 \to r$); division correctly rounded; transcendental functions as fixed
+micro-programs & identical bits on x86-64, AArch64, RVV, the interpreter, Vulkan and the oracle \\
+\texttt{:fast} & fused multiply--add where the operator allows & every output inside a rigorous error
+envelope on every substrate \\
+\bottomrule
+\end{tabularx}
+\caption{Numerical policies.}
+\end{table}
+
+The central idea is that reproducibility does not require slowness when parallelism comes from
+independent outputs. Each row of a matrix--vector product has exactly sixteen accumulators reduced in
+the fixed tree, whatever the vector width; throughput comes from processing several rows per iteration
+(chosen by the register allocator per instruction set), which changes no bit.
+
+Under the canonical policy $+$, $-$, $\times$ and $\div$ are IEEE operations on every substrate (with
+the GPU convention of flushing subnormals for division: DAZ/FTZ). Division is computed by Markstein's
+method with Dekker's exact residual and no fused operation; the logarithm is within one ulp of the
+correctly rounded value; the other transcendental functions are within one or two ulps, identical
+everywhere. Tables that must be exact, such as rotary position frequencies, are computed by a
+correctly rounded routine (\texttt{Vapor.CR}, Ziv's strategy).
+
+\paragraph{Semantics version.} The bits of a program are a function of its terms \emph{and} of the
+definition of the canonical functions. Certificates record \texttt{Vapor.Canon.version/0}, so a change
+in a canonical function cannot silently change what a certificate means.
+
+\section{The error envelope}
+
+For the fast policy and for substrates that are not canonical, \texttt{Vapor.Verify.Envelope} computes,
+for every output, the exact real value and a rigorous bound valid for \emph{any} conforming substrate
+(correct rounding, fused or unfused multiply--add, any reduction order, gradual underflow or
+flush-to-zero), in exact dyadic rationals. Contractions over exact inputs take the Wilkinson form
+$\gamma_n S + a$, decided by \texttt{within\_envelope/4} (extracted from Lean); other operations use
+running error analysis. The verifier never rounds; bounds are only ever shortened upward. The Higham
+form of $\gamma_n$, a bound on products of $(1+\delta_i)$, is proved in Lean from the standard model
+$\mathrm{fl}(x \mathbin{\mathrm{op}} y) = (x \mathbin{\mathrm{op}} y)(1+\delta)$, $|\delta| \le 2^{-24}$.
+
+\section{Rewriting without error}
+
+\texttt{Vapor.Compile.Rewrite} admits only identities that hold bit for bit over all of IEEE-754,
+signed zeros included: $\mathrm{neg}(\mathrm{neg}\,x) \to x$, $x\cdot 1 \to x$, $x + (-0) \to x$,
+$x - (+0) \to x$, but not $x + (+0) \to x$, because $(-0) + (+0) = +0$. Constant folding evaluates the
+declared semantics themselves. Rewriting therefore has error $\varepsilon = 0$ by construction.

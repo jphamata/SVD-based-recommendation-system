@@ -1,0 +1,66 @@
+\chapter{Interfaces}\label{ch:interfaces}
+
+\section{One interpreter}
+
+Every capability is a verb of one interpreter, the Dīwān, which serves the command line
+(\texttt{bin/vapor}), the terminal user interface and the browser console's terminal, so the three
+answer alike. Verbs read files or standard input, write text on a terminal and JSON in a pipe, and return
+exit statuses with meaning: 0 done and positive, 1 done and negative (refuted, not found, verification
+failed), 2 usage, 3 invalid input, 4 failure. In the console, the interpreter runs jailed: files come
+from the session, and verbs that would touch the server's disk or network (renewing a model from disk,
+writing a rendered file, the network airlock, the editor) are not offered.
+
+\begin{lstlisting}
+vapor wzn check energy.wzn            # Almizan: decide every claim
+vapor athanor run golomb.nbq | vapor verify golomb.nbq -
+vapor logic knapsack.lp | jq .objective
+vapor qalib check adder.net synth.v   # exit 1 with the input that tells them apart
+vapor render studio.txt --ink --out sketch.png
+vapor siphon preflight hub config.json model-00001-of-00002.safetensors ...
+\end{lstlisting}
+
+\section{The console}
+
+A single offline page served by the BEAM: no external font, script or request. It groups its panels
+by what one does (ask, solve, simulate, make, read, measure, trust) and alphabetises them in the language
+shown, English or Portuguese. The workspace detects the kind of problem typed and shows the search
+live in the \emph{furnace} (sparks per evaluation, the best-so-far line, the random control, the
+portfolio's allocation) and the verdict on the \emph{touchstone}. The render desk traces light
+progressively on the viewer's GPU (WebGL), keeps the scene text as the source of truth (dragging the
+image rewrites the camera line), and compares its mean radiance with the server's reference; the same
+scene can be drawn in ink.
+
+\section{Agents}
+
+\paragraph{MCP.} \texttt{mix vapor.mcp} exposes 27 tools: the language and the search
+(\texttt{alembic\_eval}, \texttt{athanor\_run}, \texttt{athanor\_verify}), the deciders
+(\texttt{logic\_check}, \texttt{rebis\_check}, \texttt{aludel\_decide}, \texttt{tabula\_analyze},
+\texttt{qalib\_check}), science and statistics (\texttt{crucible\_run}, \texttt{assay\_run}), the
+workbench and engineering desks, finance, boards, rendering, recommendations, the studio, and
+\texttt{siphon\_propose}, which only queues a request for the person. An agent proposes; the checker
+decides.
+
+\paragraph{Agents as proof objects.} An agent's definition (\texttt{Vapor.Agent.Spec}) is a value with
+a digest and a lineage; its tools carry an effect class (\texttt{pure} re-executed on replay,
+\texttt{observe} read from the record, \texttt{act} never re-executed and run only with a grant fixed in
+the digest). A run is a hash-chained journal with a Merkle root, attested by the executing node's
+Ed25519 key; replaying a run with a local model recomputes every decision on any substrate and must end
+at the same head. The store writes ahead of every step and announces every action before it happens, so
+an action happens at most once with an idempotent recipient. Personal data are sealed per data subject,
+and destroying the key erases them everywhere while the chain still verifies.
+
+\section{Editors}
+
+\paragraph{The language server.} \texttt{vapor lsp} speaks LSP over standard I/O to any editor: for
+Almizan, diagnostics with the refuting point, hover with the decider, completion in the file's script,
+symbols and definitions, canonical formatting that keeps comments, the other script as a command, and
+inlay hints that put each claim's verdict at the end of its line.
+
+\paragraph{Al-Qalam.} \texttt{vapor qalam FILE} is a small editor of the system's own, in the terminal:
+a subset of vi; each claim's verdict in the gutter (\texttt{✓}, \texttt{✗}, \texttt{?}, \texttt{!}),
+rechecked after every change made outside insert mode; numbers that \texttt{Ctrl-A} and \texttt{Ctrl-X}
+step (a fraction by its own unit), so a coefficient can be walked until a law starts or stops holding;
+bracket and top-level motions; canonical formatting and the two scripts; and an undo tree whose states
+are identified by the SHA-256 of their parent and their text, so branches are kept and identical histories
+have identical identities. Its core is pure (state and keys to state, state and size to screen) and is
+tested without a terminal and through a real pseudo-terminal.

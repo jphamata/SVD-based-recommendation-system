@@ -10,7 +10,11 @@ defmodule Vapor.UpscaleTest do
       by more than 1 dB; on photographs it stays within half a dB of it;
       it never loses to plain Lanczos;
     * **training is reproducible**: the oracle and the native worker train
-      to the same weights, bit for bit.
+      to the same weights, bit for bit;
+    * **temporal upscaling** keeps every frame consistent with its own input
+      whatever its history holds, gains only when frames sample new sub-pixel
+      positions (the whole-pixel pan is the control), and rejects the ghost
+      of an object that has gone, which a naive blend keeps.
   """
   use ExUnit.Case, async: false
   alias Vapor.Modal.Image
@@ -89,4 +93,61 @@ defmodule Vapor.UpscaleTest do
       assert {out.w, out.h} == {22 * k, 16 * k}
     end
   end
+
+  # ------------------------------------------------------------- temporal --
+
+  # a striped world with a bright disc, seen through a 48 × 48 window
+  defp world(x, y, disc? \\ true) do
+    stripes = if rem(div(x, 3) + div(y, 7), 2) == 0, do: 0.8, else: 0.2
+    v = if disc? and (x - 70) ** 2 + (y - 22) ** 2 < 120, do: 0.95, else: stripes
+    min(1.0, 0.15 + 0.7 * v + 0.1 * :math.sin(x / 5.0))
+  end
+
+  defp view(f), do: %Image{w: 48, h: 48, c: 1, px: (for y <- 0..47, x <- 0..47, do: f.(x, y)) |> List.to_tuple()}
+
+  defp film(frames, motion, sp) do
+    lrs = Enum.map(frames, &Upscale.downsample/1)
+    {ys, _} = Enum.map_reduce(lrs, nil, fn lr, prev -> y = Upscale.temporal(lr, prev, motion, spatial: sp.(lr)); {y, y} end)
+    {ys, lrs}
+  end
+
+  @tag :native
+  test "temporal: the gain comes from new sub-pixel samples, every frame stays consistent, wrong vectors cost quality not consistency", %{worker: w, model: m} do
+    sp = &Upscale.upscale(&1, worker: w, model: m)
+
+    gain = fn s ->
+      frames = for t <- 0..5, do: view(fn x, y -> world(x + s * t, y) end)
+      {ys, lrs} = film(frames, {-s, 0}, sp)
+      assert Enum.zip_with(ys, lrs, &Upscale.inconsistency/2) |> Enum.max() < 1.0e-12
+      t = ys |> Enum.zip_with(frames, &Upscale.psnr/2) |> Enum.drop(2) |> Enum.sum()
+      single = lrs |> Enum.map(sp) |> Enum.zip_with(frames, &Upscale.psnr/2) |> Enum.drop(2) |> Enum.sum()
+      (t - single) / 4
+    end
+
+    # half an input pixel per frame: each frame samples positions the last did not
+    assert gain.(1) > 0.5
+    # a whole input pixel per frame: the same samples again; nothing to gain (the control)
+    assert abs(gain.(2)) < 0.25
+
+    frames = for t <- 0..3, do: view(fn x, y -> world(x + t, y) end)
+    {ys, lrs} = film(frames, {7, -5}, sp)
+    assert Enum.zip_with(ys, lrs, &Upscale.inconsistency/2) |> Enum.max() < 1.0e-12
+  end
+
+  @tag :native
+  test "temporal: the ghost of an object that has gone is rejected; a naive blend keeps it and contradicts the input", %{worker: w, model: m} do
+    sp = &Upscale.upscale(&1, worker: w, model: m)
+    {before, now} = {view(fn x, y -> world(x + 40, y) end), view(fn x, y -> world(x + 40, y, false) end)}
+    {lr0, lr1} = {Upscale.downsample(before), Upscale.downsample(now)}
+    y0 = sp.(lr0)
+    single = sp.(lr1)
+    ours = Upscale.temporal(lr1, y0, {0, 0}, spatial: single)
+    naive = %{y0 | px: Enum.zip_with(Tuple.to_list(single.px), Tuple.to_list(y0.px), fn a, b -> 0.25 * a + 0.75 * b end) |> List.to_tuple()}
+    disc = for y <- 0..47, x <- 0..47, (x + 40 - 70) ** 2 + (y - 22) ** 2 < 120, do: y * 48 + x
+    err = fn im -> disc |> Enum.map(&abs(elem(im.px, &1) - elem(now.px, &1))) |> Enum.max() end
+
+    assert err.(naive) > 0.4 and Upscale.inconsistency(naive, lr1) > 0.3
+    assert err.(ours) <= err.(single) + 0.02 and Upscale.inconsistency(ours, lr1) < 1.0e-12
+  end
+
 end
