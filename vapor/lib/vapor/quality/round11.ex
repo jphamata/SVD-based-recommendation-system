@@ -3,7 +3,8 @@ defmodule Vapor.Quality.Round11 do
   Quality checks for the 0.11 round, in the suite's discipline: a value, a
   **control** that a broken or naive implementation would produce, and a
   threshold that separates them. (Algorithm discovery and self-play left
-  with their demonstrations in 0.16 — DIRECTIVE §19.)
+  with their demonstrations in 0.16 — DIRECTIVE §19; the living scene
+  in 0.17 — §21.)
 
   | check | value | control (must fail) |
   |---|---|---|
@@ -12,18 +13,15 @@ defmodule Vapor.Quality.Round11 do
   | homology | Betti numbers of the classics; torsion of Klein and RP² | GF(2) alone cannot tell torus from Klein |
   | persistence | one long H₁ bar for a noisy loop | a blob: no long bar |
   | science (11) | each experiment against its closed form or published value | each its own control |
-  | living scene | sky at infinity, horizon, ground walkable, warm light at the hearth | — |
-  | drawing rig | four limb ends where they were drawn | — |
-  | direction | prompts → operations, unknown words reported | a nonsense word: reported, not guessed |
   | sketch | an askew rectangle squared, a circle a circle | the same fit without constraints stays askew |
   | floor plan | rooms of 12 and 20 m², doors of 0.9 and 1.0 m | — |
   | archives | intact archive verifies and replays to the same result | one flipped byte: caught |
   """
   import Bitwise
-  alias Vapor.{Archive, Prove, Scene, Science, Sketch}
+  alias Vapor.{Archive, Prove, Science, Sketch}
 
   def run(_opts \\ []) do
-    %{checks: List.flatten([mathematics(), science(), scene(), sketch(), archives()])}
+    %{checks: List.flatten([mathematics(), science(), sketch(), archives()])}
   end
 
   defp check(name, value, control, threshold, pass), do: %{name: name, value: value, control: control, threshold: threshold, pass: pass}
@@ -58,23 +56,6 @@ defmodule Vapor.Quality.Round11 do
       r = Science.run(name)
       check("science: " <> r.name, r.value, r.control, r.threshold, r.pass)
     end
-  end
-
-
-  defp scene do
-    s = Scene.analyze(picture("quality/scene/outdoor.png"))
-    g = Scene.analyze(picture("quality/scene/guild.png"))
-    "#" <> hex = g.light.color
-    warm = String.to_integer(String.slice(hex, 0, 2), 16) - String.to_integer(String.slice(hex, 4, 2), 16)
-    ok_s = hd(s.layers).kind == "sky" and abs(s.horizon - 175 / 420) < 0.06 and List.last(s.layers).kind == "ground" and Enum.sum(s.walk.cells) > 50
-    rig = Scene.rig(picture("quality/scene/figure.png"))
-    d = Scene.direct("uma noite de chuva forte com vento, três pessoas e vagalumes; orbite devagar, xyzzy")
-
-    [check("living scene: sky at infinity, horizon (truth 0.417), ground walkable; the guild's light warm at the hearth", "horizon #{Float.round(s.horizon, 3)}, #{length(s.layers)} layers", nil,
-           "sky first, |horizon − truth| < 0.06, ground last, walkable cells; light x ∈ (0.12, 0.28), red − blue > 60", ok_s and g.light.x > 0.12 and g.light.x < 0.28 and warm > 60),
-     check("drawing rig: limb ends of a stick figure", rig.endpoints, nil, "4", rig.endpoints == 4),
-     check("direction: a Portuguese prompt as operations; a nonsense word reported", length(d.ops), inspect(d.unknown), "night, heavy rain, wind, 3 people, fireflies, orbit, slow; unknown = [xyzzy]",
-           %{"weather" => "rain", "intensity" => 1.0} in d.ops and %{"spawn" => "people", "count" => 3} in d.ops and d.unknown == ["xyzzy"])]
   end
 
   defp sketch do

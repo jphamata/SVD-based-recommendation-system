@@ -410,6 +410,35 @@ defmodule Vapor.Almizan do
 
   defp claims(%{"decls" => decls}), do: for(%{"claim" => n} = c <- decls, into: %{}, do: {n, c})
 
+  @doc """
+  Every claim's verdict with the line its declaration starts on, which is what an
+  editor shows beside a claim (the language server, Al-Qalam):
+  `{:ok, [%{line, claim, verdict, decider, detail, …}]}`, or `{:error, why, line}`
+  when the text does not parse. Options as for `check/2`.
+  """
+  def verdict_lines(text, opts \\ []) do
+    case parse(text) do
+      {:ok, m} ->
+        lines = claim_lines(text)
+        {:ok, for(r <- check(m, opts), line = lines[r.claim], line != nil, do: Map.put(r, :line, line))}
+
+      {:error, why} ->
+        {:error, why, case Regex.run(~r/^line (\d+)/, why) do [_, l] -> String.to_integer(l); _ -> 1 end}
+    end
+  end
+
+  @doc "Claim name → the line its declaration starts on, from the reader alone (so it survives a failing check)."
+  def claim_lines(text) do
+    case S.read(text) do
+      {:ok, forms} ->
+        for {:list, [{:atom, kw, _}, {:atom, name, _} | _], line} <- forms, S.keyword(kw) == "claim", into: %{} do
+          {case S.ident(name) do {:ok, n} -> n; _ -> name end, line}
+        end
+
+      _ -> %{}
+    end
+  end
+
   defp obligation(%{"wazn" => w} = c, _env, _opts) when w != "burhan",
     do: %{claim: c["claim"], root: c["root"], wazn: w, verdict: "none", decider: nil, detail: "a #{w} claim states no theorem"}
 

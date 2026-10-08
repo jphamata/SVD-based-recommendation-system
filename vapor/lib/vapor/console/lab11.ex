@@ -1,13 +1,12 @@
 defmodule Vapor.Console.Lab11 do
   @moduledoc """
   The console's laboratories for the 0.11 round, each a function from a
-  small request to a JSON-ready map (docs/CONSOLE.md): the living scene
-  (analysis, rig, direction, standalone export), sketch → drawing / plan,
-  and saving results as verifiable archives (`Vapor.Archive`).
+  small request to a JSON-ready map (docs/CONSOLE.md): sketch → drawing /
+  plan, and saving results as verifiable archives (`Vapor.Archive`).
   """
-  alias Vapor.{Archive, Scene, Sketch}
+  alias Vapor.{Archive, Sketch}
 
-  @samples %{"outdoor" => "scene/outdoor.png", "guild" => "scene/guild.png", "figure" => "scene/figure.png", "shapes" => "sketch/shapes.png", "plan" => "sketch/plan.png"}
+  @samples %{"shapes" => "sketch/shapes.png", "plan" => "sketch/plan.png"}
 
   # a sample picture by name (the quality fixtures), or the uploaded one
   defp picture("sample:" <> name, _data) do
@@ -37,38 +36,12 @@ defmodule Vapor.Console.Lab11 do
   defp ok(:error, why), do: {:error, why}
   defp ok({:error, _}, why), do: {:error, why}
 
-  # ------------------------------------------------------------------ scene
-
-  def scene_analyze(name, data) do
-    with {:ok, img} <- picture(name, data) do
-      t0 = System.monotonic_time(:millisecond)
-      s = Scene.analyze(img)
-      {:ok, Map.put(s, :ms, System.monotonic_time(:millisecond) - t0)}
-    end
-  end
-
-  def scene_rig(name, data) do
-    with {:ok, img} <- picture(name, data), do: {:ok, Scene.rig(img)}
-  end
-
-  def scene_direct(prompt, known \\ [])
-
-  def scene_direct(prompt, known) when is_binary(prompt) and byte_size(prompt) <= 2000 do
-    known = if is_list(known), do: known |> Enum.filter(&is_binary/1) |> Enum.take(200), else: []
-    {:ok, Scene.direct(prompt, known)}
-  end
-
-  def scene_direct(_, _), do: {:error, "prompt: a string up to 2000 bytes"}
-
-  def scene_export(scene, title) when is_map(scene), do: {:ok, Scene.standalone(Vapor.JSON.encode(scene), title || "vapor — cena viva")}
-  def scene_export(_, _), do: {:error, "scene: the scene object"}
-
   # ----------------------------------------------------------------- sketch
 
   def sketch(name, data, mode, opts) do
     with {:ok, img} <- picture(name, data) do
       # the sketch itself, as the vectoriser saw it (for the side-by-side)
-      seen = "data:image/png;base64," <> Base.encode64(Vapor.Modal.Image.png(Vapor.Scene.fit(img, 640)))
+      seen = "data:image/png;base64," <> Base.encode64(Vapor.Modal.Image.png(Vapor.Raster.fit(img, 640)))
       with {:ok, r} <- sketch_of(img, mode, opts), do: {:ok, Map.put(r, :image, seen)}
     end
   end

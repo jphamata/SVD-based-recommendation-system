@@ -22,9 +22,7 @@ defmodule Vapor.Main.AssayCli do
                 {:ok, r} ->
                   cond do
                     tool == "dedup" and o[:keep] ->
-                      docs = Vapor.Assay.Data.docs(text) |> List.to_tuple()
                       lines = text |> String.split("\n") |> Enum.reject(&(String.trim(&1) == "")) |> List.to_tuple()
-                      _ = docs
                       Enum.each(r.keep, &out(elem(lines, &1)))
                       err(dim(r.says))
                     json?(o) -> emit_json(r)

@@ -60,7 +60,7 @@ defmodule Vapor.WorkspaceTest do
       assert m =~ "line" or m =~ "unexpected"
     end
 
-    test "games, the Crucible, the Assay, scene operations and Alembic over HTTP", %{base: b} do
+    test "games, the Crucible, the Assay and Alembic over HTTP", %{base: b} do
       g = Examples.get("tictactoe").text
       {200, v} = req(b, :post, "/v1/vapor/game", %{text: g, action: "play", move: "4"})
       {200, r} = req(b, :post, "/v1/vapor/game", %{text: g, action: "reply", state: v["state"]})
@@ -69,8 +69,6 @@ defmodule Vapor.WorkspaceTest do
       assert hd(c["laws"])["law"] == "x^2 + y^2"
       {200, a} = req(b, :post, "/v1/vapor/assay", %{tool: "judge", text: Vapor.Assay.example("judge")})
       assert is_number(a["p_position_bias"])
-      {200, o} = req(b, :post, "/v1/vapor/scene/ops", %{text: "add circle c { x: 0.5 }"})
-      assert [%{"entity" => _}] = o["ops"]
       {200, e} = req(b, :post, "/v1/vapor/alembic", %{text: "f(n) = n * n", expr: "f(12)"})
       assert e["value"] == "144"
     end
@@ -101,7 +99,7 @@ defmodule Vapor.WorkspaceTest do
       assert capture_io(:stderr, fn -> assert Vapor.Main.run(["frobnicate"]) == 2 end) =~ "unknown command"
     end
 
-    test "crucible, assay and scenes through files and pipes", %{dir: d} do
+    test "crucible, assay and render through files and pipes", %{dir: d} do
       f = Path.join(d, "osc.txt")
       File.write!(f, "x' = v\nv' = -9*x")
       assert capture_io(fn -> assert Vapor.Main.run(["crucible", "laws", f]) == 0 end) =~ "9·x^2 + v^2"
@@ -110,18 +108,18 @@ defmodule Vapor.WorkspaceTest do
       # the example judge prefers the first slot by construction: the check fails, and so does the status
       out = capture_io(fn -> assert Vapor.Main.run(["assay", "judge", j]) == 1 end)
       assert out =~ "p_position_bias" and out =~ "position bias, p ="
-      s0 = capture_io(fn -> Vapor.Main.run(["scene", "new", "--w", "320", "--h", "200"]) end)
-      sf = Path.join(d, "s.json")
-      File.write!(sf, s0)
-      s1 = capture_io(fn -> assert Vapor.Main.run(["scene", "edit", sf, "add circle c { x: 0.5, y: 0.5 }"]) == 0 end)
-      assert s1 =~ "\"entity\""
+      sc = Path.join(d, "ball.txt")
+      File.write!(sc, "camera pos=0,0,4 look=0,0,0 fov=40\nsun dir=0.3,1,0.4 color=1,1,1 power=2\nsphere c=0,0,0 r=1 mat=diffuse albedo=0.8,0.2,0.2")
+      {:ok, ink} = JSON.decode(capture_io(fn -> assert Vapor.Main.run(["render", sc, "--ink", "--width", "40", "--height", "30", "--json"]) == 0 end))
+      assert ink["style"] == "ink" and ink["outline_pixels"] > 0 and File.read!(Path.join(d, "ball.png")) |> binary_part(1, 3) == "PNG"
+      assert capture_io(:stderr, fn -> assert Vapor.Main.run(["render", sc <> ".missing"]) == 3 end) =~ "render"
     end
   end
 
   describe "agents and the terminal console" do
     test "MCP: the agent proposes, the Athanor checks", _ do
       tools = Vapor.MCP.Server.tools() |> Enum.map(& &1["name"])
-      assert Enum.all?(~w(alembic_eval athanor_run athanor_verify game_query crucible_run assay_run scene_ops), &(&1 in tools))
+      assert Enum.all?(~w(alembic_eval athanor_run athanor_verify game_query crucible_run assay_run render_scene), &(&1 in tools))
       st = Vapor.MCP.Server.new(dir: System.tmp_dir!())
       r = Vapor.MCP.Server.handle(%{"jsonrpc" => "2.0", "id" => 1, "method" => "tools/call", "params" => %{"name" => "athanor_run",
             "arguments" => %{"text" => "space = ints(2, 0, 99)\nminimize(v) = abs(v[0] - 61) + abs(v[1] - 7)\nbudget = 50", "proposals" => ["[61, 7]"]}}}, st)

@@ -35,7 +35,7 @@ Object.assign(I18N.en, {
   samples_pdb: "Samples", pipeline: "Run the pipeline: alignment → DCA → fold", compare: "Compare two structures", align: "Align two sequences",
   precision: "Precision of the top-k predictions (k = number of true contacts)", caught: "bias detected ✓", not_caught: "bias missed ✗", bus_legend: "bus colour: |V − 1| below 3 % green, below 5 % amber, otherwise red · line width ∝ |P|", tm: "TM-score", contacts: "contacts", truth: "true", predicted: "predicted", native: "native",
   gpu: "GPU (progressive)", reference: "Reference on the server", reset: "Reset", exposure: "exposure", spp: "samples / pixel", furnace: "Furnace test", control: "control",
-  render_reference: "Render the reference", unavailable_gpu: "The GPU tracer needs WebGL2 with float targets; the reference renderer on the server still works.",
+  render_reference: "Render the reference", render_ink: "Ink", ink_title: "Ink: the same scene, stylised", ink_note: "One ray per pixel, no sampling: flat bands of the sun's light, hard shadows, outlines where the object changes, the depth jumps or the surface folds. The same text always gives the same picture.", ink_bands: "bands", ink_edges: "outline pixels", unavailable_gpu: "The GPU tracer needs WebGL2 with float targets; the reference renderer on the server still works.",
   sc_npcs: "Inhabitants", sc_npc_add: "+ inhabitant", sc_labels: "names", sc_timeline: "Timeline", sc_gif: "GIF (exact frames)", sc_frames: "drawing exact frames…",
   sc_name: "name", sc_behavior: "behaviour", sc_speed: "speed", sc_scale: "size", sc_color: "colour", sc_say: "Say", sc_say_ph: "a line to say…", sc_goto: "go to…",
   sc_wp: "Set a route (click the ground)", sc_wp_done: "Route done", sc_wp_hint: "click on the ground to add points to the route", sc_wp_n: (n) => `${n} route point(s)`,
@@ -72,7 +72,7 @@ Object.assign(I18N.pt, {
   samples_pdb: "Amostras", pipeline: "Rodar o pipeline: alinhamento → DCA → dobra", compare: "Comparar duas estruturas", align: "Alinhar duas sequências",
   precision: "Precisão das k primeiras predições (k = número de contatos verdadeiros)", caught: "viés detectado ✓", not_caught: "viés não detectado ✗", bus_legend: "cor da barra: |V − 1| abaixo de 3 % verde, abaixo de 5 % âmbar, senão vermelho · espessura ∝ |P|", tm: "TM-score", contacts: "contatos", truth: "verdadeiros", predicted: "previstos", native: "nativa",
   gpu: "GPU (progressivo)", reference: "Referência no servidor", reset: "Recomeçar", exposure: "exposição", spp: "amostras / pixel", furnace: "Teste da fornalha", control: "controle",
-  render_reference: "Renderizar a referência", unavailable_gpu: "O traçador na GPU precisa de WebGL2 com alvos float; o renderizador de referência do servidor continua disponível.",
+  render_reference: "Renderizar a referência", render_ink: "Nanquim", ink_title: "Nanquim: a mesma cena, estilizada", ink_note: "Um raio por pixel, sem amostragem: faixas chapadas da luz do sol, sombras duras, contornos onde o objeto muda, a profundidade salta ou a superfície dobra. O mesmo texto dá sempre a mesma imagem.", ink_bands: "faixas", ink_edges: "pixels de contorno", unavailable_gpu: "O traçador na GPU precisa de WebGL2 com alvos float; o renderizador de referência do servidor continua disponível.",
   sc_npcs: "Habitantes", sc_npc_add: "+ habitante", sc_labels: "nomes", sc_timeline: "Linha do tempo", sc_gif: "GIF (quadros exatos)", sc_frames: "desenhando quadros exatos…",
   sc_name: "nome", sc_behavior: "comportamento", sc_speed: "velocidade", sc_scale: "tamanho", sc_color: "cor", sc_say: "Dizer", sc_say_ph: "uma fala…", sc_goto: "ir até…",
   sc_wp: "Traçar uma rota (clique no chão)", sc_wp_done: "Rota pronta", sc_wp_hint: "clique no chão para acrescentar pontos à rota", sc_wp_n: (n) => `${n} ponto(s) de rota`,
@@ -1146,13 +1146,22 @@ mount("render", (root, R, redraw) => {
     state.textContent = t("running");
     try { const r = await api("/v1/vapor/render", { text: ed.value, width: ww, height: hh, spp: Math.min(spp, 96) }); R.ref = r; state.textContent = ""; showRef(); } catch (e) { state.textContent = e.message; }
   });
+  // the same scene stylised on the server (Vapor.Render.ink): deterministic, so no budget and no convergence
+  R.bands ??= 3;
+  const bandSel = sel(["2", "3", "4", "6"].map((k) => [k, `${k} ${t("ink_bands")}`]), String(R.bands)); bandSel.onchange = () => { R.bands = Number(bandSel.value); if (R.ink) inkB.click(); };
+  const inkB = btn(t("render_ink"), "quiet", async () => {
+    state.textContent = t("running");
+    try { R.ink = await api("/v1/vapor/render", { text: ed.value, width: 480, height: Math.round((480 * h) / w), style: "ink", bands: R.bands }); state.textContent = ""; showRef(); } catch (e) { state.textContent = e.message; }
+  });
   const furB = btn(t("furnace"), "quiet", async () => { state.textContent = t("running"); try { R.furn = await api("/v1/vapor/render/furnace"); state.textContent = ""; showRef(); } catch (e) { state.textContent = e.message; } });
   const pngB = btn(t("download_png"), "quiet", () => { if (tr) download("vapor-render.png", b64blob(tr.png().split(",")[1], "image/png")); });
-  root.append(el("div", { class: "wb-bar" }, ex, playB, btn(t("reset"), "quiet", () => { if (tr) { tr.reset(); tr.render(1); counter.textContent = t("spp_n", tr.frames); } }), ctrl(t("resolution"), resSel), pngB, refB, furB, state),
+  root.append(el("div", { class: "wb-bar" }, ex, playB, btn(t("reset"), "quiet", () => { if (tr) { tr.reset(); tr.render(1); counter.textContent = t("spp_n", tr.frames); } }), ctrl(t("resolution"), resSel), pngB, refB, inkB, bandSel, furB, state),
     el("div", { class: "render-grid" }, el("figure", { class: "gpu-fig" }, cv, el("figcaption", {}, counter, el("span", { class: "muted", text: " · " + t("orbit_hint") }))), el("div", {}, ed, errs)), out);
   function gpuMean() { if (!tr || !tr.frames) return null; const L = tr.readLinear(); let s = 0; for (let i = 0; i < L.w * L.h; i++) s += 0.2126 * L.data[i * 4] + 0.7152 * L.data[i * 4 + 1] + 0.0722 * L.data[i * 4 + 2]; return s / (L.w * L.h); }
   function showRef() {
     out.replaceChildren();
+    if (R.ink) out.append(sect(t("ink_title"), el("div", { class: "split2" }, el("img", { src: R.ink.png, class: "refimg", alt: t("ink_title"), width: String(R.ink.w) }),
+      el("div", {}, facts([["w × h", `${R.ink.w} × ${R.ink.h}`], [t("ink_bands"), R.bands], [t("ink_edges"), R.ink.edges], ["ms", R.ink.ms]]), el("p", { class: "muted", text: t("ink_note") })))));
     if (R.ref) { const gm = gpuMean(), rel = gm != null ? Math.abs(gm - R.ref.mean) / Math.max(R.ref.mean, 1e-9) : null;
       out.append(sect(t("reference"), el("div", { class: "split2" }, el("img", { src: R.ref.png, class: "refimg", alt: t("reference"), width: String(R.ref.w * 2) }),
         el("div", {}, stats(stat(t("ref_mean"), wbNum(R.ref.mean, 4)), stat(t("gpu_mean"), wbNum(gm, 4)), stat(t("agree"), rel == null ? "—" : `${(rel * 100).toFixed(2)} %`)),

@@ -66,6 +66,55 @@ proved and rejects what it refuted.
 `qalib_check`, `recommend_run` (27 tools); the console's completion derives its verbs from
 `Vapor.Main.verbs/0`.
 
+**Continued: Kimi K3, the siphon, names, and fifteen proposals** ([DIRECTIVE.md §21](docs/DIRECTIVE.md)).
+
+**Kimi K3** ([KIMI.md](docs/KIMI.md)) — KDA, Gated MLA without positions, Block Attention Residuals and
+Stable LatentMoE with SiTU-GLU as one step program (`Vapor.Lock.Adapters.DeltaHybrid`, reached by the
+`kimi_k3` alias; Kimi Linear is a refusal written as data). Logits within 4.4·10⁻⁶ of an independent
+float64 reference written from the report alone; greedy identical; native = oracle; forgetting the KDA
+state or the MLA cache fails. **MXFP4** (`Vapor.Quant.MXFP4`) decodes exactly. **Quantile Balancing**
+(`Vapor.Train.Balance`): the relaxation is integral (certified by the rational simplex), and Algorithm 1
+as written is not — its thresholds create ties; midpoints reach the optimum in ≤ 10 rounds.
+
+**The siphon** ([SIPHON.md](docs/SIPHON.md)) — the network airlock. The person declares fetchers in
+`$VAPOR_HOME/siphons.json` and runs them (`vapor siphon run|approve`); an agent can only propose
+(`siphon_propose`, MCP); a fetch is bounded (reduced environment, deadline, byte cap), goes through the
+format airlocks, may be pinned by SHA-256 and leaves a receipt. `vapor siphon headers|preflight`: the
+airlock's verdict on a remote checkpoint from its configuration and safetensors headers alone
+(`Vapor.Lock.preflight/2`). Streaming weights over a network, for chat, is refused by arithmetic.
+
+**Names** ([AIRLOCK.md §11](docs/AIRLOCK.md)) — modules are named for what they compute, products only
+as spellings: `Vapor.Model.Llama` → `Vapor.Model.Decoder`, the Whisper and Granite adapters →
+`encoder_decoder` and `multipliers`. `lock_test.exs` fails the build on a product name in a module name.
+
+**The Assay** — `layers` (which layer a probe should read, after the Perception Encoder) and `detect`
+(SAM 3's cgF1, with the IoU matching solved exactly and certified).
+
+**Almizan** — `vapor wzn fmt [--check|--write]` (`Vapor.Almizan.Format`): the canonical form with
+comments kept as glosses; the language server's formatting and lens used to delete comments.
+
+**Tests** — `mix vapor.test`: a content-addressed cache over what each test file can reach (its
+modules' bytecode, transitively; support, fixtures, `priv/`, the toolchain); for the edit loop, not the
+release. `ccitt.ex` compiles in 0.3 s instead of 5. Documentation that names a missing module,
+function or repository path fails `docs_references_test.exs`.
+
+**The living scene, removed** ([SCENE.md](docs/SCENE.md)) — with `Vapor.Scene.Ops`, `vapor scene`,
+MCP `scene_ops`, the archive kind `scene` and `Vapor.Alembic.Tree`. Sketch and archives continue in
+[SKETCH.md](docs/SKETCH.md) (`Vapor.Raster` holds the shared raster tools). **Ink**
+(`Vapor.Render.ink/2`, [RENDER.md §3](docs/RENDER.md)): the same scene text, stylised — flat bands,
+hard shadows, outlines — deterministic; in the console's render desk, `vapor render FILE --ink` and
+`render_scene` with `style: "ink"`.
+
+**Al-Qalam** ([EDITORS.md](docs/EDITORS.md)) — `vapor qalam FILE`, vapor's editor, suckless-sized
+(`Vapor.Qalam`, no dependency): a vi subset in the terminal; each claim's verdict in the gutter,
+rechecked after every change (`K` for the detail); `Ctrl-A`/`Ctrl-X` scrub the number under the
+cursor and the gutter answers; `%`, `[[`, `]]`; `:fmt`, `:ar`, `:la`; a Merkle undo tree whose
+branches are kept. The language server and the editor share `Vapor.Almizan.verdict_lines/2`.
+
+**Fixed** — `bin/vapor` replaced an exported `VAPOR_HOME` with the repository's path, so `vapor chat`
+and `vapor siphon` read the wrong directory. The console's guide described panels removed in 0.16; the
+README listed removed modules. MCP: 27 tools (`siphon_propose` in, `scene_ops` out).
+
 ## 0.16.0 — 2026-10-07
 
 Scrutiny of the eighth request (translated: "loose ends; purge of the merely illustrative; conversations and agent up to
@@ -332,18 +381,18 @@ Scrutiny of the fourth request (translated: "arbitrary problems and not just pre
 
 ## 0.11.0 — 2026-10-04
 
-Scrutiny of the third request of the day (translated: AlphaProof/AlphaDev/AlphaFold/AlphaZero "and beyond", physics on several fronts, bringing a picture to life, saving and exporting everything): [docs/DIRECTIVE.md §14](docs/DIRECTIVE.md). The rule that runs through the round: **a search proposes, a verifier decides**. Every delivery has a check with a control in `mix vapor.quality` (§5g, 26 checks). Documents: [SCENE.md](docs/SCENE.md), [DESCOBERTA.md](docs/DESCOBERTA.md), [MATHEMATICS.md](docs/MATHEMATICS.md), [SCIENCE.md](docs/SCIENCE.md), [JOGOS.md](docs/JOGOS.md).
+Scrutiny of the third request of the day (translated: AlphaProof/AlphaDev/AlphaFold/AlphaZero "and beyond", physics on several fronts, bringing a picture to life, saving and exporting everything): [docs/DIRECTIVE.md §14](docs/DIRECTIVE.md). The rule that runs through the round: **a search proposes, a verifier decides**. Every delivery has a check with a control in `mix vapor.quality` (§5g, 26 checks). Documents: [SCENE.md](docs/SCENE.md), DESCOBERTA.md (removed in 0.16), [MATHEMATICS.md](docs/MATHEMATICS.md), [SCIENCE.md](docs/SCIENCE.md), JOGOS.md (removed in 0.16).
 
 **Bringing a picture to life** ([docs/SCENE.md](docs/SCENE.md))
 - `Vapor.Scene`: SLIC + region graph, grown sky, depth from the ground plane (heuristic, editable), layers with the background reconstructed by push-pull, walkable ground, light; skeleton of drawings (Zhang–Suen, graph by *crossing number*, loops), mesh with skinning; PT/EN direction → operations, unknown words reported; standalone HTML page. `scene_test.exs`.
 - The `SceneEngine` engine (in the console and in the exported HTML): layers as planes in perspective, ground in bands, inhabitants by A* with the head on the horizon, rain/snow/fog/storm, torches, candles, embers, smoke, fireflies, birds, butterflies, leaves, wind in the vegetation, time of day and cycle, animated drawings (wave, walk, dance, breathe), entropy, seed and fixed step (the loop is reproducible), video recording.
 - `Vapor.Sketch`: sketch → technical drawing with constraints (SVG, DXF R12); floor plan → rooms, doors and 3D model (GLB). `sketch_test.exs`.
 
-**Discovering** ([DESCOBERTA.md](docs/DESCOBERTA.md), [MATHEMATICS.md](docs/MATHEMATICS.md))
+**Discovering** (DESCOBERTA.md (removed in 0.16), [MATHEMATICS.md](docs/MATHEMATICS.md))
 - `Vapor.Discover`: optimal sorting networks for n ≤ 8 (0-1 principle), 2×2 multiplication with 7 products (exact over the integers; rank 6 never), minimal bit tricks by exhaustion (⌊(x+y)/2⌋ = `(x&y)+((x^y)>>1)`), complexity class from counts. `discover_test.exs`.
 - `Vapor.Prove`: geometry by the algebraic method (numerator ≡ 0 + non-degeneracy + a check in exact rationals; false ones refuted), conjectures found and proved (Euler line, nine-point circle), homology over GF(2) and ℚ (Klein and RP² torsion), persistent homology. `prove_test.exs`.
 
-**Science and games** ([SCIENCE.md](docs/SCIENCE.md), [JOGOS.md](docs/JOGOS.md))
+**Science and games** ([SCIENCE.md](docs/SCIENCE.md), JOGOS.md (removed in 0.16))
 - `Vapor.Science`: Schrödinger by split-step (coherent state, exact tunnelling), relativistic Boris (γ, E×B), Grad–Shafranov against Solov'ev, Hartree–Fock STO-3G (H₂ −1.1167; HeH⁺ −2.860662; the failure of RHF shown), Lennard-Jones, Wright–Fisher against the exact chain, phylogeny (RF 0), HP folding down to −9. `science_test.exs`.
 - `Vapor.Games`: tic-tac-toe AlphaZero (policy + value + PUCT + self-play; `priv/games/tictactoe.json`) — against **all** the optimal lines of perfect play, none lost with 128 simulations and 13 % with 8 (the untrained search: 97 %); domain randomization on the cart-pole (484 against 275 steps in unseen worlds). `games_test.exs`.
 
@@ -366,7 +415,7 @@ Scrutiny of the third request of the day (translated: AlphaProof/AlphaDev/AlphaF
 
 ## 0.10.0 — 2026-10-04
 
-Scrutiny of the two requests of this round (substrates, training, OCR of other scripts; and, in between, endless context, physics, networks, Cyrillic, LaTeX, FreeBSD): [docs/DIRECTIVE.md §13](docs/DIRECTIVE.md). Every delivery has a check with a control in `mix vapor.quality` (§5f). Documents of the round: [SUBSTRATES.md](docs/SUBSTRATES.md), [TRAINING.md](docs/TRAINING.md), [PHYSICS.md](docs/PHYSICS.md), [REDES.md](docs/REDES.md), [OCR.md §3g–§3k](docs/OCR.md).
+Scrutiny of the two requests of this round (substrates, training, OCR of other scripts; and, in between, endless context, physics, networks, Cyrillic, LaTeX, FreeBSD): [docs/DIRECTIVE.md §13](docs/DIRECTIVE.md). Every delivery has a check with a control in `mix vapor.quality` (§5f). Documents of the round: [SUBSTRATES.md](docs/SUBSTRATES.md), [TRAINING.md](docs/TRAINING.md), [PHYSICS.md](docs/PHYSICS.md), REDES.md (removed in 0.16), [OCR.md §3g–§3k](docs/OCR.md).
 
 **Substrates** ([docs/SUBSTRATES.md](docs/SUBSTRATES.md))
 - **Substrate airlock** (`Vapor.Substrate`, `mix vapor.substrate list|kit|judge`): probes with known answers (FMA, FTZ, DAZ, signed zero, NaN, reduction order, real mantissa bits, division, functions, the real kernels) → verdict `:canonical | :envelope | :refused` with the **numerical fingerprint**; signed CBOR record (Ed25519); the dispatcher only sends canonical programs to canonical substrates; admission on arrival. `substrate_test.exs`.
@@ -384,7 +433,7 @@ Scrutiny of the two requests of this round (substrates, training, OCR of other s
 **Physics** ([docs/PHYSICS.md](docs/PHYSICS.md))
 - `Vapor.Physics`: XPBD with substeps, as a vapor program — batched, **bit for bit on every substrate**, differentiable. First-order pendulum against the exact elliptic period; chaos (double pendulum) oracle = native while one ulp separates the worlds; `sysid/3` recovers rod and damping from noisy measurements by the gradient of the trajectory (shuffled in time: nothing); cart-pole by random search 200/200; **digital twin** with CUSUM and a log in a *hash* chain that is rebuilt from the model and the actions. `physics_test.exs`.
 
-**Networks** ([docs/REDES.md](docs/REDES.md))
+**Networks** (REDES.md (removed in 0.16))
 - `Vapor.Graph`: reproducible generators (ER, BA, WS, planted), Clauset–Shalizi–Newman power law with *bootstrap* and likelihood ratio, configuration null and z-scores, deterministic Louvain, SIR and mean-field threshold, percolation and robustness, PageRank on the host and **as a vapor program**; = networkx. `graph_test.exs`.
 
 **Vision** ([docs/OCR.md §3g–§3k](docs/OCR.md))

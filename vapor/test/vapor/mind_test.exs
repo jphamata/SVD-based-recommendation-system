@@ -30,14 +30,6 @@ defmodule Vapor.MindTest do
     assert c.strategies["mind"].evals >= 1
   end
 
-  test "direct a scene: the model writes operations, which are validated line by line" do
-    m = Mind.script(["add glow sun { x: 0.8, y: 0.2, r: 0.1, color: \"#ffcc66\" }\nmake it pretty\nset world.weather = \"rain\""])
-    {:ok, r} = Mind.direct(m, Vapor.Scene.Ops.blank(), "a sun in the rain")
-    assert length(r.ops) == 2
-    assert [p] = r.problems
-    assert p =~ "line 2"
-  end
-
   test "a model spec that cannot be understood is refused" do
     assert {:error, _} = Mind.parse("telepathy:v1")
     assert {:ok, %Mind{name: "anthropic:x"}} = Mind.parse("anthropic:x")

@@ -1,8 +1,7 @@
 defmodule Vapor.Archive do
   @moduledoc """
   Save and export, for everything: one format for any result vapor
-  produces — a chart read, a proof, a discovered algorithm, a simulation,
-  a living scene, a trained policy.
+  produces — a chart read, a proof, a simulation, a backtest.
 
   An archive is a zip with a `manifest.json` and its files. The manifest
   names the `kind`, the vapor version and semantics, the **recipe** (the
@@ -19,7 +18,7 @@ defmodule Vapor.Archive do
 
   **Signed archives** (0.13). Integrity alone catches corruption, not a
   coherent lie: whoever rewrites a result can rewrite the manifest too. For
-  the kinds that cannot be recomputed (a whole scene, a measurement) the
+  the kinds that cannot be recomputed (a measurement, a model's output) the
   answer is a signature: `sign/2` adds `signature.json` — Ed25519 over
   `"vapor-archive-v1\n" ‖ manifest.json`, with the key id — and
   `verify(zip, trusted: [public keys])` refuses an archive that is
@@ -40,7 +39,6 @@ defmodule Vapor.Archive do
     "prove.geometry" => {Vapor.Prove, :replay},
     "prove.homology" => {Vapor.Prove, :replay},
     "science" => {Vapor.Science, :replay},
-    "scene" => {Vapor.Scene, :replay},
     # 0.13: the finance desk's deterministic tasks (timings scrubbed)
     "finance.arbitrage" => {Vapor.Finance, :replay},
     "finance.backtest" => {Vapor.Finance, :replay},

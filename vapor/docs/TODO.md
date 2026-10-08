@@ -21,9 +21,24 @@ rounds 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16 and 0.17 that wer
 - ☐ **Ternary weights `:sb2`** with a model trained ternary (BitNet b1.58): a GEMV of additions and
   subtractions in every backend, and the accumulator's overflow bound in Lean. Without such a model
   the format measures nothing.
-- ☐ **Agents and the web, as the 0.17 request designed it**: an `observe` tool that fetches through the
-  hermetic seal, strips scripts, stores the snapshot in the Khazāna by hash under a byte budget, and is
-  never re-fetched on replay; an `act` plan executed only with a person's Ed25519 signature.
+- ◐ **Agents and the web**: the siphon (docs/SIPHON.md) is the door, and by the person's rule an agent
+  only proposes; the person runs the fetch. Open: a page fetcher whose snapshot (scripts stripped) goes to
+  the Khazāna by hash, so a replay never fetches again; an `act` plan executed only with the person's
+  Ed25519 signature.
+- ☐ **Kimi K3 at its real size** (docs/KIMI.md, "What is owed"): the release's own spelling as an alias,
+  checked header-only against the real checkpoint; the vision tower and the MTP layer; serving the hybrid
+  in `Vapor.Engine`; a router whose cost is not quadratic in the experts.
+- ☐ **A layer-streaming executor** for work that reads the weights once (one prefill pass to score,
+  classify or embed a long document), fed by the siphon. Not for chat: per-token decoding is bounded by
+  active bytes ÷ bandwidth (docs/SIPHON.md).
+- ☐ **Image and video generators** (Flux-class rectified-flow transformers, video DiTs): an airlock adapter
+  and an independent reference, as for K3; the 2D/3D RoPE they need (below, *Models and operators*).
+- ☐ **DFlash drafters**: a block drafter bound to one target's hash (it shares the embedding and the head)
+  with a performance gate (τ histogram, full-block acceptance); correctness needs nothing new, because the
+  verify pass is already bit-identical to single steps. Speculative *sampling* certified exactly on a small
+  vocabulary in rationals.
+- ☐ **Ink, further**: hatching, line weight by depth, and an ink mode in the GPU tracer (today ink runs on
+  the server only).
 - ☐ **Sketch**: a parametric constraint solver (coincidence, tangency, distance) with a degrees-of-freedom
   report; Gröbner bases to prove a constraint set inconsistent.
 - ☐ **Language server**: rename, code actions ("add the missing `(box …)`"), semantic tokens.
@@ -69,7 +84,6 @@ rounds 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16 and 0.17 that wer
 - ☐ **Crucible**: p orbitals (6-31G bases) and UHF to break bonds; PDEs in 2D with the same evidence of order; conservation laws for systems with symbolic parameters.
 - ☐ **Assay**: evaluation of generative models with IRT (difficulty per item), sequential tests (stopping early with error control), and *dedup* at corpus scale (LSH on disk).
 - ☐ **Mind**: an optional autonomous loop (the model proposes, the furnace measures, the model reads the certificate and proposes again) with a call budget and recording in the journal; today the loop is guided by the person.
-- ◐ **Free scenes**: text operations, per-frame expressions and direction by a model exist; what is missing is simple physics between entities (collision, springs) written in Alembic, and the editable timeline in the console.
 
 ## Round 0.13 — what was left open
 
@@ -100,20 +114,15 @@ rounds 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16 and 0.17 that wer
 - ◐ **Logic**: linear arithmetic (rational simplex with a Farkas certificate) ✅ 0.13 ([LOGIC.md §5](LOGIC.md)); missing are the DRUP checker in the native worker (R(3, 4) in seconds); LRAT (linear checking); exporting Gröbner and Knuth–Bendix certificates to Lean (now that Lean runs here); integer programming ✅ 0.17 ([LOGIC.md §6](LOGIC.md); cutting planes are in round 0.17's list).
 - ☐ **Boards**: evaluation by a network trained by generic self-play (the loop already exists) for small chess/shogi (5×5 minishogi, 6×6 Los Alamos); NNUE as a compiler program; 9×9 Go with a network; hold'em with card abstraction.
 - ☐ **Generic self-play** loses 21 % of the optimal lines with 8 simulations at tic-tac-toe, against 13 % for the specialized one — it still has to match it (residual network, *temperature schedule*, more games) before going to larger games.
-- ☐ **Scene**: exact-frame MP4 (the exact-frame GIF exists); direction by clause grammar does not yet parse coordination ("Ana e Bento dançam") nor subordinate clauses.
 
 ## Round 0.11 — what was left open
 
-- ☐ **Learned depth for the living scene**: the ground-plane heuristic is the fallback; a monocular depth model through the airlock (the layers and the depths are already data) would open up photos without ground (portraits, aerial views) and wider navigation. With segmentation, the people in the photo itself become inhabitants.
-- ☐ **Direction by a language model**: the scene's operation schema under the JSON Schema constrained decoding that vapor already has, when a useful model is loaded; the vocabulary remains the fallback that reports what it does not understand.
-- ◐ **Exact frames offline**: ✅ 0.12 — exact-frame GIF by vapor's encoder (up to 240 frames, fixed step). Missing: a loop that closes (the last frame = the first) and MP4.
 - ☐ **Sketch → photorealistic** with a user checkpoint (img2img already exists) and the measurement that says whether the generated image respects the sketch (the vectorized lines of the output against those of the sketch).
 - ☐ **Geometry**: Wu's triangulation (points by two quadratic conditions), inequalities, readable proofs; export certificates to Lean (when `lake` is present).
-- ☐ **Discovery**: 3×3 (rank 23), the *flip graph* of Kauers & Moosbauer; minimum depth of the networks; synthesis with symbolic proof at 32/64 bits (bit-vectors) instead of a sample.
 - ☐ **Science as vapor programs**: the *split-step* (DFT as `linear`), Boris and Lennard-Jones as programs — the same bits on every substrate; DFT of solids, electrolytes, rigid bodies.
 - ✅ **Signed archives** (0.13): Ed25519 over the manifest with the operator's key; `verify(zip, trusted: …)`; `mix vapor.archive`. Missing: signing by KMS/HSM (the same item as for `Keys`).
 - ☐ **Stronger controls in science**: the coherent state and tunnelling are compared with a reference, but the "control" of the first is a conservation and that of the second a computed prediction; E×B and HeH⁺ have none. A wrong scheme, run (Lie instead of Strang with a large step; a potential with its sign flipped), would be the real control.
-- ☐ **Larger self-play**: a game whose state does not fit in memory (Connect-Four 6×7) and the network as a compiler program; environments generated by an adversary (PAIRED) beyond randomization.
+- ☐ **Larger self-play** (`Vapor.Play.SelfPlay`): a game whose state does not fit in memory (Connect-Four 6×7) and the network as a compiler program.
 
 ## Round 0.10 — what was left open
 
@@ -122,7 +131,7 @@ rounds 0.6, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16 and 0.17 that wer
 - ☐ **Small and serif axis labels**: the digitizer refuses 12 of 30 charts of the hard set (it never reads wrong). A digit reader by shape models (like the CJK one) and segmentation of touching digits would close a good part of it.
 - ☐ **Language models from another domain** for CJK (the current one comes from Faker's word lists: in Chinese, on a new seed, it does not help) and one for Arabic (in visual order).
 - ☐ **Rigid-body physics** (the 0.11 science covers quantum, relativity, tokamak, chemistry and biology, not this): rotation and inertia, angular joints, contact between bodies and friction (XPBD treats them all the same way); the RL policy inside the program (one episode = one run).
-- ☐ **Large networks**: sparse operators in the compiler (PageRank and SIR on millions of edges); personalized PageRank in the library (`Vapor.Docs.Library`) as a RAG ranking.
+- ☐ **Personalized PageRank** in the library (`Vapor.Docs.Library`) as a RAG ranking, with sparse operators in the compiler. (The complex-networks module left in 0.16.)
 - ☐ **Formulas beyond the grammar**: matrices, accents, `\left…\right`, multiple lines; and handwritten formulas.
 
 ## Performance

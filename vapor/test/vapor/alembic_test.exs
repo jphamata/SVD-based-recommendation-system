@@ -2,7 +2,6 @@ defmodule Vapor.AlembicTest do
   # not async: two tests count atoms VM-wide, which concurrent tests would disturb
   use ExUnit.Case, async: false
   alias Vapor.Alembic
-  alias Vapor.Alembic.Tree
 
   defp ev(text, prog \\ nil) do
     case Alembic.eval(text, program: prog) do
@@ -123,25 +122,6 @@ defmodule Vapor.AlembicTest do
         assert {:ok, v2} = Alembic.literal(Alembic.show(v))
         assert Alembic.show(v2) == Alembic.show(v)
       end
-    end
-  end
-
-  describe "the portable numeric tree" do
-    test "parses the numeric subset and refuses the rest" do
-      assert {:ok, ["+", 0.5, ["*", 0.2, ["f", "sin", [["v", "t"]]]]]} = Tree.parse("0.5 + 0.2*sin(t)", ["t"])
-      assert {:error, m} = Tree.parse("len([1])", ["t"])
-      assert m =~ "not available"
-      assert {:error, _} = Tree.parse("q + 1", ["t"])
-    end
-
-    test "evaluation is total and matches the browser's (golden values of noise)" do
-      {:ok, tr} = Tree.parse("if t > 1 then 1/0 else sqrt(-1) + fract(2.75)", ["t"])
-      assert Tree.eval(tr, %{"t" => 2.0}) == 0.0
-      assert Tree.eval(tr, %{"t" => 0.0}) == 0.75
-      # the same numbers are asserted in test/js/scene_noise.mjs against the engine's JavaScript
-      assert Tree.noise([1.0, 2.0]) == 0.16636425908654928
-      assert Tree.noise([-1.25, 7.0]) == 0.03921110928058624
-      assert Tree.noise([123.4567, -0.0015]) == 0.10643366817384958
     end
   end
 end

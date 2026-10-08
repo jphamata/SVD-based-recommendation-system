@@ -243,8 +243,7 @@ defmodule Vapor.Quality.Report do
     (RHF's known failure, shown); the phylogeny and the regression against the shuffled version; the paired
     test on the null against the planted effect; the calibrated model against the overconfident one; Krippendorff's
     α against random labels; the scaling law against shuffled losses (which exposed an
-    `exp` overflow, fixed); the solved game against chance; the browser's noise against the
-    server's.
+    `exp` overflow, fixed); the solved game against chance.
 
     | check | value | control | threshold | ok |
     |---|---|---|---|---|
@@ -279,7 +278,7 @@ defmodule Vapor.Quality.Report do
 
   defp round12(x) do
     """
-    ## 5h. Round 0.12 — workbench, engineering, logic, boards, proteins, render, scene direction
+    ## 5h. Round 0.12 — workbench, engineering, logic, boards, proteins, render, ink
 
     Each solver against the closed form, the published value or the oracle, and against its control:
     Dormand–Prince against fixed-step RK4; Crank–Nicolson (order 2) against implicit Euler (order 1);
@@ -289,8 +288,8 @@ defmodule Vapor.Quality.Report do
     that is not conserved; Fenske against reflux below the minimum; the whole DRUP proof against the
     truncated one; Knuth–Bendix against the axioms merely oriented; Thales against the false variant; the right
     proposal against the swapped one; perft against the published numbers; CFR+ against uniform play; the
-    planned alignment against the shuffled one; the furnace against the biased estimator; and direction
-    with names against the sentence with no one.
+    planned alignment against the shuffled one; the furnace against the biased estimator; and the ink
+    style's shadow against the same scene without what casts it.
 
     | check | value | control | threshold | ok |
     |---|---|---|---|---|
@@ -302,14 +301,11 @@ defmodule Vapor.Quality.Report do
 
   defp round11(x) do
     """
-    ## 5g. Round 0.11 — discovery, mathematics, science, self-play, living scene, sketch, archives
+    ## 5g. Round 0.11 — mathematics, science, sketch, archives
 
-    Sorting networks against randomly drawn and pruned networks; the bit trick against the naive formula
-    that overflows; rank 7 against the impossible rank 6; theorems against their false twins;
-    conjectures against the trivial triples; homology over ℚ against that over GF(2); the loop against the
-    blob; each science experiment against its closed form or the published value and its
-    control; the trained agent against the same search without training; the policy of many worlds against that
-    of one; the scene, the skeleton, the direction, the sketch and the floor plan against the truth they were
+    Theorems against their false twins; conjectures against the trivial triples; homology over ℚ
+    against that over GF(2); the loop against the blob; each science experiment against its closed form
+    or the published value and its control; the sketch and the floor plan against the truth they were
     drawn with; and the archive against one changed byte.
 
     | check | value | control | threshold | ok |

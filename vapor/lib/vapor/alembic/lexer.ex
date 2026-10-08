@@ -1,6 +1,6 @@
 defmodule Vapor.Alembic.Lexer do
   @moduledoc """
-  Alembic's lexer (docs/ALEMBIC.md §2). Tokens are `{kind, value, line, col}`
+  Alembic's lexer (docs/ALEMBIC.md §1). Tokens are `{kind, value, line, col}`
   with a closed set of kinds; identifiers stay binaries — nothing a user
   types ever becomes an atom.
 

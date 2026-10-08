@@ -1713,3 +1713,172 @@ bin/vapor wzn check priv/almizan/causes.wzn             # three proved, two refu
 bin/vapor recommend test/fixtures/recommend/genres_films.csv
 nix flake check                                         # on the pinned nixpkgs
 ```
+
+## 21. Round 0.17, continued: Kimi K3 through the airlock, the siphon, names, and fifteen proposals
+
+> Requests 10–13 (2026-10-08), translated and condensed. With the Kimi K3 technical report: "tie loose
+> ends, close TODOs, weigh the attached ideas, study the attachments, above all K3." The attached ideas:
+> an editor of vapor's own (Al-Qalam, in Zig and Vulkan), a REPL with a "triple return" (Al-Mukhbār), a
+> terminal mode, human–AI and human–human collaboration, a suckless rule, a canonical formatter
+> (`vapor fmt`), an Emacs-like trinity of configuration, automation and plugins, what blockchains could
+> give and take, self-renewal when Zig, the BEAM, Lean or Unix change, a literate format whose
+> documentation cannot lie (Kitāb), faster tests ("the suites are slow and hold back evolution: is there
+> a way?"), a release artifact with customisation, a guild of agents, a private cluster in a garage. "And
+> the scene system (the characters, the fireflies…), far too much of a toy: aim at fine control,
+> abstraction, photorealism or stylisation and beyond, or remove it. Support for models at the level of
+> Fable, Astra, video models such as Flux, K3, DeepSeek 4, remembering the airlock strategy." Then: a
+> proposal to stream weights from the network into a transient file system, and "a way to couple the
+> internet airlock-style (a Python script with the official libraries, or something custom for my own
+> cluster, a ghost network, S3 or beyond) — and **never connect the agent to the internet on its own:
+> always leave the connection to the user, even with minimal effort, for safety**." Then four
+> attachments for a clean-room extraction (the Perception Encoder paper, DFlash, V-JEPA 2's code, SAM 3).
+> Then: "are files like llama or kimi_k3 inevitable and correct, or should models, open or proprietary,
+> named by family or not, live only in the airlocks, with a pure mathematical core?"
+
+### The instruction, scrutinised
+
+- **"Support K3, DeepSeek 4, Fable, Astra, Flux…"** These are four different things. K3 has a report, so
+  it can be admitted the vapor way: equations, an independent reference, an adapter, controls (below).
+  DeepSeek 4 came with no report, so there is nothing to check an adapter against. Fable, Sol and Astra
+  are closed: there are no weights to admit, only an API, which vapor reaches as a proposer through
+  the agent backends, never as a source of truth. Flux-class generators and video models are owed, in
+  the TODO, with what they need first (a 2D/3D RoPE checked against a reference).
+- **"Never connect the agent on its own."** Taken as a rule, not a feature: **the siphon**
+  ([SIPHON.md](SIPHON.md)). The person declares fetchers in `$VAPOR_HOME/siphons.json` (any program: the
+  official Python libraries, `aws s3 cp`, `rsync` to their own cluster). Only the person runs one, at
+  their own terminal. An agent has one tool, `siphon_propose`, which queues a request with its reason and
+  fetches nothing. The console does not offer the verb at all. A fetch runs as a port with a reduced
+  environment, a deadline and a byte cap; what lands goes through the format airlocks, may be pinned by
+  SHA-256, and leaves a receipt with the exact argv.
+- **"Stream the weights."** Refused for chat by arithmetic: decoding reads every active weight once per
+  token, so a 15 GB model over a 20 MB/s link costs about twelve minutes per token, and K3 about two
+  hours. What survives is header-only admission (`vapor siphon headers`, `preflight`): the airlock's
+  verdict on a checkpoint from its `config.json` and two ranged reads per shard, before a byte of data
+  is fetched. A layer-streaming executor for read-once work (one prefill pass) is in the TODO.
+- **"Names only in the airlocks?"** Yes, once *function* and *spelling* are told apart
+  ([AIRLOCK.md §11](AIRLOCK.md)). The code that computes a family's function is inevitable, and it is
+  mathematics, so it is named for what it computes. A family's spelling (`model_type`, keys, tensor
+  names) is data. `Vapor.Model.Llama` became `Vapor.Model.Decoder` (eight families read it), the Whisper
+  and Granite adapters became `encoder_decoder` and `multipliers`, and the K3 adapter is the
+  **delta-rule hybrid**, which `kimi_k3` reaches as an alias. `lock_test.exs` now fails the build if a
+  module name carries a product or family name. The agent backends keep their vendors' protocol names,
+  the one allowance.
+- **"The scene: fine control, or remove it."** Removed (below).
+- **"The tests are slow."** Measured first: the full suite is about 100 minutes on this machine (2
+  vCPUs). The slow files lower and run models on the native worker (the K3 file takes about three
+  minutes, a third of it one lowering); the Python oracles that run here start numpy, not torch, so
+  start-up is not where the time goes. The answer is a cache keyed on what a test file can reach
+  (below), plus one compile-time fix (a full build is 32 s).
+
+### Kimi K3, checked ([KIMI.md](KIMI.md))
+
+| claim or piece | verdict | evidence |
+|---|---|---|
+| KDA, Gated MLA (NoPE), Block Attention Residuals, Stable LatentMoE, SiTU-GLU | admitted as one step program (`Vapor.Lock.Adapters.DeltaHybrid`) | logits within 4.4·10⁻⁶ (relative) of an independent float64 reference written from the report alone; 1.35·10⁻⁵ with the soft caps biting, a low-rank query and MXFP4 experts; greedy decoding identical; native worker = oracle, bit for bit; forgetting the KDA state or the MLA cache fails |
+| chunkwise KDA (Eq. 4) equals the recurrence (Eq. 1) | holds | 3·10⁻¹⁶; the UT transform the report defers to Kimi Linear was derived and checked |
+| the bounded decay (Eq. 5) keeps the chunk's reciprocal decay finite | holds | float32, a 16-token tile: finite with `g ∈ (−5, 0)`, overflow with Kimi Linear's form |
+| MXFP4 experts | exact | every MXFP4 value inside binary32's range is a binary32 value; overflow and NaN scales refused by name (`Vapor.Quant.MXFP4`) |
+| Quantile Balancing: the relaxation is integral | holds | a bipartite b-matching (totally unimodular); the rational simplex returns 0/1 with a checked certificate |
+| Quantile Balancing, Algorithm 1, recovers the balanced assignment | **does not, as written** | thresholds set *at* the (k+1)-th entry put margins at zero and create the ties the appendix calls measure-zero; balanced in 5 of 60 batches. Midpoint thresholds reach the certified optimum in ≤ 10 rounds on every batch (`Vapor.Train.Balance`). The training recipe is unaffected |
+| K3's own `config.json`, tensor names and MXFP4 layout | **not verified** | huggingface.co is refused by this machine's network; the spelling is vapor's, and a real checkpoint spelled otherwise is refused with the field named, reconciled by an alias file |
+
+### The attachments for a clean-room extraction
+
+Each was read and written up as a specification in prose; the code was written from the
+specification, not from the source.
+
+| attachment | what was extracted | built |
+|---|---|---|
+| Perception Encoder (Bolya et al., 2025) | the finding that the best features are inside the network, not at its output, as a protocol any encoder can be put through | Assay `layers`: a probe per layer, the layer and λ chosen on validation, test read once, McNemar against the output, a shuffled-label control |
+| SAM 3 (Meta, 2025) | **cgF1** = 100 · pmF1 · IL_MCC, which separates "is it there" from "where" and forces calibration | Assay `detect`: the IoU matching solved exactly by the rational simplex (a totally unimodular program, so the optimum is certified), presence over images with and without the object, a bootstrap interval; a greedy matching loses a true positive the optimal one keeps |
+| DFlash (2602.06036) | block drafting is a chain, a degenerate tree; losslessness needs the verify pass's argmax to equal step-by-step decoding, a condition the paper does not state | nothing new needed: vapor's verify pass is bit-identical to single steps by batch invariance (`speculative_test.exs`); a drafter bound to its target's hash is in the TODO |
+| V-JEPA 2 (code) | its RoPE pairs adjacent elements but tiles the angles, so the two elements of a pair get different angles: not a rotation, a bug the code keeps for checkpoint compatibility (2.1 fixes it). Also LayerNorm ε = 10⁻⁶ and the CEM planner's settings | not built: no video encoder is admitted yet; the quirk is recorded for whoever writes that adapter |
+
+### The proposals, weighed
+
+| proposal | verdict | what was done |
+|---|---|---|
+| **Al-Qalam**, an editor in Zig and Vulkan (MSDF glyphs, "opens in 4 ms, < 45 MB") | the numbers are unmeasured, and a GPU editor is years of work the evidence does not need. Then the person asked for an editor anyway, "even if only for me": a request is a reason, and the size must follow from the use | built suckless: `vapor qalam` (`Vapor.Qalam`, ~650 lines, no dependency), a vi subset in the terminal with the **balance in the gutter**, **scrubbable numbers** (walk a damping coefficient to zero and watch `✗` turn into `✓`), `%` and top-level motions, `:fmt`/`:ar`/`:la`, and a **Merkle undo tree**. Not built: Vulkan, MSDF, 144 FPS, viewports, the "Composer", plugins ([EDITORS.md](EDITORS.md), "Al-Qalam") |
+| **Al-Mukhbār**, a REPL with a "triple return" (exact value, proved envelope, silicon cost) | the value is already exact (`vapor alembic -e`, `vapor wzn run`); a cost in nanoseconds is a measurement, not part of an answer that must be the same everywhere; instructions and spills are deterministic and could be reported | not built |
+| "the editor does nothing, it only looks" (suckless) | agreed: that is what a language server is | the server's formatting no longer deletes comments (below) |
+| the centaur: agents propose, the person decides | already the rule of the Touchstone, and now of the network (the siphon) | — |
+| human–human collaboration by CRDT over a Merkle AST, P2P over Nebula | merge by union holds for disjoint edits only; a transport is a security system of its own (§20 refused the ghost network) | not built |
+| "hermit mode": no network, ever, unless asked | already true; the siphon is the only door, and only the person opens it | the siphon |
+| **`vapor fmt`**: canonical form, glosses for comments, fractions in lowest terms, zero configuration | sound, except **reordering declarations**: the order is the author's argument, and identity already ignores layout and script | built (`Vapor.Almizan.Format`, `vapor wzn fmt --check/--write`): the printer's form with comments kept as glosses; the language server uses it |
+| configuration as a Tabula contract, automation in Alembic with fuel, plugins in Elixir | the second and third exist; the first needs an editor with keymaps to configure, and Tabula already decides any such file (`vapor tabula`) | — |
+| from blockchains: UTXO as linear types for registers; AIR traces | the register allocator already has a checker proved in Lean; ZK lives in [ZK_FHE.md](ZK_FHE.md) | — |
+| to blockchains: Tabula for contracts, exact arbitrage, deterministic oracles | Tabula is propositional and deontic, not a contract language; exact arbitrage exists (the finance desk's LP certificates); bit-identical inference across substrates is exactly a deterministic oracle | nothing to build; the claim that holds is stated |
+| self-renewal: canary workers, hot code loading, Lean extraction, unikernels, proof-gated upgrades over the ghost network | the first three exist (the substrate airlock admits a worker by probes; the BEAM; extraction checked byte for byte); the Linux worker needs no libc, the BEAM does; the last rests on the network refused in §20 | — |
+| **Kitāb**, documentation that cannot lie | sound, and needs no new file format | built as a test over the docs as they are: every `Vapor.…` module and function they name exists, every repository path they name exists, the Almizan pair in two scripts has one hash. It found a citation of the retired Alembic sandbox, a misspelled JBIG2 module and `priv/games` |
+| teaching models the languages by constrained decoding | exists (the JSON Schema grammar, the repair loop of `Vapor.Mind`) | — |
+| faster tests: a Merkle test cache, frozen oracles, binary tables for `ccitt.ex`, tiers | the cache is right; the oracles that matter are already frozen as fixtures, and the tiers that call Python are the independent checks, run when their tooling is present; the `ccitt.ex` diagnosis was right and its cure is simpler | built: `mix vapor.test` (below); `ccitt.ex` compiles in 0.3 s instead of 5 |
+| a release artifact "of about 4 MB" via `mix vapor.archive` | `vapor.archive` signs and verifies *result* archives, not releases; a release carries the BEAM runtime | not built this round |
+| a guild of agents with locks on AST nodes and branches in `/dev/shm` | many agents on one repository is solved by branches and tests; locks on syntax do not stop semantic conflicts | not built |
+| a private cluster in the garage | `Vapor.Cluster` exists (content-addressed cache, redundant audit, quarantine, hedging); "a notebook with 8 GB that acts as if it had 128 GB of VRAM" is a remote server, which `mix vapor.serve` is | — |
+| the SVD recommender of this repository | absorbed in §20 (`Vapor.Recommend`) | — |
+
+### What was built
+
+- **K3** through the airlock, MXFP4, Quantile Balancing with its flaw and fix, header-only preflight.
+- **The siphon** (`Vapor.Siphon`, `vapor siphon`, MCP `siphon_propose`).
+- **Names**: the core and the topologies named for what they compute; products only as spellings.
+- **Assay `layers` and `detect`**, from the Perception Encoder and SAM 3.
+- **`vapor wzn fmt`** and a formatting language server that keeps comments.
+- **`mix vapor.test`**, a content-addressed test cache (`Vapor.TestCache`): a test file's key covers the
+  file, the support files, the fixtures, `priv/`, the toolchain, the excluded tiers, and the bytecode of
+  every module it can reach, transitively through the atom tables. A file is recorded only when every
+  test in it passed. Change one module and only the files that can reach it run again; change `priv/` or
+  a fixture and everything runs. It is for the edit loop, not a release gate: `mix test` ignores it.
+  Measured: the suite's 159 files keyed in about 4 s; a second run of a passing subset went from 19 s
+  to 4.3 s.
+- **The scene, removed, and the renderer, extended.** The living scene was a 2.5D canvas engine whose
+  depth was a heuristic "stated as such", directed by a grammar of clauses. Nothing in it could be checked
+  against anything but itself, in a project where every other result carries its evidence. Removed:
+  `Vapor.Scene`, `Vapor.Scene.Ops`, the console tab and its HTML export, `vapor scene`, MCP `scene_ops`,
+  the mind layer's `direct/3`, the archive kind `scene`, and `Vapor.Alembic.Tree`, which existed only to
+  run a scene's motion in the browser. Kept: sketch → drawing and floor plan → 3D, now in
+  [SKETCH.md](SKETCH.md), with the raster tools in `Vapor.Raster`. The answer to "fine control,
+  abstraction, photorealism or stylised" is the renderer that was already checked, plus **ink**
+  (`Vapor.Render.ink/2`): the same scene text as flat bands, hard sun shadows and outlines on silhouettes
+  and folds, deterministic, in milliseconds, so a scene can be composed in ink and then rendered with
+  physical light. In the console, the CLI (`vapor render --ink`) and MCP (`render_scene`, `style: "ink"`).
+  Its quality check has a control: the ball's shadow reads exactly 0.8 × 0.3, and without the ball the
+  same pixel is lit.
+
+### What was found on the way
+
+- **Formatting deleted comments.** The language server's formatting and its Arabic/Latin lens printed
+  the parsed tree, and the reader drops comments, so formatting a file erased its glosses. The end-to-end
+  test now formats a messy document with a comment and checks the comment survives.
+- **`bin/vapor` overwrote the person's `VAPOR_HOME`.** It used the name for the repository root, and an
+  assignment to an exported variable in `sh` is exported: with `VAPOR_HOME=~/.vapor` set, `vapor chat`
+  and `vapor siphon` read the repository instead. A test runs the launcher with the variable set.
+- **Quantile Balancing's Algorithm 1** (above).
+- **`ccitt.ex`** built its Huffman tables in the module body: four seconds of every compile of that file.
+  They are built once per VM now.
+- **Stale documents.** The console's guide still described panels removed in 0.16 (Physics, Networks,
+  Training, Mathematics, Algorithms, Science, Games), the README listed `graph.ex`, `discover.ex` and
+  `games.ex`, and two documents cited `Alembic.sandbox`. All fixed; the new docs test catches the kind.
+- **Dead code**: the Assay CLI built a list of documents and discarded it.
+- **Two test files with Portuguese names** (`rodada12`, `rodada13`), now `quality_round12/13`.
+
+### What this document does not claim
+
+- That K3 runs at its real size here, or that its real spelling was read.
+- That the siphon makes a fetcher safe: it bounds what a fetch can do and what it brings in, and leaves
+  the choice of fetcher to the person.
+- That a cached test passed on this commit: it passed on the same bytes of everything it can reach.
+- That ink is a style engine: one style, with its thresholds.
+
+### How to contest
+
+```sh
+mix test test/vapor/kimi_test.exs test/vapor/balance_test.exs test/vapor/siphon_test.exs \
+         test/vapor/assay_detect_test.exs test/vapor/assay_layers_test.exs test/vapor/almizan_format_test.exs \
+         test/vapor/test_cache_test.exs test/vapor/docs_references_test.exs test/vapor/render_test.exs \
+         test/vapor/lock_test.exs test/vapor/lsp_test.exs
+python3 test/python/kimi_k3_reference.py /tmp/k3 k3 1   # the independent reference, from the report alone
+mix vapor.test --dry                                    # what would run, and why the rest would not
+printf 'camera pos=0,3,5 look=0,0,0 fov=45\nsun dir=0,1,0 color=1,1,1 power=2\nplane y=0 mat=diffuse albedo=0.8,0.8,0.8\nsphere c=0,1.2,0 r=0.6 mat=diffuse albedo=0.2,0.4,0.8\n' \
+  | bin/vapor render - --ink --out ink.png              # the quality check's scene, in ink
+```

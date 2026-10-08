@@ -30,7 +30,7 @@ defmodule Vapor.MCPServerTest do
     assert r["result"]["serverInfo"]["name"] == "vapor" and r["result"]["capabilities"]["tools"]
     assert {nil, st} = Server.handle(%{"jsonrpc" => "2.0", "method" => "notifications/initialized"}, st)
     {r, st} = Server.handle(%{"jsonrpc" => "2.0", "id" => 2, "method" => "tools/list"}, st)
-    assert length(r["result"]["tools"]) == 28 and Enum.all?(r["result"]["tools"], &match?(%{"inputSchema" => %{"type" => "object"}}, &1))
+    assert length(r["result"]["tools"]) == 27 and Enum.all?(r["result"]["tools"], &match?(%{"inputSchema" => %{"type" => "object"}}, &1))
     {r, st} = Server.handle(%{"jsonrpc" => "2.0", "id" => 3, "method" => "nope"}, st)
     assert r["error"]["code"] == -32601
     {r, st} = Server.handle(%{"jsonrpc" => "2.0", "id" => 4, "method" => "tools/call", "params" => %{"name" => "studio_run", "arguments" => %{"graph" => 7}}}, st)

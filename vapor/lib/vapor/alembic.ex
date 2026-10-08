@@ -1,8 +1,8 @@
 defmodule Vapor.Alembic do
   @moduledoc """
   **Alembic** — the small language in which a person (or a model) writes
-  a problem for vapor: a verifier, an objective, a game, a simulation, a
-  scene's motion (docs/ALEMBIC.md). The alembic is where a mixture is
+  a problem for vapor: a verifier, an objective, a game, a simulation
+  (docs/ALEMBIC.md). The alembic is where a mixture is
   distilled; here it is where an open request becomes something a machine
   can check.
 

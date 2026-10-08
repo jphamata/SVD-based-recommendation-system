@@ -49,7 +49,7 @@ trajectory. A damped oscillator: no law — and that is proved too.
 
 ## Limits
 
-Everything runs in `Alembic.sandbox` (1 GB, 4 min): an absurd grid comes back as a time or
+Everything runs in `Vapor.Hermetic.seal` (1 GB, 4 min): an absurd grid comes back as a time or
 memory error, it never brings the server down. The chemistry is closed-shell STO-3G with H and He;
 p orbitals are refused with the reason. Laws with non-polynomial functions (`basis = [cos(q)]`) are
 verified numerically and **labelled** "not a proof".

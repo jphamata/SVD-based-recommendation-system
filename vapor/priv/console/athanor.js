@@ -1,12 +1,12 @@
 "use strict";
 /* athanor.js — the 0.14 open bench (docs/CONSOLE.md §0.14): the Workspace
    (any problem in Alembic or in words: searched by the Athanor and steered
-   by hand, a game played, a Crucible system run, a scene composed), the
+   by hand, a game played, a Crucible system run), the
    Crucible and the Assay. Every result ends on the touchstone: a gold
    streak for each check that holds, a lead streak for each that does not.
    Runs after the page's scripts and uses their helpers ($, el, t, api,
    svgEl, lineChart, legend, editor, table, stats, stat, wbNum, busy, shown,
-   openPanel, PALETTE_ITEMS, rerender, download, SceneEngine). */
+   openPanel, PALETTE_ITEMS, rerender, download). */
 
 /* ================================================================== words */
 Object.assign(I18N.en, {
@@ -19,7 +19,7 @@ Object.assign(I18N.en, {
   formalize: "Draft it", formalizing: "drafting…", no_mind: "No language model is configured on this server (VAPOR_MIND or --model). Write the problem below — the shelf has a starting point for each kind.",
   readback: "The model read its own program back as:", attempts: (n) => `loaded after ${n} attempt${n === 1 ? "" : "s"}`,
   run: "Run", stop: "Stop", resume: "Resume", more: "+ budget", budget: "budget", seed: "seed", verify_again: "Check again", save_cert: "Save certificate",
-  detecting: "reading…", k_athanor: "Athanor", k_athanor_d: "a search", k_game: "Game", k_game_d: "two players", k_crucible: "Crucible", k_alembic: "Alembic", k_alembic_d: "a program", k_scene: "Scene", k_scene_d: "operations",
+  detecting: "reading…", k_athanor: "Athanor", k_athanor_d: "a search", k_game: "Game", k_game_d: "two players", k_crucible: "Crucible", k_alembic: "Alembic", k_alembic_d: "a program",
   furnace_empty: "Nothing in the furnace yet. Choose something from the shelf, or write a problem, and run it.",
   evals: (a, b) => `${a} of ${b} evaluations`, best: "best", control: "random search, same budget",
   strategies: "share of the budget · improvements", running_s: "the furnace is lit", done_s: "settled",
@@ -32,10 +32,9 @@ Object.assign(I18N.en, {
   control_beat: (q) => `random search never matched it (chance per sample ≤ ${q})`, control_easy: (k, n) => `random search matched it ${k} times in ${n}`,
   journal_d: "the journal's root hash: re-run from the seed and the outside proposals to get the same",
   game_solve: "Solve exactly", game_search: "Search (MCTS)", game_learn: "Learn from self-play", game_new: "New game", your_move: "Your move", vapor_plays: (m) => `vapor plays ${m}`,
-  scene_words_ph: "Direct in words: “a slow comet, falling snow, dusk”", scene_direct: "Direct", scene_hint: "Scene operations run in the canvas; each line is kept in the document's log.",
   eval_ph: "Evaluate an expression against this program, e.g. fib(20)", evaluate: "Evaluate",
   domains: "Domains", tools: "Tools", data: "Data", drop_data: "Drop a CSV, TSV or JSON-lines file", says: "", laws_found: "Conserved", evidence: "Evidence",
-  fields: { math: "Mathematics", cs: "Computing", science: "Science", ai: "AI", finance: "Finance", scene: "Scenes" }
+  fields: { math: "Mathematics", cs: "Computing", science: "Science", ai: "AI", finance: "Finance" }
 });
 Object.assign(I18N.pt, {
   g_open: "Bancada aberta", work: "Espaço de trabalho", work_s: "qualquer problema, buscado e conferido", crucible: "Crisol", crucible_s: "o seu próprio sistema, com a evidência",
@@ -47,7 +46,7 @@ Object.assign(I18N.pt, {
   formalize: "Rascunhar", formalizing: "rascunhando…", no_mind: "Nenhum modelo de linguagem está configurado neste servidor (VAPOR_MIND ou --model). Escreva o problema abaixo — a prateleira tem um ponto de partida para cada tipo.",
   readback: "O modelo leu o próprio programa de volta como:", attempts: (n) => `carregado após ${n} tentativa${n === 1 ? "" : "s"}`,
   run: "Rodar", stop: "Parar", resume: "Retomar", more: "+ orçamento", budget: "orçamento", seed: "semente", verify_again: "Conferir de novo", save_cert: "Salvar certificado",
-  detecting: "lendo…", k_athanor: "Athanor", k_athanor_d: "uma busca", k_game: "Jogo", k_game_d: "dois jogadores", k_crucible: "Crisol", k_alembic: "Alembic", k_alembic_d: "um programa", k_scene: "Cena", k_scene_d: "operações",
+  detecting: "lendo…", k_athanor: "Athanor", k_athanor_d: "uma busca", k_game: "Jogo", k_game_d: "dois jogadores", k_crucible: "Crisol", k_alembic: "Alembic", k_alembic_d: "um programa",
   furnace_empty: "Nada na fornalha ainda. Escolha algo na prateleira, ou escreva um problema, e rode.",
   evals: (a, b) => `${a} de ${b} avaliações`, best: "melhor", control: "busca aleatória, mesmo orçamento",
   strategies: "fatia do orçamento · melhorias", running_s: "a fornalha está acesa", done_s: "assentado",
@@ -60,23 +59,15 @@ Object.assign(I18N.pt, {
   control_beat: (q) => `a busca aleatória nunca chegou lá (chance por amostra ≤ ${q})`, control_easy: (k, n) => `a busca aleatória chegou lá ${k} vezes em ${n}`,
   journal_d: "a raiz do diário: reexecutar da semente e das propostas externas dá a mesma",
   game_solve: "Resolver exatamente", game_search: "Buscar (MCTS)", game_learn: "Aprender jogando consigo", game_new: "Novo jogo", your_move: "Sua vez", vapor_plays: (m) => `o vapor joga ${m}`,
-  scene_words_ph: "Dirija em palavras: “um cometa lento, neve caindo, entardecer”", scene_direct: "Dirigir", scene_hint: "As operações de cena rodam na tela; cada linha fica no registro do documento.",
   eval_ph: "Avalie uma expressão contra este programa, p. ex. fib(20)", evaluate: "Avaliar",
   domains: "Domínios", tools: "Ferramentas", data: "Dados", drop_data: "Solte um arquivo CSV, TSV ou JSON por linha", says: "", laws_found: "Conservado", evidence: "Evidência",
-  fields: { math: "Matemática", cs: "Computação", science: "Ciência", ai: "IA", finance: "Finanças", scene: "Cenas" }
+  fields: { math: "Matemática", cs: "Computação", science: "Ciência", ai: "IA", finance: "Finanças" }
 });
 
 /* ================================================================ shared */
 const W = { info: null };
 async function workInfo() { if (!W.info) W.info = await api("/v1/vapor/workspace"); return W.info; }
 const fmtv = (v) => (v == null ? "—" : typeof v === "number" ? wbNum(v, 5) : String(v));
-const SCENE_STARTER = `# a free scene: every number may be an expression of t (seconds), i, n, u
-add glow sun { x: 0.78, y: 0.24 + 0.03*sin(t/2), r: 0.13, color: "#ffcc66" }
-add particles stars { count: 160, x: noise(i, 1), y: 0.62*noise(i, 2), r: 0.0012 + 0.002*noise(i, 3), alpha: 0.35 + 0.65*tri(t/3 + noise(i, 4)), color: "#ffffff" }
-add trail comet { x: 0.5 + 0.34*cos(0.7*t), y: 0.42 + 0.18*sin(0.7*t), length: 2.5, width: 0.004, color: hsl(190 + 60*sin(t), 85, 70) }
-add text title { x: 0.5, y: 0.9, text: "vapor", size: 0.06, color: "#ece4d3" }
-set world.weather = "snow"`;
-const isScene = (txt) => { const l = txt.split("\n").map((s) => s.replace(/#.*$/, "").trim()).find((s) => s); return !!l && /^(add|set|remove|clear|at|direct)\b/.test(l); };
 
 /* a streak on the touchstone: a rough, tapered smear, the same for the same check (seeded by its name) */
 function streak(name, ok, detail) {
@@ -147,7 +138,7 @@ function furnaceView(F) {
 function buildBench(root, mode) {
   root.replaceChildren();
   root.append(el("h2", { text: t(mode === "work" ? "work" : mode) }), el("p", { class: "lede", text: t(mode + "_lede") }));
-  const S = { mode, run: 0, session: null, F: null, cert: null, kind: null, scene: null };
+  const S = { mode, run: 0, session: null, F: null, cert: null, kind: null };
   const ta = editor(`ed-${mode}`, 18);
   const kindEl = el("span", { class: "kind", "aria-live": "polite" });
   const errEl = el("p", { class: "err-line", hidden: "" });
@@ -194,7 +185,6 @@ function buildBench(root, mode) {
         if (!byField[f]) return;
         shelf.append(el("span", { class: "field", text: t("fields")[f] }), el("span", { class: "vials" }, ...byField[f].map((e) => vial(e.title, e.about, f, () => load(e.text)))));
       });
-      shelf.append(el("span", { class: "field", text: t("fields").scene }), el("span", { class: "vials" }, vial(t("k_scene"), t("scene_hint"), "science", () => load(SCENE_STARTER))));
       if (!ta.value) load(info.athanor[0].text);
     } else if (mode === "crucible") {
       shelf.append(el("span", { class: "field", text: t("domains") }), el("span", { class: "vials" }, ...info.crucible.map((k) => vial(k.kind, k.about, "science", () => { domain = k.kind; load(k.example); }))));
@@ -233,7 +223,6 @@ function buildBench(root, mode) {
     clearTimeout(detT);
     detT = setTimeout(async () => {
       const txt = ta.value;
-      if (isScene(txt)) { S.kind = { kind: "scene" }; kindEl.replaceChildren(el("b", { text: t("k_scene") }), " · " + t("k_scene_d")); return; }
       kindEl.textContent = t("detecting");
       try {
         S.kind = await api("/v1/vapor/detect", { text: txt });
@@ -251,14 +240,12 @@ function buildBench(root, mode) {
     const txt = ta.value, my = ++S.run;
     if (S.session) api(`/v1/vapor/athanor/${S.session}`, { action: "close" }).catch(() => {});
     S.session = null; S.cert = null; below.replaceChildren(); errEl.hidden = true; stopB.hidden = true; moreB.hidden = true;
-    if (S.scene) { S.scene.destroy(); S.scene = null; }
-    const kind = (S.kind && S.kind.kind) || (isScene(txt) ? "scene" : "athanor");
+    const kind = (S.kind && S.kind.kind) || "athanor";
     try {
       if (kind === "athanor") await runAthanor(txt, my);
       else if (kind === "game") await runGame(txt, null);
       else if (kind === "crucible") await runCrucible(txt, S.kind.domain || domain);
       else if (kind === "assay") await runAssay(txt, domain);
-      else if (kind === "scene") await runScene(txt);
       else await runAlembic(txt);
     } catch (e) { errEl.hidden = false; errEl.textContent = e.message; right.replaceChildren(furnaceView({ sparks: [], trace: [], status: "idle" })); }
   };
@@ -381,21 +368,6 @@ function buildBench(root, mode) {
     const r = await api("/v1/vapor/assay", { tool, text: txt, seed: +seed.value || 1 });
     right.replaceChildren(assayView(r));
     below.replaceChildren(touchstone(r.says, evidenceChecks(r.evidence)), ...assayDetails(r));
-  }
-
-  /* ---------------------------------------------------------------- scene */
-  async function runScene(txt) {
-    const r = await api("/v1/vapor/scene/ops", { text: txt });
-    const cv = el("canvas", { class: "scene-cv" });
-    right.replaceChildren(cv);
-    const scene = { w: 960, h: 600, horizon: 0.62, layers: [], walk: { cols: 0, rows: 0, cells: [] }, bg: ["#0b1424", "#2a3550"], seed: +seed.value || 1, ops: r.ops };
-    S.scene = SceneEngine.create(cv, scene); S.scene.play();
-    const words = el("input", { type: "text", placeholder: t("scene_words_ph") }), go = el("button", { class: "quiet", type: "button", text: t("scene_direct") });
-    go.onclick = async () => { if (!words.value.trim()) return; const d = await api("/v1/vapor/scene/mind", { words: words.value, scene }); d.ops.forEach((op) => S.scene.apply(op)); ta.value += (d.text ? "\n" + d.text : "\n" + `direct "${words.value}"`) + "\n"; words.value = ""; if (d.problems && d.problems.length) { errEl.hidden = false; errEl.textContent = d.problems.join(" · "); } };
-    const exp = el("button", { class: "quiet", type: "button", text: "HTML" });
-    exp.onclick = async () => { const h = await fetch("/v1/vapor/scene/export", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ scene: S.scene.snapshot(), title: "vapor — scene" }) }); download("scene.html", new Blob([await h.text()], { type: "text/html" })); };
-    below.replaceChildren(el("div", { class: "propose" }, words, go, exp), el("p", { class: "muted", text: t("scene_hint") }));
-    if (r.problems.length) { errEl.hidden = false; errEl.textContent = r.problems.join(" · "); }
   }
 
   /* -------------------------------------------------------------- alembic */

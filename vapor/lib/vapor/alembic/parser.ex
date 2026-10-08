@@ -1,7 +1,7 @@
 defmodule Vapor.Alembic.Parser do
   @moduledoc """
   Alembic's parser: tokens → a tree of tuples with fixed atoms
-  (docs/ALEMBIC.md §2). A program is a sequence of definitions,
+  (docs/ALEMBIC.md §1). A program is a sequence of definitions,
 
       name = expression
       name(a, b) = expression

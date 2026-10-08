@@ -130,24 +130,18 @@ are in the tests.
   stream against growing positions; the first-order pendulum; chaos
   bit for bit across substrates (control: one ulp); the twin's identification
   (control: measurements shuffled in time); the cart-pole (control:
-  null policy); the twin's alarm (control: no fault); the networks against
-  their nulls; the charts (control: permuted labels, **all
+  null policy); the twin's alarm (control: no fault); the charts (control: permuted labels, **all
   refused**); the formulas (control: flat reading); CJK (control:
   random characters — the language model cannot help, and in Japanese and
   Korean it has to help); Arabic and Cyrillic (control: the Latin reader).
-- **round 0.11** (`Vapor.Quality.Round11`, §5g, 26 checks): sorting
-  networks at the known optima (control: randomly drawn and pruned); the minimal bit
-  trick (control: the naive formula overflows); the exact rank 7
-  (control: rank 6 never); 15 theorems and false twins by both routes;
-  conjectures (control: no trivial triple); homology over ℚ against
-  GF(2); the persistence of a loop against a blob; 11 science
-  experiments, each against its reference and its control; the self-play
-  agent against perfect play (control: search without training); varied
-  worlds against one world; the scene, the skeleton, the direction (control: a
-  meaningless word is reported), the sketch (control: without constraints,
+- **round 0.11** (`Vapor.Quality.Round11`, §5g): theorems and false twins by
+  both routes; conjectures (control: no trivial triple); homology over ℚ against
+  GF(2); the persistence of a loop against a blob; the science experiments, each
+  against its reference and its control; the sketch (control: without constraints,
   it stays crooked), the floor plan; and the archive (control: one byte changed and
-  re-zipped).
-- **round 0.12** (`Vapor.Quality.Round12`, §5h, 27 checks, ~6 s):
+  re-zipped). Discovery and self-play left in 0.16, the living scene in 0.17
+  (DIRECTIVE §19, §21).
+- **round 0.12** (`Vapor.Quality.Round12`, §5h, ~6 s):
   Dormand–Prince against fixed-step RK4; Robertson at the values of
   Hairer & Wanner; Crank–Nicolson's order 2 against implicit Euler's order 1
   by a manufactured solution; incoherent units refused before
@@ -160,8 +154,9 @@ are in the tests.
   oriented; Thales against the false variant; the right proposal against the
   swapped one; chess and shogi perft, legal Go positions; CFR+ against
   uniform play; the planned alignment against the shuffled one (precision and
-  fold); the furnace against the biased estimator; the direction with names against
-  the sentence with no one in it. Also in `rodada12_test.exs`.
+  fold); the furnace against the biased estimator; the ink style's hard shadow
+  against the same scene without what casts it (0.17). Also in
+  `quality_round12_test.exs`.
 
 ## 5. Limits
 

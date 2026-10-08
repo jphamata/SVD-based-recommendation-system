@@ -2,7 +2,9 @@
 
 > Request (0.12), translated: "the scene and creation and editing in the studio much more
 > flexible and customisable and aiming at the possibility of photo-realism".
-> Scrutiny: [DIRECTIVE.md §15](DIRECTIVE.md).
+> Scrutiny: [DIRECTIVE.md §15](DIRECTIVE.md). Since 0.17 ("fine control, abstraction,
+> photorealism or stylised and beyond"): the same scene **in ink** (§3), and `vapor render`.
+> The living scene that used to sit beside this renderer was removed ([SCENE.md](SCENE.md)).
 
 The photo-realism of film renderers comes from a single equation —
 light transport — solved by Monte Carlo sampling
@@ -16,7 +18,7 @@ format and the same materials**:
   GPU** — one sample per pixel per frame accumulated in a float
   texture, the image converging as you watch.
 
-Console *Make → Render* · MCP `render_scene`.
+Console *Make → Render* · MCP `render_scene` · terminal `vapor render FILE [--ink] [--out F.png]`.
 
 ## 1. The scene
 
@@ -66,7 +68,32 @@ The way renderer authors check theirs
   (two independent Monte Carlo estimates); in the console, the white
   furnace agrees within 0.00%.
 
-## 3. Honest limits
+## 3. Ink: the same scene, stylised (0.17)
+
+`Vapor.Render.ink/2` draws the **same scene text** as a picture made by hand: one ray per
+pixel through its centre, and
+
+- each surface's own colour lit by the sun in `bands` **flat steps** (3 by default), over an
+  `ambient` floor (0.3); the shadowed side is the floor;
+- **hard sun shadows**: one shadow ray per pixel, no penumbra;
+- **ink** where the picture has an edge: the visible object changes (silhouettes), the depth
+  jumps (`depth_jump`, relative, 0.08), or the surface folds (`crease`: neighbouring normals
+  whose cosine falls below 0.75 — a box's edges);
+- emitters keep their colour; the sky is its gradient.
+
+Nothing is sampled, so there is no noise and no budget: the picture is a function of the
+text and the options, exactly. Abstraction is the number of bands and the edge thresholds;
+fine control is the text (move the sun, the camera, an object) — the same text the path
+tracer reads, so a scene can be composed in ink in milliseconds and then rendered with
+physical light.
+
+Checked (`render_test.exs`, report §5h): two runs are identical; a lit ball takes at most
+`bands` flat colours; its centre is not inked and its outline is a ring of the right size;
+the ground straight below a ball under a vertical sun reads exactly 0.8 × 0.3 (albedo ×
+ambient: the hard shadow), and the quality round's **control** removes the ball, after
+which the same pixel is lit (0.8).
+
+## 4. Honest limits
 
 - No multiple importance sampling (MIS): small lights
   reached only through the BRDF — the sun seen through glass (caustics),
@@ -76,3 +103,5 @@ The way renderer authors check theirs
   no triangle meshes, image textures, volumes or subsurface.
 - The server limits width × height × samples to 6 million per request;
   the browser's GPU has no such limit.
+- Ink is one style, not a style engine: no hatching, no line weight by depth, no
+  painterly strokes; it runs on the server (the GPU tracer has no ink mode).

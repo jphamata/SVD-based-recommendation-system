@@ -27,15 +27,15 @@ defmodule Vapor.Quality.Round12 do
   | poker | Kuhn: exploitability < 0.01, value −1/18 | uniform play: exploitability 0.458 |
   | proteins | NMR models of 1LCD: TM > 0.8; DCA precision > 0.9; fold TM > 0.6 | shuffled alignment: precision at chance, fold TM < 0.3 |
   | render | white and gradient furnaces | the biased estimator: caught |
-  | scene direction | a named inhabitant directed in time | a sentence without names: nothing aimed at anyone |
+  | ink (0.17) | the ball's hard shadow at the ambient level, its outline on the silhouette | the same scene without the ball: the ground lit |
   """
-  alias Vapor.{Logic, Render, Scene, Solve}
+  alias Vapor.{Logic, Render, Solve}
   alias Vapor.Bio.{Coevolution, Structure}
   alias Vapor.Engineering.{Circuit, FEM, Power, Process}
   alias Vapor.Play.{Chess, Go, MNK, Poker, Shogi}
 
   def run(_opts \\ []) do
-    %{checks: List.flatten([bench(), engineering(), logic(), boards(), proteins(), render(), scene()])}
+    %{checks: List.flatten([bench(), engineering(), logic(), boards(), proteins(), render(), ink()])}
   end
 
   defp check(name, value, control, threshold, pass), do: %{name: name, value: value, control: control, threshold: threshold, pass: pass}
@@ -195,13 +195,23 @@ defmodule Vapor.Quality.Round12 do
      check("render: the gradient furnace a(½ + n_y/3) (the estimator's distribution)", f(g.mean_error), f(b.mean_error), "|error| < 0.005; the biased estimator < −0.03", abs(g.mean_error) < 0.005 and b.mean_error < -0.03)]
   end
 
-  # ================================================================= scene
+  # ================================================================= ink
 
-  defp scene do
-    r = Scene.direct(~s(a knight named Arthur walks to the door, then at 3s he says "hello" and waves))
-    c = Scene.direct("heavy rain, then at 4s wind")
-    ok = %{"npc" => "Arthur", "say" => "hello", "at" => 3.0} in r.ops and %{"npc" => "Arthur", "goto" => "door"} in r.ops
-    [check("scene: a named inhabitant directed in place and in time (pronoun resolved)", length(r.ops), Enum.any?(c.ops, &Map.has_key?(&1, "npc")), "Arthur goes to the door and speaks at 3 s; a sentence without names aims at no one",
-           ok and not Enum.any?(c.ops, &Map.has_key?(&1, "npc")))]
+  @ink_scene """
+  camera pos=0,3,5 look=0,0,0 fov=45
+  sun dir=0,1,0 color=1,1,1 power=2
+  plane y=0 mat=diffuse albedo=0.8,0.8,0.8
+  sphere c=0,1.2,0 r=0.6 mat=diffuse albedo=0.2,0.4,0.8
+  """
+
+  # the camera looks at the origin: the image's centre is the ground straight below the ball, in its shadow
+  defp ink do
+    {:ok, s} = Render.parse(@ink_scene)
+    {:ok, bare} = Render.parse(@ink_scene |> String.split("\n") |> Enum.reject(&String.starts_with?(&1, "sphere")) |> Enum.join("\n"))
+    centre = fn r -> r.linear |> Enum.at(45) |> Enum.at(60) |> elem(0) end
+    a = Render.ink(s, width: 120, height: 90, bands: 4)
+    b = Render.ink(bare, width: 120, height: 90, bands: 4)
+    [check("ink: a hard sun shadow at the ambient level (0.8 × 0.3), the ball outlined", "#{f(centre.(a))}, #{a.edges} outline pixels", "without the ball: #{f(centre.(b))}",
+           "shadow = 0.24 to 10⁻⁹ with an outline; without the ball the same pixel lit at 0.8", abs(centre.(a) - 0.24) < 1.0e-9 and a.edges > 0 and centre.(b) == 0.8)]
   end
 end

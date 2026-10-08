@@ -305,24 +305,19 @@ defmodule Vapor.Console do
   # ---- the 0.11 laboratories (Vapor.Console.Lab11)
 
   def handle(sock, %{method: :POST, path: "/v1/vapor/" <> route, body: body}, _ctx)
-      when route in ~w(scene/analyze scene/rig scene/direct scene/export sketch archive archive/check) do
+      when route in ~w(sketch archive archive/check) do
     alias Vapor.Console.Lab11, as: L
 
     case JSON.decode(body) do
       {:ok, req} when is_map(req) ->
         result =
           case route do
-            "scene/analyze" -> L.scene_analyze(req["name"] || "picture.png", req["data"] || "")
-            "scene/rig" -> L.scene_rig(req["name"] || "drawing.png", req["data"] || "")
-            "scene/direct" -> L.scene_direct(req["prompt"], req["known"] || [])
-            "scene/export" -> L.scene_export(req["scene"], req["title"])
             "sketch" -> L.sketch(req["name"] || "sketch.png", req["data"] || "", req["mode"] || "vector", req)
             "archive" -> L.archive(req["kind"], req["recipe"], req["result"])
             "archive/check" -> L.archive_check(req["data"] || "")
           end
 
         case result do
-          {:ok, html} when route == "scene/export" -> raw(sock, 200, "text/html; charset=utf-8", html)
           {:ok, %{error: msg}} -> bad(sock, msg)
           {:ok, v} -> json(sock, 200, v)
           {:error, why} when is_binary(why) -> bad(sock, why)
@@ -337,7 +332,7 @@ defmodule Vapor.Console do
   # ---- the 0.12 laboratories (Vapor.Console.Lab12)
 
   def handle(sock, %{method: :POST, path: "/v1/vapor/" <> route, body: body}, _ctx)
-      when route in ~w(solve engineering logic chess shogi go mnk poker protein render scene/gif) do
+      when route in ~w(solve engineering logic chess shogi go mnk poker protein render) do
     alias Vapor.Console.Lab12, as: L
 
     case JSON.decode(body) do
@@ -354,7 +349,6 @@ defmodule Vapor.Console do
             "poker" -> L.poker(req)
             "protein" -> L.protein(req)
             "render" -> L.render(req)
-            "scene/gif" -> L.scene_gif(req)
           end
 
         case result do
@@ -382,7 +376,7 @@ defmodule Vapor.Console do
     end
   end
 
-  # ---- the 0.14 open workspace (Vapor.Console.Lab14): Alembic, the Athanor, games, the Crucible, the Assay, scenes
+  # ---- the 0.14 open workspace (Vapor.Console.Lab14): Alembic, the Athanor, games, the Crucible, the Assay
   # the reference tracer's self-check (white and gradient furnaces, the biased estimator as control)
   def handle(sock, %{method: :GET, path: "/v1/vapor/render/furnace"}, _ctx), do: json(sock, 200, Vapor.Console.Lab12.furnace())
 
@@ -394,7 +388,7 @@ defmodule Vapor.Console do
   end
 
   def handle(sock, %{method: :POST, path: "/v1/vapor/" <> route, body: body}, ctx)
-      when route in ["alembic", "athanor", "athanor/verify", "game", "crucible", "assay", "formalize", "scene/ops", "scene/mind", "detect"] or
+      when route in ["alembic", "athanor", "athanor/verify", "game", "crucible", "assay", "formalize", "detect"] or
              (byte_size(route) > 8 and binary_part(route, 0, 8) == "athanor/") do
     alias Vapor.Console.Lab14, as: L
     case JSON.decode(body) do
@@ -408,8 +402,6 @@ defmodule Vapor.Console do
             "crucible" -> L.crucible(req)
             "assay" -> L.assay(req)
             "formalize" -> L.formalize(req, ctx)
-            "scene/ops" -> L.scene_ops(req)
-            "scene/mind" -> L.scene_mind(req, ctx)
             "detect" -> {:ok, L.detect(to_string(req["text"] || ""))}
             "athanor/" <> id -> L.athanor_action(id, req)
           end

@@ -156,4 +156,13 @@ defmodule Vapor.SiphonTest do
     assert {:error, %{bound: b}} = Siphon.find("nope", o)
     assert b =~ "cp"
   end
+
+  test "bin/vapor reads the person's $VAPOR_HOME, not its own directory", %{home: home} do
+    # the launcher once named the repository VAPOR_HOME, which replaced an exported one for every verb
+    root = Path.expand("../..", __DIR__)
+    {out, 0} = System.cmd(Path.join(root, "bin/vapor"), ["siphon", "fetchers", "--json"], env: [{"VAPOR_HOME", home}, {"MIX_ENV", "test"}])
+    {:ok, fs} = Vapor.JSON.decode(out)
+    assert "cp" in Enum.map(fs, & &1["name"])
+  end
+
 end

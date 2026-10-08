@@ -2,7 +2,7 @@ defmodule Vapor.Alembic.Compiler do
   @moduledoc """
   Alembic's evaluator: the tree is compiled once into nested closures
   (`fn env -> value end`), so a verifier called a hundred thousand times
-  in a search pays for the walk over the tree once (docs/ALEMBIC.md §3).
+  in a search pays for the walk over the tree once (docs/ALEMBIC.md §2).
 
   Every way a program can run long — a call, an element of a loop — pays
   **fuel**; running out throws, never hangs. Recursion depth is bounded.

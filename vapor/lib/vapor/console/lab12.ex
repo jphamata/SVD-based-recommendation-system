@@ -5,8 +5,8 @@ defmodule Vapor.Console.Lab12 do
   algebra; ensembles on the native worker), engineering (circuits, power
   flow, frames, plane FEM, pipe networks, reaction networks, flash,
   distillation), the logic desk, the boards (chess, shogi, Go, m,n,k,
-  poker), proteins, the reference renderer and the living scene's exact
-  frames as a GIF. Each a function from a small JSON request to a
+  poker), proteins, and the reference renderer, physically based or
+  stylised (`style: "ink"`). Each a function from a small JSON request to a
   JSON-ready result, each bounded before it runs (a request is data from
   outside).
   """
@@ -277,12 +277,23 @@ defmodule Vapor.Console.Lab12 do
   def render(req) do
     with {:ok, t} <- text(req["text"]), {:ok, scene} <- Render.parse(t) do
       w = clamp(req["width"], 16, 480, 240); h = clamp(req["height"], 16, 320, 150); spp = clamp(req["spp"], 1, 256, 16)
-      if w * h * spp > 6_000_000, do: {:error, "width × height × spp at most 6 million on the server (the GPU tracer in the page has no such limit)"},
-        else: (case timed(fn -> Render.render(scene, width: w, height: h, spp: spp, seed: clamp(req["seed"], 1, 1_000_000, 1)) end, 240_000) do
-          %{} = r -> {:ok, %{png: "data:image/png;base64," <> Base.encode64(r.png), ms: r.ms, rays: r.rays, w: w, h: h, spp: spp,
-                            mean: r.linear |> List.flatten() |> Enum.map(fn {a, b, c} -> 0.2126 * a + 0.7152 * b + 0.0722 * c end) |> then(&(Enum.sum(&1) / length(&1)))}}
-          e -> e
-        end)
+
+      cond do
+        # the same scene, stylised: one ray per pixel, no sampling, no budget needed
+        req["style"] == "ink" ->
+          r = Render.ink(scene, width: w, height: h, bands: clamp(req["bands"], 2, 8, 3))
+          {:ok, %{png: "data:image/png;base64," <> Base.encode64(r.png), ms: r.ms, w: w, h: h, style: "ink", edges: r.edges}}
+
+        w * h * spp > 6_000_000 ->
+          {:error, "width × height × spp at most 6 million on the server (the GPU tracer in the page has no such limit)"}
+
+        true ->
+          case timed(fn -> Render.render(scene, width: w, height: h, spp: spp, seed: clamp(req["seed"], 1, 1_000_000, 1)) end, 240_000) do
+            %{} = r -> {:ok, %{png: "data:image/png;base64," <> Base.encode64(r.png), ms: r.ms, rays: r.rays, w: w, h: h, spp: spp, style: "pbr",
+                              mean: r.linear |> List.flatten() |> Enum.map(fn {a, b, c} -> 0.2126 * a + 0.7152 * b + 0.0722 * c end) |> then(&(Enum.sum(&1) / length(&1)))}}
+            e -> e
+          end
+      end
     end
   end
 
@@ -294,25 +305,6 @@ defmodule Vapor.Console.Lab12 do
         v
       v -> v
     end
-  end
-
-  # ========================================================== scene frames
-
-  def scene_gif(req) do
-    frames = req["frames"] || []
-    cond do
-      not is_list(frames) or frames == [] or length(frames) > 240 -> {:error, "frames: 1–240 PNG data URLs"}
-      true ->
-        imgs = Enum.map(frames, fn f ->
-          bin = f |> String.replace(~r/^data:image\/png;base64,/, "") |> Base.decode64!(ignore: :whitespace)
-          {:ok, %{image: img}} = Vapor.Docs.Pictures.read(:png, bin)
-          img
-        end)
-        gif = Vapor.Media.GIF.encode(imgs, fps: clamp(req["fps"], 1, 50, 10))
-        {:ok, %{gif: "data:image/gif;base64," <> Base.encode64(gif), frames: length(imgs), bytes: byte_size(gif)}}
-    end
-  rescue
-    _ -> {:error, "frames: PNG data URLs of one size"}
   end
 
   defp clamp(n, lo, hi, _d) when is_integer(n), do: n |> max(lo) |> min(hi)

@@ -13,8 +13,6 @@ defmodule Vapor.Mind do
       parsed as a literal and checked against the space, then scored by the
       same verifier as every other strategy. A model that proposes nonsense
       just loses the bandit's budget.
-    * `direct/3` — a scene directed in words becomes scene operations
-      (`Vapor.Scene.Ops`), parsed and validated.
     * `ask/3` — a plain answer, for the terminal.
 
   Backends (`from_env/0`, `parse/1`): `anthropic:MODEL` (ANTHROPIC_API_KEY),
@@ -217,23 +215,6 @@ defmodule Vapor.Mind do
 
   defp parse_candidate(%{kind: :program} = s, line), do: Space.parse_program(s, line)
   defp parse_candidate(s, line), do: with({:ok, v} <- Alembic.literal(line), do: Space.check(s, v))
-
-  # ============================================================ direct
-
-  @doc """
-  Direct a scene in words: the model writes scene operations
-  (`Vapor.Scene.Ops`), which are parsed and validated; lines it got wrong
-  come back as problems. `{:ok, %{text, ops, problems}}`.
-  """
-  def direct(%__MODULE__{} = m, scene, words) do
-    system = "You direct a living scene by writing operations, one per line, nothing else.\n\n" <> Vapor.Scene.Ops.card()
-    user = "The scene: #{Vapor.Scene.Ops.summary(scene)}\n\nDirection: #{words}\n\nWrite the operations."
-    with {:ok, reply} <- complete(m, system, user, "direct", temperature: 0.6) do
-      text = extract_code(reply)
-      {:ok, ops, probs} = Vapor.Scene.Ops.parse(text)
-      {:ok, %{text: text, ops: ops, problems: probs}}
-    end
-  end
 
   # ============================================================ ask
 

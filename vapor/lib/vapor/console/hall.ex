@@ -299,8 +299,9 @@ defmodule Vapor.Console.Hall do
   end
 
   # the terminal completes every verb but those that make no sense in a jail (models from disk, the editors' server)
-  # siphon: fetching is the person's act at their own terminal, never a page's (docs/SIPHON.md)
-  @verbs Vapor.Main.verbs() -- ~w(lsp version search palingenesis siphon)
+  # siphon: fetching is the person's act at their own terminal, never a page's (docs/SIPHON.md); render writes
+  # a file on the server (the console has its render desk); qalam needs a terminal of one's own
+  @verbs Vapor.Main.verbs() -- ~w(lsp version search palingenesis siphon render qalam)
 
   @doc "Completions for the last word of a line: verbs and builtins first, then the session's files."
   def complete(line, files) do

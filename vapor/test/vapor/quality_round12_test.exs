@@ -1,4 +1,4 @@
-defmodule Vapor.Rodada12Test do
+defmodule Vapor.QualityRound12Test do
   @moduledoc "The 0.12 quality round (Vapor.Quality.Round12, report §5h): every check passes, and every control is a value that differs from the check's."
   use ExUnit.Case, async: true
   @moduletag timeout: 600_000

@@ -100,4 +100,50 @@ defmodule Vapor.RenderTest do
     # two independent Monte Carlo estimates of the same mean radiance (glass caustics make it the noisiest quantity)
     assert abs(j["scene_mean"] - mean) / mean < 0.03
   end
+
+  # ------------------------------------------------------------------ ink
+
+  describe "ink: the same scene, stylised" do
+    @ball """
+    camera pos=0,0,4 look=0,0,0 fov=40
+    sky top=0.6,0.7,0.9 bottom=0.9,0.9,0.9
+    sun dir=0.3,1,0.4 color=1,1,1 power=2
+    sphere c=0,0,0 r=1 mat=diffuse albedo=0.8,0.2,0.2
+    """
+
+    test "a function of the scene alone: flat bands, the outline on the silhouette and nowhere inside" do
+      {:ok, s} = Render.parse(@ball)
+      a = Render.ink(s, width: 80, height: 60, bands: 3)
+      assert a == %{Render.ink(s, width: 80, height: 60, bands: 3) | ms: a.ms}
+      ink = {0.06, 0.05, 0.05}
+      {sky_top, sky_bottom} = {{0.6, 0.7, 0.9}, {0.9, 0.9, 0.9}}
+      px = for row <- a.linear, c <- row, do: c
+      ball = Enum.reject(px, fn {r, g, b} = c -> c == ink or (b > r and g > r) or {r, g, b} in [sky_top, sky_bottom] end)
+      # the ball's pixels take at most `bands` flat colours (lit levels; the shadowed side is level 0)
+      assert ball |> Enum.uniq() |> length() <= 3
+      # the centre of the ball is inside it, not on its outline; its silhouette is inked
+      assert Enum.at(Enum.at(a.linear, 30), 40) != ink
+      ring = Enum.count(px, &(&1 == ink))
+      assert ring == a.edges and ring > 2 * :math.pi() * 12 and ring < 2 * :math.pi() * 12 * 4
+    end
+
+    test "a hard sun shadow on the ground, and a fold inked where a box's faces meet" do
+      {:ok, s} = Render.parse("""
+      camera pos=0,3,5 look=0,0,0 fov=45
+      sun dir=0,1,0 color=1,1,1 power=2
+      plane y=0 mat=diffuse albedo=0.8,0.8,0.8
+      sphere c=0,1.2,0 r=0.6 mat=diffuse albedo=0.2,0.4,0.8
+      box min=1.2,0,-0.5 max=2,0.8,0.3 mat=diffuse albedo=0.8,0.7,0.2
+      """)
+
+      a = Render.ink(s, width: 120, height: 90, bands: 4, crease: 0.75)
+      lit = Enum.at(Enum.at(a.linear, 85), 10)
+      # the camera looks at the origin, the ground straight below the ball (the ball does not hide it from
+      # here): the image's centre is ground in the ball's shadow, at the ambient level
+      shadowed = Enum.at(Enum.at(a.linear, 45), 60)
+      assert_in_delta elem(shadowed, 0), 0.8 * 0.3, 1.0e-9
+      assert elem(lit, 0) == 0.8
+      assert a.edges > 0
+    end
+  end
 end

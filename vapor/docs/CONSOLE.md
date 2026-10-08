@@ -44,13 +44,13 @@ file and tries to read outside the jail; then it switches to Portuguese and to d
 ## 0.14 — the open workbench
 
 The console opens on the **Open workbench** group: *Workspace* (write or describe any
-problem; the type is detected — search, claim, game, system, scene, Alembic), *Crucible* (your
+problem; the type is detected — search, claim, game, system, Alembic), *Crucible* (your
 system, with evidence) and *Assay* (model evaluations: signal or noise). The search
 appears in the **furnace** — sparks per evaluation, the best-so-far line, the dashed line of the
 random control, the portfolio's allocation — and the verdict on the **touchstone**: a gold
 streak for each check that passed, a lead one for each that failed. The person proposes candidates, pins and
 bans finalists, measures external objectives and asks the model for a draft or proposals. Calls:
-`GET /v1/vapor/workspace`, `POST /v1/vapor/{detect,alembic,athanor,athanor/verify,game,crucible,assay,formalize,scene/ops,scene/mind}`,
+`GET /v1/vapor/workspace`, `POST /v1/vapor/{detect,alembic,athanor,athanor/verify,game,crucible,assay,formalize}`,
 `GET|POST /v1/vapor/athanor/:id` (`?since=N` for the new sparks). Identity: soot
 `#14110D`, parchment, brass, verdigris and cinnabar; headings in an old-style serif from the
 system fonts (no font downloaded). Screenshots: `docs/img/bancada-*.png`.
@@ -211,7 +211,7 @@ entirely in cache comes back in about 1 s.
 
 ![Studio, dark, in Portuguese: the same graph, already computed, comes back entirely from the cache (0 computed, 5 from the cache)](img/console-estudio-escuro.png)
 
-### Round 0.10: substrates, training, physics, networks, other scripts
+### Round 0.10: substrates, other scripts
 
 **Measure — Substrates.** Each substrate present runs the airlock's probes;
 the table shows the verdict (canonical, within the envelope, refused) and the
@@ -219,23 +219,8 @@ the table shows the verdict (canonical, within the envelope, refused) and the
 bits, signed zero, NaN, division, functions —, with each field that
 departs from the exact oracle marked.
 
-**Measure — Training.** The receipt of the model vapor trained (`priv/lm`): the
-curve on held-out text against the baselines it has to beat
-(byte frequency, Witten–Bell 3 and 5), the digests, the sample; and the
-**stream** beyond the training length, window by window, against the
-control of growing positions.
-
-**Simulate — Physics.** *Chaos, run twice*: the double pendulum and
-its copy one ulp away, animated; the oracle checks the native worker bit for bit
-over the first steps; the distance between the worlds on a log scale. *A
-digital twin*: residuals and CUSUM with the threshold, the fault and the alarm marked, and the
-log rebuilt from the model and the actions.
-
-**Simulate — Networks.** A model (Barabási–Albert, Erdős–Rényi,
-Watts–Strogatz, planted communities), the force-directed layout coloured by
-Louvain's communities, the clustering against the configuration null model, the
-power-law verdict with the water level at the *bootstrap* p, the
-robustness to failures and to attacks, and the top of the PageRank.
+The round's Training, Physics and Networks panels left in 0.16 (DIRECTIVE §19: each re-ran a
+fixed example); physics stays as the Crucible's and the studio's engine ([PHYSICS.md](PHYSICS.md)).
 
 **Read — Vision** gained a choice of **script** (Latin, Arabic, Cyrillic,
 cursive, 中文, 日本語, 한국어, formula), with a note that says what each
@@ -246,12 +231,6 @@ chart that was read appear redrawn alongside — lines, points or bars, in the
 series' colours, with the categories read (or the reason for refusal); a
 formula comes back as LaTeX. The footer says **which reader** read it (and whether there was a
 language model): Arabic and Cyrillic have their own, without a language model.
-
-![Physics: the digital twin](img/console-fisica.png)
-
-![Networks, dark, in Portuguese](img/console-redes-escuro.png)
-
-![Training](img/console-treino.png)
 
 ![Substrates](img/console-substratos.png)
 
@@ -268,60 +247,23 @@ language model): Arabic and Cyrillic have their own, without a language model.
 The identity line at the top also says **where the model runs**: `substrate CPU` or
 `substrate GPU · <device>` (with `mix vapor.serve --gpu`).
 
-### Round 0.11: bringing images to life, sketches, discovering, science, games, archives
-
-**Make — Living scene**: drop a photo, a painting, a generated image or
-choose an example; within seconds it moves — a perspective camera over
-the layers, inhabitants walking on the ground, weather, light, wind. The direction
-bar accepts sentences ("a stormy night, three villagers walking to
-the door, fireflies; orbit slowly") and the chips apply one operation
-each; the script appears alongside, the depths adjust layer by
-layer, "show depth" and "show the walkable ground" reveal the
-analysis. A loose drawing gets a skeleton and waves, walks, dances. Outputs:
-an 8 s video, **an HTML file that plays offline**, and the verifiable
-archive.
+### Round 0.11: sketches and archives
 
 **Make — Sketch**: technical drawing (the sketch beside what it meant
 to say, the constraints listed, SVG and DXF; "show without the constraints" is the
 control) or floor plan → 3D (rooms with area, doors with width, a
-3D viewer that rotates and zooms, GLB).
-
-**Discover — Mathematics**: choose a theorem (or a false one, marked ✗) and
-prove it — the figure with the claim drawn, the certificate and the independent
-check; *conjecture and prove* draws the lines and circles found;
-the Betti table highlights the torsion; persistence shows the cloud and the
-bars. **Algorithms**: the sorting network diagram, the 7 products and
-the counts chart, the minimal program with the 8/16/32-bit
-checks.
-
-**Simulate — Science**: eleven cards, each with the verdict, value,
-reference and control, and a chart when there is one (the orbit of the
-coherent state, the liquid's g(r), the 20-mer's fold). **Games**: play against
-the self-play agent while seeing where the search looked; the curve of losses per simulation;
-the domain-randomisation bars.
+3D viewer that rotates and zooms, GLB) — [SKETCH.md](SKETCH.md).
 
 **Trust — Archives**: drop a zip saved from any panel: intact or
 altered, and — if deterministic — recomputed and compared.
 
-![Living scene: a guild hall on a stormy night, with torches, embers and three villagers going to the door](img/console-cena-guilda.png)
-
-![Living scene: the landscape at dusk, with birds and butterflies](img/console-cena-paisagem.png)
-
-![A hand-drawn stick figure, with a skeleton, dancing in the landscape](img/console-cena-desenho.png)
-
-![The exported scene, standalone, offline](img/console-cena-exportada.png)
+The round's other panels are gone: algorithm discovery and self-play left in 0.16
+(DIRECTIVE §19; mathematics and science stay as the Crucible's kinds and the archives'
+replayable recipes), and the living scene in 0.17 ([SCENE.md](SCENE.md), DIRECTIVE §21).
 
 ![Sketch → technical drawing: lines, circle and arc with the constraints found](img/console-esboco-tecnico.png)
 
 ![Sketch → 3D floor plan](img/console-esboco-planta.png)
-
-![Mathematics](img/console-matematica.png)
-
-![Algorithms](img/console-algoritmos.png)
-
-![Science](img/console-ciencia.png)
-
-![Games](img/console-jogos.png)
 
 ### Round 0.12: workbench, engineering, logic, boards, proteins, render
 
@@ -376,9 +318,8 @@ numbers that justify it), and the results below:
   as text with recompilation on every keystroke, **dragging orbits the camera and
   rewrites the `camera` line**, five examples, resolution, PNG, the
   server's reference with the **agreement** of the mean radiances, the
-  furnace test with the control.
-- **Living scene**: inhabitant inspector, route by clicks, time
-  line, GIF of exact frames ([SCENE.md §6.1](SCENE.md)).
+  furnace test with the control, and since 0.17 the same scene **in ink**
+  (flat bands, hard shadows, outlines; 2–6 bands) ([RENDER.md §3](RENDER.md)).
 
 Checked by `test/js/console_desks.mjs` in headless Chromium (with
 WebGL2 over SwiftShader): **every example of every panel** run through the
@@ -482,10 +423,6 @@ shows up as a failure, not as a half-translated panel.
 | `POST /v1/vapor/quality` `{text}` | text gate verdict, thresholds and measures |
 | `POST /v1/vapor/ocr` `{name, data, script?}` | text from an image or from the scanned pages of a PDF: lines, boxes, per-character confidences; tables with structure, cells and Markdown/HTML/CSV; figures with caption and the charts' data; `script`: `latin`, `arabic`, `cyrillic`, `cursive` (refused), `zh`, `ja`, `ko`, `math` |
 | `GET /v1/vapor/substrates` | each substrate present, admitted by measurement: verdict, numerical fingerprint, probes |
-| `POST /v1/vapor/scene/analyze` `{name, data}` (or `name: "sample:outdoor"`) | the scene: layers (PNG with alpha) and depths, horizon, walkable ground, light, palette |
-| `POST /v1/vapor/scene/rig` `{name, data}` | a drawing's skeleton: bones, mesh and weights, the image with alpha |
-| `POST /v1/vapor/scene/direct` `{prompt}` | the prompt as operations and the words not understood |
-| `POST /v1/vapor/scene/export` `{scene, title?}` | **a standalone HTML page** that plays the scene offline |
 | `POST /v1/vapor/sketch` `{name, data, mode, snap?, longest?}` | `vector`: lines, circles, arcs, constraints, SVG, DXF; `plan`: walls, doors, rooms with area, mesh and GLB |
 | `POST /v1/vapor/archive` `{kind, recipe, result}` · `POST /v1/vapor/archive/check` `{data}` | the archive (zip, base64; the deterministic kinds computed by the server from the recipe); the check and the recomputation |
 | `POST /v1/vapor/audit` `{data, log_key?}` | check a dossier (or its PDF): items, clauses, signatures, anchors, root |
@@ -505,8 +442,7 @@ shows up as a failure, not as a half-translated panel.
 | `POST /v1/vapor/chess` `{fen, action, move?, depth?, n?}` · `/shogi` `{sfen, …}` | state and legal moves, move, engine, analysis, mate proof, perft |
 | `POST /v1/vapor/go` `{size, komi, moves, action?, sims?}` · `/mnk` `{m, n, k, gravity, moves}` · `/poker` `{game, iterations}` | Go by move list; k-in-a-row solved; CFR+ with curve and strategy |
 | `POST /v1/vapor/protein` `{action: analyse \| compare \| pipeline \| align, …}` | structure, metrics, pipeline, alignment |
-| `POST /v1/vapor/render` `{text, width, height, spp}` · `GET /v1/vapor/render/furnace` | reference PNG and mean radiance; the furnaces and the control |
-| `POST /v1/vapor/scene/gif` `{frames, fps}` | exact PNG frames → GIF |
+| `POST /v1/vapor/render` `{text, width, height, spp}` (or `style: "ink"`, `bands`) · `GET /v1/vapor/render/furnace` | reference PNG and mean radiance, or the ink picture and its outline count; the furnaces and the control |
 | `POST /v1/vapor/finance` `{kind, text}` | the finance desk (0.13): `arbitrage`, `backtest`, `book`, `calendar`, `curve`, `exchange`, `mc`, `micro`, `options`, `portfolio`, `risk` — result and certificate ([FINANCE.md](FINANCE.md)) |
 | `GET /v1/vapor/thumb?doc=…` | PNG thumbnail of an indexed image |
 | `GET /favicon.ico`, `/logo.svg`, `/manifest.webmanifest`, `/icon-192.png`, `/icon-512.png` | identity and installation |

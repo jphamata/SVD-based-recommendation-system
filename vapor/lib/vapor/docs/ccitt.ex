@@ -62,14 +62,14 @@ defmodule Vapor.Docs.CCITT do
                  000000010111 000000011100 000000011101 000000011110 000000011111)
 
   # {code string, run}; make-ups are 64·(i + 1), extended 1792 + 64·i
-  codes = fn term, makeup ->
+  defp codes(term, makeup) do
     Enum.with_index(term, fn c, i -> {c, i} end) ++
       Enum.with_index(makeup, fn c, i -> {c, 64 * (i + 1)} end) ++
       Enum.with_index(@ext_makeup, fn c, i -> {c, 1792 + 64 * i} end)
   end
 
   # a direct table over `bits`-bit peeks: index → {length, run} (or {0, nil})
-  table = fn list, bits ->
+  defp table(list, bits) do
     entries =
       for {c, run} <- list, len = byte_size(c), v = String.to_integer(c, 2), s = bits - len,
           i <- (v <<< s)..((v <<< s) + (1 <<< s) - 1), into: %{}, do: {i, {len, run}}
@@ -77,15 +77,24 @@ defmodule Vapor.Docs.CCITT do
     for(i <- 0..((1 <<< bits) - 1), do: Map.get(entries, i, {0, nil})) |> List.to_tuple()
   end
 
-  @white table.(codes.(@white_term, @white_makeup), 12)
-  @black table.(codes.(@black_term, @black_makeup), 13)
+  # built once per VM on first use: evaluated in the module body they cost four seconds of every
+  # compile of this file; two-dimensional mode codes are ≤ 7 bits
+  defp tabs do
+    case :persistent_term.get(__MODULE__, nil) do
+      nil ->
+        t = %{white: table(codes(@white_term, @white_makeup), 12), black: table(codes(@black_term, @black_makeup), 13),
+              modes: table([{"0001", :pass}, {"001", :horiz}, {"1", {:v, 0}}, {"011", {:v, 1}}, {"000011", {:v, 2}},
+                            {"0000011", {:v, 3}}, {"010", {:v, -1}}, {"000010", {:v, -2}}, {"0000010", {:v, -3}}], 7)}
+        :persistent_term.put(__MODULE__, t)
+        t
 
-  # two-dimensional mode codes (≤ 7 bits)
-  @modes table.([{"0001", :pass}, {"001", :horiz}, {"1", {:v, 0}}, {"011", {:v, 1}}, {"000011", {:v, 2}},
-                 {"0000011", {:v, 3}}, {"010", {:v, -1}}, {"000010", {:v, -2}}, {"0000010", {:v, -3}}], 7)
+      t ->
+        t
+    end
+  end
 
   @doc false
-  def tables, do: %{white: @white, black: @black, modes: @modes}
+  def tables, do: tabs()
 
   # ------------------------------------------------------------- decoding --
 
@@ -110,7 +119,7 @@ defmodule Vapor.Docs.CCITT do
           bin: data, pos: 0, k: k, cols: cols, rows: rows, eoline: !!opts[:end_of_line],
           align: !!opts[:byte_align], eob: Keyword.get(opts, :end_of_block, true) != false,
           white: if(opts[:black_is_1], do: 0, else: 1), eof: false, done: false, err: false,
-          next2d: k < 0, warns: []
+          next2d: k < 0, warns: [], tabs: tabs()
         }
 
         st = start(st)
@@ -171,7 +180,7 @@ defmodule Vapor.Docs.CCITT do
   end
 
   defp run_length(st, black, acc \\ 0) do
-    {r, st} = if black == 1, do: code(st, @black, 13), else: code(st, @white, 12)
+    {r, st} = if black == 1, do: code(st, st.tabs.black, 13), else: code(st, st.tabs.white, 12)
     if r >= 64, do: run_length(st, black, acc + r), else: {acc + r, st}
   end
 
@@ -240,7 +249,7 @@ defmodule Vapor.Docs.CCITT do
     case look(st, 7) do
       :eof -> {:eof, st}
       v ->
-        case elem(@modes, v) do
+        case elem(st.tabs.modes, v) do
           {0, nil} -> {:bad, st}
           {len, m} -> {m, eat(st, len)}
         end

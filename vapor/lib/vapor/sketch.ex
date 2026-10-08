@@ -1,7 +1,7 @@
 defmodule Vapor.Sketch do
   @moduledoc """
   From a sketch to a drawing an engineer or an architect can use
-  (docs/SCENE.md §5):
+  (docs/SKETCH.md §1–2):
 
     * **vectorise** (`vectorize/2`) — the strokes are thinned to a skeleton
       graph; each chain is fitted by a line (total least squares), a circle
@@ -25,7 +25,7 @@ defmodule Vapor.Sketch do
   """
   alias Vapor.Geom.Mesh
   alias Vapor.Modal.Image
-  alias Vapor.Scene
+  alias Vapor.Raster
 
   # ============================================================ vectorise
 
@@ -36,13 +36,13 @@ defmodule Vapor.Sketch do
   `max` (working size, 640).
   """
   def vectorize(%Image{} = img, opts \\ []) do
-    full = Scene.fit(img, Keyword.get(opts, :max, 640))
+    full = Raster.fit(img, Keyword.get(opts, :max, 640))
     {w, h} = {full.w, full.h}
     g = Vapor.Vision.Segment.gray(full)
     ink = Vapor.Vision.Segment.ink(g)
     mask = List.to_tuple(for y <- 0..(h - 1), x <- 0..(w - 1), do: elem(elem(ink, y), x) == 1)
-    thick = Scene.dilate_mask(w, h, mask, 1)
-    {nodes, chains} = Scene.skeleton(w, h, thick)
+    thick = Raster.dilate_mask(w, h, mask, 1)
+    {nodes, chains} = Raster.skeleton(w, h, thick)
     # the stroke's width: ink pixels per skeleton pixel (thinning shortens each free end by about half of it)
     skel_len = chains |> Enum.map(&length(&1.px)) |> Enum.sum() |> max(1)
     stroke = Enum.count(Tuple.to_list(mask), & &1) / skel_len
@@ -101,7 +101,7 @@ defmodule Vapor.Sketch do
   end
 
   defp split(ps, tol) do
-    ps |> Scene.rdp(tol * 1.5) |> Enum.chunk_every(2, 1, :discard) |> Enum.reject(fn [p, q] -> dist(p, q) < tol end)
+    ps |> Raster.rdp(tol * 1.5) |> Enum.chunk_every(2, 1, :discard) |> Enum.reject(fn [p, q] -> dist(p, q) < tol end)
     |> Enum.map(fn [{x0, y0}, {x1, y1}] -> {:line, %{x0: x0, y0: y0, x1: x1, y1: y1}} end)
   end
 

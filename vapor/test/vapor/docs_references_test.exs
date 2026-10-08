@@ -5,14 +5,17 @@ defmodule Vapor.DocsReferencesTest do
   module of the integrations, or a function with that name and arity), and
   the Almizan pair that docs/ALMIZAN.md shows as one tree in two scripts
   has one hash. Found by the first run: `Vapor.Alembic.sandbox` (replaced by
-  `Vapor.Hermetic.seal` this round) and a misspelled JBIG2 module.
+  `Vapor.Hermetic.seal` this round) and a misspelled JBIG2 module. Every
+  repository path the docs name in code font (`lib/…`, `test/…`, `priv/…`)
+  exists too; found by its first run: `priv/games`, gone since 0.16.
+  DIRECTIVE.md is the record of past rounds and keeps the paths they had.
   """
   use ExUnit.Case, async: true
 
   @root Path.expand("../..", __DIR__)
 
   # named in the docs as retired, refused or renamed — on purpose
-  @not_modules ~w(Vapor.Graph Vapor.Discover Vapor.Games Vapor.Silicon)
+  @not_modules ~w(Vapor.Graph Vapor.Discover Vapor.Games Vapor.Silicon Vapor.Scene Vapor.Alembic.Tree Vapor.Model.Llama)
 
   defp known do
     {:ok, mods} = :application.get_key(:vapor, :modules)
@@ -50,6 +53,16 @@ defmodule Vapor.DocsReferencesTest do
       Enum.any?(names, &String.starts_with?(&1, mod <> ".")) -> fun == nil
       true -> false
     end
+  end
+
+  test "every repository path the docs name exists" do
+    bad =
+      for f <- Path.wildcard(Path.join(@root, "docs/*.md")) ++ [Path.join(@root, "README.md")], Path.basename(f) != "DIRECTIVE.md",
+          [_, p] <- Regex.scan(~r/`((?:lib|test|priv|native|scripts)\/[A-Za-z0-9_.\/-]+)`/, File.read!(f)),
+          p = String.trim_trailing(p, "."), not String.contains?(p, "*"), not File.exists?(Path.join(@root, p)), uniq: true,
+          do: "#{Path.basename(f)}: #{p}"
+
+    assert bad == []
   end
 
   test "docs/ALMIZAN.md's two scripts are one tree: the same hash" do

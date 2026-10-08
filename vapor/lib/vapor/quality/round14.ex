@@ -28,14 +28,13 @@ defmodule Vapor.Quality.Round14 do
   | scaling | α CI contains 0.34; largest runs predicted < 1 % | shuffled losses: holdout error > 1 % |
   | dedup | near-duplicates clustered, Jaccard exact | — |
   | games | tic-tac-toe: draw over 5 478 positions; MCTS beats random | random vs random ≈ ½ |
-  | portable tree | noise() golden values (= the browser's) | a non-numeric call: refused |
   """
   alias Vapor.{Alembic, Assay, Athanor, Crucible}
   alias Vapor.Athanor.{Examples, Game, Touchstone}
-  alias Vapor.Alembic.{Builtins, Tree}
+  alias Vapor.Alembic.Builtins
 
   def run(_opts \\ []) do
-    %{checks: List.flatten([furnace(), proofs(), holdout(), replay(), sandbox(), laws(), physics(), biology(), assay(), games(), tree()])}
+    %{checks: List.flatten([furnace(), proofs(), holdout(), replay(), sandbox(), laws(), physics(), biology(), assay(), games()])}
   end
 
   defp check(name, value, control, threshold, pass), do: %{name: name, value: value, control: control, threshold: threshold, pass: pass}
@@ -237,10 +236,4 @@ defmodule Vapor.Quality.Round14 do
            "draw over 5 478; MCTS > 0.75; random ≈ ½ (0.3–0.8, first-mover edge)", r.value == 0 and r.positions == 5478 and m.score > 0.75 and rr.score > 0.3 and rr.score < 0.8)]
   end
 
-  defp tree do
-    golden = [Tree.noise([1.0, 2.0]), Tree.noise([-1.25, 7.0]), Tree.noise([123.4567, -0.0015])]
-    refused = match?({:error, _}, Tree.parse("len([1])", ["t"]))
-    [check("portable tree: noise() bit-identical to the browser's (golden values, test/js/scene_noise.mjs)", Enum.map(golden, &f/1), "len([1]) in a scene: #{if refused, do: "refused", else: "ACCEPTED"}",
-           "the three goldens exactly; non-numeric calls refused", golden == [0.16636425908654928, 0.03921110928058624, 0.10643366817384958] and refused)]
-  end
 end

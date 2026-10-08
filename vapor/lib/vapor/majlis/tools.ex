@@ -19,7 +19,7 @@ defmodule Vapor.Majlis.Tools do
   """
 
   @pure ~w(alembic_eval athanor_verify rebis_check aludel_decide tabula_analyze amalgam_sum cupel_drill logic_check arbitrage_check workbench_solve studio_validate studio_catalogue)
-  @observe ~w(athanor_run game_query crucible_run assay_run engineering_run finance_run board_query scene_ops)
+  @observe ~w(athanor_run game_query crucible_run assay_run engineering_run finance_run board_query)
 
   @doc "Every tool a thread may enable."
   def names, do: @pure ++ @observe

@@ -3,17 +3,17 @@
 # (no Mix start-up) for vapor's own verbs, and the Mix tasks for the rest.
 set -e
 here=$(dirname "$0")
-VAPOR_HOME=$(cd "$here/.." && pwd)
+root=$(cd "$here/.." && pwd)   # not VAPOR_HOME: that one names the user's state (~/.vapor) and reaches the children
 env=${MIX_ENV:-dev}
 # MIX_BUILD_PATH, when set, names the build directory itself (Mix appends no env to it)
-build=${MIX_BUILD_PATH:-$VAPOR_HOME/_build/$env}
+build=${MIX_BUILD_PATH:-$root/_build/$env}
 ebin="$build/lib/vapor/ebin"
 case "${1:-help}" in
   serve|tui|ocr|merge|quality|rag|lock|train|generate|export|audit|bench|archive|finance|rl|upscale|substrate|mcp|shm|demo_model)
     verb=$1; shift
-    MIX_EXS="$VAPOR_HOME/mix.exs" exec mix "vapor.$verb" "$@" ;;
+    MIX_EXS="$root/mix.exs" exec mix "vapor.$verb" "$@" ;;
 esac
-if [ ! -d "$ebin" ] || [ "$VAPOR_HOME/mix.exs" -nt "$ebin/vapor.app" ]; then
-  (cd "$VAPOR_HOME" && MIX_ENV=$env mix compile >&2)
+if [ ! -d "$ebin" ] || [ "$root/mix.exs" -nt "$ebin/vapor.app" ]; then
+  (cd "$root" && MIX_ENV=$env mix compile >&2)
 fi
 ERL_LIBS="$build/lib" exec elixir --erl "+sbwt none" -e 'Vapor.Main.main(System.argv())' -- "$@"

@@ -1,6 +1,6 @@
 defmodule Vapor.SketchTest do
   @moduledoc """
-  Sketch → drawing (docs/SCENE.md §5), on hand-wobbled sketches whose
+  Sketch → drawing (docs/SKETCH.md §1–2), on hand-wobbled sketches whose
   intent is known (`priv/quality/sketch`, drawn by a script): a rectangle
   drawn 2.2° askew comes back square, a wobbly circle as a circle, a 45°
   hypotenuse at 45°, a free 29.5° line left alone; the control is the same

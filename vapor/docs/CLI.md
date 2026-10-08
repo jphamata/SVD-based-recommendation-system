@@ -16,7 +16,8 @@ vapor game FILE solve|search|learn|play
 vapor crucible KIND FILE                # `vapor crucible` lists; --example shows one
 vapor assay TOOL FILE                   # `vapor assay` lists; --example shows one
 vapor mind ask|formalize|transcript     # --model or VAPOR_MIND
-vapor scene new|edit|direct|export|card
+vapor render FILE [--ink] [--out F.png]  # a scene: path-traced, or in ink (0.17)
+vapor qalam FILE                         # Al-Qalam, the editor: vi keys, verdicts in the gutter (0.17)
 vapor solve FILE                        # the equation workbench
 vapor rebis equiv|anf|identity|stabilizer|aiger FILE…   # circuits over GF(2) (0.15)
 vapor aludel decide P --vars x,y --box '0,1;0,1' | REQUEST.json   # positivity, barriers
@@ -24,11 +25,12 @@ vapor tabula FILE [--facts a,b]          # a contract: antinomies, proofs, gaps
 vapor cupel [--n 32 --k 64 --bit 26]     # the silent-corruption drill
 vapor amalgam FILE|- [--f32]             # a sum that does not depend on the order
 vapor chat new|say|show|edit|regen|switch|rewind|fork|pin|context|compact|search|export|import|share …  (0.16)
-vapor wzn check|show|hash|run|transmute|assay|abjad FILE …   # Almizan (0.16): decided claims
+vapor wzn check|show|hash|run|transmute|assay|abjad|fmt FILE …   # Almizan (0.16): decided claims; fmt (0.17)
 vapor logic FILE | check FILE PROPOSAL.json   # the logic desk (0.17): SAT, LP, integer LP, causal, Gröbner…
 vapor qalib map|check …                  # sky130 netlists, mapped and proved equal (0.17)
 vapor recommend RATINGS.csv              # factorisation with baselines and a control (0.17)
 vapor palingenesis planks|try MODEL …    # renew a model plank by plank (0.17)
+vapor siphon fetchers|queue|approve|reject|run|headers|preflight …   # the network airlock (0.17)
 vapor lsp                                # the language server (VS Code, Neovim, Emacs, …)
 vapor serve | tui | ocr | merge | quality …   # the earlier mix tasks
 ```
@@ -51,10 +53,10 @@ vapor athanor run euler.nbq > c.json || vapor verify euler.nbq c.json && echo "r
 echo "the shortest Golomb ruler with 8 marks" | vapor mind formalize - > g.nbq && vapor athanor run g.nbq
 
 # an objective measured by an external program (a training run, a simulation)
-vapor athanor run hp.nbq --measure './treina.sh'   # reads $VAPOR_CANDIDATE_JSON, prints the number (the last one in the output)
+vapor athanor run hp.nbq --measure './train.sh'   # reads $VAPOR_CANDIDATE_JSON, prints the number (the last one in the output)
 
-# a scene edited by operations, like a document
-vapor scene new > s.json && vapor scene edit s.json "add glow sol { x: 0.7, y: 0.2 }" > s2.json
+# a scene drawn in ink in milliseconds, then with physical light
+vapor render studio.txt --ink --out sketch.png && vapor render studio.txt --spp 64 --out final.png
 ```
 
 ## Opus from the terminal (0.15)
@@ -117,20 +119,33 @@ vapor recommend ratings.csv --top 5
 vapor palingenesis planks ./Model
 vapor palingenesis try ./Model --plank model.layers.12.mlp --from ./Finetuned \
       --anchors keep.txt --targets improve.txt --epsilon 0.05 --out ./Model-gen1
+
+# Almizan in canonical form, comments kept (exit 1 under --check when it is not)
+vapor wzn fmt claims.wzn --check || vapor wzn fmt claims.wzn --write
+
+# the network airlock: you declare the fetchers, an agent may only propose, you approve
+vapor siphon queue                                       # what agents asked for, with their reasons
+vapor siphon approve 4be1c09a7f3e --sha256 9f2c…         # runs it now, pinned; anything else stays queued
+vapor siphon preflight hub config.json model-00001-of-00002.safetensors model-00002-of-00002.safetensors
+                                                         # the airlock's verdict from the headers alone
 ```
 
 Logic: [LOGIC.md §6–§7](LOGIC.md); netlists: [QALIB.md](QALIB.md); recommendations:
-[RECOMMEND.md](RECOMMEND.md); planks: [PALINGENESIS.md](PALINGENESIS.md). In the console's
-terminal (the jail) `palingenesis` is refused, because it reads models from the server's disk;
-the other three verbs read only the session's files.
+[RECOMMEND.md](RECOMMEND.md); planks: [PALINGENESIS.md](PALINGENESIS.md); the siphon:
+[SIPHON.md](SIPHON.md); render: [RENDER.md](RENDER.md). In the console's terminal (the jail)
+`palingenesis` is refused, because it reads models from the server's disk, `render` because it
+writes a file on the server (the console has its render desk), `qalam` because it needs a terminal
+of one's own, and `siphon` is not offered at all: fetching is the person's act at their own terminal. The other verbs read only the session's
+files.
 
 ## Agents and terminal console
 
 The same verbs are MCP tools (`mix vapor.mcp`: `alembic_eval`, `athanor_run` with
-`proposals`, `athanor_verify`, `game_query`, `crucible_run`, `assay_run`, `scene_ops`; in 0.15
+`proposals`, `athanor_verify`, `game_query`, `crucible_run`, `assay_run`; in 0.15
 `rebis_check`, `aludel_decide`, `tabula_analyze`, `cupel_drill`, `amalgam_sum`; in 0.17
-`qalib_check` and `recommend_run`, with `logic_check` now covering LP, integer programs and causal
-diagrams — 27 in all) and TUI commands (`mix vapor.tui`: `alembic -e "…"`, `athanor run file`, …). An
+`qalib_check`, `recommend_run` and `siphon_propose` (which only queues a fetch for the person to
+approve), with `logic_check` now covering LP, integer programs and causal diagrams, `render_scene`
+taking `style: "ink"`, and `scene_ops` gone with the living scene — 27 in all) and TUI commands (`mix vapor.tui`: `alembic -e "…"`, `athanor run file`, …). An
 agent proposes; the Touchstone checks — the same door for people, models and programs.
 
 ## Mind

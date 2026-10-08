@@ -343,6 +343,89 @@ defmodule Vapor.Render do
     %{w: w, h: h, spp: spp, linear: rows, png: png(rows, scene.exposure), ms: System.monotonic_time(:millisecond) - t0, rays: w * h * spp}
   end
 
+  @doc """
+  The same scene, **stylised** (ink and flat colour): one ray per pixel
+  through its centre, the surface's own colour lit by the sun in `bands`
+  flat steps, hard sun shadows, and ink where the picture has an edge —
+  the visible object changes, the depth jumps (`depth_jump`, relative), or
+  the surface folds (`crease`, the cosine below which neighbouring normals
+  count as a fold). No sampling, so no noise: a function of the scene and
+  the options, exactly. Emitters keep their colour; the sky is its
+  gradient. `%{w, h, linear, png, edges, ms}`; options `width`, `height`,
+  `bands` (3), `ink` (`{0.06, 0.05, 0.05}`), `depth_jump` (0.08),
+  `crease` (0.75), `ambient` (0.3).
+  """
+  def ink(scene, opts \\ []) do
+    w = Keyword.get(opts, :width, 160) |> max(2) |> min(1920)
+    h = Keyword.get(opts, :height, 100) |> max(2) |> min(1080)
+    bands = Keyword.get(opts, :bands, 3) |> max(2)
+    ink = Keyword.get(opts, :ink, {0.06, 0.05, 0.05})
+    {jump, crease, amb} = {Keyword.get(opts, :depth_jump, 0.08), Keyword.get(opts, :crease, 0.75), Keyword.get(opts, :ambient, 0.3)}
+    t0 = System.monotonic_time(:millisecond)
+
+    # per pixel: {object, depth, normal, flat colour}
+    gbuf =
+      Vapor.Play.pmap(Enum.to_list(0..(h - 1)), fn y ->
+        for x <- 0..(w - 1) do
+          {o, d} = center_ray(scene.camera, w, h, x, y)
+
+          case hit(scene.objects, o, d) do
+            nil -> {nil, :infinity, nil, sky(scene, d)}
+            {t, {obj, n}} -> {:erlang.phash2(obj), t, n, flat(scene, obj, add3(o, mul(d, t)), n, bands, amb)}
+          end
+        end
+        |> List.to_tuple()
+      end)
+      |> List.to_tuple()
+
+    at = fn x, y -> elem(elem(gbuf, y), x) end
+
+    edge? = fn x, y ->
+      {id, t, n, _} = at.(x, y)
+
+      Enum.any?([{x + 1, y}, {x, y + 1}, {x - 1, y}, {x, y - 1}], fn {u, v} ->
+        u >= 0 and v >= 0 and u < w and v < h and
+          (fn {id2, t2, n2, _} ->
+             id2 != id or
+               (is_number(t) and is_number(t2) and abs(t - t2) > jump * min(t, t2)) or
+               (n != nil and n2 != nil and dot(n, n2) < crease)
+           end).(at.(u, v))
+      end)
+    end
+
+    rows = for y <- 0..(h - 1), do: for(x <- 0..(w - 1), do: if(edge?.(x, y), do: ink, else: elem(at.(x, y), 3)))
+    edges = for y <- 0..(h - 1), x <- 0..(w - 1), edge?.(x, y), reduce: 0, do: (n -> n + 1)
+    %{w: w, h: h, linear: rows, png: png(rows, scene.exposure), edges: edges, ms: System.monotonic_time(:millisecond) - t0}
+  end
+
+  # the surface's colour in flat light: ambient plus the sun's cosine in `bands` steps, zero in the sun's shadow
+  defp flat(_scene, %{m: %{kind: "emit"} = m}, _p, _n, _bands, _amb), do: m.emit
+  defp flat(scene, %{m: m}, p, n, bands, amb) do
+    base = if m.kind == "diffuse", do: albedo(m, p), else: m.albedo
+
+    lit =
+      case scene.sun do
+        nil -> 1.0
+        sun ->
+          c = max(0.0, dot(n, sun.dir))
+          shadow = c > 0 and hit(scene.objects, add3(p, mul(n, 1.0e-3)), sun.dir) != nil
+          if shadow, do: 0.0, else: Float.floor(c * bands) / (bands - 1) |> min(1.0)
+      end
+
+    mul(base, amb + (1 - amb) * lit)
+  end
+
+  # the ray through a pixel's centre (no jitter, no aperture: an outline must not move)
+  defp center_ray(cam, w, h, px, py) do
+    fwd = norm(sub(cam.look, cam.pos))
+    right = norm(cross(fwd, {0.0, 1.0, 0.0}))
+    up = cross(right, fwd)
+    th = :math.tan(cam.fov * :math.pi() / 360)
+    u = ((px + 0.5) / w * 2 - 1) * th * (w / h)
+    v = (1 - (py + 0.5) / h * 2) * th
+    {cam.pos, norm(add3(add3(fwd, mul(right, u)), mul(up, v)))}
+  end
+
   @doc "Tone map (ACES filmic approximation, Narkowicz) and sRGB-encode HDR rows to a PNG."
   def png(rows, exposure \\ 1.0) do
     h = length(rows)

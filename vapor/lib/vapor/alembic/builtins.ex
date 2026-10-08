@@ -1,6 +1,6 @@
 defmodule Vapor.Alembic.Builtins do
   @moduledoc """
-  Alembic's standard library (docs/ALEMBIC.md §4): arithmetic on
+  Alembic's standard library (docs/ALEMBIC.md §1, §3): arithmetic on
   arbitrary-precision integers and floats, lists, tuples, maps, strings,
   bits, combinatorics and statistics — all pure, all charged fuel in
   proportion to the work they do, none able to touch the host.

@@ -2,7 +2,7 @@
 
 > `vapor lsp` (`Vapor.LSP`), `editors/`. Tests: `lsp_test.exs` (the protocol over real stdio, from a
 > Node client), `editors_test.exs` (VS Code manifest and grammars validated; the Vim syntax files
-> load without error in `vim -Es`). Scrutiny: [DIRECTIVE §19](DIRECTIVE.md).
+> load without error in `vim -Es`), `qalam_test.exs` (Al-Qalam). Scrutiny: [DIRECTIVE §19–§21](DIRECTIVE.md).
 
 ## The principle
 
@@ -70,8 +70,42 @@ verdict, the decider, the counterexample point and the hash. That needs a surfac
 What stays owed: rename and code actions in the server (quick fixes such as "add the missing
 `(box …)`"), semantic tokens, and actually running the clients in their editors (below).
 
+## Al-Qalam: a pen, not a workshop (0.17)
+
+The answer above stands for editing in general. Then the person who owns the project asked for an
+editor of vapor's own anyway, "even if only for me". A request like that is a reason to build a tool,
+as long as its size follows from what it is for. What it is for: writing Almizan and Alembic files
+with the balance in sight, in any terminal, offline, with nothing to install. So it is **small**:
+one module (`Vapor.Qalam`, about 650 lines), no dependency, no configuration, no plugins, and no
+claim to replace Emacs or Neovim.
+
+```sh
+vapor qalam energy.wzn
+```
+
+| | what it does | why it is there |
+|---|---|---|
+| keys | a subset of vi: motions, counts, `i a o`, `x dd yy p J`, `u` and `Ctrl-R`, `/`, `:w :q :wq ZZ` | muscle memory, not a new keymap |
+| **the balance in the gutter** | each claim's verdict on its first line (`✓` proved, `✗` refuted, `?` undecided, `!` does not parse), rechecked after each change made outside insert mode; `K` shows the decider and the counterexample | the reason the editor exists: evidence beside the text, where no general editor shows it as directly |
+| **scrubbable numbers** | `Ctrl-A`/`Ctrl-X` step the number under the cursor (a fraction by its own unit, Arabic-Indic digits kept), and the gutter answers | walk a damping coefficient from `1/10` to `0/10` and watch `✗` turn into `✓` (a test does exactly this) |
+| structure | `%` matching bracket (comments skipped), `[[` `]]` top-level forms | S-expressions are the language's shape |
+| canon and lens | `:fmt` (comments kept), `:ar` / `:la` (the other script, the same hash) | the formatter and the projections, one keystroke away |
+| **a Merkle undo tree** | a state's identity is SHA-256(parent ‖ text); undo then change starts a branch and keeps the old one; `g-`/`g+` walk all states in time; `:tree` counts them | nothing typed is lost, and identical histories give identical identities |
+
+What it shares with the language server: one function, `Vapor.Almizan.verdict_lines/2`, computes
+the verdict per line for both. The check runs sealed with a 5-second deadline, so a claim that is
+slow to decide cannot freeze the editor. The design keeps a pure core: `feed/2` (state and keys to
+state) and `render/2` (state and size to screen) are tested without a terminal, and one test drives
+`bin/vapor qalam` through a real pseudo-terminal (`qalam_test.exs`).
+
+Not done, on purpose: syntax colours (the gutter is the colour that matters), windows and buffers
+(a terminal multiplexer has them), the mouse, macros, configuration. Known limits: a wide character
+counts as one column, right-to-left lines are laid out by the terminal, and the whole screen is
+redrawn on each key, which is fine for source files and slow for very large ones.
+
 ## What is not claimed
 
 That the VS Code extension, the Neovim *plugin* and the Emacs mode have been opened in their
-respective editors on this machine — they are not installed. What is tested is the server (over
+respective editors on this machine — they are not installed. Al-Qalam is tested in a pseudo-terminal,
+not in every terminal emulator. What is tested is the server (over
 real stdio) and the files each editor reads (validated by format).

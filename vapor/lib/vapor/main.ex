@@ -4,7 +4,7 @@ defmodule Vapor.Main do
   (docs/CLI.md):
 
     * one verb per tool: `vapor alembic`, `vapor athanor`, `vapor game`,
-      `vapor crucible`, `vapor assay`, `vapor mind`, `vapor scene`,
+      `vapor crucible`, `vapor assay`, `vapor mind`, `vapor render`, `vapor qalam`,
       `vapor solve`, `vapor verify`, and the older tasks (`serve`, `tui`,
       `ocr`, `merge`, `quality`, …) through `bin/vapor`;
     * input from a file or from standard input (`-`, or a pipe);
@@ -18,7 +18,7 @@ defmodule Vapor.Main do
   """
   alias Vapor.Alembic
 
-  @verbs ~w(alembic athanor search game crucible assay mind scene solve verify logic rebis aludel tabula cupel amalgam qalib recommend palingenesis siphon chat wzn lsp help version)
+  @verbs ~w(alembic athanor search game crucible assay mind render qalam solve verify logic rebis aludel tabula cupel amalgam qalib recommend palingenesis siphon chat wzn lsp help version)
 
   @doc "The verbs (what `help` lists and the console's terminal completes)."
   def verbs, do: @verbs
@@ -50,7 +50,8 @@ defmodule Vapor.Main do
   def run(["crucible" | rest]), do: Vapor.Main.ScienceCli.run(rest)
   def run(["assay" | rest]), do: Vapor.Main.AssayCli.run(rest)
   def run(["mind" | rest]), do: Vapor.Main.MindCli.run(rest)
-  def run(["scene" | rest]), do: Vapor.Main.SceneCli.run(rest)
+  def run(["render" | rest]), do: render(rest)
+  def run(["qalam" | rest]), do: qalam(rest)
   def run(["solve" | rest]), do: solve(rest)
   def run(["logic" | rest]), do: Vapor.Main.ForgeCli.logic(rest)
   def run(["qalib" | rest]), do: Vapor.Main.ForgeCli.qalib(rest)
@@ -85,7 +86,8 @@ defmodule Vapor.Main do
       vapor assay TOOL FILE                       AI research: compare, leaderboard, contamination, dedup, scaling,
                                                   calibration, agreement (`vapor assay` lists)
       vapor mind ask|formalize|propose …          a language model, always checked (VAPOR_MIND=anthropic:MODEL …)
-      vapor scene new|edit|direct|export …        scenes as documents edited by operations
+      vapor render FILE [--ink] [--out F.png]     a scene path-traced (physical light), or the same scene in ink and flat colour
+      vapor qalam FILE                            the editor: vi keys, each claim's verdict in the gutter, scrubbable numbers
       vapor solve FILE                            the workbench: equations with units, ODEs, PDEs, fits
       vapor logic FILE | check FILE PROPOSAL      SAT, LP, integer LP, causal diagrams, Gröbner…: decided, with certificates
       vapor rebis equiv|anf|identity|stabilizer … circuits over GF(2): proved equal or told apart
@@ -241,6 +243,49 @@ defmodule Vapor.Main do
   end
 
   defp slim(r), do: Vapor.Console.Lab12.slim(r)
+
+  # vapor qalam FILE: Al-Qalam, the editor (Vapor.Qalam), on this terminal
+  defp qalam(argv) do
+    with {:ok, _o, [path]} <- opts(argv, []),
+         :ok <- if(jailed?(), do: {:error, "the editor needs your own terminal; in the console, the Workspace edits files"}, else: :ok),
+         :ok <- Vapor.Qalam.run(path) do
+      0
+    else
+      :usage -> 2
+      {:ok, _, _} -> err("vapor qalam FILE"); 2
+      {:error, m} -> err("vapor qalam: " <> m); 2
+    end
+  end
+
+  # vapor render FILE: the scene language of docs/RENDER.md; the PNG goes to --out (default: FILE with .png, or render.png)
+  defp render(argv) do
+    with {:ok, o, args} <- opts(argv, [ink: :boolean, width: :integer, height: :integer, spp: :integer, bands: :integer, seed: :integer, out: :string]),
+         :ok <- if(jailed?(), do: :jailed, else: :ok),
+         {:ok, text} <- read_input(List.first(args)),
+         {:ok, scene} <- Vapor.Render.parse(text) do
+      {w, h} = {o[:width] || 240, o[:height] || 150}
+      file = o[:out] || if(List.first(args) in [nil, "-"], do: "render.png", else: Path.rootname(hd(args)) <> ".png")
+
+      info =
+        if o[:ink] do
+          r = Vapor.Render.ink(scene, width: w, height: h, bands: o[:bands] || 3)
+          File.write!(file, r.png)
+          %{file: file, width: r.w, height: r.h, style: "ink", outline_pixels: r.edges, ms: r.ms}
+        else
+          r = Vapor.Render.render(scene, width: w, height: h, spp: o[:spp] || 16, seed: o[:seed] || 1)
+          File.write!(file, r.png)
+          lum = r.linear |> List.flatten() |> Enum.map(fn {a, b, c} -> 0.2126 * a + 0.7152 * b + 0.0722 * c end)
+          %{file: file, width: r.w, height: r.h, style: "physical", spp: r.spp, mean_radiance: Enum.sum(lum) / length(lum), ms: r.ms}
+        end
+
+      if json?(o), do: emit_json(info), else: out("#{bold(file)}  #{info.width}×#{info.height} · #{info.style}" <> dim("  #{info.ms} ms"))
+      0
+    else
+      :usage -> 2
+      :jailed -> err("vapor render: writes a file on the server; in the console, the render desk draws the same scene"); 2
+      {:error, m} -> err("vapor render: " <> to_string(m)); 3
+    end
+  end
 
   defp solve_text(%{kind: "worksheet", lines: lines}), do: Enum.map_join(lines, "\n", &inspect/1)
   defp solve_text(r), do: r |> slim() |> jsonable() |> Vapor.JSON.encode()

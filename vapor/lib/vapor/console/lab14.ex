@@ -2,8 +2,8 @@ defmodule Vapor.Console.Lab14 do
   @moduledoc """
   The console's open workspace (docs/CONSOLE.md §0.14): Alembic, the
   Athanor's live sessions (steered by the person: propose, pin, ban, ask
-  the model, measure), games, the Crucible, the Assay, scene operations
-  and formalisation by a model. Every request is bounded; every
+  the model, measure), games, the Crucible, the Assay and
+  formalisation by a model. Every request is bounded; every
   computation runs sandboxed.
   """
   alias Vapor.{Alembic, Assay, Crucible, Mind}
@@ -16,7 +16,7 @@ defmodule Vapor.Console.Lab14 do
     %{athanor: Enum.map(Examples.all(), &Map.take(&1, [:id, :field, :title, :about, :text])),
       crucible: Crucible.kinds(), assay: Assay.tools(),
       mind: case mind(ctx) do nil -> nil; m -> m.name end,
-      card: Alembic.card(), scene_card: Vapor.Scene.Ops.card(), scene_kinds: Vapor.Scene.Ops.kinds()}
+      card: Alembic.card()}
   end
 
   @doc "The model the console uses: VAPOR_MIND, else the served model when there is one."
@@ -206,7 +206,7 @@ defmodule Vapor.Console.Lab14 do
   def crucible(req), do: with({:ok, t} <- text(req), do: Crucible.run(to_string(req["kind"]), t))
   def assay(req), do: with({:ok, t} <- text(req), do: Assay.run(to_string(req["tool"]), t, seed: int(req["seed"], 1, 1_000_000) || 1))
 
-  # ---------------------------------------------------------------- mind, scenes
+  # ---------------------------------------------------------------- mind
 
   def formalize(req, ctx) do
     with {:ok, words} <- text(req, "words") do
@@ -221,29 +221,6 @@ defmodule Vapor.Console.Lab14 do
     end
   rescue
     ArgumentError -> {:error, "kind: auto, search or game"}
-  end
-
-  def scene_ops(req) do
-    with {:ok, t} <- text(req) do
-      {:ok, ops, probs} = Vapor.Scene.Ops.parse(t)
-      {:ok, %{ops: ops, problems: probs}}
-    end
-  end
-
-  def scene_mind(req, ctx) do
-    with {:ok, words} <- text(req, "words") do
-      scene = if is_map(req["scene"]), do: req["scene"], else: Vapor.Scene.Ops.blank()
-      case mind(ctx) do
-        nil ->
-          r = Vapor.Scene.direct(words)
-          {:ok, %{ops: r.ops, problems: Enum.map(r.unknown, &"not understood: #{&1}"), via: "vocabulary"}}
-        m ->
-          case Mind.direct(m, scene, words) do
-            {:ok, r} -> {:ok, Map.put(r, :via, m.name)}
-            e -> e
-          end
-      end
-    end
   end
 
   def program_text(space, t), do: Space.parse_program(space, t)

@@ -155,8 +155,7 @@ CFR+ with exact exploitability; **proteins** have the field's
 metrics (equal to TM-align), folding from contacts and contacts from
 coevolution, with the honest comparison against the state-of-the-art predictors; and the
 **render** traces light physically on the viewer's GPU, with a
-reference that passes the furnace test. Inhabitants of the living scene have a
-name, speech, route and time. All in the console — alphabetical navigation, command
+reference that passes the furnace test (and, since 0.17, draws the same scene in ink). All in the console — alphabetical navigation, command
 palette — and over MCP.
 
 Since 0.13.0, vapor takes its principle — **every number with what
@@ -216,7 +215,18 @@ and proves them equal to their specification, or finds the input that tells them
 **Recommend** absorbs this repository's SVD script and gives its RMSE the baselines, test and control
 it lacked. Alembic files are `.nbq`; Mīzān is now **Almizan**.
 
+The same round admits **Kimi K3** (delta-rule attention, latent attention without positions,
+attention residuals, an 896-expert latent mixture in MXFP4) against an independent reference written
+from its report, and finds that the report's balancing algorithm, as written, does not balance. The
+network has one door, the **siphon**: fetchers the person declares and runs, which an agent can only
+ask for. Modules are named for what they compute; product names live in the airlock's spellings. The
+living scene, a toy, is gone; the renderer that replaces it draws a scene with physical light or in
+**ink**. `mix vapor.test` reruns only the test files whose reach changed. And vapor has a small
+editor of its own, **Al-Qalam** (`vapor qalam`): vi keys, each claim's verdict in the gutter, and
+numbers you scrub until a law starts or stops holding.
+
 - Round 0.17 — the build, English, the seal **[docs/HERMETIC.md](docs/HERMETIC.md)** · integer programs and causes **[docs/LOGIC.md §6–§7](docs/LOGIC.md)** · Palingenesis **[docs/PALINGENESIS.md](docs/PALINGENESIS.md)** · Qālib **[docs/QALIB.md](docs/QALIB.md)** · recommendations **[docs/RECOMMEND.md](docs/RECOMMEND.md)** · the editor question **[docs/EDITORS.md](docs/EDITORS.md)** · the scrutiny of the request and its attachments: **[docs/DIRECTIVE.md §20](docs/DIRECTIVE.md)**
+- Round 0.17, continued — Kimi K3 **[docs/KIMI.md](docs/KIMI.md)** · the siphon **[docs/SIPHON.md](docs/SIPHON.md)** · where names live **[docs/AIRLOCK.md §11](docs/AIRLOCK.md)** · ink **[docs/RENDER.md §3](docs/RENDER.md)** · sketch **[docs/SKETCH.md](docs/SKETCH.md)** · Al-Qalam **[docs/EDITORS.md](docs/EDITORS.md)** · the scrutiny of fifteen proposals: **[docs/DIRECTIVE.md §21](docs/DIRECTIVE.md)**
 
 Since 0.16.0, vapor is more **pure** and **converses**. What only re-enacted a fixed example went out
 (complex networks, algorithm discovery, tic-tac-toe, ten demonstration panels — almost
@@ -273,8 +283,8 @@ Hungarian: the network merged with its shuffled copy becomes itself again).
 <p><img src="docs/img/bancada-athanor-escuro.png" alt="the furnace live: the 7-mark Golomb ruler found at 25, the dashed line of random search, the portfolio's share" width="760"></p>
 
 - Round 0.13 — finance and trading desk: **[docs/FINANCE.md](docs/FINANCE.md)** · exact linear arithmetic: **[docs/LOGIC.md §5](docs/LOGIC.md)** · transistors: **[docs/ENGINEERING.md §1](docs/ENGINEERING.md)** · °C/°F: **[docs/WORKBENCH.md §1](docs/WORKBENCH.md)** · the scrutiny: **[docs/DIRECTIVE.md §16](docs/DIRECTIVE.md)** · thesis: **[monografia/monografia.pdf](monografia/monografia.pdf)** · defence: **[monografia/DEFESA.md](monografia/DEFESA.md)**
-- Round 0.12 — workbench: **[docs/WORKBENCH.md](docs/WORKBENCH.md)** · engineering: **[docs/ENGINEERING.md](docs/ENGINEERING.md)** · logic: **[docs/LOGIC.md](docs/LOGIC.md)** · boards and cards: **[docs/BOARDS.md](docs/BOARDS.md)** · proteins: **[docs/PROTEINS.md](docs/PROTEINS.md)** · render: **[docs/RENDER.md](docs/RENDER.md)** · scene inhabitants: **[docs/SCENE.md §6.1](docs/SCENE.md)** · the scrutiny: **[docs/DIRECTIVE.md §15](docs/DIRECTIVE.md)**
-- Round 0.11 — living scene, sketch, save/export: **[docs/SCENE.md](docs/SCENE.md)** · mathematics: **[docs/MATHEMATICS.md](docs/MATHEMATICS.md)** · science: **[docs/SCIENCE.md](docs/SCIENCE.md)** · the scrutiny: **[docs/DIRECTIVE.md §14](docs/DIRECTIVE.md)**
+- Round 0.12 — workbench: **[docs/WORKBENCH.md](docs/WORKBENCH.md)** · engineering: **[docs/ENGINEERING.md](docs/ENGINEERING.md)** · logic: **[docs/LOGIC.md](docs/LOGIC.md)** · boards and cards: **[docs/BOARDS.md](docs/BOARDS.md)** · proteins: **[docs/PROTEINS.md](docs/PROTEINS.md)** · render: **[docs/RENDER.md](docs/RENDER.md)** · the scrutiny: **[docs/DIRECTIVE.md §15](docs/DIRECTIVE.md)**
+- Round 0.11 — sketch, save/export: **[docs/SKETCH.md](docs/SKETCH.md)** (the living scene: removed in 0.17, **[docs/SCENE.md](docs/SCENE.md)**) · mathematics: **[docs/MATHEMATICS.md](docs/MATHEMATICS.md)** · science: **[docs/SCIENCE.md](docs/SCIENCE.md)** · the scrutiny: **[docs/DIRECTIVE.md §14](docs/DIRECTIVE.md)**
 - Round 0.10 — substrates (Metal, Tenstorrent, FreeBSD, cluster): **[docs/SUBSTRATES.md](docs/SUBSTRATES.md)** · training and endless context: **[docs/TRAINING.md](docs/TRAINING.md)** · physics, RL and twins: **[docs/PHYSICS.md](docs/PHYSICS.md)** · scripts, charts and formulas: **[docs/OCR.md §3g–§3k](docs/OCR.md)** · the scrutiny of the request: **[docs/DIRECTIVE.md §13](docs/DIRECTIVE.md)**
 - Round 0.9 — the studio, Stable Diffusion, consistent upscaling, RL, 3D, MCP and the map of the Hugging Face courses: **[docs/STUDIO.md](docs/STUDIO.md)**
 - Round 0.8 — resident GPU, sparse 4-bit, Mamba-2, cluster: **[docs/FRONTIER.md §1, §4, §6, §7](docs/FRONTIER.md)** · measurements: **[docs/bench/ROUND08.md](docs/bench/ROUND08.md)**
@@ -347,6 +357,7 @@ nix develop                # Elixir, Zig 0.16, QEMU, Vulkan+lavapipe, spirv-tool
 make native cross          # vapor-worker + vapor-fabric (host) and aarch64/riscv64 workers
 make fixtures              # real vocabularies (pinned SHA-256) for the tokenizer levels
 make test                  # every level whose tooling is present
+mix vapor.test             # the edit loop: only the test files whose reach changed (a content-addressed cache)
 make e2e                   # the whole pipeline, see below
 mix vapor.bench            # regenerates docs/bench (kernels, engine, ULP, tokenizer)
 mix vapor.quality          # output quality: docs/bench/QUALITY.md, quality.json, PNG/WAV gallery
@@ -356,29 +367,29 @@ make slides                # the presentation PDF
 With a model (a Hugging Face directory or a `.gguf` file):
 
 ```sh
-mix vapor.generate --model ./Qwen2-0.5B --prompt "Olá" --max-tokens 64 --temperature 0.7 --storage bf16
+mix vapor.generate --model ./Qwen2-0.5B --prompt "Hello" --max-tokens 64 --temperature 0.7 --storage bf16
 mix vapor.serve --model ./model-q8_0.gguf --port 8000 --threads 8 --replicas 2
-curl -s localhost:8000/v1/chat/completions -d '{"messages":[{"role":"user","content":"Oi!"}],"stream":true}'
+curl -s localhost:8000/v1/chat/completions -d '{"messages":[{"role":"user","content":"Hi!"}],"stream":true}'
 mix vapor.export --model ./Qwen2-0.5B --out qwen2.q8_0.gguf --type q8_0        # for llama.cpp
 mix vapor.export --model qwen2.q8_0.gguf --out ./qwen2-bf16 --dtype bf16      # back to HF
 mix vapor.lock ./Phi-3-mini-4k-instruct                                       # who claims it, what is missing
-mix vapor.lock ./MeuModelo --alias meu_alias.json                             # a new family, with data only
-mix vapor.merge --method slerp --t 0.3 --out ./fundido ./ModeloA ./ModeloB    # with a signed merge.receipt
-mix vapor.quality --model ./Qwen2-0.5B --text retido.txt --reference corpus.txt   # signal or noise?
-mix vapor.serve --model ./Qwen2-0.5B --docs ./meus-arquivos                    # console at http://127.0.0.1:8000/
-mix vapor.rag index minha.vlib ./meus-arquivos ./pacote.zip && mix vapor.rag search minha.vlib "multa contratual"
-mix vapor.ocr read escaneado.pdf foto.jpg                                     # OCR, with the confidence of each line
-mix vapor.merge --diagnose --base ./Base ./AjusteA ./AjusteB                  # the regime, before merging
-mix vapor.merge --out ./f --try "linear;ties:density=0.2" --eval retido.txt ./A ./B   # merging by measurement
-mix vapor.merge --stream --method slerp --t 0.3 --out ./f ./ModeloA ./ModeloB  # disk to disk, one tensor at a time
+mix vapor.lock ./MyModel --alias my_alias.json                             # a new family, with data only
+mix vapor.merge --method slerp --t 0.3 --out ./merged ./ModelA ./ModelB      # with a signed merge.receipt
+mix vapor.quality --model ./Qwen2-0.5B --text heldout.txt --reference corpus.txt  # signal or noise?
+mix vapor.serve --model ./Qwen2-0.5B --docs ./my-files                          # console at http://127.0.0.1:8000/
+mix vapor.rag index my.vlib ./my-files ./bundle.zip && mix vapor.rag search my.vlib "late payment penalty"
+mix vapor.ocr read scanned.pdf photo.jpg                                      # OCR, with the confidence of each line
+mix vapor.merge --diagnose --base ./Base ./TunedA ./TunedB                    # the regime, before merging
+mix vapor.merge --out ./f --try "linear;ties:density=0.2" --eval heldout.txt ./A ./B  # merging by measurement
+mix vapor.merge --stream --method slerp --t 0.3 --out ./f ./ModelA ./ModelB    # disk to disk, one tensor at a time
 mix vapor.tui                                                                 # the console in the terminal
-mix vapor.finance curve curva_di.txt                                          # curve with the repricing certificate
-mix vapor.finance backtest estrategia.txt                                     # the four noise gates
-mix vapor.finance book ordens.txt                                             # journal, naive judge, ITCH, FIX
-mix vapor.archive verify resultado.zip --trusted operador.key.pub             # signed archive
+mix vapor.finance curve di_curve.txt                                          # curve with the repricing certificate
+mix vapor.finance backtest strategy.txt                                       # the four noise gates
+mix vapor.finance book orders.txt                                             # journal, naive judge, ITCH, FIX
+mix vapor.archive verify result.zip --trusted operator.key.pub                # signed archive
 mix vapor.quality --only round13                                              # §5i in ~25 s
 mix vapor.quality --only round14                                              # §5j in ~60 s
-bin/vapor alembic --card                                                      # the language; then: bin/vapor athanor run problema.nbq
+bin/vapor alembic --card                                                      # the language; then: bin/vapor athanor run problem.nbq
 ```
 
 `make e2e` does all of this with a demonstration checkpoint (random
@@ -611,11 +622,11 @@ In a Phoenix app: `forward "/llm", Vapor.Plug, name: MyApp.LLM` (see
 | `lib/vapor/mcp/server.ex` | the MCP server |
 | `lib/vapor/substrate.ex`, `substrate/kit.ex`, `emit/msl.ex`, `export/stablehlo.ex` | the substrate airlock (probes, verdicts, signed admissions), the portable kit, Metal (MSL), StableHLO export |
 | `lib/vapor/cluster.ex`, `train/lm.ex`, `streaming.ex` | orchestration (content-addressed cache, redundant auditing, quarantine, *hedging*), deterministic pre-training, endless context |
-| `lib/vapor/physics.ex`, `graph.ex` | XPBD physics as programs, RL and digital twins; complex networks with null models |
+| `lib/vapor/physics.ex` | XPBD physics as programs, RL and digital twins |
 | `lib/vapor/vision/bidi.ex`, `cjk.ex`, `figure.ex`, `math.ex` | bidi (Arabic), CJK with a language model, figures and charts, formulas → LaTeX |
-| `lib/vapor/scene.ex`, `sketch.ex`, `archive.ex` | living scene (analysis, skeleton, direction, export), sketch → drawing and 3D plan, verifiable and recomputable archives |
-| `lib/vapor/discover.ex`, `prove.ex` | algorithm discovery with a certificate; algebraic geometry, conjectures, homology |
-| `lib/vapor/science.ex`, `science/`, `games.ex` | quantum, relativity, tokamak, chemistry, matter, biology; self-play (policy + value + PUCT) and domain randomization |
+| `lib/vapor/sketch.ex`, `raster.ex`, `archive.ex` | sketch → drawing and 3D plan (fitting, thinning, skeletons), verifiable and recomputable archives |
+| `lib/vapor/prove.ex` | algebraic geometry, conjectures, homology |
+| `lib/vapor/science.ex`, `science/` | quantum, relativity, tokamak, chemistry, matter, biology |
 | `lib/vapor/units.ex`, `expr.ex`, `dense.ex`, `solve.ex`, `solve/` | the workbench: units, compiled expressions and derivatives, dense and sparse linear algebra (RCM + banded Cholesky), ODEs (Dormand–Prince, Rosenbrock), PDEs with manufactured verification, systems, fits, optimization, native ensemble |
 | `lib/vapor/engineering/` | circuits (MNA), power flow, frames and trusses, plane FEM (Q4/QM6), piping, kinetics, flash, distillation — each with a certificate |
 | `lib/vapor/logic.ex`, `logic/` | CDCL and the DRUP checker, Ramsey problems, formulas (Tseitin), Knuth–Bendix, Gröbner; the checking of external proposals |
@@ -631,7 +642,7 @@ In a Phoenix app: `forward "/llm", Vapor.Plug, name: MyApp.LLM` (see
 | `lib/vapor/console/lab15.ex`, `main/opus_cli.ex`, `priv/console/opus.js` | the Opus in the console, in the terminal, and their calls |
 | `monografia/` | the thesis (abnTeX2) with the figures, and the script of the oral defence |
 | `lib/vapor/tui.ex` | the console in the terminal |
-| `priv/ocr`, `priv/ocr-arabic`, `priv/ocr-cyrillic`, `priv/ocr-cjk-*`, `priv/math`, `priv/lm`, `priv/games`, `priv/speech`, `priv/digits`, `priv/upscale`, `priv/rl`, `priv/quality/*` | the trained readers and policies, the tiny SD checkpoint and the suite's held-out data |
+| `priv/ocr`, `priv/ocr-arabic`, `priv/ocr-cyrillic`, `priv/ocr-cjk-*`, `priv/math`, `priv/lm`, `priv/speech`, `priv/digits`, `priv/upscale`, `priv/rl`, `priv/quality/*` | the trained readers and policies, the tiny SD checkpoint and the suite's held-out data |
 | `lib/vapor/docs.ex`, `docs/` | document airlock (zip, PDF, Office, markup, images) and the library |
 | `lib/vapor/console.ex`, `priv/console/` | the web console (bilingual), its calls, logo, favicon, manifest |
 | `lib/vapor/quality/` | calibrated gates, text/image/audio metrics, planted models, suite, report, checkpoint judge |
@@ -691,13 +702,10 @@ digitizer reads lines, bars and scatter with L-shaped axes and refuses the rest
 (on the hard set, 12 of 30 refused, no gross error); the
 formulas are printed and single-line (no matrices, no handwriting); the physics is of
 particles and rods (no rigid bodies, no friction, no collisions between
-bodies); the networks are for thousands of nodes, not millions; endless context
+bodies); endless context
 was measured on a model of half a million parameters. From 0.11.0: no claim of
 generative quality (sketch → photorealistic needs weights that do not
-come with it); the depth of the living scene is **heuristic** (the ground plane)
-and navigation is 2.5D in a small window; the inhabitants are figures of the
-engine, and a drawing's motion comes from the topology of the skeleton, not from
-what it shows; battery DFT and general relativity were
+come with it); battery DFT and general relativity were
 refused by name; geometry covers equalities with explicit
 constructions and gives algebraic certificates, not readable proofs; science runs in binary64 on the BEAM (deterministic),
 not yet as programs of the compiler. From 0.12.0: structure

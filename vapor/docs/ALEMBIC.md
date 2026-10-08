@@ -1,13 +1,12 @@
 # Alembic — the language of problems
 
 > Since 0.14.0. Code: `lib/vapor/alembic/` (`lexer.ex`, `parser.ex`, `compiler.ex`,
-> `builtins.ex`, `tree.ex`) and `lib/vapor/alembic.ex`. Tests: `test/vapor/alembic_test.exs`.
+> `builtins.ex`) and `lib/vapor/alembic.ex`. Tests: `test/vapor/alembic_test.exs`.
 > Reference card: `vapor alembic --card`.
 
 Alembic is the language in which **any** problem is written for the workbench: a space and an
 objective (Athanor searches), a claim (Athanor looks for the counterexample or proves by
-enumeration), a game (Athanor solves, searches or learns), a scene (the numeric subset
-runs in the browser). It replaces the predefined categories of the earlier rounds: instead of
+enumeration), a game (Athanor solves, searches or learns). It replaces the predefined categories of the earlier rounds: instead of
 choosing among ready-made problems, the person — or a language model — writes their own.
 
 The name is the apparatus's: the alembic receives what is put into it and gives back what is distilled.
@@ -45,8 +44,8 @@ The input is free, so the limits belong to the machine and not to the person:
 | deep recursion | maximum depth 5,000 | same |
 | huge numbers | integers up to 65,536 bits | `2 ^ 100000000` → *bits* |
 | huge lists | 2 million elements; `range` bounded | `range(10^9)` → *range* |
-| memory | `Alembic.sandbox/2`: its own process with `max_heap_size`; the VM kills it | memory bomb → `{:error, :memory}`, the caller lives |
-| time | `sandbox(…, timeout:)` | `{:error, :timeout}` |
+| memory | `Vapor.Hermetic.seal/2`: its own process with `max_heap_size`; the VM kills it | memory bomb → `{:error, :memory}`, the caller lives |
+| time | `seal(…, timeout:)` | `{:error, :timeout}` |
 | atom table | identifiers stay binaries, never atoms | 2,000 new names → < 50 atoms |
 | code in place of data | `Alembic.literal/1` reads only data (and constant arithmetic) | `f(1)` and comprehensions rejected |
 
@@ -58,15 +57,7 @@ The same discipline holds for the numeric expressions compiled by the equation w
 (`config :vapor, expr_jit_cap: 4096`), new ones are **interpreted** with the same values and
 no atom is created (test in `alembic_test.exs`).
 
-## 3. The portable tree (scenes)
-
-`Vapor.Alembic.Tree` is the numeric subset (arithmetic, comparisons, `if`, mathematical
-functions, `noise`) converted into a JSON tree that the browser **interprets** — it never
-compiles or evaluates it as JavaScript. That is how a scene accepts `x: 0.5 + 0.2*sin(t)` typed
-by the person without opening an injection door. `noise()` is bit-for-bit identical in Elixir and in JS
-(golden values in `test/js/scene_noise.mjs` and `alembic_test.exs`).
-
-## 4. API
+## 3. API
 
 ```elixir
 {:ok, prog} = Vapor.Alembic.load(text, consts: %{"n" => 8}, skip: ["space"], fuel: 10_000_000)
@@ -79,7 +70,7 @@ Vapor.Hermetic.seal(fn -> … end, heap_mb: 64, timeout: 5_000)   # the one seal
 
 `show` and `literal` are inverses (tested with 300 random nested values).
 
-## 5. Terminal
+## 4. Terminal
 
 ```
 vapor alembic programa.nbq            # evaluates the constants and shows them

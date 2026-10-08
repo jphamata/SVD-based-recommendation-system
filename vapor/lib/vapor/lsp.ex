@@ -220,7 +220,7 @@ defmodule Vapor.LSP do
     case Almizan.parse(text) do
       {:ok, m} ->
         if decide do
-          lines = claim_lines(text)
+          lines = Almizan.claim_lines(text)
 
           for r <- Almizan.check(m, depth: 14), r.verdict in ["refuted", "unknown"] do
             line = Map.get(lines, r.claim, 1)
@@ -313,7 +313,7 @@ defmodule Vapor.LSP do
     arabic = Syntax.projection(text) == :arabic
     kws = Enum.map(@kw_latin, &if(arabic, do: Syntax.arabic(&1), else: &1))
     roots = Enum.map(Syntax.roots(), fn {_, {l, a}} -> if arabic, do: a, else: l end)
-    claims = claim_lines(text) |> Map.keys()
+    claims = Almizan.claim_lines(text) |> Map.keys()
     Enum.map(kws, &item(&1, 14)) ++ Enum.map(roots, &item(&1, 20)) ++ Enum.map(claims, &item(&1, 3))
   end
 
@@ -323,7 +323,7 @@ defmodule Vapor.LSP do
   defp item(label, kind), do: %{"label" => label, "kind" => kind}
 
   defp symbols(%{lang: :almizan, text: text}) do
-    for {name, line} <- claim_lines(text) do
+    for {name, line} <- Almizan.claim_lines(text) do
       r = %{"start" => %{"line" => line - 1, "character" => 0}, "end" => %{"line" => line - 1, "character" => 0}}
       %{"name" => name, "kind" => 12, "range" => r, "selectionRange" => r}
     end
@@ -347,7 +347,7 @@ defmodule Vapor.LSP do
     w = word_at(text, pos)
     name = case Syntax.ident(w) do {:ok, n} -> n; _ -> w end
 
-    case claim_lines(text)[name] do
+    case Almizan.claim_lines(text)[name] do
       nil -> nil
       line -> %{"uri" => uri, "range" => %{"start" => %{"line" => line - 1, "character" => 0}, "end" => %{"line" => line - 1, "character" => 0}}}
     end
@@ -355,34 +355,22 @@ defmodule Vapor.LSP do
 
   defp definition(_, _, _), do: nil
 
-  # claim name → line, from the reader (positions survive even when the checker refuses)
   defp hints(%{lang: :almizan, text: text}) do
-    with {:ok, m} <- Almizan.parse(text) do
-      lines = claim_lines(text)
-      rows = String.split(text, "\n")
+    case Almizan.verdict_lines(text, depth: 12) do
+      {:ok, rs} ->
+        rows = String.split(text, "\n")
 
-      for r <- Almizan.check(m, depth: 12), r.verdict != "none", line = lines[r.claim], line != nil do
-        width = rows |> Enum.at(line - 1, "") |> :unicode.characters_to_binary(:utf8, {:utf16, :little}) |> byte_size() |> div(2)
-        mark = case r.verdict do "proved" -> "✓ proved"; "refuted" -> "✗ refuted"; v -> "? " <> v end
-        %{"position" => %{"line" => line - 1, "character" => width}, "label" => "#{mark} · #{r.decider}", "paddingLeft" => true, "tooltip" => r.detail}
-      end
-    else
+        for r <- rs, r.verdict != "none" do
+          width = rows |> Enum.at(r.line - 1, "") |> :unicode.characters_to_binary(:utf8, {:utf16, :little}) |> byte_size() |> div(2)
+          mark = case r.verdict do "proved" -> "✓ proved"; "refuted" -> "✗ refuted"; v -> "? " <> v end
+          %{"position" => %{"line" => r.line - 1, "character" => width}, "label" => "#{mark} · #{r.decider}", "paddingLeft" => true, "tooltip" => r.detail}
+        end
+
       _ -> []
     end
   end
 
   defp hints(_), do: []
-
-  defp claim_lines(text) do
-    case Syntax.read(text) do
-      {:ok, forms} ->
-        for {:list, [{:atom, kw, _}, {:atom, name, _} | _], line} <- forms, Syntax.keyword(kw) == "claim", into: %{} do
-          {case Syntax.ident(name) do {:ok, n} -> n; _ -> name end, line}
-        end
-
-      _ -> %{}
-    end
-  end
 
   # ------------------------------------------------------------------ framing
 

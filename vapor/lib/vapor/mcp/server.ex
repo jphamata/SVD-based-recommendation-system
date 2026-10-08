@@ -159,10 +159,9 @@ defmodule Vapor.MCP.Server do
         "inputSchema" => %{"type" => "object", "properties" => %{"fetcher" => %{"type" => "string"}, "ref" => %{"type" => "string"}, "why" => %{"type" => "string"}}, "required" => ["fetcher", "ref", "why"]}},
       %{"name" => "assay_run", "description" => "AI-research statistics (docs/ASSAY.md): tool compare (columns a, b), leaderboard (one column per system), contamination (JSON train/test/scores), dedup (one document per line), scaling (N, D, L), calibration (p, correct), agreement (one column per annotator), judge (ab, ba). Every answer says whether it is signal or noise.",
         "inputSchema" => %{"type" => "object", "properties" => %{"tool" => %{"type" => "string"}, "text" => %{"type" => "string"}}, "required" => ["tool", "text"]}},
-      %{"name" => "scene_ops", "description" => "Parse scene operations (docs/SCENE.md §9) into the operations a living scene applies; problems name each line not understood.\n" <> Vapor.Scene.Ops.card(),
-        "inputSchema" => %{"type" => "object", "properties" => %{"text" => %{"type" => "string"}}, "required" => ["text"]}},
-      %{"name" => "render_scene", "description" => "Path-trace a scene (docs/RENDER.md): camera pos= look= fov=; sky top= bottom=; sun dir= color= power=; sphere c= r=; plane y=; box min= max=; mat=diffuse|metal|glass|emit with albedo= rough= ior= color= power= checker=. The PNG is written under the output directory (named by its digest) and returned inline; mean linear radiance included.",
-        "inputSchema" => %{"type" => "object", "properties" => %{"text" => %{"type" => "string"}, "width" => %{"type" => "integer"}, "height" => %{"type" => "integer"}, "spp" => %{"type" => "integer"}}, "required" => ["text"]}}
+      %{"name" => "render_scene", "description" => "Path-trace a scene (docs/RENDER.md): camera pos= look= fov=; sky top= bottom=; sun dir= color= power=; sphere c= r=; plane y=; box min= max=; mat=diffuse|metal|glass|emit with albedo= rough= ior= color= power= checker=. style physical (default: path-traced, spp samples per pixel) or ink (the same scene stylised: flat colour bands, hard sun shadows, outlines on silhouettes and folds; one ray per pixel, deterministic). The PNG is written under the output directory (named by its digest) and returned inline; mean linear radiance included for the physical style.",
+        "inputSchema" => %{"type" => "object", "properties" => %{"text" => %{"type" => "string"}, "width" => %{"type" => "integer"}, "height" => %{"type" => "integer"}, "spp" => %{"type" => "integer"},
+                                                                 "style" => %{"type" => "string", "enum" => ~w(physical ink)}, "bands" => %{"type" => "integer"}}, "required" => ["text"]}}
     ]
   end
 
@@ -337,7 +336,6 @@ defmodule Vapor.MCP.Server do
   end
 
   defp call("assay_run", %{"tool" => _, "text" => _} = args, _st), do: lab(Vapor.Console.Lab14.assay(args) |> then(fn {:ok, v} -> {:ok, Vapor.Main.jsonable(v)}; e -> e end))
-  defp call("scene_ops", %{"text" => _} = args, _st), do: lab(Vapor.Console.Lab14.scene_ops(args) |> then(fn {:ok, v} -> {:ok, Vapor.Main.jsonable(v)}; e -> e end))
 
   defp call("workbench_solve", %{"text" => _} = args, _st), do: lab(Vapor.Console.Lab12.solve(args))
   defp call("engineering_run", %{"kind" => _, "text" => _} = args, _st), do: lab(Vapor.Console.Lab12.engineering(args))
@@ -360,8 +358,13 @@ defmodule Vapor.MCP.Server do
         File.mkdir_p!(st.out)
         file = Path.join(st.out, (:crypto.hash(:sha256, png) |> Base.encode16(case: :lower) |> binary_part(0, 16)) <> ".png")
         File.write!(file, png)
-        data = %{"file" => file, "width" => r.w, "height" => r.h, "spp" => r.spp, "mean_radiance" => r.mean, "ms" => r.ms}
-        %{"content" => [%{"type" => "text", "text" => "#{file} · #{r.w}×#{r.h} · #{r.spp} spp · mean radiance #{Float.round(r.mean, 5)}"},
+        {data, line} =
+          case r do
+            %{style: "ink"} -> {%{"file" => file, "width" => r.w, "height" => r.h, "style" => "ink", "outline_pixels" => r.edges, "ms" => r.ms}, "#{file} · #{r.w}×#{r.h} · ink · #{r.edges} outline pixels"}
+            _ -> {%{"file" => file, "width" => r.w, "height" => r.h, "spp" => r.spp, "mean_radiance" => r.mean, "ms" => r.ms}, "#{file} · #{r.w}×#{r.h} · #{r.spp} spp · mean radiance #{Float.round(r.mean, 5)}"}
+          end
+
+        %{"content" => [%{"type" => "text", "text" => line},
                         %{"type" => "image", "data" => Base.encode64(png), "mimeType" => "image/png"}],
           "structuredContent" => data, "isError" => false}
       {:error, why} -> err(why)

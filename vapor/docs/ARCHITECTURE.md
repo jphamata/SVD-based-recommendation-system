@@ -461,11 +461,12 @@ has been proved since 0.6); the Vulkan driver (contained in a process).
 
 Since 0.10: pre-training and endless context ([TRAINING.md](TRAINING.md)), physics
 for RL and digital twins ([PHYSICS.md](PHYSICS.md)), CJK, Arabic, figures and formulas ([OCR.md §3g–§3k](OCR.md)).
-Since 0.11: living scene, sketch and files ([SCENE.md](SCENE.md)), mathematics
+Since 0.11: sketch and archives ([SKETCH.md](SKETCH.md)), mathematics
 ([MATHEMATICS.md](MATHEMATICS.md)), science ([SCIENCE.md](SCIENCE.md)). (Complex
 networks, algorithm discovery and the tic-tac-toe self-play left in
-0.16: they were fixed demonstrations — [DIRECTIVE.md §19](DIRECTIVE.md).)
-Since 0.12: workbench, engineering, logic, boards, proteins, render.
+0.16: they were fixed demonstrations — [DIRECTIVE.md §19](DIRECTIVE.md); the living scene
+left in 0.17 — [SCENE.md](SCENE.md), §21.)
+Since 0.12: workbench, engineering, logic, boards, proteins, render (in ink too, since 0.17).
 Since 0.13: finance and the trading desk ([FINANCE.md](FINANCE.md)) —
 the first layer since the workbench to **compile to the core** again: the
 Monte Carlo writes the trajectory step, the generator included, as terms

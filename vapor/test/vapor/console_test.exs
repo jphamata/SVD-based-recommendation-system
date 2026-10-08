@@ -190,21 +190,14 @@ defmodule Vapor.ConsoleTest do
   end
 
   @tag :native
-  test "0.11 over HTTP: a living scene analysed, directed and exported; a sketch; an archive round trip", %{base: b} do
-    {200, sc} = post(b, "/v1/vapor/scene/analyze", %{name: "sample:outdoor"})
-    assert hd(sc["layers"])["kind"] == "sky" and sc["walk"]["cols"] > 0
-    {200, d} = post(b, "/v1/vapor/scene/direct", %{prompt: "noite de chuva, xyzzy"})
-    assert %{"time" => "night"} in d["ops"] and d["unknown"] == ["xyzzy"]
-    # the export is a page, not JSON
-    {:ok, {{_, 200, _}, h, html}} = :httpc.request(:post, {String.to_charlist(b <> "/v1/vapor/scene/export"), [], ~c"application/json", JSON.encode(%{scene: Map.put(sc, "ops", d["ops"])})}, [], body_format: :binary)
-    assert List.keyfind(h, ~c"content-type", 0) |> elem(1) |> to_string() =~ "text/html"
-    assert html =~ "SceneEngine.create" and html =~ "data:image/png;base64,"
+  test "0.11 over HTTP: a sketch; an archive round trip; the living scene gone", %{base: b} do
     {200, sk} = post(b, "/v1/vapor/sketch", %{name: "sample:plan", mode: "plan"})
     assert length(sk["rooms"]) == 2 and String.starts_with?(sk["image"], "data:image/png")
     {200, ar} = post(b, "/v1/vapor/archive", %{kind: "prove.homology", recipe: %{complex: "torus"}})
     {200, ck} = post(b, "/v1/vapor/archive/check", %{data: ar["data"]})
     assert ck["intact"] and ck["replay"] == "{:ok, :same}"
-    # refusals by name
-    assert {400, _} = post(b, "/v1/vapor/scene/analyze", %{name: "sample:nope"})
+    # refusals by name; the living scene was removed in 0.17 (DIRECTIVE §21): its routes are not found
+    assert {400, _} = post(b, "/v1/vapor/sketch", %{name: "sample:nope"})
+    assert {404, _} = post(b, "/v1/vapor/scene/analyze", %{name: "sample:outdoor"})
   end
 end
