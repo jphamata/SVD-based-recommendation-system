@@ -24,7 +24,7 @@ weights say, and what does the measurement show?":
   was missing — **whether the models have a common ancestor** (`weight_cosine`: ≈ 1 for
   fine-tunes of the same base, ≈ 0 for networks trained from different
   initialisations, whose units are not aligned).
-- **`Merge.select/4`** (`mix vapor.merge --try "linear;ties:density=0.2;…" --eval retido.txt`) —
+- **`Merge.select/4`** (`mix vapor.merge --try "linear;ties:density=0.2;…" --eval heldout.txt`) —
   merges each candidate, measures bits per byte on held-out text through the certified
   substrate and keeps the best; the receipt `vapor.merge.select/1` stores all
   the scores and the digest of the evaluation text. The merged weights and the scores are

@@ -94,8 +94,8 @@ as spellings: `Vapor.Model.Llama` → `Vapor.Model.Decoder`, the Whisper and Gra
 comments kept as glosses; the language server's formatting and lens used to delete comments.
 
 **Tests** — `mix vapor.test`: a content-addressed cache over what each test file can reach (its
-modules' bytecode, transitively; support, fixtures, `priv/`, the toolchain); for the edit loop, not the
-release. `ccitt.ex` compiles in 0.3 s instead of 5. Documentation that names a missing module,
+modules' bytecode, transitively; support, fixtures, `priv/`, the native binaries, the toolchain, and the
+repository trees the file reads at run time); for the edit loop, not the release. `ccitt.ex` compiles in 0.3 s instead of 5. Documentation that names a missing module,
 function or repository path fails `docs_references_test.exs`.
 
 **The living scene, removed** ([SCENE.md](docs/SCENE.md)) — with `Vapor.Scene.Ops`, `vapor scene`,
@@ -120,7 +120,9 @@ nothing under a whole-pixel pan (the control), and the ghost of a vanished objec
 LuaLaTeX, in English: the architecture and its guarantees as the system is, beside the academic
 thesis and deck, which are unchanged.
 
-**Fixed** — the siphon killed a fetcher by shelling out to `kill`, which the audit forbids; a shell
+**Fixed** — the Livebook tour still called the decoder by its old name (the rename had passed over
+`.livemd` files; found by the full suite) and was still in Portuguese: both fixed. The siphon killed a
+fetcher by shelling out to `kill`, which the audit forbids; a shell
 wrapper now runs the fetcher in its own session and ends its whole process group at the deadline or
 when the byte cap closes the port. `bin/vapor` replaced an exported `VAPOR_HOME` with the repository's path, so `vapor chat`
 and `vapor siphon` read the wrong directory. The console's guide described panels removed in 0.16; the

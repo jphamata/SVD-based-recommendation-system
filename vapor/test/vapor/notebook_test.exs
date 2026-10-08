@@ -29,9 +29,9 @@ defmodule Vapor.NotebookTest do
     assert certified.substrates_bit_identical == :all_outputs
     assert invariant?
     assert Enum.all?(json, fn {check, _text} -> check == :ok end)
-    assert rag.reverifica == :ok and rag.documentos == ["ai-act"]
-    assert resumed.notificacoes == 1 and resumed.resposta == "feito: 42 | \"enviado\""
-    assert replay.repeticao.mismatches == [] and replay.notificacoes_depois == 1
-    assert replay.adulterado == {:error, {:broken_at, 2}}
+    assert rag.reverify == :ok and rag.documents == ["ai-act"]
+    assert resumed.notifications == 1 and resumed.answer == "done: 42 | \"sent\""
+    assert replay.replay.mismatches == [] and replay.notifications_after == 1
+    assert replay.tampered == {:error, {:broken_at, 2}}
   end
 end

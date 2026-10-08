@@ -85,11 +85,11 @@ hybrid, inclusion proofs, receipts), and the library adds:
 - the same file (by SHA-256) added twice changes nothing.
 
 ```sh
-mix vapor.rag index minha.vlib ./pasta ./arquivos.zip    # recursive
-mix vapor.rag search minha.vlib "o que diz o contrato sobre multa" --k 5
-mix vapor.rag search minha.vlib "…" --json               # with proofs and receipt
-mix vapor.rag image minha.vlib foto.png
-mix vapor.rag show minha.vlib
+mix vapor.rag index my.vlib ./folder ./files.zip         # recursive
+mix vapor.rag search my.vlib "what does the contract say about penalties" --k 5
+mix vapor.rag search my.vlib "…" --json                  # with proofs and receipt
+mix vapor.rag image my.vlib photo.png
+mix vapor.rag show my.vlib
 ```
 
 The library is written in the BEAM's external term format and read back

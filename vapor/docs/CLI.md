@@ -75,7 +75,7 @@ vapor rebis identity mul16.net --spec 'm[32] = a[16] * b[16]'
 vapor aludel decide 'x^4*y^2 + x^2*y^4 - 3*x^2*y^2 + 1 + 1/1000' --vars x,y --box '-2,2;-2,2' --strict --json > w.json
 
 # a contract: antinomies with the scenario; the positions when delivery was late
-vapor tabula venda.txt --facts delivered,late
+vapor tabula sale.txt --facts delivered,late
 ```
 
 ## Conversations, Almizan and the single terminal (0.16)
@@ -86,7 +86,7 @@ T=$(vapor chat new --title draft --system "answer in Portuguese")
 vapor chat say $T "what is a Gröbner basis?"
 vapor chat edit $T 3fa2c1 "and a small example?"     # a branch; the old one stays
 vapor chat context $T                                # what the model will read, and what is left out
-vapor chat export $T --md > rascunho.md
+vapor chat export $T --md > draft.md
 
 # a conservation law proved over ℚ; the damped version refuted at the point
 vapor wzn check priv/almizan/oscillator.wzn

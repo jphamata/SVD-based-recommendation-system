@@ -14,9 +14,14 @@ defmodule Vapor.TestCache do
     edge, so the closure over-approximates what the file runs (a module
     built from a string at run time would escape it; `Module.concat` on
     computed names is not used in vapor);
-  * every file under `priv/`, which includes the native workers, plus the
-    OTP, Elixir and vapor versions and the set of excluded tiers (tooling
-    that appears changes what runs).
+  * every file under `priv/` and the native binaries the tests run
+    (`native/zig-out`), plus the OTP, Elixir and vapor versions and the set
+    of excluded tiers (tooling that appears changes what runs);
+  * the repository files the test reads at run time, found in its own text:
+    a test that names `docs/`, `lib/`, `notebooks/`, `editors/`, `bin/` and
+    the like (or `README.md`, `mix.exs`…) is keyed on every file under that
+    tree. A test that reads the sources (the audit's rules) re-runs when any
+    source changes, not only the modules it reaches.
 
   Change one module and only the test files that can reach it run again.
   Change a fixture, `priv/`, a support file or the toolchain and
@@ -61,11 +66,13 @@ defmodule Vapor.TestCache do
     shared = shared_digest(root, excluded)
     beams = Map.new(graph, fn {m, _} -> {m, beam_digest(m)} end)
     support = support(root)
+    texts = Map.new(files, &{&1, File.read!(Path.join(root, &1))})
+    trees = texts |> Map.values() |> Enum.flat_map(&reads/1) |> Enum.uniq() |> Map.new(&{&1, tree_digest(root, &1)})
 
     Map.new(files, fn f ->
-      text = File.read!(Path.join(root, f))
+      text = texts[f]
       mods = closure(through_support(named_modules(text), support), graph)
-      digest = :crypto.hash(:sha256, [shared, text | Enum.map(Enum.sort(mods), &beams[&1])])
+      digest = :crypto.hash(:sha256, [shared, text, Enum.map(reads(text), &trees[&1]) | Enum.map(Enum.sort(mods), &beams[&1])])
       {f, Base.encode16(digest, case: :lower)}
     end)
   end
@@ -141,8 +148,30 @@ defmodule Vapor.TestCache do
     for n <- 2..length(parts)//1, do: Enum.join(Enum.take(parts, n), ".")
   end
 
+  @trees ~w(lib docs notebooks editors proofs integrations scripts bin native technical monografia slides)
+  @root_files ~w(README.md CHANGELOG.md mix.exs flake.nix Makefile)
+
+  @doc "The repository trees and root files a test's text names, which it reads at run time."
+  def reads(text) do
+    trees = for [_, t] <- Regex.scan(~r{(?:^|[^\w])(#{Enum.join(@trees, "|")})/}, text), uniq: true, do: t
+    Enum.sort(trees) ++ Enum.filter(@root_files, &String.contains?(text, &1))
+  end
+
+  # every file under a tree (or the one file), its path and bytes; build output and caches are not sources
+  defp tree_digest(root, name) do
+    base = Path.join(root, name)
+    files = if File.regular?(base), do: [base], else: Path.wildcard(Path.join(base, "**"), match_dot: false)
+
+    files
+    |> Enum.filter(&File.regular?/1)
+    |> Enum.reject(&String.contains?(&1, ["/_build/", "/deps/", "/.lake/", "/.zig-cache/", "/node_modules/"]))
+    |> Enum.sort()
+    |> Enum.reduce(:crypto.hash_init(:sha256), fn f, h -> h |> :crypto.hash_update(Path.relative_to(f, root)) |> :crypto.hash_update(File.read!(f)) end)
+    |> :crypto.hash_final()
+  end
+
   defp shared_digest(root, excluded) do
-    globs = ["test/support/**", "test/python/**", "test/js/**", "test/fixtures/**", "test/test_helper.exs", "priv/**"]
+    globs = ["test/support/**", "test/python/**", "test/js/**", "test/fixtures/**", "test/test_helper.exs", "priv/**", "native/zig-out/**"]
 
     files =
       globs

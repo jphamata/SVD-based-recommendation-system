@@ -427,7 +427,7 @@ tape — the Hawkes fit of the arrivals **finds the planted self-excitation**
 ```sh
 mix test test/vapor/finance_test.exs test/vapor/console_markets_test.exs   # QuantLib, SciPy, simplefix when present
 mix vapor.quality --only round13                                            # §5i: 23 checks with a control
-mix vapor.finance backtest minha_estrategia.txt                             # the four gates on your strategy
-mix vapor.finance book minhas_ordens.txt                                    # journal, naive judge, ITCH, FIX
+mix vapor.finance backtest my_strategy.txt                                  # the four gates on your strategy
+mix vapor.finance book my_orders.txt                                        # journal, naive judge, ITCH, FIX
 node test/js/console_markets.mjs http://127.0.0.1:8000/ /tmp/capturas       # with `mix vapor.serve`
 ```

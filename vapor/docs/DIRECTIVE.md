@@ -1825,8 +1825,12 @@ specification, not from the source.
 - **Assay `layers` and `detect`**, from the Perception Encoder and SAM 3.
 - **`vapor wzn fmt`** and a formatting language server that keeps comments.
 - **`mix vapor.test`**, a content-addressed test cache (`Vapor.TestCache`): a test file's key covers the
-  file, the support files, the fixtures, `priv/`, the toolchain, the excluded tiers, and the bytecode of
-  every module it can reach, transitively through the atom tables. A file is recorded only when every
+  file, the support files, the fixtures, `priv/`, the native binaries, the toolchain, the excluded tiers,
+  the bytecode of every module it can reach (transitively through the atom tables), and every file under
+  the repository trees its text names (`docs/`, `lib/`, `notebooks/`, `bin/`…), because a test that
+  reads files at run time depends on them. That last part was found by the full suite: the Livebook
+  tour failed on a stale name, and a cache keyed on modules alone would have kept skipping the tests that
+  read the docs or the sources. A file is recorded only when every
   test in it passed. Change one module and only the files that can reach it run again; change `priv/` or
   a fixture and everything runs. It is for the edit loop, not a release gate: `mix test` ignores it.
   Measured: the suite's 159 files keyed in about 4 s; a second run of a passing subset went from 19 s

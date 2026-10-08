@@ -1,24 +1,24 @@
-# vapor — um passeio executável
+# vapor — an executable tour
 
 ```elixir
-# No Livebook: aponte para o checkout do vapor (com `make native` feito).
+# In Livebook: point at a vapor checkout (with `make native` done).
 Mix.install([{:vapor, path: Path.join(__DIR__, "..")}])
 ```
 
-## O que este caderno mostra
+## What this notebook shows
 
-Cada seção é uma afirmação do projeto, conferida na hora — na sua máquina,
-sem rede e sem arquivos de modelo (os pesos são aleatórios e pequenos; o
-que se demonstra são propriedades, não qualidade de texto):
+Each section is a claim of the project, checked on the spot: on your machine,
+with no network and no model files (the weights are random and small; what is
+demonstrated is properties, not text quality):
 
-1. um programa vira código de máquina **certificado**, e todo substrato dá os mesmos bits;
-2. um modelo de família de fronteira (Qwen3-MoE) gera de forma **invariante ao lote**;
-3. a saída estruturada é válida **por construção**, não por nova tentativa;
-4. a recuperação (RAG) tem **recibo** e prova de pertinência;
-5. um agente é um **valor**; sua execução é um diário encadeado; repetir é provar;
-   e uma execução que caiu **retoma** do disco sem repetir o que fez.
+1. a program becomes **certified** machine code, and every substrate gives the same bits;
+2. a model of a frontier family (Qwen3-MoE) generates **invariantly to the batch**;
+3. structured output is valid **by construction**, not by retrying;
+4. retrieval (RAG) comes with a **receipt** and a proof of inclusion;
+5. an agent is a **value**; its run is a chained journal; replaying is proving;
+   and a run that crashed **resumes** from disk without repeating what it did.
 
-## 1. Um programa certificado
+## 1. A certified program
 
 ```elixir
 alias Vapor.{Program, Tensor, Certificate}
@@ -42,18 +42,18 @@ p = compiled.certificate.payload
 ```elixir
 input = Tensor.random(:f32, [1000], 42, scale: 4.0)
 {:ok, %{outputs: %{y: y}}, trace} = Vapor.run(compiled, %{x: input})
-# o rastro diz qual substrato executou (o árbitro escolhe; a falha de um passa ao próximo)
+# the trace says which substrate ran it (the arbiter chooses; a failure falls through to the next)
 {trace, Tensor.to_list(y) |> Enum.take(4)}
 ```
 
-## 2. Um modelo de fronteira em miniatura
+## 2. A frontier model in miniature
 
-Uma configuração `qwen3_moe` (8 especialistas, 2 ativos por token, normas
-por cabeça) com pesos aleatórios, e um tokenizador BPE byte-level de 259
-tokens — o mesmo código que carrega um checkpoint real do Hugging Face.
+A `qwen3_moe` configuration (8 experts, 2 active per token, per-head norms)
+with random weights, and a byte-level BPE tokenizer of 259 tokens: the same
+code that loads a real Hugging Face checkpoint.
 
 ```elixir
-alias Vapor.Model.{Config, Llama}
+alias Vapor.Model.{Config, Decoder}
 
 {:ok, cfg} =
   Config.from_map(%{
@@ -67,7 +67,7 @@ alias Vapor.Model.{Config, Llama}
 
 weights =
   cfg
-  |> Llama.expected_weights()
+  |> Decoder.expected_weights()
   |> Enum.with_index(1000)
   |> Map.new(fn
     {{name, shape, :norm}, i} ->
@@ -78,7 +78,7 @@ weights =
       {name, Tensor.random(:f32, shape, i, scale: if(name == "model.embed_tokens.weight", do: 1.0, else: 0.2))}
   end)
 
-# um tokenizador byte-level sem merges: cada byte é um token (aliases do GPT-2)
+# a byte-level tokenizer with no merges: each byte is a token (GPT-2's aliases)
 printable = Enum.to_list(?!..?~) ++ Enum.to_list(0xA1..0xAC) ++ Enum.to_list(0xAE..0xFF)
 
 {byte_alias, _} =
@@ -101,11 +101,11 @@ printable = Enum.to_list(?!..?~) ++ Enum.to_list(0xA1..0xAC) ++ Enum.to_list(0xA
 Vapor.Engine.info(engine) |> Map.take([:model, :sequences, :pages, :max_seq])
 ```
 
-Invariância ao lote: a mesma requisição, sozinha ou disputando o passo com
-outras três, dá os mesmos tokens.
+Batch invariance: the same request, alone or sharing the step with three
+others, gives the same tokens.
 
 ```elixir
-prompt = Vapor.Tokenizer.encode(tk, "Era uma vez")
+prompt = Vapor.Tokenizer.encode(tk, "Once upon a time")
 opts = [max_tokens: 24, temperature: 0.9, seed: 7]
 
 {:ok, alone, _, _} = Vapor.Engine.complete(engine, prompt, opts)
@@ -117,11 +117,11 @@ Enum.each(crowd, &Task.await(&1, 120_000))
 {alone == crowded, Vapor.Tokenizer.decode(tk, alone) |> inspect()}
 ```
 
-## 3. Saída estruturada por construção
+## 3. Structured output by construction
 
-Um JSON Schema vira gramática; a cada passo só os tokens que mantêm a saída
-dentro da gramática podem ser escolhidos. Mesmo um modelo aleatório produz
-JSON válido para o esquema.
+A JSON Schema becomes a grammar; at each step only the tokens that keep the
+output inside the grammar can be chosen. Even a random model produces JSON
+valid for the schema.
 
 ```elixir
 alias Vapor.Grammar.{Constraint, JSONSchema, Vocab}
@@ -129,11 +129,11 @@ alias Vapor.Grammar.{Constraint, JSONSchema, Vocab}
 schema = %{
   "type" => "object",
   "properties" => %{
-    "cidade" => %{"type" => "string", "maxLength" => 12},
-    "chove" => %{"type" => "boolean"},
-    "escala" => %{"enum" => ["C", "F"]}
+    "city" => %{"type" => "string", "maxLength" => 12},
+    "raining" => %{"type" => "boolean"},
+    "scale" => %{"enum" => ["C", "F"]}
   },
-  "required" => ["cidade", "chove", "escala"]
+  "required" => ["city", "raining", "scale"]
 }
 
 {:ok, grammar} = JSONSchema.compile(schema)
@@ -148,35 +148,35 @@ for seed <- 1..3 do
 end
 ```
 
-## 4. Recuperação com recibo
+## 4. Retrieval with a receipt
 
 ```elixir
 alias Vapor.RAG
 
 docs = [
-  {"ai-act", "Sistemas de IA de alto risco devem registrar eventos automaticamente (logs) durante toda a vida útil, para rastreabilidade."},
-  {"lgpd", "O titular pode pedir a eliminação dos dados pessoais tratados com o seu consentimento."},
-  {"receita", "Pão de queijo: polvilho, ovos, leite e queijo; asse por 30 minutos."}
+  {"ai-act", "High-risk AI systems must record events automatically (logs) over their whole lifetime, for traceability."},
+  {"gdpr", "The data subject may ask for the erasure of personal data processed with their consent."},
+  {"recipe", "Cheese bread: tapioca starch, eggs, milk and cheese; bake for 30 minutes."}
 ]
 
 corpus = RAG.corpus(docs, max_chars: 200)
-result = RAG.retrieve(corpus, "rastreabilidade logs alto risco", k: 2, method: :bm25)
+result = RAG.retrieve(corpus, "traceability logs high risk", k: 2, method: :bm25)
 
 %{
-  raiz_do_corpus: RAG.root_hex(corpus),
-  recibo: result.receipt,
-  documentos: Enum.map(result.hits, & &1.doc),
-  reverifica: RAG.verify(corpus, result)
+  corpus_root: RAG.root_hex(corpus),
+  receipt: result.receipt,
+  documents: Enum.map(result.hits, & &1.doc),
+  reverify: RAG.verify(corpus, result)
 }
 ```
 
-## 5. Agentes imutáveis
+## 5. Immutable agents
 
-O agente é um valor com digest; as ferramentas declaram seu efeito (`pure`,
-`observe`, `act`) e só as `act` concedidas na especificação podem agir.
-Aqui as decisões vêm de um *backend* roteirizado (determinístico) para que o
-caderno não dependa de um modelo treinado — com o modelo local acima, a
-repetição recomputaria os tokens.
+An agent is a value with a digest; tools declare their effect (`pure`,
+`observe`, `act`) and only the `act` tools granted in the specification can
+act. Here the decisions come from a scripted (deterministic) backend so that
+the notebook does not depend on a trained model; with the local model above,
+replaying would recompute the tokens.
 
 ```elixir
 defmodule Tour.Script do
@@ -189,10 +189,10 @@ defmodule Tour.Script do
 
     if results == [] do
       {:ok, %{content: "", deterministic: true, record: %{"seed" => opts["seed"]},
-              calls: [%{"id" => "c0", "name" => "soma", "arguments" => %{"a" => 2, "b" => 40}},
-                      %{"id" => "c1", "name" => "notifica", "arguments" => %{"para" => "ops"}}]}}
+              calls: [%{"id" => "c0", "name" => "add", "arguments" => %{"a" => 2, "b" => 40}},
+                      %{"id" => "c1", "name" => "notify", "arguments" => %{"to" => "ops"}}]}}
     else
-      {:ok, %{content: "feito: " <> Enum.join(results, " | "), calls: [], deterministic: true, record: %{"seed" => opts["seed"]}}}
+      {:ok, %{content: "done: " <> Enum.join(results, " | "), calls: [], deterministic: true, record: %{"seed" => opts["seed"]}}}
     end
   end
 end
@@ -201,63 +201,63 @@ alias Vapor.Agent
 alias Vapor.Agent.{Journal, Spec, Store}
 
 spec =
-  Spec.new(name: "operador", instructions: "Seja preciso.", model: %{"kind" => "local", "id" => "roteiro"},
-           tools: [%{name: "soma", effect: "pure", parameters: %{"type" => "object", "properties" => %{"a" => %{"type" => "integer"}, "b" => %{"type" => "integer"}}, "required" => ["a", "b"]}},
-                   %{name: "notifica", effect: "act", parameters: %{"type" => "object", "properties" => %{"para" => %{"type" => "string"}}, "required" => ["para"]}}],
-           grants: ["notifica"])
+  Spec.new(name: "operator", instructions: "Be precise.", model: %{"kind" => "local", "id" => "script"},
+           tools: [%{name: "add", effect: "pure", parameters: %{"type" => "object", "properties" => %{"a" => %{"type" => "integer"}, "b" => %{"type" => "integer"}}, "required" => ["a", "b"]}},
+                   %{name: "notify", effect: "act", parameters: %{"type" => "object", "properties" => %{"to" => %{"type" => "string"}}, "required" => ["to"]}}],
+           grants: ["notify"])
 
 {:ok, sent} = Elixir.Agent.start_link(fn -> [] end)
 
 impls = %{
-  "soma" => fn %{"a" => a, "b" => b}, _ -> {:ok, a + b} end,
-  "notifica" => fn %{"para" => to}, ctx -> Elixir.Agent.update(sent, &[{to, ctx.idempotency_key} | &1]); {:ok, "enviado"} end
+  "add" => fn %{"a" => a, "b" => b}, _ -> {:ok, a + b} end,
+  "notify" => fn %{"to" => to}, ctx -> Elixir.Agent.update(sent, &[{to, ctx.idempotency_key} | &1]); {:ok, "sent"} end
 }
 
 {Spec.digest(spec), spec.grants}
 ```
 
-Uma execução que **cai** antes de notificar (o disco recusa o registro da
-soma, evento 2: tudo que vem depois espera por ele), e a retomada a partir
-do que ficou gravado. Se a queda fosse *depois* da notificação e antes do
-seu registro, a retomada a repetiria com a mesma chave de idempotência — o
-destinatário que respeita a chave aplica uma vez só.
+A run that **crashes** before notifying (the disk refuses the record of the
+sum, event 2: everything after it waits for it), and the resumption from what
+was written. Had the crash come *after* the notification and before its
+record, the resumption would repeat it with the same idempotency key, and a
+recipient that honours the key applies it once.
 
 ```elixir
 dir = Path.join(System.tmp_dir!(), "vapor-tour-#{System.unique_integer([:positive])}")
 store = Store.File.new(dir)
-crash = fn e, _journal -> if e["seq"] >= 2, do: {:error, :disco_cheio}, else: :ok end
+crash = fn e, _journal -> if e["seq"] >= 2, do: {:error, :disk_full}, else: :ok end
 
-{:error, {:on_event, :disco_cheio}, _} =
-  Agent.run(spec, "Some 2+40 e avise ops.", backend: %Tour.Script{}, impls: impls, on_event: [crash, Store.hook(store)])
+{:error, {:on_event, :disk_full}, _} =
+  Agent.run(spec, "Add 2+40 and tell ops.", backend: %Tour.Script{}, impls: impls, on_event: [crash, Store.hook(store)])
 
 [run_id] = Store.unfinished(store)
 {:ok, done} = Store.resume(store, spec, run_id, backend: %Tour.Script{}, impls: impls)
 
 %{
-  resposta: done.answer,
-  eventos: Enum.map(done.journal.events, & &1["kind"]),
-  notificacoes: Elixir.Agent.get(sent, & &1) |> length(),
-  raiz_merkle: Journal.root(done.journal)
+  answer: done.answer,
+  events: Enum.map(done.journal.events, & &1["kind"]),
+  notifications: Elixir.Agent.get(sent, & &1) |> length(),
+  merkle_root: Journal.root(done.journal)
 }
 ```
 
-Repetir é provar: as decisões e a ferramenta `pure` são recomputadas; a
-ação é lida do diário, nunca reexecutada. Adulterar um evento quebra a
-cadeia.
+Replaying is proving: the decisions and the `pure` tool are recomputed; the
+action is read from the journal, never executed again. Tampering with an event
+breaks the chain.
 
 ```elixir
 {:ok, report} = Agent.replay(spec, done.journal, backend: %Tour.Script{}, impls: impls)
 forged = %{done.journal | events: List.update_at(done.journal.events, 2, &put_in(&1, ["data", "result"], 41))}
 
 %{
-  repeticao: Map.take(report, [:verified, :observed, :mismatches, :head]),
-  notificacoes_depois: Elixir.Agent.get(sent, & &1) |> length(),
-  adulterado: Journal.verify(forged)
+  replay: Map.take(report, [:verified, :observed, :mismatches, :head]),
+  notifications_after: Elixir.Agent.get(sent, & &1) |> length(),
+  tampered: Journal.verify(forged)
 }
 ```
 
-## Para onde ir
+## Where to go next
 
-* `docs/AGENTS.md` — a reflexão sobre agentes imutáveis e o que cada peça resolve;
-* `docs/ELIXIR_ECOSYSTEM.md` — Phoenix/LiveView, Ecto, Oban, Broadway, Nx, Nerves… com escrutínio;
-* `integrations/vapor_plug` — a API compatível com OpenAI montada num roteador Phoenix.
+* `docs/AGENTS.md`: immutable agents, and what each piece solves;
+* `docs/ELIXIR_ECOSYSTEM.md`: Phoenix/LiveView, Ecto, Oban, Broadway, Nx, Nerves…, with scrutiny;
+* `integrations/vapor_plug`: the OpenAI-compatible API mounted in a Phoenix router.

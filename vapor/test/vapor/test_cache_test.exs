@@ -47,4 +47,27 @@ defmodule Vapor.TestCacheTest do
       File.rm_rf!(root)
     end
   end
+
+  test "a file that reads repository files at run time is keyed on them: docs for the docs test, sources for the audit" do
+    assert TestCache.reads(~s|Path.wildcard(Path.join(@root, "docs/*.md")) ++ [Path.join(@root, "README.md")]|) == ["docs", "README.md"]
+    assert TestCache.reads(~s|@lib Path.wildcard("lib/**/*.ex")|) == ["lib"]
+    assert TestCache.reads(~s|Path.expand("../../notebooks/tour.livemd", __DIR__)|) == ["notebooks"]
+    assert TestCache.reads("Vapor.Assay.Detect.run(x)") == []
+
+    root = Path.join(System.tmp_dir!(), "vapor-tc-#{System.unique_integer([:positive])}")
+    File.mkdir_p!(Path.join(root, "docs"))
+    File.write!(Path.join(root, "d_test.exs"), ~s|File.read!("docs/A.md")|)
+    File.write!(Path.join(root, "e_test.exs"), "Vapor.Siphon.run(f, r)")
+    File.write!(Path.join(root, "docs/A.md"), "one")
+
+    try do
+      k1 = TestCache.keys(["d_test.exs", "e_test.exs"], root, [])
+      File.write!(Path.join(root, "docs/A.md"), "two")
+      k2 = TestCache.keys(["d_test.exs", "e_test.exs"], root, [])
+      assert k1["d_test.exs"] != k2["d_test.exs"] and k1["e_test.exs"] == k2["e_test.exs"]
+    after
+      File.rm_rf!(root)
+    end
+  end
+
 end

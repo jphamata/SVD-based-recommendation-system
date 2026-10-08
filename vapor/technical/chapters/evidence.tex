@@ -71,7 +71,8 @@ formal & Lean builds, the extraction is byte-identical, exported Almizan claims 
 \end{table}
 
 For the edit loop, \texttt{mix vapor.test} keeps a content-addressed cache. A test file's key is the
-SHA-256 of the file, the support files and fixtures, \texttt{priv/}, the toolchain versions, the excluded
-tiers, and the compiled bytecode of every module the file can reach, transitively through the modules'
-atom tables. A file is recorded only when every test in it passed; changing one module reruns only the
+SHA-256 of the file, the support files and fixtures, \texttt{priv/}, the native binaries, the toolchain
+versions, the excluded tiers, the compiled bytecode of every module the file can reach (transitively
+through the modules' atom tables), and every file under the repository trees the test's text names
+(a test that reads the documents or the sources depends on them). A file is recorded only when every test in it passed; changing one module reruns only the
 files that can reach it. The cache is for the edit loop, not for releases: \texttt{mix test} ignores it.

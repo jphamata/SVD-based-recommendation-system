@@ -76,5 +76,5 @@ vapor chat show $T --tree          # all branches
 vapor chat edit $T 3fa2c1 "and an example?"   # 6+ hex digits are enough
 vapor chat context $T              # what goes, what is left out
 vapor chat fork $T 3fa2c1 --title "another line"
-vapor chat export $T --md > rascunho.md
+vapor chat export $T --md > draft.md
 ```

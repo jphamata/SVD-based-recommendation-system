@@ -87,7 +87,7 @@ sizes expressed as products of fields of the admitted configuration:
 ```
 
 This is the built-in **Phi-3/Phi-4** alias. Registration:
-`Vapor.Lock.register(map)`, `Vapor.Lock.register_json("arquivo.json")` or
+`Vapor.Lock.register(map)`, `Vapor.Lock.register_json("file.json")` or
 `VAPOR_LOCK_ALIASES=a.json:b.json` in the environment. Admission runs the
 base family's checks on the rewritten configuration, so an alias can **narrow**
 what the base accepts, never **widen** it (LongRoPE and `partial_rotary_factor ≠ 1`
@@ -132,8 +132,8 @@ For how each one is built only from existing operators, see
 ## 5. Diagnosis
 
 ```sh
-mix vapor.lock ./MeuModelo            # who claims it, why, spec, missing/extra tensors
-mix vapor.lock ./MeuModelo --alias meu_alias.json
+mix vapor.lock ./MyModel              # who claims it, why, spec, missing/extra tensors
+mix vapor.lock ./MyModel --alias my_alias.json
 mix vapor.lock --list
 ```
 
